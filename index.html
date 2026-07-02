@@ -1,0 +1,2244 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#10141a">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Solado">
+<title>Solado — entraînement musical</title>
+<style>
+  :root{
+    --bg:#10141a; --panel:#1a2029; --panel2:#222a36; --ink:#e8edf4; --dim:#8a97a8;
+    --accent:#4cc2ff; --good:#3ddc84; --bad:#ff5d6c; --gold:#ffd166;
+    --bronze:#cd8a4e; --argent:#cfd6df; --vermeil:#e8a87c; --rhod:#9fd8e8;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    touch-action:manipulation; user-select:none;-webkit-user-select:none}
+  #app{max-width:430px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;
+    padding:max(10px,env(safe-area-inset-top)) 14px max(14px,env(safe-area-inset-bottom))}
+  header{display:flex;align-items:center;justify-content:space-between;padding:6px 2px 10px}
+  header h1{font-size:15px;margin:0;font-weight:600;letter-spacing:.4px;color:var(--dim)}
+  .hstats{display:flex;gap:10px;align-items:center;font-size:13px;color:var(--dim)}
+  .hstats b{color:var(--ink)}
+  #btnSound{background:var(--panel);border:1px solid #2c3645;color:var(--ink);
+    border-radius:8px;padding:4px 10px;font-size:12.5px}
+  .screen{display:none;flex:1;flex-direction:column}
+  .screen.active{display:flex}
+  button{font-family:inherit;cursor:pointer}
+
+  .mission{background:var(--panel);border-radius:14px;padding:14px;margin-bottom:12px;
+    font-size:14px;line-height:1.45;color:var(--ink)}
+  .mission .who{color:var(--accent);font-weight:600;font-size:12px;letter-spacing:.6px;text-transform:uppercase}
+  .tiers{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+  .tier{padding:8px 10px;font-size:12px;border-radius:10px;border:1px solid #2c3645;
+    background:var(--panel);color:var(--dim);font-weight:600;flex:1 1 28%}
+  .tier small{display:block;font-weight:400;font-size:10px;margin-top:1px}
+  .tier.sel{border-color:var(--accent);color:var(--ink)}
+  .tier.off{opacity:.38}
+  .paliers{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+  .palier{background:var(--panel);border:2px solid transparent;border-radius:12px;
+    padding:10px 12px;display:flex;justify-content:space-between;align-items:center;color:var(--ink);gap:8px}
+  .palier.sel{border-color:var(--accent)}
+  .palier.locked{opacity:.42}
+  .palier.mystery{border-style:dashed;border-color:#3a4456;opacity:.6}
+  .palier .pl{font-size:14px;font-weight:600;text-align:left;flex:1}
+  .palier .pl small{display:block;font-weight:400;color:var(--dim);font-size:12px;margin-top:2px}
+  .pright{display:flex;flex-direction:column;align-items:flex-end;gap:5px}
+  .chip{font-size:11px;padding:3px 8px;border-radius:99px;background:var(--panel2);color:var(--dim);white-space:nowrap}
+  .chip.ok{background:rgba(61,220,132,.15);color:var(--good)}
+  .chip.cur{background:rgba(76,194,255,.15);color:var(--accent)}
+  .bigbtn{width:100%;padding:16px;border:none;border-radius:14px;background:var(--accent);
+    color:#04222f;font-size:18px;font-weight:700;margin-bottom:8px}
+  .secbtn{width:100%;padding:13px;border:1px solid #2c3645;border-radius:14px;
+    background:var(--panel);color:var(--ink);font-size:15px;font-weight:600;margin-bottom:8px}
+  .linkrow{display:flex;justify-content:space-between;align-items:center;margin-top:4px}
+  .linkbtn{background:none;border:none;color:var(--dim);font-size:13px;text-decoration:underline}
+  .defi{font-size:13px;color:var(--gold)}
+
+  .exhead{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--dim);margin:4px 0 8px}
+  .dots{display:flex;gap:5px}
+  .dot{width:9px;height:9px;border-radius:50%;background:var(--panel2)}
+  .dot.g{background:var(--good)} .dot.b{background:var(--bad)}
+  .timerbar{height:6px;border-radius:3px;background:var(--panel2);overflow:hidden;margin:2px 0 8px;visibility:hidden}
+  .timerbar.on{visibility:visible}
+  .timerbar div{height:100%;background:var(--gold);width:100%}
+  .staffbox{background:#f6f1e7;border-radius:16px;padding:6px 0;margin-bottom:10px}
+  .feedback{min-height:64px;text-align:center;font-size:15px;line-height:1.35;padding:4px 8px;color:var(--dim)}
+  .feedback .big{font-size:17px;font-weight:700}
+  .feedback.good .big{color:var(--good)} .feedback.bad .big{color:var(--bad)}
+  .hearbtn{background:var(--panel2);border:1px solid #2c3645;color:var(--ink);border-radius:8px;
+    padding:5px 12px;font-size:13px;margin-top:6px}
+  .answers{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:auto}
+  .answers button{padding:16px 0;font-size:17px;font-weight:700;border:none;border-radius:12px;
+    background:var(--panel2);color:var(--ink)}
+  .answers button:active{background:#2e3a4a}
+  .answers.wmode{grid-template-columns:1fr 1fr 2fr}
+  #btnNext{display:none;width:100%;padding:14px;border:none;border-radius:12px;
+    background:var(--ink);color:#10141a;font-size:16px;font-weight:700;margin-top:10px}
+  .quit{background:none;border:none;color:var(--dim);font-size:12px;margin-top:10px;text-decoration:underline}
+
+  .score{font-size:44px;font-weight:800;text-align:center;margin:14px 0 2px}
+  .score small{font-size:16px;color:var(--dim);font-weight:500}
+  .sub{font-size:14px;color:var(--dim);text-align:center;margin-bottom:12px}
+  .jarvis{background:var(--panel);border-left:3px solid var(--accent);border-radius:10px;
+    padding:11px 13px;font-size:14px;line-height:1.45;margin-bottom:12px}
+  .errlist{background:var(--panel);border-radius:12px;padding:4px 13px;margin-bottom:12px}
+  .errlist .er{padding:9px 0;border-bottom:1px solid #242d3a;font-size:13.5px;line-height:1.4}
+  .errlist .er:last-child{border-bottom:none}
+  .errlist .er b{color:var(--bad)}
+  .valprog{font-size:13px;color:var(--dim);text-align:center;margin-bottom:12px}
+  .valprog b{color:var(--gold)}
+
+  .statgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+  .stat{background:var(--panel);border-radius:12px;padding:12px;text-align:center}
+  .stat .v{font-size:22px;font-weight:800}
+  .stat .l{font-size:11.5px;color:var(--dim);margin-top:2px}
+  .fragiles{background:var(--panel);border-radius:12px;padding:10px 13px;font-size:13.5px;line-height:1.6;margin-bottom:12px}
+  .fragiles b{color:var(--bad)}
+  .savebox{background:var(--panel);border-radius:12px;padding:12px;margin-bottom:12px}
+  .savebox h4{margin:0 0 8px;font-size:13px;color:var(--dim);letter-spacing:.4px;text-transform:uppercase}
+  .savebox textarea{width:100%;height:64px;background:var(--panel2);border:1px solid #2c3645;color:var(--ink);
+    border-radius:8px;font-size:11px;padding:8px;resize:none;font-family:monospace;-webkit-user-select:text;user-select:text}
+  .savebox .row{display:flex;gap:8px;margin-top:8px}
+  .savebox .row button{flex:1;padding:10px;border:none;border-radius:9px;font-weight:600;font-size:13.5px;
+    background:var(--panel2);color:var(--ink);border:1px solid #2c3645}
+  .savemsg{font-size:12.5px;color:var(--good);margin-top:7px;min-height:16px}
+
+  #overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);display:none;align-items:center;
+    justify-content:center;padding:24px;z-index:10}
+  #overlay.on{display:flex}
+  .card{background:linear-gradient(160deg,#2a3344,#1a2029);border:1px solid #3a4860;border-radius:18px;
+    padding:20px;max-width:min(390px,92vw);max-height:88vh;overflow:auto;animation:pop .35s ease}
+  .card h3{margin:0 0 4px;font-size:13px;color:var(--gold);letter-spacing:.8px;text-transform:uppercase}
+  .card h2{margin:0 0 10px;font-size:19px}
+  .card p{margin:0 0 8px;font-size:14.5px;line-height:1.55;color:#cdd7e4}
+  .card .src{font-size:11.5px;color:var(--dim);font-style:italic}
+  .card button{margin-top:14px;width:100%;padding:12px;border:none;border-radius:10px;
+    background:var(--gold);color:#332600;font-weight:700;font-size:15px}
+  @keyframes pop{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
+  .star{color:var(--gold)}
+  .mdots{display:flex;align-items:center;gap:3px;flex-wrap:wrap;justify-content:flex-end}
+  .mdots i{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent)}
+
+  /* ===== Clavier tactile ===== */
+  .kbd{position:relative;height:150px;margin-top:auto;margin-bottom:10px;display:flex;
+    user-select:none;-webkit-user-select:none;touch-action:manipulation}
+  .wkey{flex:1;background:#f6f1e7;border:1px solid #b9ad97;border-top:none;border-radius:0 0 7px 7px;
+    position:relative;z-index:1;display:flex;align-items:flex-end;justify-content:center;padding-bottom:6px}
+  .wkey+.wkey{margin-left:-1px}
+  .wkey .lbl{font-size:11px;color:#8a7f68;font-weight:600;pointer-events:none}
+  .wkey.act{background:#bfe3ff}
+  .wkey.tgt{background:#ffe2a0}
+  .wkey.good{background:#bdf0cf} .wkey.bad{background:#ffc1c8}
+  .bkey{position:absolute;top:0;height:62%;background:#222a36;border:1px solid #11151c;border-radius:0 0 6px 6px;
+    z-index:2;display:flex;align-items:flex-end;justify-content:center;padding-bottom:5px}
+  .bkey .lbl{font-size:9px;color:#aeb8c6;font-weight:600;pointer-events:none}
+  .bkey.act{background:#2f5f8f} .bkey.tgt{background:#b98a2e}
+  .bkey.good{background:#2e7d4f} .bkey.bad{background:#a23b45}
+  .kbdcfg{display:flex;flex-direction:column;gap:10px}
+  .kbdcfg .seg{display:flex;gap:6px}
+  .kbdcfg .seg button{flex:1;padding:11px 6px;border-radius:10px;border:1px solid #2c3645;
+    background:var(--panel2);color:var(--dim);font-size:13px;font-weight:600}
+  .kbdcfg .seg button.on{border-color:var(--accent);color:var(--ink);background:#243243}
+  .kbdcfg .lab{font-size:11.5px;color:var(--dim);letter-spacing:.4px;text-transform:uppercase;margin-bottom:-4px}
+  .wkey,.bkey{border-top:0;font-family:inherit}
+
+  /* ===== Rituel quotidien, calendrier, trophées ===== */
+  .ritual{background:var(--panel);border:1px solid #2c3645;border-radius:12px;padding:12px;margin-bottom:12px}
+  .ritualTop{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}
+  .ritualTop .who{color:var(--accent);font-weight:700;font-size:11px;letter-spacing:.6px;text-transform:uppercase}
+  .ritualTop b{font-size:13px;color:var(--ink);text-align:right}
+  .ritualStats{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:10px}
+  .rstat{background:var(--panel2);border-radius:8px;padding:8px 6px;text-align:center;min-width:0}
+  .rstat .v{font-size:18px;font-weight:800;color:var(--ink)}
+  .rstat .l{font-size:10.5px;color:var(--dim);white-space:normal}
+  .calHead,.calGrid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+  .calHead{margin-bottom:4px;color:var(--dim);font-size:10px;text-align:center}
+  .calDay{height:26px;border-radius:7px;background:#151b23;border:1px solid #26303e;color:#647186;
+    font-size:10px;display:flex;align-items:center;justify-content:center;position:relative}
+  .calDay.on{background:rgba(76,194,255,.18);border-color:rgba(76,194,255,.55);color:var(--ink);font-weight:700}
+  .calDay.perfect{background:rgba(255,209,102,.2);border-color:rgba(255,209,102,.65);color:var(--gold)}
+  .calDay.today:after{content:"";position:absolute;left:50%;bottom:3px;width:4px;height:4px;border-radius:50%;background:var(--good);transform:translateX(-50%)}
+  .calDay.empty{visibility:hidden}
+  .ritualNote{font-size:12.5px;line-height:1.4;color:var(--dim);margin-top:8px}
+  .oracle{background:linear-gradient(160deg,#1a2029,#202735);border-left:3px solid var(--gold);
+    border-radius:12px;padding:11px 12px;margin-bottom:12px}
+  .oracle h3{margin:0 0 5px;color:var(--gold);font-size:11px;letter-spacing:.7px;text-transform:uppercase}
+  .oracle p{margin:0;font-size:13.5px;line-height:1.45;color:#d3deea}
+  .oracle .src{display:block;color:var(--dim);font-size:11.5px;margin-top:6px;font-style:italic}
+  .oracle button{margin-top:9px;background:none;border:1px solid #3a4860;color:var(--ink);border-radius:8px;padding:7px 9px;font-size:12px}
+  .trophyStrip{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:12px}
+  .trophy{background:var(--panel);border:1px solid #2c3645;border-radius:10px;padding:8px 6px;min-height:58px;text-align:center;color:var(--dim)}
+  .trophy.on{border-color:rgba(255,209,102,.65);background:rgba(255,209,102,.1);color:var(--ink)}
+  .trophy .ico{display:block;font-size:17px;line-height:1.1;margin-bottom:3px}
+  .trophy b{display:block;font-size:11.5px;line-height:1.15}
+  .trophy small{display:block;font-size:10px;line-height:1.15;color:var(--dim);margin-top:2px}
+  .profileGrid{display:grid;grid-template-columns:1fr;gap:8px;margin-top:10px}
+  .profileGrid label{font-size:11.5px;color:var(--dim);letter-spacing:.4px;text-transform:uppercase}
+  .profileGrid select{width:100%;margin-top:4px;background:var(--panel2);border:1px solid #2c3645;color:var(--ink);border-radius:8px;padding:9px;font-size:13.5px}
+  .prepNotes{display:grid;grid-template-columns:1fr;gap:10px;margin:10px 0}
+  .prepNote{display:block;background:rgba(255,255,255,.045);border:1px solid #303b4d;border-radius:12px;padding:10px}
+  .prepStaff{width:100%;background:#f6f1e7;border:1px solid #d6c7a9;border-radius:12px;padding:6px 0;margin-bottom:9px}
+  .prepTxt{font-size:14px;line-height:1.4;color:#d8e2ee}
+  .prepTxt b{color:var(--gold);font-size:17px}
+  .prepTxt .hearbtn{width:100%;margin-top:9px;background:var(--gold);color:#332600;border:none;font-size:15px;font-weight:800}
+  .corrBox{margin-top:8px;background:rgba(255,255,255,.05);border:1px solid #3a4860;border-radius:10px;padding:9px;text-align:left}
+  .corrBox h4{margin:0 0 5px;font-size:12px;color:var(--gold);letter-spacing:.4px;text-transform:uppercase}
+  .corrBox p{margin:5px 0;font-size:13px;line-height:1.4;color:#d3deea}
+  .corrBox b{color:var(--ink)}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>SOLADO · ENTRAÎNEMENT MUSICAL</h1>
+    <div class="hstats">
+      <span>XP <b id="hXp">0</b></span>
+      <span>Jours <b id="hStreak">0</b></span>
+      <button id="btnSound">♪ chant</button>
+    </div>
+  </header>
+
+  <div class="screen active" id="scrHome">
+    <div class="mission"><span class="who">Solado</span><br><span id="missionTxt"></span></div>
+    <div class="ritual" id="ritualBox">
+      <div class="ritualTop"><span class="who">Rituel</span><b id="ritualTitle"></b></div>
+      <div class="ritualStats" id="ritualStats"></div>
+      <div class="calHead"><span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>D</span></div>
+      <div class="calGrid" id="calGrid"></div>
+      <div class="ritualNote" id="ritualNote"></div>
+    </div>
+    <div class="oracle" id="oracleBox"></div>
+    <div class="trophyStrip" id="trophyStrip"></div>
+    <div class="tiers" id="tierRow"></div>
+    <div class="paliers" id="palierList"></div>
+    <div id="starCTA"></div>
+    <button class="bigbtn" id="btnSerie">Série de 10</button>
+    <button class="secbtn" id="btnRafale">Rafale 20 s · chrono</button>
+    <button class="secbtn" id="btnClavier">🎹 Clavier — lire &amp; jouer</button>
+    <div class="linkrow">
+      <button class="linkbtn" id="btnStats">Stats &amp; sauvegarde</button>
+      <button class="linkbtn" id="btnPieces">Mes partitions</button>
+      <span class="defi" id="defiTxt"></span>
+    </div>
+  </div>
+
+  <div class="screen" id="scrEx">
+    <div class="exhead"><span id="exMode"></span><div class="dots" id="exDots"></div><span id="exCount"></span></div>
+    <div class="timerbar" id="timerbar"><div id="timerfill"></div></div>
+    <div class="staffbox" id="staffbox"></div>
+    <div class="feedback" id="feedback">Quelle est cette note ?</div>
+    <div class="answers" id="answers"></div>
+    <button id="btnNext">Continuer</button>
+    <button class="quit" id="btnQuit">Abandonner la série</button>
+  </div>
+
+  <div class="screen" id="scrRes">
+    <div class="score" id="resScore"></div>
+    <div class="sub" id="resSub"></div>
+    <div class="jarvis" id="resSolado"></div>
+    <div class="errlist" id="resErrs"></div>
+    <div class="valprog" id="resVal"></div>
+    <div class="sub" id="resCode" style="margin-bottom:12px"></div>
+    <button class="bigbtn" id="btnAgain">Encore une série</button>
+    <button class="secbtn" id="btnHome">Accueil</button>
+  </div>
+
+  <div class="screen" id="scrStats">
+    <div class="statgrid" id="statGrid"></div>
+    <div class="fragiles" id="fragBox"></div>
+    <div class="savebox">
+      <h4>Sauvegarde — exporter</h4>
+      <div class="savemsg" id="saveCode" style="margin:0 0 8px;color:var(--gold)"></div>
+      <textarea id="expArea" readonly></textarea>
+      <div class="row"><button id="btnCopy">Copier</button><button id="btnDownload">Télécharger (fichier)</button></div>
+      <div class="row"><button id="btnQR">Transfert QR (hors-ligne)</button></div>
+      <h4 style="margin-top:14px">Restaurer</h4>
+      <textarea id="impArea" placeholder="Colle ici une sauvegarde complète, ou un code palier (ex. P4, P4+, B2) pour reprendre où tu en étais."></textarea>
+      <div class="row"><button id="btnImport">Charger (collé)</button><button id="btnUndoImport">Annuler l'import</button></div>
+      <div class="row"><button id="btnImportFile">Charger depuis un fichier .json</button></div>
+      <input type="file" id="fileInput" accept="application/json,.json" style="display:none">
+      <div class="savemsg" id="saveMsg"></div>
+    </div>
+    <div class="savebox">
+      <h4>Synchro entre appareils</h4>
+      <div class="savemsg" id="syncState" style="margin:0 0 8px;color:var(--ink)"></div>
+      <input id="syncToken" type="password" autocomplete="off" placeholder="Jeton GitHub (permission gist)" style="width:100%;background:var(--panel2);border:1px solid #2c3645;color:var(--ink);border-radius:8px;padding:9px;font-size:13.5px;-webkit-user-select:text;user-select:text">
+      <div class="row"><button id="btnSyncOn">Activer sur cet appareil</button><button id="btnSyncNow">Synchroniser maintenant</button></div>
+      <div class="row"><button id="btnSyncOff">Désactiver (cet appareil)</button></div>
+      <div class="savemsg" id="syncMsg"></div>
+    </div>
+    <button class="secbtn" id="btnStatsBack">Retour</button>
+  </div>
+
+  <div class="screen" id="scrPieces">
+    <div class="mission"><span class="who">Solado</span><br>Tes œuvres. Travaille le « premier regard » : clé, armure, mesure, tempo, caractère — le réflexe du lecteur, sans jouer une note.</div>
+    <div class="paliers" id="pieceList"></div>
+    <div class="savebox">
+      <h4>Ajouter une partition</h4>
+      <input id="pcTitle" placeholder="Titre (ex. Le Cygne)" style="width:100%;background:var(--panel2);border:1px solid #2c3645;color:var(--ink);border-radius:8px;padding:9px;font-size:13.5px;-webkit-user-select:text;user-select:text">
+      <div class="row" style="margin-top:8px">
+        <select id="pcClef" style="flex:1;background:var(--panel2);border:1px solid #2c3645;color:var(--ink);border-radius:8px;padding:9px;font-size:13.5px"><option value="sol">Clé de sol</option><option value="fa">Clé de fa</option><option value="deux">Les deux clés</option></select>
+        <input id="pcKey" placeholder="Tonalité (ex. La M)" style="flex:1;background:var(--panel2);border:1px solid #2c3645;color:var(--ink);border-radius:8px;padding:9px;font-size:13.5px;-webkit-user-select:text;user-select:text">
+      </div>
+      <div class="row" style="margin-top:8px"><button id="btnAddPiece">Ajouter</button></div>
+      <div class="savemsg" id="pieceMsg"></div>
+    </div>
+    <button class="secbtn" id="btnPiecesBack">Retour</button>
+  </div>
+
+  <div class="screen" id="scrKbd">
+    <div class="exhead"><span id="kHead">Clavier</span><div class="dots" id="kDots"></div><span id="kCount"></span></div>
+    <div class="staffbox" id="kStaff"></div>
+    <div class="feedback" id="kFb"></div>
+    <div class="kbd" id="kKbd"></div>
+    <div class="answers" id="kNames" style="display:none"></div>
+    <button class="quit" id="kQuit">Quitter le clavier</button>
+  </div>
+</div>
+
+<div id="overlay"><div class="card" id="cardBox"></div></div>
+
+<script>/* qrcode-generator (Kazuhiko Arase, MIT) — minifié, embarqué pour le transfert QR hors-ligne */
+var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],f={},c=function(t,r){o=function(t){for(var r=new Array(t),e=0;e<t;e+=1){r[e]=new Array(t);for(var n=0;n<t;n+=1)r[e][n]=null}return r}(i=4*e+17),l(0,0),l(i-7,0),l(0,i-7),s(),h(),d(t,r),e>=7&&v(t),null==a&&(a=p(e,n,u)),w(a,r)},l=function(t,r){for(var e=-1;e<=7;e+=1)if(!(t+e<=-1||i<=t+e))for(var n=-1;n<=7;n+=1)r+n<=-1||i<=r+n||(o[t+e][r+n]=0<=e&&e<=6&&(0==n||6==n)||0<=n&&n<=6&&(0==e||6==e)||2<=e&&e<=4&&2<=n&&n<=4)},h=function(){for(var t=8;t<i-8;t+=1)null==o[t][6]&&(o[t][6]=t%2==0);for(var r=8;r<i-8;r+=1)null==o[6][r]&&(o[6][r]=r%2==0)},s=function(){for(var t=B.getPatternPosition(e),r=0;r<t.length;r+=1)for(var n=0;n<t.length;n+=1){var i=t[r],a=t[n];if(null==o[i][a])for(var u=-2;u<=2;u+=1)for(var f=-2;f<=2;f+=1)o[i+u][a+f]=-2==u||2==u||-2==f||2==f||0==u&&0==f}},v=function(t){for(var r=B.getBCHTypeNumber(e),n=0;n<18;n+=1){var a=!t&&1==(r>>n&1);o[Math.floor(n/3)][n%3+i-8-3]=a}for(n=0;n<18;n+=1){a=!t&&1==(r>>n&1);o[n%3+i-8-3][Math.floor(n/3)]=a}},d=function(t,r){for(var e=n<<3|r,a=B.getBCHTypeInfo(e),u=0;u<15;u+=1){var f=!t&&1==(a>>u&1);u<6?o[u][8]=f:u<8?o[u+1][8]=f:o[i-15+u][8]=f}for(u=0;u<15;u+=1){f=!t&&1==(a>>u&1);u<8?o[8][i-u-1]=f:u<9?o[8][15-u-1+1]=f:o[8][15-u-1]=f}o[i-8][8]=!t},w=function(t,r){for(var e=-1,n=i-1,a=7,u=0,f=B.getMaskFunction(r),c=i-1;c>0;c-=2)for(6==c&&(c-=1);;){for(var g=0;g<2;g+=1)if(null==o[n][c-g]){var l=!1;u<t.length&&(l=1==(t[u]>>>a&1)),f(n,c-g)&&(l=!l),o[n][c-g]=l,-1==(a-=1)&&(u+=1,a=7)}if((n+=e)<0||i<=n){n-=e,e=-e;break}}},p=function(t,r,e){for(var n=A.getRSBlocks(t,r),o=b(),i=0;i<e.length;i+=1){var a=e[i];o.put(a.getMode(),4),o.put(a.getLength(),B.getLengthInBits(a.getMode(),t)),a.write(o)}var u=0;for(i=0;i<n.length;i+=1)u+=n[i].dataCount;if(o.getLengthInBits()>8*u)throw"code length overflow. ("+o.getLengthInBits()+">"+8*u+")";for(o.getLengthInBits()+4<=8*u&&o.put(0,4);o.getLengthInBits()%8!=0;)o.putBit(!1);for(;!(o.getLengthInBits()>=8*u||(o.put(236,8),o.getLengthInBits()>=8*u));)o.put(17,8);return function(t,r){for(var e=0,n=0,o=0,i=new Array(r.length),a=new Array(r.length),u=0;u<r.length;u+=1){var f=r[u].dataCount,c=r[u].totalCount-f;n=Math.max(n,f),o=Math.max(o,c),i[u]=new Array(f);for(var g=0;g<i[u].length;g+=1)i[u][g]=255&t.getBuffer()[g+e];e+=f;var l=B.getErrorCorrectPolynomial(c),h=k(i[u],l.getLength()-1).mod(l);for(a[u]=new Array(l.getLength()-1),g=0;g<a[u].length;g+=1){var s=g+h.getLength()-a[u].length;a[u][g]=s>=0?h.getAt(s):0}}var v=0;for(g=0;g<r.length;g+=1)v+=r[g].totalCount;var d=new Array(v),w=0;for(g=0;g<n;g+=1)for(u=0;u<r.length;u+=1)g<i[u].length&&(d[w]=i[u][g],w+=1);for(g=0;g<o;g+=1)for(u=0;u<r.length;u+=1)g<a[u].length&&(d[w]=a[u][g],w+=1);return d}(o,n)};f.addData=function(t,r){var e=null;switch(r=r||"Byte"){case"Numeric":e=M(t);break;case"Alphanumeric":e=x(t);break;case"Byte":e=m(t);break;case"Kanji":e=L(t);break;default:throw"mode:"+r}u.push(e),a=null},f.isDark=function(t,r){if(t<0||i<=t||r<0||i<=r)throw t+","+r;return o[t][r]},f.getModuleCount=function(){return i},f.make=function(){if(e<1){for(var t=1;t<40;t++){for(var r=A.getRSBlocks(t,n),o=b(),i=0;i<u.length;i++){var a=u[i];o.put(a.getMode(),4),o.put(a.getLength(),B.getLengthInBits(a.getMode(),t)),a.write(o)}var g=0;for(i=0;i<r.length;i++)g+=r[i].dataCount;if(o.getLengthInBits()<=8*g)break}e=t}c(!1,function(){for(var t=0,r=0,e=0;e<8;e+=1){c(!0,e);var n=B.getLostPoint(f);(0==e||t>n)&&(t=n,r=e)}return r}())},f.createTableTag=function(t,r){t=t||2;var e="";e+='<table style="',e+=" border-width: 0px; border-style: none;",e+=" border-collapse: collapse;",e+=" padding: 0px; margin: "+(r=void 0===r?4*t:r)+"px;",e+='">',e+="<tbody>";for(var n=0;n<f.getModuleCount();n+=1){e+="<tr>";for(var o=0;o<f.getModuleCount();o+=1)e+='<td style="',e+=" border-width: 0px; border-style: none;",e+=" border-collapse: collapse;",e+=" padding: 0px; margin: 0px;",e+=" width: "+t+"px;",e+=" height: "+t+"px;",e+=" background-color: ",e+=f.isDark(n,o)?"#000000":"#ffffff",e+=";",e+='"/>';e+="</tr>"}return e+="</tbody>",e+="</table>"},f.createSvgTag=function(t,r,e,n){var o={};"object"==typeof arguments[0]&&(t=(o=arguments[0]).cellSize,r=o.margin,e=o.alt,n=o.title),t=t||2,r=void 0===r?4*t:r,(e="string"==typeof e?{text:e}:e||{}).text=e.text||null,e.id=e.text?e.id||"qrcode-description":null,(n="string"==typeof n?{text:n}:n||{}).text=n.text||null,n.id=n.text?n.id||"qrcode-title":null;var i,a,u,c,g=f.getModuleCount()*t+2*r,l="";for(c="l"+t+",0 0,"+t+" -"+t+",0 0,-"+t+"z ",l+='<svg version="1.1" xmlns="http://www.w3.org/2000/svg"',l+=o.scalable?"":' width="'+g+'px" height="'+g+'px"',l+=' viewBox="0 0 '+g+" "+g+'" ',l+=' preserveAspectRatio="xMinYMin meet"',l+=n.text||e.text?' role="img" aria-labelledby="'+y([n.id,e.id].join(" ").trim())+'"':"",l+=">",l+=n.text?'<title id="'+y(n.id)+'">'+y(n.text)+"</title>":"",l+=e.text?'<description id="'+y(e.id)+'">'+y(e.text)+"</description>":"",l+='<rect width="100%" height="100%" fill="white" cx="0" cy="0"/>',l+='<path d="',a=0;a<f.getModuleCount();a+=1)for(u=a*t+r,i=0;i<f.getModuleCount();i+=1)f.isDark(a,i)&&(l+="M"+(i*t+r)+","+u+c);return l+='" stroke="transparent" fill="black"/>',l+="</svg>"},f.createDataURL=function(t,r){t=t||2,r=void 0===r?4*t:r;var e=f.getModuleCount()*t+2*r,n=r,o=e-r;return I(e,e,function(r,e){if(n<=r&&r<o&&n<=e&&e<o){var i=Math.floor((r-n)/t),a=Math.floor((e-n)/t);return f.isDark(a,i)?0:1}return 1})},f.createImgTag=function(t,r,e){t=t||2,r=void 0===r?4*t:r;var n=f.getModuleCount()*t+2*r,o="";return o+="<img",o+=' src="',o+=f.createDataURL(t,r),o+='"',o+=' width="',o+=n,o+='"',o+=' height="',o+=n,o+='"',e&&(o+=' alt="',o+=y(e),o+='"'),o+="/>"};var y=function(t){for(var r="",e=0;e<t.length;e+=1){var n=t.charAt(e);switch(n){case"<":r+="&lt;";break;case">":r+="&gt;";break;case"&":r+="&amp;";break;case'"':r+="&quot;";break;default:r+=n}}return r};return f.createASCII=function(t,r){if((t=t||1)<2)return function(t){t=void 0===t?2:t;var r,e,n,o,i,a=1*f.getModuleCount()+2*t,u=t,c=a-t,g={"██":"█","█ ":"▀"," █":"▄","  ":" "},l={"██":"▀","█ ":"▀"," █":" ","  ":" "},h="";for(r=0;r<a;r+=2){for(n=Math.floor((r-u)/1),o=Math.floor((r+1-u)/1),e=0;e<a;e+=1)i="█",u<=e&&e<c&&u<=r&&r<c&&f.isDark(n,Math.floor((e-u)/1))&&(i=" "),u<=e&&e<c&&u<=r+1&&r+1<c&&f.isDark(o,Math.floor((e-u)/1))?i+=" ":i+="█",h+=t<1&&r+1>=c?l[i]:g[i];h+="\n"}return a%2&&t>0?h.substring(0,h.length-a-1)+Array(a+1).join("▀"):h.substring(0,h.length-1)}(r);t-=1,r=void 0===r?2*t:r;var e,n,o,i,a=f.getModuleCount()*t+2*r,u=r,c=a-r,g=Array(t+1).join("██"),l=Array(t+1).join("  "),h="",s="";for(e=0;e<a;e+=1){for(o=Math.floor((e-u)/t),s="",n=0;n<a;n+=1)i=1,u<=n&&n<c&&u<=e&&e<c&&f.isDark(o,Math.floor((n-u)/t))&&(i=0),s+=i?g:l;for(o=0;o<t;o+=1)h+=s+"\n"}return h.substring(0,h.length-1)},f.renderTo2dContext=function(t,r){r=r||2;for(var e=f.getModuleCount(),n=0;n<e;n++)for(var o=0;o<e;o++)t.fillStyle=f.isDark(n,o)?"black":"white",t.fillRect(o*r,n*r,r,r)},f};t.stringToBytes=(t.stringToBytesFuncs={default:function(t){for(var r=[],e=0;e<t.length;e+=1){var n=t.charCodeAt(e);r.push(255&n)}return r}}).default,t.createStringToBytes=function(t,r){var e=function(){for(var e=S(t),n=function(){var t=e.read();if(-1==t)throw"eof";return t},o=0,i={};;){var a=e.read();if(-1==a)break;var u=n(),f=n()<<8|n();i[String.fromCharCode(a<<8|u)]=f,o+=1}if(o!=r)throw o+" != "+r;return i}(),n="?".charCodeAt(0);return function(t){for(var r=[],o=0;o<t.length;o+=1){var i=t.charCodeAt(o);if(i<128)r.push(i);else{var a=e[t.charAt(o)];"number"==typeof a?(255&a)==a?r.push(a):(r.push(a>>>8),r.push(255&a)):r.push(n)}}return r}};var r,e,n,o,i,a=1,u=2,f=4,c=8,g={L:1,M:0,Q:3,H:2},l=0,h=1,s=2,v=3,d=4,w=5,p=6,y=7,B=(r=[[],[6,18],[6,22],[6,26],[6,30],[6,34],[6,22,38],[6,24,42],[6,26,46],[6,28,50],[6,30,54],[6,32,58],[6,34,62],[6,26,46,66],[6,26,48,70],[6,26,50,74],[6,30,54,78],[6,30,56,82],[6,30,58,86],[6,34,62,90],[6,28,50,72,94],[6,26,50,74,98],[6,30,54,78,102],[6,28,54,80,106],[6,32,58,84,110],[6,30,58,86,114],[6,34,62,90,118],[6,26,50,74,98,122],[6,30,54,78,102,126],[6,26,52,78,104,130],[6,30,56,82,108,134],[6,34,60,86,112,138],[6,30,58,86,114,142],[6,34,62,90,118,146],[6,30,54,78,102,126,150],[6,24,50,76,102,128,154],[6,28,54,80,106,132,158],[6,32,58,84,110,136,162],[6,26,54,82,110,138,166],[6,30,58,86,114,142,170]],e=1335,n=7973,i=function(t){for(var r=0;0!=t;)r+=1,t>>>=1;return r},(o={}).getBCHTypeInfo=function(t){for(var r=t<<10;i(r)-i(e)>=0;)r^=e<<i(r)-i(e);return 21522^(t<<10|r)},o.getBCHTypeNumber=function(t){for(var r=t<<12;i(r)-i(n)>=0;)r^=n<<i(r)-i(n);return t<<12|r},o.getPatternPosition=function(t){return r[t-1]},o.getMaskFunction=function(t){switch(t){case l:return function(t,r){return(t+r)%2==0};case h:return function(t,r){return t%2==0};case s:return function(t,r){return r%3==0};case v:return function(t,r){return(t+r)%3==0};case d:return function(t,r){return(Math.floor(t/2)+Math.floor(r/3))%2==0};case w:return function(t,r){return t*r%2+t*r%3==0};case p:return function(t,r){return(t*r%2+t*r%3)%2==0};case y:return function(t,r){return(t*r%3+(t+r)%2)%2==0};default:throw"bad maskPattern:"+t}},o.getErrorCorrectPolynomial=function(t){for(var r=k([1],0),e=0;e<t;e+=1)r=r.multiply(k([1,C.gexp(e)],0));return r},o.getLengthInBits=function(t,r){if(1<=r&&r<10)switch(t){case a:return 10;case u:return 9;case f:case c:return 8;default:throw"mode:"+t}else if(r<27)switch(t){case a:return 12;case u:return 11;case f:return 16;case c:return 10;default:throw"mode:"+t}else{if(!(r<41))throw"type:"+r;switch(t){case a:return 14;case u:return 13;case f:return 16;case c:return 12;default:throw"mode:"+t}}},o.getLostPoint=function(t){for(var r=t.getModuleCount(),e=0,n=0;n<r;n+=1)for(var o=0;o<r;o+=1){for(var i=0,a=t.isDark(n,o),u=-1;u<=1;u+=1)if(!(n+u<0||r<=n+u))for(var f=-1;f<=1;f+=1)o+f<0||r<=o+f||0==u&&0==f||a==t.isDark(n+u,o+f)&&(i+=1);i>5&&(e+=3+i-5)}for(n=0;n<r-1;n+=1)for(o=0;o<r-1;o+=1){var c=0;t.isDark(n,o)&&(c+=1),t.isDark(n+1,o)&&(c+=1),t.isDark(n,o+1)&&(c+=1),t.isDark(n+1,o+1)&&(c+=1),0!=c&&4!=c||(e+=3)}for(n=0;n<r;n+=1)for(o=0;o<r-6;o+=1)t.isDark(n,o)&&!t.isDark(n,o+1)&&t.isDark(n,o+2)&&t.isDark(n,o+3)&&t.isDark(n,o+4)&&!t.isDark(n,o+5)&&t.isDark(n,o+6)&&(e+=40);for(o=0;o<r;o+=1)for(n=0;n<r-6;n+=1)t.isDark(n,o)&&!t.isDark(n+1,o)&&t.isDark(n+2,o)&&t.isDark(n+3,o)&&t.isDark(n+4,o)&&!t.isDark(n+5,o)&&t.isDark(n+6,o)&&(e+=40);var g=0;for(o=0;o<r;o+=1)for(n=0;n<r;n+=1)t.isDark(n,o)&&(g+=1);return e+=Math.abs(100*g/r/r-50)/5*10},o),C=function(){for(var t=new Array(256),r=new Array(256),e=0;e<8;e+=1)t[e]=1<<e;for(e=8;e<256;e+=1)t[e]=t[e-4]^t[e-5]^t[e-6]^t[e-8];for(e=0;e<255;e+=1)r[t[e]]=e;var n={glog:function(t){if(t<1)throw"glog("+t+")";return r[t]},gexp:function(r){for(;r<0;)r+=255;for(;r>=256;)r-=255;return t[r]}};return n}();function k(t,r){if(void 0===t.length)throw t.length+"/"+r;var e=function(){for(var e=0;e<t.length&&0==t[e];)e+=1;for(var n=new Array(t.length-e+r),o=0;o<t.length-e;o+=1)n[o]=t[o+e];return n}(),n={getAt:function(t){return e[t]},getLength:function(){return e.length},multiply:function(t){for(var r=new Array(n.getLength()+t.getLength()-1),e=0;e<n.getLength();e+=1)for(var o=0;o<t.getLength();o+=1)r[e+o]^=C.gexp(C.glog(n.getAt(e))+C.glog(t.getAt(o)));return k(r,0)},mod:function(t){if(n.getLength()-t.getLength()<0)return n;for(var r=C.glog(n.getAt(0))-C.glog(t.getAt(0)),e=new Array(n.getLength()),o=0;o<n.getLength();o+=1)e[o]=n.getAt(o);for(o=0;o<t.getLength();o+=1)e[o]^=C.gexp(C.glog(t.getAt(o))+r);return k(e,0).mod(t)}};return n}var A=function(){var t=[[1,26,19],[1,26,16],[1,26,13],[1,26,9],[1,44,34],[1,44,28],[1,44,22],[1,44,16],[1,70,55],[1,70,44],[2,35,17],[2,35,13],[1,100,80],[2,50,32],[2,50,24],[4,25,9],[1,134,108],[2,67,43],[2,33,15,2,34,16],[2,33,11,2,34,12],[2,86,68],[4,43,27],[4,43,19],[4,43,15],[2,98,78],[4,49,31],[2,32,14,4,33,15],[4,39,13,1,40,14],[2,121,97],[2,60,38,2,61,39],[4,40,18,2,41,19],[4,40,14,2,41,15],[2,146,116],[3,58,36,2,59,37],[4,36,16,4,37,17],[4,36,12,4,37,13],[2,86,68,2,87,69],[4,69,43,1,70,44],[6,43,19,2,44,20],[6,43,15,2,44,16],[4,101,81],[1,80,50,4,81,51],[4,50,22,4,51,23],[3,36,12,8,37,13],[2,116,92,2,117,93],[6,58,36,2,59,37],[4,46,20,6,47,21],[7,42,14,4,43,15],[4,133,107],[8,59,37,1,60,38],[8,44,20,4,45,21],[12,33,11,4,34,12],[3,145,115,1,146,116],[4,64,40,5,65,41],[11,36,16,5,37,17],[11,36,12,5,37,13],[5,109,87,1,110,88],[5,65,41,5,66,42],[5,54,24,7,55,25],[11,36,12,7,37,13],[5,122,98,1,123,99],[7,73,45,3,74,46],[15,43,19,2,44,20],[3,45,15,13,46,16],[1,135,107,5,136,108],[10,74,46,1,75,47],[1,50,22,15,51,23],[2,42,14,17,43,15],[5,150,120,1,151,121],[9,69,43,4,70,44],[17,50,22,1,51,23],[2,42,14,19,43,15],[3,141,113,4,142,114],[3,70,44,11,71,45],[17,47,21,4,48,22],[9,39,13,16,40,14],[3,135,107,5,136,108],[3,67,41,13,68,42],[15,54,24,5,55,25],[15,43,15,10,44,16],[4,144,116,4,145,117],[17,68,42],[17,50,22,6,51,23],[19,46,16,6,47,17],[2,139,111,7,140,112],[17,74,46],[7,54,24,16,55,25],[34,37,13],[4,151,121,5,152,122],[4,75,47,14,76,48],[11,54,24,14,55,25],[16,45,15,14,46,16],[6,147,117,4,148,118],[6,73,45,14,74,46],[11,54,24,16,55,25],[30,46,16,2,47,17],[8,132,106,4,133,107],[8,75,47,13,76,48],[7,54,24,22,55,25],[22,45,15,13,46,16],[10,142,114,2,143,115],[19,74,46,4,75,47],[28,50,22,6,51,23],[33,46,16,4,47,17],[8,152,122,4,153,123],[22,73,45,3,74,46],[8,53,23,26,54,24],[12,45,15,28,46,16],[3,147,117,10,148,118],[3,73,45,23,74,46],[4,54,24,31,55,25],[11,45,15,31,46,16],[7,146,116,7,147,117],[21,73,45,7,74,46],[1,53,23,37,54,24],[19,45,15,26,46,16],[5,145,115,10,146,116],[19,75,47,10,76,48],[15,54,24,25,55,25],[23,45,15,25,46,16],[13,145,115,3,146,116],[2,74,46,29,75,47],[42,54,24,1,55,25],[23,45,15,28,46,16],[17,145,115],[10,74,46,23,75,47],[10,54,24,35,55,25],[19,45,15,35,46,16],[17,145,115,1,146,116],[14,74,46,21,75,47],[29,54,24,19,55,25],[11,45,15,46,46,16],[13,145,115,6,146,116],[14,74,46,23,75,47],[44,54,24,7,55,25],[59,46,16,1,47,17],[12,151,121,7,152,122],[12,75,47,26,76,48],[39,54,24,14,55,25],[22,45,15,41,46,16],[6,151,121,14,152,122],[6,75,47,34,76,48],[46,54,24,10,55,25],[2,45,15,64,46,16],[17,152,122,4,153,123],[29,74,46,14,75,47],[49,54,24,10,55,25],[24,45,15,46,46,16],[4,152,122,18,153,123],[13,74,46,32,75,47],[48,54,24,14,55,25],[42,45,15,32,46,16],[20,147,117,4,148,118],[40,75,47,7,76,48],[43,54,24,22,55,25],[10,45,15,67,46,16],[19,148,118,6,149,119],[18,75,47,31,76,48],[34,54,24,34,55,25],[20,45,15,61,46,16]],r=function(t,r){var e={};return e.totalCount=t,e.dataCount=r,e},e={};return e.getRSBlocks=function(e,n){var o=function(r,e){switch(e){case g.L:return t[4*(r-1)+0];case g.M:return t[4*(r-1)+1];case g.Q:return t[4*(r-1)+2];case g.H:return t[4*(r-1)+3];default:return}}(e,n);if(void 0===o)throw"bad rs block @ typeNumber:"+e+"/errorCorrectionLevel:"+n;for(var i=o.length/3,a=[],u=0;u<i;u+=1)for(var f=o[3*u+0],c=o[3*u+1],l=o[3*u+2],h=0;h<f;h+=1)a.push(r(c,l));return a},e}(),b=function(){var t=[],r=0,e={getBuffer:function(){return t},getAt:function(r){var e=Math.floor(r/8);return 1==(t[e]>>>7-r%8&1)},put:function(t,r){for(var n=0;n<r;n+=1)e.putBit(1==(t>>>r-n-1&1))},getLengthInBits:function(){return r},putBit:function(e){var n=Math.floor(r/8);t.length<=n&&t.push(0),e&&(t[n]|=128>>>r%8),r+=1}};return e},M=function(t){var r=a,e=t,n={getMode:function(){return r},getLength:function(t){return e.length},write:function(t){for(var r=e,n=0;n+2<r.length;)t.put(o(r.substring(n,n+3)),10),n+=3;n<r.length&&(r.length-n==1?t.put(o(r.substring(n,n+1)),4):r.length-n==2&&t.put(o(r.substring(n,n+2)),7))}},o=function(t){for(var r=0,e=0;e<t.length;e+=1)r=10*r+i(t.charAt(e));return r},i=function(t){if("0"<=t&&t<="9")return t.charCodeAt(0)-"0".charCodeAt(0);throw"illegal char :"+t};return n},x=function(t){var r=u,e=t,n={getMode:function(){return r},getLength:function(t){return e.length},write:function(t){for(var r=e,n=0;n+1<r.length;)t.put(45*o(r.charAt(n))+o(r.charAt(n+1)),11),n+=2;n<r.length&&t.put(o(r.charAt(n)),6)}},o=function(t){if("0"<=t&&t<="9")return t.charCodeAt(0)-"0".charCodeAt(0);if("A"<=t&&t<="Z")return t.charCodeAt(0)-"A".charCodeAt(0)+10;switch(t){case" ":return 36;case"$":return 37;case"%":return 38;case"*":return 39;case"+":return 40;case"-":return 41;case".":return 42;case"/":return 43;case":":return 44;default:throw"illegal char :"+t}};return n},m=function(r){var e=f,n=t.stringToBytes(r),o={getMode:function(){return e},getLength:function(t){return n.length},write:function(t){for(var r=0;r<n.length;r+=1)t.put(n[r],8)}};return o},L=function(r){var e=c,n=t.stringToBytesFuncs.SJIS;if(!n)throw"sjis not supported.";!function(){var t=n("友");if(2!=t.length||38726!=(t[0]<<8|t[1]))throw"sjis not supported."}();var o=n(r),i={getMode:function(){return e},getLength:function(t){return~~(o.length/2)},write:function(t){for(var r=o,e=0;e+1<r.length;){var n=(255&r[e])<<8|255&r[e+1];if(33088<=n&&n<=40956)n-=33088;else{if(!(57408<=n&&n<=60351))throw"illegal char at "+(e+1)+"/"+n;n-=49472}n=192*(n>>>8&255)+(255&n),t.put(n,13),e+=2}if(e<r.length)throw"illegal char at "+(e+1)}};return i},D=function(){var t=[],r={writeByte:function(r){t.push(255&r)},writeShort:function(t){r.writeByte(t),r.writeByte(t>>>8)},writeBytes:function(t,e,n){e=e||0,n=n||t.length;for(var o=0;o<n;o+=1)r.writeByte(t[o+e])},writeString:function(t){for(var e=0;e<t.length;e+=1)r.writeByte(t.charCodeAt(e))},toByteArray:function(){return t},toString:function(){var r="";r+="[";for(var e=0;e<t.length;e+=1)e>0&&(r+=","),r+=t[e];return r+="]"}};return r},S=function(t){var r=t,e=0,n=0,o=0,i={read:function(){for(;o<8;){if(e>=r.length){if(0==o)return-1;throw"unexpected end of file./"+o}var t=r.charAt(e);if(e+=1,"="==t)return o=0,-1;t.match(/^\s$/)||(n=n<<6|a(t.charCodeAt(0)),o+=6)}var i=n>>>o-8&255;return o-=8,i}},a=function(t){if(65<=t&&t<=90)return t-65;if(97<=t&&t<=122)return t-97+26;if(48<=t&&t<=57)return t-48+52;if(43==t)return 62;if(47==t)return 63;throw"c:"+t};return i},I=function(t,r,e){for(var n=function(t,r){var e=t,n=r,o=new Array(t*r),i={setPixel:function(t,r,n){o[r*e+t]=n},write:function(t){t.writeString("GIF87a"),t.writeShort(e),t.writeShort(n),t.writeByte(128),t.writeByte(0),t.writeByte(0),t.writeByte(0),t.writeByte(0),t.writeByte(0),t.writeByte(255),t.writeByte(255),t.writeByte(255),t.writeString(","),t.writeShort(0),t.writeShort(0),t.writeShort(e),t.writeShort(n),t.writeByte(0);var r=a(2);t.writeByte(2);for(var o=0;r.length-o>255;)t.writeByte(255),t.writeBytes(r,o,255),o+=255;t.writeByte(r.length-o),t.writeBytes(r,o,r.length-o),t.writeByte(0),t.writeString(";")}},a=function(t){for(var r=1<<t,e=1+(1<<t),n=t+1,i=u(),a=0;a<r;a+=1)i.add(String.fromCharCode(a));i.add(String.fromCharCode(r)),i.add(String.fromCharCode(e));var f,c,g,l=D(),h=(f=l,c=0,g=0,{write:function(t,r){if(t>>>r!=0)throw"length over";for(;c+r>=8;)f.writeByte(255&(t<<c|g)),r-=8-c,t>>>=8-c,g=0,c=0;g|=t<<c,c+=r},flush:function(){c>0&&f.writeByte(g)}});h.write(r,n);var s=0,v=String.fromCharCode(o[s]);for(s+=1;s<o.length;){var d=String.fromCharCode(o[s]);s+=1,i.contains(v+d)?v+=d:(h.write(i.indexOf(v),n),i.size()<4095&&(i.size()==1<<n&&(n+=1),i.add(v+d)),v=d)}return h.write(i.indexOf(v),n),h.write(e,n),h.flush(),l.toByteArray()},u=function(){var t={},r=0,e={add:function(n){if(e.contains(n))throw"dup key:"+n;t[n]=r,r+=1},size:function(){return r},indexOf:function(r){return t[r]},contains:function(r){return void 0!==t[r]}};return e};return i}(t,r),o=0;o<r;o+=1)for(var i=0;i<t;i+=1)n.setPixel(i,o,e(i,o));var a=D();n.write(a);for(var u=function(){var t=0,r=0,e=0,n="",o={},i=function(t){n+=String.fromCharCode(a(63&t))},a=function(t){if(t<0);else{if(t<26)return 65+t;if(t<52)return t-26+97;if(t<62)return t-52+48;if(62==t)return 43;if(63==t)return 47}throw"n:"+t};return o.writeByte=function(n){for(t=t<<8|255&n,r+=8,e+=1;r>=6;)i(t>>>r-6),r-=6},o.flush=function(){if(r>0&&(i(t<<6-r),t=0,r=0),e%3!=0)for(var o=3-e%3,a=0;a<o;a+=1)n+="="},o.toString=function(){return n},o}(),f=a.toByteArray(),c=0;c<f.length;c+=1)u.writeByte(f[c]);return u.flush(),"data:image/gif;base64,"+u};return t}();qrcode.stringToBytesFuncs["UTF-8"]=function(t){return function(t){for(var r=[],e=0;e<t.length;e++){var n=t.charCodeAt(e);n<128?r.push(n):n<2048?r.push(192|n>>6,128|63&n):n<55296||n>=57344?r.push(224|n>>12,128|n>>6&63,128|63&n):(e++,n=65536+((1023&n)<<10|1023&t.charCodeAt(e)),r.push(240|n>>18,128|n>>12&63,128|n>>6&63,128|63&n))}return r}(t)},function(t){"function"==typeof define&&define.amd?define([],t):"object"==typeof exports&&(module.exports=t())}(function(){return qrcode});
+</script>
+<script>
+"use strict";
+/* ================= SÉCURITÉ ================= */
+// Échappe tout texte d'origine utilisateur ou importée avant injection en innerHTML.
+// Sans ça, un titre de partition (ou une sauvegarde partagée) pourrait injecter du HTML/script (XSS).
+function esc(s){
+  return String(s==null?"":s).replace(/[&<>"']/g,function(c){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c];
+  });
+}
+/* ================= DONNÉES ================= */
+const NOTES = {
+  do4 :{n:"do", clef:"sol", p:-2, midi:60, mn:"Le do du milieu est transpercé par sa petite ligne, rien qu'à lui."},
+  re4 :{n:"ré", clef:"sol", p:-1, midi:62, mn:"Collé juste sous la portée."},
+  mi4 :{n:"mi", clef:"sol", p:0,  midi:64, mn:"La portée commence en bas par MI, sur la 1ʳᵉ ligne."},
+  fa4 :{n:"fa", clef:"sol", p:1,  midi:65, mn:"Premier interligne, juste au-dessus du mi."},
+  sol4:{n:"sol",clef:"sol", p:2,  midi:67, mn:"La clé de sol s'enroule autour de la ligne 2 : tout ce qui la touche est SOL."},
+  la4 :{n:"la", clef:"sol", p:3,  midi:69, mn:"Juste au-dessus de la ligne de la clé."},
+  si4 :{n:"si", clef:"sol", p:4,  midi:71, mn:"La ligne du milieu, pile au centre."},
+  do5 :{n:"do", clef:"sol", p:5,  midi:72, mn:"3ᵉ interligne : après si, le cycle recommence à do."},
+  re5 :{n:"ré", clef:"sol", p:6,  midi:74, mn:"Posé SUR la 4ᵉ ligne."},
+  mi5 :{n:"mi", clef:"sol", p:7,  midi:76, mn:"Dernier interligne, tout en haut."},
+  fa5 :{n:"fa", clef:"sol", p:8,  midi:77, mn:"Sur la dernière ligne : la portée finit en FA."},
+  fa3 :{n:"fa", clef:"fa",  p:6,  midi:53, mn:"Entre les deux points de la clé de fa : c'est sa raison d'être."},
+  sol3:{n:"sol",clef:"fa",  p:7,  midi:55, mn:"Juste au-dessus de la ligne du fa."},
+  la3 :{n:"la", clef:"fa",  p:8,  midi:57, mn:"La ligne du haut en clé de fa."},
+  si3 :{n:"si", clef:"fa",  p:9,  midi:59, mn:"Juste au-dessus de la portée."},
+  do4f:{n:"do", clef:"fa",  p:10, midi:60, mn:"Petite ligne au-dessus de la portée : le MÊME do du milieu qu'en clé de sol."},
+  mi3 :{n:"mi", clef:"fa",  p:5,  midi:52, mn:"3ᵉ interligne, juste sous la ligne du fa."},
+  re3 :{n:"ré", clef:"fa",  p:4,  midi:50, mn:"En clé de fa, la ligne du MILIEU est ré."},
+  do3 :{n:"do", clef:"fa",  p:3,  midi:48, mn:"2ᵉ interligne : un do discret, au cœur de la main gauche."},
+  si2 :{n:"si", clef:"fa",  p:2,  midi:47, mn:"Posé sur la 2ᵉ ligne."},
+  la2 :{n:"la", clef:"fa",  p:1,  midi:45, mn:"1ᵉʳ interligne, tout en bas."},
+  sol2:{n:"sol",clef:"fa",  p:0,  midi:43, mn:"La 1ʳᵉ ligne de la clé de fa est SOL — comme la clé de sol, mais deux octaves plus bas."},
+  fa2 :{n:"fa", clef:"fa",  p:-1, midi:41, mn:"Collé sous la portée : le fa grave, écho du fa de la clé."}
+};
+function U(a,b){return a.concat(b);}
+const PALIERS = [
+  {id:"P1", t:"Sol · premières notes", sub:"sol, la, si",            notes:["sol4","la4","si4"]},
+  {id:"P2", t:"Sol · vers le haut",    sub:"+ do5, ré5",             notes:["sol4","la4","si4","do5","re5"]},
+  {id:"P3", t:"Sol · le sommet",       sub:"+ mi5, fa5",             notes:["sol4","la4","si4","do5","re5","mi5","fa5"]},
+  {id:"P4", t:"Sol · vers le bas",     sub:"+ mi4, fa4",             notes:["mi4","fa4","sol4","la4","si4","do5","re5","mi5","fa5"]},
+  {id:"P5", t:"Sol · octave complète", sub:"+ ré4, do4",             notes:["do4","re4","mi4","fa4","sol4","la4","si4","do5","re5","mi5","fa5"]},
+  {id:"P6", t:"Fa · premiers repères", sub:"fa3, sol3, la3",         notes:["fa3","sol3","la3"]},
+  {id:"P7", t:"Fa · jusqu'au do",      sub:"+ si3, do médian",       notes:["fa3","sol3","la3","si3","do4f"]},
+  {id:"P8", t:"Fa · la ligne du ré",   sub:"+ mi3, ré3",             notes:["re3","mi3","fa3","sol3","la3","si3","do4f"]},
+  {id:"P9", t:"Fa · vers le grave",    sub:"+ do3, si2",             notes:["si2","do3","re3","mi3","fa3","sol3","la3","si3","do4f"]},
+  {id:"P10",t:"Fa · octave grave",     sub:"+ la2, sol2, fa2",       notes:["fa2","sol2","la2","si2","do3","re3","mi3","fa3","sol3","la3","si3","do4f"]},
+  {id:"B1", t:"Boss · double regard",  sub:"deux clés, zone 1",      notes:U(["sol4","la4","si4"],["fa3","sol3","la3"])},
+  {id:"B2", t:"Boss · les deux do",    sub:"deux clés, zone 2",      notes:U(["sol4","la4","si4","do5","re5"],["fa3","sol3","la3","si3","do4f"])},
+  {id:"B3", t:"Boss · grand écart",    sub:"deux clés, zone 3",      notes:U(["sol4","la4","si4","do5","re5","mi5","fa5"],["re3","mi3","fa3","sol3","la3","si3","do4f"])},
+  {id:"B4", t:"Boss · presque tout",   sub:"deux clés, zone 4",      notes:U(["mi4","fa4","sol4","la4","si4","do5","re5","mi5","fa5"],["si2","do3","re3","mi3","fa3","sol3","la3","si3","do4f"])},
+  {id:"B5", t:"Examen · Les Deux Clés",sub:"tout l'ambitus",         notes:U(["do4","re4","mi4","fa4","sol4","la4","si4","do5","re5","mi5","fa5"],["fa2","sol2","la2","si2","do3","re3","mi3","fa3","sol3","la3","si3","do4f"])}
+];
+const CARDS = {
+  P1:{t:"La clé de sol est une lettre",x:"La clé de sol est un G (sol en notation anglo-saxonne) devenu décoratif au fil des siècles de copie. Sa boucle s'enroule autour de la ligne du sol : la clé ne décore pas, elle désigne.",s:"À vérifier : Grove Music, art. « Clef »."},
+  P2:{t:"Pourquoi « do ré mi » ?",x:"Vers l'an 1000, Guido d'Arezzo prend les premières syllabes d'un hymne latin, Ut queant laxis : ut, ré, mi, fa, sol, la. « Ut » deviendra « do ». Tu chantes ses syllabes depuis mille ans.",s:"À vérifier : Britannica, « Guido of Arezzo »."},
+  P3:{t:"Avant la portée, on devinait",x:"Avant la portée, des signes (neumes) indiquaient le geste mélodique, pas les notes exactes. Les lignes ont transformé un aide-mémoire en vraie écriture, lisible sans professeur.",s:"À vérifier : Grove, « Neume », « Staff »."},
+  P4:{t:"Mille ans de copies à la main",x:"Avant l'imprimerie musicale (fin du XVᵉ siècle), chaque partition était recopiée à la main, erreurs comprises. Les musicologues comparent les manuscrits pour retrouver le texte d'origine.",s:"À vérifier : Grove, « Music printing »."},
+  P5:{t:"Bach, l'arpenteur du clavier",x:"Dans Le Clavier bien tempéré, Bach compose deux fois 24 préludes et fugues : un couple dans chacune des 24 tonalités. Tout le territoire des tonalités, démontré au clavier.",s:"À vérifier : Grove, « Bach » ; BWV 846–893."},
+  P6:{t:"La clé de fa aussi est une lettre",x:"La clé de fa est un ancien F dont les deux points encadrent la ligne du fa. Les deux clés que tu lis sont des lettres déguisées qui pointent chacune une ligne de référence.",s:"À vérifier : Grove, « Clef »."},
+  P7:{t:"Le do du milieu, frontière des mains",x:"Le do médian s'écrit sous la portée en clé de sol, au-dessus en clé de fa. Même touche, deux écritures : la charnière où tes deux mains se rejoignent.",s:"À vérifier : Grove, « Middle C »."},
+  P10:{t:"Le piano est né d'un « et si ? »",x:"Vers 1700 à Florence, Cristofori remplace les sautereaux du clavecin par des marteaux : on peut enfin jouer piano et forte selon le toucher. D'où le nom de l'instrument.",s:"À vérifier : Britannica, « Bartolomeo Cristofori »."}
+};
+const CARDS_TIER = {
+  zen:{t:"Chopin, un hiver à Majorque",x:"Chopin achève ses 24 Préludes durant l'hiver 1838-39 à la chartreuse de Valldemossa, avec George Sand. Un prélude par tonalité : le tour complet du monde tonal — celui que tu viens de commencer.",s:"Vérifié : Grove « Chopin » ; G. Sand, Un hiver à Majorque (1842)."},
+  bronze:{t:"Glass fait ses gammes, comme toi",x:"Philip Glass a écrit ses études pour piano (1991-2012) avec un double but : explorer des textures, et améliorer son propre jeu. Même les grands composent leurs exercices. Tes séries chronométrées sont tes études.",s:"Vérifié : préface éd. 2014 ; classical-music.com ; laphil.com."},
+  argent:{t:"Interstellar : une lettre d'une page",x:"Nolan remet à Zimmer une page unique — une fable sur la paternité — sans révéler le film. « Écris une journée. » Le morceau piano-orgue qui en sort devient le cœur de la partition.",s:"Vérifié : The Hollywood Reporter ; IndieWire."},
+  vermeil:{t:"Le vermeil, entre argent et or",x:"Le vermeil n'est pas un métal : c'est de l'argent massif recouvert d'or. Plus précieux que l'argent, pas encore l'or — exactement la marche où tu te tiens. Encore un effort.",s:"Fait général vérifiable (orfèvrerie)."},
+  or:{t:"Oppenheimer : le violon de la famille",x:"Pour Oppenheimer, Nolan suggère le violon. Göransson écrit pour sa femme, la violoniste Serena Göransson, qui enregistre de nuit. Oscar 2024 de la meilleure musique. La précision, ça se travaille en famille.",s:"Vérifié : Variety ; Academy ; ClassicFM."},
+  rhodium:{t:"Rhodium : plus rare que l'or",x:"Le rhodium est l'un des métaux précieux les plus rares et les plus chers au monde — au-dessus de l'or. Lire six notes en six secondes sans erreur, c'est exactement ça : du rhodium.",s:"Fait général vérifiable (métaux précieux)."}
+};
+const NAMES=["do","ré","mi","fa","sol","la","si"];
+const RAFALE_S=20;
+const DAY_MS=864e5;
+const PROFILE_AFFINITIES=[
+  {id:"classique",label:"Classique"},
+  {id:"cinema",label:"Musique de film"},
+  {id:"jazz",label:"Jazz"},
+  {id:"electro",label:"Électro"},
+  {id:"chanson",label:"Chanson"}
+];
+const PROFILE_ASPIRATIONS=[
+  {id:"interprete",label:"Interprète"},
+  {id:"compositeur",label:"Compositeur"},
+  {id:"impro",label:"Improvisateur"},
+  {id:"curieux",label:"Explorateur"}
+];
+const MUSIC_MIRRORS=[
+  {id:"mozart",aff:["classique"],asp:["compositeur","interprete"],t:"Mozart, version concentrée",x:"Aujourd'hui tu avances par petites touches rapides. Ça rappelle Mozart enfant : beaucoup de musique absorbée très tôt, beaucoup de réflexes, et une vitesse qui ne vaut que si l'oreille reste claire.",s:"Clin d'œil historique : Mozart compose et joue très jeune."},
+  {id:"bach",aff:["classique"],asp:["interprete","compositeur"],t:"Bach, l'artisan régulier",x:"Ton meilleur allié aujourd'hui, c'est la régularité. Bach recopiait, transformait, révisait : pas du spectaculaire, du métier. Tu construis exactement ce genre de solidité.",s:"Clin d'œil : Bach travaille l'écriture comme un artisan du contrepoint."},
+  {id:"clara",aff:["classique"],asp:["interprete"],t:"Clara Schumann, précision et présence",x:"Tu joues comme quelqu'un qui cherche la netteté avant l'effet. Clara Schumann était admirée pour cette autorité calme : une note bien lue vaut mieux qu'une note précipitée.",s:"Clin d'œil : Clara Schumann fut une immense pianiste du XIXe siècle."},
+  {id:"ravel",aff:["classique","cinema"],asp:["compositeur","curieux"],t:"Ravel, l'horloger des couleurs",x:"Ta séance a un côté minutieux. Ravel aimait les mécanismes fins, les couleurs exactes, les engrenages qui brillent. Aujourd'hui, ton solfège polit les rouages.",s:"Clin d'œil : Ravel est souvent associé à l'orchestration précise."},
+  {id:"debussy",aff:["classique"],asp:["curieux","compositeur"],t:"Debussy, oreille en aquarelle",x:"Tu n'es pas seulement en train de reconnaître des notes : tu ouvres des couleurs. Debussy aurait probablement approuvé ce flou positif où une lecture devient une sensation.",s:"Clin d'œil : Debussy renouvelle la couleur harmonique française."},
+  {id:"monk",aff:["jazz"],asp:["impro","curieux"],t:"Thelonious Monk, angle assumé",x:"Si une note t'a surpris, garde-la. Monk savait faire d'un angle bizarre une signature. Aujourd'hui, tes erreurs ne sont pas des murs : ce sont des endroits à écouter deux fois.",s:"Clin d'œil : Monk transforme les décalages en langage."},
+  {id:"glass",aff:["electro","classique"],asp:["compositeur","interprete"],t:"Philip Glass, motifs en boucle",x:"Tu répètes, et la répétition commence à devenir musique. Glass a bâti beaucoup de tension avec des cellules simples qui reviennent. Ton calendrier fait pareil : une petite cellule par jour.",s:"Clin d'œil : Glass a aussi écrit des études pour travailler son jeu."},
+  {id:"williams",aff:["cinema"],asp:["compositeur","curieux"],t:"John Williams, motif qui s'accroche",x:"Aujourd'hui, cherche le thème minuscule : une note fragile, un intervalle, une main qui hésite. Williams sait qu'un motif clair peut porter tout un monde.",s:"Clin d'œil : Williams construit souvent des thèmes très mémorisables."},
+  {id:"boulanger",aff:["classique","jazz","cinema"],asp:["compositeur","curieux"],t:"Nadia Boulanger, exigence bienveillante",x:"Tu es dans une journée de construction. Boulanger formait des musiciens très différents avec la même idée : entendre juste, comprendre mieux, recommencer proprement.",s:"Clin d'œil : Nadia Boulanger a formé de nombreux compositeurs du XXe siècle."},
+  {id:"katebush",aff:["chanson","electro"],asp:["interprete","compositeur"],t:"Kate Bush, théâtre intérieur",x:"Ta progression a un côté scène intérieure : on répète, on affine, puis quelque chose devient expressif. Même une gamme peut devenir un personnage si tu l'écoutes vraiment.",s:"Clin d'œil : Kate Bush mêle écriture, voix, danse et production."}
+];
+/* ===== Altérations & clavier (pures, sans DOM — testées) ===== */
+// Noms français par classe de hauteur. Touches noires = deux orthographes (enharmonie).
+const PC_NAMES={0:["do"],1:["do♯","ré♭"],2:["ré"],3:["ré♯","mi♭"],4:["mi"],5:["fa"],
+  6:["fa♯","sol♭"],7:["sol"],8:["sol♯","la♭"],9:["la"],10:["la♯","si♭"],11:["si"]};
+const WHITE_PC=[0,2,4,5,7,9,11];
+function pcOf(midi){return ((midi%12)+12)%12;}
+function isWhite(midi){return WHITE_PC.indexOf(pcOf(midi))>=0;}
+// pc autorisées au dièse / au bémol (on évite mi♯, si♯, do♭, fa♭ — inhabituels pour un débutant)
+const SHARP_OK=[0,2,5,7,9], FLAT_OK=[2,4,7,9,11];
+function buildKeyboard(lo,hi){ const k=[]; for(let m=lo;m<=hi;m++) k.push({midi:m,pc:pcOf(m),white:isWhite(m)}); return k; }
+// Objet-note pour la portée à partir d'un id du dictionnaire NOTES.
+function baseNoteObj(id){ const nt=NOTES[id]; return {id:id,clef:nt.clef,p:nt.p,acc:null,midi:nt.midi,name:nt.n}; }
+// Applique une altération (renvoie un nouvel objet ; midi décalé d'un demi-ton, position et lettre inchangées).
+function withAcc(o,type){
+  const r=Object.assign({},o);
+  if(type==="diese"){ r.acc="♯"; r.midi=o.midi+1; r.id=null; }
+  else if(type==="bemol"){ r.acc="♭"; r.midi=o.midi-1; r.id=null; }
+  return r;
+}
+// Ambitus clavier par clé (calé sur les notes réellement enseignées dans NOTES).
+function kbdRangeFor(clef){ return clef==="fa"?[41,60]:[60,77]; } // fa: fa2–do4 · sol: do4–fa5
+function clefNoteIds(clef){ return Object.keys(NOTES).filter(function(id){return NOTES[id].clef===clef;}); }
+// Choisit une cible (avec ou sans altération) dans une plage. Pur : déterministe si rnd fourni.
+function pickKbdTarget(clef,allowAcc,prevMidi,rnd){
+  rnd=rnd||Math.random;
+  const range=kbdRangeFor(clef), ids=clefNoteIds(clef);
+  let tries=0, o;
+  do{
+    o=baseNoteObj(ids[Math.floor(rnd()*ids.length)]);
+    if(allowAcc && rnd()<0.45){
+      const canSharp=SHARP_OK.indexOf(pcOf(o.midi))>=0 && o.midi+1<=range[1];
+      const canFlat =FLAT_OK.indexOf(pcOf(o.midi))>=0 && o.midi-1>=range[0];
+      if(canSharp && (!canFlat || rnd()<0.5)) o=withAcc(o,"diese");
+      else if(canFlat) o=withAcc(o,"bemol");
+    }
+    tries++;
+  } while(o.midi===prevMidi && tries<8);
+  return o;
+}
+// 4 propositions de noms (classes de hauteur) autour d'une cible, pour l'exercice touche→note.
+function nameOptions(targetMidi,rnd){
+  rnd=rnd||Math.random;
+  const tpc=pcOf(targetMidi), set={}; set[tpc]=1;
+  const order=[]; for(let d=1;d<=6 && order.length<6;d++){ order.push((tpc+d)%12); order.push((tpc+12-d)%12); }
+  for(let i=0;i<order.length && Object.keys(set).length<4;i++) set[order[i]]=1;
+  const arr=Object.keys(set).map(Number);
+  // mélange déterministe léger
+  for(let i=arr.length-1;i>0;i--){ const j=Math.floor(rnd()*(i+1)); const t=arr[i];arr[i]=arr[j];arr[j]=t; }
+  return arr.map(function(pc){ return {pc:pc,label:PC_NAMES[pc].join(" / "),correct:pc===tpc}; });
+}
+// Échelle des niveaux (specs Youcef). n = taille du groupe, ms = temps PAR note.
+const TIERS=[
+  {id:"zen",     label:"Zen",         n:1, ms:null, xp:30},
+  {id:"bronze",  label:"Bronze",      n:2, ms:5000, xp:40},
+  {id:"argent",  label:"Argent",      n:3, ms:4000, xp:50},
+  {id:"vermeil", label:"Vermeil",     n:4, ms:3000, xp:60},
+  {id:"or",      label:"Or",          n:5, ms:2000, xp:80},
+  {id:"rhodium", label:"Rhodium",     n:6, ms:1000, xp:100},
+  {id:"diamantbleu", label:"Diamant Bleu", future:true},
+  {id:"jadeite",     label:"Jadéite",      future:true},
+  {id:"diamantrose", label:"Diamant Rose", future:true},
+  {id:"etoile1", label:"Étoile",    future:true},
+  {id:"etoile2", label:"2 Étoiles", future:true},
+  {id:"etoile3", label:"3 Étoiles", future:true},
+  {id:"etoile4", label:"4 Étoiles", future:true},
+  {id:"etoile5", label:"5 Étoiles", future:true}
+];
+const TIER_IDS=TIERS.map(function(t){return t.id;});
+function tierDef(id){return TIERS.find(function(t){return t.id===id;});}
+const ECRIT_RATIO=0.3; // écriture seulement en Zen / Libre
+
+/* ================= ÉTAT ================= */
+function dateKey(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
+function todayStr(){return dateKey(new Date());}
+function parseDayKey(k){const p=String(k).split("-").map(Number);return new Date(p[0],p[1]-1,p[2]);}
+function addDays(d,n){const x=new Date(d.getFullYear(),d.getMonth(),d.getDate());x.setDate(x.getDate()+n);return x;}
+let DB=null;
+function freshStar(){ return {level:0,started:false,due:0,firstAt:0}; }
+function freshPalierState(){
+  const o={bestRafale:0, star:freshStar()};
+  TIER_IDS.forEach(function(t){o[t]={series:[],ok:false};});
+  return o;
+}
+function clampInt(v,min,max,def){
+  v=Number(v);
+  if(!Number.isFinite(v)) return def;
+  return Math.max(min,Math.min(max,Math.round(v)));
+}
+function cleanText(v,max,def){
+  v=String(v==null?(def||""):v).replace(/\s+/g," ").trim();
+  if(!v && def) v=def;
+  if(max && v.length>max) v=v.slice(0,max).trim();
+  return v;
+}
+function cleanId(v,prefix){
+  v=String(v==null?"":v).replace(/[^a-zA-Z0-9_-]/g,"").slice(0,48);
+  return v || (prefix+Date.now()+Math.floor(Math.random()*1000));
+}
+function normalizeQuestion(q){
+  if(!q||typeof q!=="object") return null;
+  const text=cleanText(q.q||q.question,160,"");
+  const raw=Array.isArray(q.choix)?q.choix:(Array.isArray(q.choices)?q.choices:[]);
+  const choix=raw.map(function(c){return cleanText(c,80,"");}).filter(Boolean).slice(0,6);
+  const rep=clampInt(q.rep!==undefined?q.rep:q.answer,0,choix.length-1,-1);
+  if(!text||choix.length<2||rep<0) return null;
+  return {q:text,choix:choix,rep:rep};
+}
+function normalizePiece(p,idx){
+  if(!p||typeof p!=="object") return null;
+  const titre=cleanText(p.titre||p.title,80,"Partition importée");
+  const q=(Array.isArray(p.q)?p.q:[]).map(normalizeQuestion).filter(Boolean).slice(0,24);
+  return {
+    id:cleanId(p.id,"u"),
+    titre:titre,
+    compositeur:cleanText(p.compositeur||p.composer||p.author,80,"(perso)"),
+    clef:["sol","fa","deux"].indexOf(p.clef)>=0?p.clef:"sol",
+    key:cleanText(p.key||p.tonalite,40,""),
+    pd:!!p.pd,
+    info:cleanText(p.info||p.description,240,"Partition perso — fais ton premier regard sur ta copie."),
+    q:q
+  };
+}
+function normalizeDay(d){
+  if(!d||typeof d!=="object") d={};
+  return {
+    series:clampInt(d.series,0,999,0),
+    rafales:clampInt(d.rafales,0,999,0),
+    clavier:clampInt(d.clavier,0,999,0),
+    revisions:clampInt(d.revisions,0,999,0),
+    perfect:!!d.perfect,
+    xp:clampInt(d.xp,0,99999,0),
+    last:clampInt(d.last,0,Number.MAX_SAFE_INTEGER,0)
+  };
+}
+function ensureStructure(db){
+  if(!db||typeof db!=="object"||Array.isArray(db)) db={};
+  if(db.sound===undefined) db.sound=true;
+  if(db.soundLong===undefined) db.soundLong=true;
+  if(db.haptic===undefined) db.haptic=true;
+  if(!db.seen) db.seen={};
+  if(!Array.isArray(db.pieces)) db.pieces=[];
+  db.pieces=db.pieces.map(normalizePiece).filter(Boolean).slice(0,80); // partitions ajoutées par le joueur, normalisées après import douteux
+  if(!db.sel) db.sel="P1";
+  if(!db.xp) db.xp=0;
+  if(!db.noteStats) db.noteStats={};
+  if(!db.days) db.days={};
+  Object.keys(db.days).forEach(function(k){
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(k)) delete db.days[k];
+    else db.days[k]=normalizeDay(db.days[k]);
+  });
+  if(!db.events) db.events=[]; // journal d'événements (télémétrie locale)
+  if(!db.kbdStats) db.kbdStats={total:0,ok:0,byPc:{}};
+  db.kbdStats.total=clampInt(db.kbdStats.total,0,999999,0);
+  db.kbdStats.ok=clampInt(db.kbdStats.ok,0,999999,0);
+  if(!db.kbdStats.byPc||typeof db.kbdStats.byPc!=="object") db.kbdStats.byPc={};
+  if(!db.profile||typeof db.profile!=="object") db.profile={};
+  if(!PROFILE_AFFINITIES.find(function(x){return x.id===db.profile.affinity;})) db.profile.affinity="classique";
+  if(!PROFILE_ASPIRATIONS.find(function(x){return x.id===db.profile.aspiration;})) db.profile.aspiration="interprete";
+  if(!db.paliers) db.paliers={};
+  // anciens noms de paliers : P8 (boss deux clés v3) devient B5
+  if(db.paliers.P8 && !db.paliers.B5 && db.v && db.v<4){ db.paliers.B5=db.paliers.P8; delete db.paliers.P8; }
+  PALIERS.forEach(function(p){
+    const old=db.paliers[p.id];
+    if(!old){ db.paliers[p.id]=freshPalierState(); return; }
+    let base=old;
+    if(old.series!==undefined && old.bronze===undefined){ // v1
+      base=freshPalierState();
+      base.zen.series=old.series||[]; base.zen.ok=!!old.validated;
+      base.bestRafale=old.bestRafale||0;
+    } else if(old.bronze!==undefined && old.debutant===undefined && old.zen===undefined){ // v2
+      base=freshPalierState();
+      base.zen=old.bronze||{series:[],ok:false};
+      base.bronze=old.argent||{series:[],ok:false};
+      base.argent=old.or||{series:[],ok:false};
+      base.bestRafale=old.bestRafale||0;
+    } else if(old.debutant!==undefined){ // v3
+      base=freshPalierState();
+      base.zen=old.debutant; base.bronze=old.bronze||base.bronze;
+      base.argent=old.argent||base.argent; base.or=old.or||base.or;
+      base.rhodium=old.rhodium||base.rhodium;
+      base.bestRafale=old.bestRafale||0;
+    } else {
+      TIER_IDS.forEach(function(t){ if(!base[t]) base[t]={series:[],ok:false}; });
+      if(base.bestRafale===undefined) base.bestRafale=0;
+    }
+    db.paliers[p.id]=base;
+  });
+  PALIERS.forEach(function(p){ const st=db.paliers[p.id]; if(st && !st.star) st.star=freshStar(); }); // étoiles
+  const modeMap={hors:"libre",debutant:"zen",bronze:"bronze",argent:"argent",or:"or",rhodium:"rhodium"};
+  if(db.v && db.v<4 && modeMap[db.mode]) db.mode=modeMap[db.mode];
+  if(!db.mode||(db.mode!=="libre"&&TIER_IDS.indexOf(db.mode)<0)) db.mode="zen";
+  if(db.mode!=="libre" && tierDef(db.mode) && tierDef(db.mode).future) db.mode="zen";
+  if(!PALIERS.find(function(p){return p.id===db.sel;})) db.sel="P1";
+  db.v=5;
+  return db;
+}
+const LS_KEY="solfegeProto1", LS_MIRROR="solfegeProto1_mirror", LS_PREIMPORT="solfegeProto1_preimport", LS_CHECKPOINT="solfegeProto1_checkpoint";
+let saveFailed=false;
+function readKey(k){ try{ const s=localStorage.getItem(k); return s?JSON.parse(s):null; }catch(e){ return null; } }
+/* ---- Miroir IndexedDB : filet supplémentaire quand localStorage est purgé (iOS/ménage navigateur) ---- */
+const IDB_NAME="soladoBackup", IDB_STORE="kv";
+function idbOpen(cb){
+  try{
+    if(typeof indexedDB==="undefined"){ cb(null); return; }
+    const rq=indexedDB.open(IDB_NAME,1);
+    rq.onupgradeneeded=function(){ try{ rq.result.createObjectStore(IDB_STORE); }catch(e){} };
+    rq.onsuccess=function(){ cb(rq.result); };
+    rq.onerror=function(){ cb(null); };
+  }catch(e){ cb(null); }
+}
+function idbSave(str){
+  idbOpen(function(db){
+    if(!db) return;
+    try{ db.transaction(IDB_STORE,"readwrite").objectStore(IDB_STORE).put(str,"save"); }catch(e){}
+  });
+}
+function idbLoad(cb){
+  idbOpen(function(db){
+    if(!db){ cb(null); return; }
+    try{
+      const rq=db.transaction(IDB_STORE,"readonly").objectStore(IDB_STORE).get("save");
+      rq.onsuccess=function(){ cb(rq.result||null); };
+      rq.onerror=function(){ cb(null); };
+    }catch(e){ cb(null); }
+  });
+}
+// Si l'app démarre vierge alors que le miroir IndexedDB contient une progression : on restaure.
+function idbRescue(){
+  if(activeDayKeys().length || (DB.xp||0)>0) return; // une progression locale existe déjà
+  idbLoad(function(str){
+    if(!str) return;
+    let obj=null; try{ obj=JSON.parse(str); }catch(e){ return; }
+    if(!obj||typeof obj!=="object"||!obj.paliers) return;
+    const cand=ensureStructure(obj);
+    if(!(cand.xp||0) && !Object.keys(cand.days||{}).length) return;
+    DB=cand; save(); renderHome();
+    logEvent("idb_rescue",{xp:DB.xp});
+    $("cardBox").innerHTML='<h3>Sauvegarde de secours</h3><h2>Progression retrouvée</h2>'+
+      '<p>Le stockage principal était vide — ta progression a été restaurée depuis la copie de secours interne ('+(DB.xp||0)+' XP).</p>'+
+      '<p class="src">Pense aussi à exporter de temps en temps : Stats & sauvegarde → Copier ou Télécharger.</p>'+
+      '<button onclick="document.getElementById(\'overlay\').classList.remove(\'on\')">Continuer</button>';
+    $("overlay").classList.add("on");
+  });
+}
+function logEvent(type,data){
+  if(!DB) return;
+  if(!DB.events) DB.events=[];
+  DB.events.push(Object.assign({t:Date.now(),type:type},data||{}));
+  if(DB.events.length>500) DB.events=DB.events.slice(-500); // journal capé
+}
+function saveBanner(show){
+  let b=document.getElementById("saveWarn");
+  if(show && !b){
+    b=document.createElement("div"); b.id="saveWarn";
+    b.style.cssText="position:fixed;left:0;right:0;bottom:0;background:#7a1d24;color:#fff;font-size:12.5px;padding:9px 12px;text-align:center;z-index:50;line-height:1.35";
+    b.textContent="⚠ Sauvegarde impossible sur cet appareil. Va dans Stats et exporte ta progression pour ne rien perdre.";
+    document.body.appendChild(b);
+  } else if(!show && b){ b.remove(); }
+}
+function load(){
+  if(navigator.storage && navigator.storage.persist){ try{ navigator.storage.persist(); }catch(e){} }
+  const raw=readKey(LS_KEY)||readKey(LS_MIRROR)||readKey(LS_CHECKPOINT); // bascule sur les miroirs si le primaire est illisible
+  DB=ensureStructure(raw||{});
+  const dk=activeDayKeys();
+  if(dk.length){
+    const gap=Math.round((Date.now()-new Date(dk[dk.length-1]+"T00:00:00").getTime())/864e5);
+    if(gap>=5) logEvent("retour_apres_pause",{gapJours:gap});
+  }
+  logEvent("ouverture",{});
+  save();
+}
+function save(){
+  let str;
+  try{ str=JSON.stringify(DB); }catch(e){ saveFailed=true; saveBanner(true); return false; }
+  let ok=false;
+  try{ localStorage.setItem(LS_KEY,str); ok=true; }catch(e){}
+  try{ localStorage.setItem(LS_MIRROR,str); }catch(e){} // écriture redondante
+  try{
+    const prev=readKey(LS_CHECKPOINT);
+    const pd=prev?Object.keys(prev.days||{}).length:0, nd=activeDayKeys().length, px=prev?(prev.xp||0):0, nx=DB.xp||0;
+    // On n'écrase le checkpoint que si l'état n'est PAS strictement moins bon (jamais un vide par-dessus une progression).
+    if(!prev || nx>px || nd>pd || (nx>=px && nd>=pd))
+      localStorage.setItem(LS_CHECKPOINT,str);
+  }catch(e){} // troisième filet : dernier meilleur état connu
+  idbSave(str); // quatrième filet : IndexedDB (asynchrone, sans blocage)
+  saveFailed=!ok; saveBanner(!ok);
+  return ok;
+}
+/* Code de secours courant : dernier palier validé en Zen, au format accepté par Restaurer (ex. P4+). */
+function currentRecoveryCode(){
+  let last=-1;
+  for(let i=0;i<PALIERS.length;i++){
+    const st=DB.paliers[PALIERS[i].id];
+    if(st && st.zen && st.zen.ok) last=i; else break;
+  }
+  return last>=0 ? PALIERS[last].id+"+" : null;
+}
+function renderResCode(){
+  const c=currentRecoveryCode();
+  $("resCode").innerHTML = c
+    ? 'Code de secours : <b style="color:var(--gold)">'+esc(c)+'</b> — note-le quelque part ; tapé dans Restaurer, il redonne ta progression sur n\'importe quel appareil.'
+    : '';
+}
+
+/* ---- progression ---- */
+function tierComplete(tid){
+  return PALIERS.every(function(p){return DB.paliers[p.id][tid].ok;});
+}
+function tierUnlocked(tid){
+  const td=tierDef(tid);
+  if(!td||td.future) return false; // gemmes & étoiles : mécaniques à valider
+  const i=TIER_IDS.indexOf(tid);
+  if(i<=0) return true;
+  return tierComplete(TIER_IDS[i-1]);
+}
+function palierPlayable(pid,tid){
+  if(!tierUnlocked(tid)) return false;
+  const i=PALIERS.findIndex(function(p){return p.id===pid;});
+  if(i===0) return true;
+  return DB.paliers[PALIERS[i-1].id][tid].ok;
+}
+function playableInMode(pid,mode){
+  return mode==="libre" ? palierPlayable(pid,"zen") : palierPlayable(pid,mode);
+}
+// Brume : visibles = paliers découverts (jouables en Zen) + UNE série mystère
+function visiblePaliers(){
+  const out=[]; let mysteryShown=false;
+  for(let i=0;i<PALIERS.length;i++){
+    const p=PALIERS[i];
+    if(palierPlayable(p.id,"zen")) out.push({p:p,mystery:false});
+    else { out.push({p:p,mystery:true}); mysteryShown=true; break; }
+  }
+  return out;
+}
+function checkValidation(seriesArr){
+  const l3=seriesArr.slice(-3);
+  if(l3.length===3 && l3.reduce(function(a,x){return a+x.e;},0)<=1) return true;
+  const week=Date.now()-7*864e5;
+  const l5=seriesArr.slice(-5).filter(function(x){return x.ts>=week;});
+  if(l5.length===5 && l5.reduce(function(a,x){return a+x.e;},0)<=2) return true;
+  return false;
+}
+function valProgress(pid,tid){
+  const m=DB.paliers[pid][tid];
+  if(m.ok) return "Validé ✓";
+  const s=m.series;
+  if(!s.length) return "0/3 séries propres";
+  let k=0,err=0;
+  for(let i=s.length-1;i>=0 && k<3;i--){ if(err+s[i].e<=1){err+=s[i].e;k++;} else break; }
+  return k+"/3 séries propres";
+}
+function dayActive(d){ return !!(d && ((d.series||0)+(d.rafales||0)+(d.clavier||0)+(d.revisions||0)>0 || d.perfect)); }
+function activeDayKeys(){
+  return Object.keys(DB.days||{}).filter(function(k){return dayActive(DB.days[k]);}).sort();
+}
+function streak(){
+  let n=0;let d=new Date();
+  if(!dayActive(DB.days[todayStr()])) d=addDays(d,-1);
+  for(;;){
+    const k=dateKey(d);
+    if(dayActive(DB.days[k])){n++;d=addDays(d,-1);}else break;
+  }
+  return n;
+}
+function longestStreak(){
+  const keys=activeDayKeys();
+  let best=0,cur=0,prev=null;
+  keys.forEach(function(k){
+    const d=parseDayKey(k);
+    cur=(prev && Math.round((d-prev)/DAY_MS)===1)?cur+1:1;
+    best=Math.max(best,cur); prev=d;
+  });
+  return best;
+}
+function weekKey(d){
+  const x=new Date(d.getFullYear(),d.getMonth(),d.getDate());
+  const day=(x.getDay()+6)%7;
+  x.setDate(x.getDate()-day);
+  return dateKey(x);
+}
+function weekStats(){
+  const weeks={};
+  activeDayKeys().forEach(function(k){ const wk=weekKey(parseDayKey(k)); weeks[wk]=(weeks[wk]||0)+1; });
+  const complete=Object.keys(weeks).filter(function(k){return weeks[k]>=3;}).sort();
+  let cur=0,anchor=weekKey(new Date());
+  if(complete.indexOf(anchor)<0) anchor=weekKey(addDays(new Date(),-7));
+  let d=parseDayKey(anchor);
+  for(;;){
+    const k=dateKey(d);
+    if(complete.indexOf(k)>=0){cur++; d=addDays(d,-7);}else break;
+  }
+  return {weeks:weeks,complete:complete,current:cur};
+}
+function markDay(kind,deltaXp){
+  const t=todayStr();
+  if(!DB.days[t]) DB.days[t]=normalizeDay({});
+  const d=normalizeDay(DB.days[t]);
+  kind=kind||"serie";
+  if(kind==="clavier") d.clavier++;
+  else if(kind==="rafale") d.rafales++;
+  else if(kind==="revision") d.revisions++;
+  else d.series++;
+  d.xp+=clampInt(deltaXp,0,9999,0);
+  d.last=Date.now();
+  DB.days[t]=d;
+}
+function practiceTotals(){
+  const out={days:0,series:0,rafales:0,clavier:0,revisions:0,perfect:0};
+  Object.keys(DB.days||{}).forEach(function(k){
+    const d=DB.days[k];
+    if(dayActive(d)) out.days++;
+    out.series+=d.series||0; out.rafales+=d.rafales||0; out.clavier+=d.clavier||0; out.revisions+=d.revisions||0;
+    if(d.perfect) out.perfect++;
+  });
+  return out;
+}
+function trophyDefs(){
+  const totals=practiceTotals(), ws=weekStats(), st=streak(), best=longestStreak();
+  const kbd=DB.kbdStats||{total:0,ok:0};
+  return [
+    {id:"first",ico:"✓",t:"Premier jour",s:"mise en route",on:totals.days>=1},
+    {id:"streak3",ico:"3",t:"3 jours",s:"élan",on:st>=3||best>=3},
+    {id:"streak10",ico:"10",t:"10 jours",s:"suite claire",on:st>=10||best>=10},
+    {id:"weeks4",ico:"4S",t:"4 semaines",s:"rythme installé",on:ws.current>=4},
+    {id:"perfect",ico:"★",t:"Défi parfait",s:"sans faute",on:totals.perfect>=1},
+    {id:"clavier",ico:"♪",t:"Clavier 50",s:"géographie",on:kbd.total>=50},
+    {id:"xp1000",ico:"XP",t:"1000 XP",s:"volume",on:(DB.xp||0)>=1000},
+    {id:"rhodium",ico:"Rh",t:"Rhodium",s:"vitesse tenue",on:tierComplete("rhodium")}
+  ];
+}
+function trophiesEarned(){return trophyDefs().filter(function(t){return t.on;}).length;}
+
+/* ================= AUDIO ================= */
+/* Chaîne : oscillateurs → filtre par note → gain par note → compresseur maître → sortie.
+   Le compresseur évite toute saturation quand plusieurs notes se chevauchent (mélodies, fanfares).
+   Timbre "corde frappée" : attaque brève, harmoniques aigus qui s'éteignent plus vite que le fondamental,
+   filtre qui se referme pendant la tenue (le son s'assombrit naturellement, comme un piano). */
+let AC=null, BUS=null;
+function audioBus(){
+  if(!AC){
+    AC=new (window.AudioContext||window.webkitAudioContext)();
+    const comp=AC.createDynamicsCompressor();
+    comp.threshold.value=-16; comp.knee.value=22; comp.ratio.value=6;
+    comp.attack.value=0.003; comp.release.value=0.24;
+    const out=AC.createGain(); out.gain.value=0.9;
+    comp.connect(out); out.connect(AC.destination);
+    BUS=comp;
+  }
+  if(AC.state==="suspended"){ try{ AC.resume(); }catch(e){} }
+  return AC;
+}
+// iOS/Android : l'audio ne démarre qu'après un geste. On déverrouille au tout premier contact.
+function unlockAudio(){
+  try{ const ac=audioBus(); const b=ac.createBuffer(1,1,22050); const s=ac.createBufferSource(); s.buffer=b; s.connect(ac.destination); s.start(0); }catch(e){}
+  try{ document.removeEventListener("touchend",unlockAudio,true); document.removeEventListener("pointerdown",unlockAudio,true); }catch(e){}
+}
+try{ document.addEventListener("touchend",unlockAudio,true); document.addEventListener("pointerdown",unlockAudio,true); }catch(e){}
+function noteDur(){ if(EX&&EX.kind==="rafale")return 0.48; return DB.soundLong?2.8:0.85; }
+function tone(midi,dur,delay){
+  if(!DB.sound) return;
+  try{
+    const ac=audioBus();
+    const t0=ac.currentTime+(delay||0), d=dur||noteDur();
+    const f=440*Math.pow(2,(midi-69)/12);
+    const master=ac.createGain(), filter=ac.createBiquadFilter();
+    filter.type="lowpass"; filter.Q.setValueAtTime(0.5,t0);
+    filter.frequency.setValueAtTime(Math.min(8500,Math.max(1400,f*8)),t0);
+    filter.frequency.exponentialRampToValueAtTime(Math.max(650,f*1.6), t0+Math.max(0.35,d*0.75)); // le timbre s'assombrit pendant la tenue
+    filter.connect(master); master.connect(BUS);
+    master.gain.setValueAtTime(0.0001,t0);
+    master.gain.exponentialRampToValueAtTime(0.5,t0+0.012);          // attaque franche
+    master.gain.exponentialRampToValueAtTime(0.3,t0+0.10);           // retombée du marteau
+    master.gain.exponentialRampToValueAtTime(0.13,t0+Math.max(0.3,d*0.55)); // tenue qui respire
+    master.gain.exponentialRampToValueAtTime(0.0001,t0+d+0.9);       // extinction douce, sans clic
+    const stopAt=t0+d+1.0;
+    const bank=[            // [rang, gain, forme, détune ¢] — léger battement pour un son vivant
+      [1,0.62,"triangle",-2.5],
+      [1,0.30,"sine",2.5],
+      [0.5,0.10,"sine",0],
+      [2,0.22,"sine",0],
+      [3,0.10,"sine",3],
+      [4,0.05,"sine",-3],
+      [5.04,0.025,"sine",0] // partiel légèrement inharmonique, comme une vraie corde
+    ];
+    bank.forEach(function(h){
+      const o=ac.createOscillator(), g=ac.createGain(), a=h[1];
+      o.type=h[2]; o.frequency.value=f*h[0];
+      if(o.detune) o.detune.value=h[3]||0;
+      g.gain.setValueAtTime(a,t0);
+      if(h[0]>=2){ // les harmoniques aigus meurent plus vite : c'est ce qui fait "corde" et pas "orgue"
+        g.gain.setTargetAtTime(a*0.03, t0+0.06, Math.max(0.14, d*(h[0]>=4?0.12:0.22)));
+      }
+      o.connect(g).connect(filter);
+      o.start(t0); o.stop(stopAt);
+    });
+  }catch(e){}
+}
+function sfxGood(m){tone(m);}
+function sfxMelody(seq){ seq.forEach(function(id,i){ tone(NOTES[id].midi,0.58,i*0.22); }); }
+function sfxBad(){tone(38,0.22);}
+function vibrate(pat){ try{ if(DB.haptic && navigator.vibrate) navigator.vibrate(pat); }catch(e){} }
+function sfxWin(){tone(72,0.3,0);tone(76,0.3,0.12);tone(79,0.5,0.24);}
+
+/* ================= PORTÉE SVG ================= */
+/* Géométrie agrandie pour mobile : interligne 18 unités (half=9) au lieu de 14.
+   H couvre p=-3..11 avec hampes, lignes supplémentaires et marques, sans chevauchement. */
+const STAFF={W:320,half:9,top:46,H:172};
+function yOf(p){return STAFF.top+8*STAFF.half-p*STAFF.half;}
+function pOfY(y){return Math.max(-3,Math.min(11,Math.round((STAFF.top+8*STAFF.half-y)/STAFF.half)));}
+// big : 0/absent = note de groupe · 1 = grande note (question note seule) · 2 = grande note + halo doré (découverte/préparation)
+function noteGlyph(x,p,color,acc,big){
+  const y=yOf(p);
+  const rx=big?13.5:10, ry=big?9.4:7.1, led=big?25:17, stem=big?46:36, sw=big?2.8:2.1;
+  let s="";
+  for(let q=10;q<=p;q+=2) s+='<line x1="'+(x-led)+'" y1="'+yOf(q)+'" x2="'+(x+led)+'" y2="'+yOf(q)+'" stroke="#4a4337" stroke-width="'+(big?2.2:1.8)+'"/>';
+  for(let q=-2;q>=p;q-=2) s+='<line x1="'+(x-led)+'" y1="'+yOf(q)+'" x2="'+(x+led)+'" y2="'+yOf(q)+'" stroke="#4a4337" stroke-width="'+(big?2.2:1.8)+'"/>';
+  if(acc) s+='<text x="'+(x-(big?27:19))+'" y="'+(y+(big?10:8))+'" text-anchor="middle" font-size="'+(big?36:28)+'" font-weight="700" font-family="serif" fill="'+color+'">'+acc+'</text>';
+  if(big===2) s+='<ellipse cx="'+x+'" cy="'+y+'" rx="'+(rx+5.5)+'" ry="'+(ry+4)+'" transform="rotate(-14 '+x+' '+y+')" fill="rgba(255,187,60,.45)"/>';
+  s+='<ellipse cx="'+x+'" cy="'+y+'" rx="'+rx+'" ry="'+ry+'" transform="rotate(-14 '+x+' '+y+')" fill="'+color+'"/>';
+  if(p<4) s+='<line x1="'+(x+rx*.9)+'" y1="'+y+'" x2="'+(x+rx*.9)+'" y2="'+(y-stem)+'" stroke="'+color+'" stroke-width="'+sw+'"/>';
+  else    s+='<line x1="'+(x-rx*.9)+'" y1="'+y+'" x2="'+(x-rx*.9)+'" y2="'+(y+stem)+'" stroke="'+color+'" stroke-width="'+sw+'"/>';
+  return s;
+}
+function chunkXs(n){
+  if(n<=1) return [STAFF.W*0.62];
+  const x0=108, x1=292, step=(x1-x0)/(n-1);
+  const xs=[]; for(let i=0;i<n;i++) xs.push(x0+i*step);
+  return xs;
+}
+function staffSVG(clef,notes,caretX){ // notes=[{p,color,x,acc,big,mark}]
+  const W=STAFF.W, H=STAFF.H;
+  let s='<svg id="staffsvg" viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block">';
+  for(let i=0;i<5;i++){const y=STAFF.top+i*2*STAFF.half;
+    s+='<line x1="14" y1="'+y+'" x2="'+(W-14)+'" y2="'+y+'" stroke="#4a4337" stroke-width="1.6"/>';}
+  if(clef==="sol") s+='<text x="20" y="'+(yOf(2)+14)+'" font-size="80" font-family="serif" fill="#33415c">\u{1D11E}</text>';
+  else s+='<text x="22" y="'+(yOf(6)+7)+'" font-size="52" font-family="serif" fill="#33415c">\u{1D122}</text>';
+  (notes||[]).forEach(function(nx){
+    s+=noteGlyph(nx.x,nx.p,nx.color||"#1c2230",nx.acc,nx.big===2?2:(nx.big?1:0));
+    if(nx.mark){ // 2e canal : forme/texte, lisible sans la couleur (daltonisme)
+      let my=yOf(nx.p)-26; if(my<18) my=yOf(nx.p)+34; // près du bord haut : marque sous la note
+      const ok=nx.mark==="good";
+      s+='<text x="'+nx.x+'" y="'+my+'" text-anchor="middle" font-size="24" font-weight="700" fill="'+(ok?"#2e7d4f":"#c0392b")+'">'+(ok?"✓":"✕")+'</text>';
+    }
+  });
+  if(caretX!==undefined && caretX!==null)
+    s+='<path d="M '+(caretX-7)+' '+(H-6)+' L '+(caretX+7)+' '+(H-6)+' L '+caretX+' '+(H-18)+' Z" fill="#4cc2ff"/>';
+  s+='<text x="'+(W-16)+'" y="14" text-anchor="end" font-size="11" fill="#9a8f7a" font-family="sans-serif">clé de '+(clef==="sol"?"sol":"fa")+'</text>';
+  s+='</svg>';
+  return s;
+}
+
+/* ================= ÉCRANS ================= */
+const $=function(id){return document.getElementById(id);};
+function show(id){document.querySelectorAll(".screen").forEach(function(s){s.classList.remove("active");});$(id).classList.add("active");
+  if(id==="scrRes") renderResCode(); // le code de secours accompagne chaque écran de résultat
+}
+function soundLabel(){ return !DB.sound?"muet":(DB.soundLong?"♪ chant":"♪ court"); }
+function header(){ $("hXp").textContent=DB.xp; $("hStreak").textContent=streak(); $("btnSound").textContent=soundLabel(); }
+function modeLabel(m){ return m==="libre"?"Libre":tierDef(m).label; }
+function labelFrom(list,id){ const x=list.find(function(o){return o.id===id;}); return x?x.label:list[0].label; }
+function renderCalendar(){
+  const now=new Date(), first=new Date(now.getFullYear(),now.getMonth(),1);
+  const blanks=(first.getDay()+6)%7, days=new Date(now.getFullYear(),now.getMonth()+1,0).getDate();
+  let html="";
+  for(let i=0;i<blanks;i++) html+='<span class="calDay empty"></span>';
+  for(let d=1;d<=days;d++){
+    const key=dateKey(new Date(now.getFullYear(),now.getMonth(),d)), day=DB.days[key];
+    let cls="calDay";
+    if(dayActive(day)) cls+=" on";
+    if(day&&day.perfect) cls+=" perfect";
+    if(key===todayStr()) cls+=" today";
+    html+='<span class="'+cls+'">'+d+'</span>';
+  }
+  $("calGrid").innerHTML=html;
+}
+function renderRitual(){
+  const totals=practiceTotals(), ws=weekStats(), st=streak(), best=longestStreak();
+  const today=DB.days[todayStr()]||normalizeDay({});
+  const todayCount=(today.series||0)+(today.rafales||0)+(today.clavier||0)+(today.revisions||0);
+  $("ritualTitle").textContent=todayCount?("Aujourd'hui : "+todayCount+" session"+(todayCount>1?"s":"")):"Rituel à lancer";
+  $("ritualStats").innerHTML=
+    '<div class="rstat"><div class="v">'+st+'</div><div class="l">jours de suite</div></div>'+
+    '<div class="rstat"><div class="v">'+ws.current+'</div><div class="l">semaines</div></div>'+
+    '<div class="rstat"><div class="v">'+trophiesEarned()+'/'+trophyDefs().length+'</div><div class="l">trophées</div></div>';
+  $("ritualNote").textContent = todayCount
+    ? "Investissement compté : séries, rafales, révisions et clavier. Meilleure suite : "+best+" jour"+(best>1?"s":"")+"."
+    : "Un jour coché suffit à garder le fil. Une petite série propre vaut mieux qu'une grande séance brouillonne.";
+  renderCalendar();
+}
+function renderTrophies(){
+  $("trophyStrip").innerHTML=trophyDefs().map(function(t){ // tous les trophées, aucun caché
+    return '<div class="trophy '+(t.on?'on':'')+'"><span class="ico">'+esc(t.ico)+'</span><b>'+esc(t.t)+'</b><small>'+esc(t.s)+'</small></div>';
+  }).join("");
+}
+function mirrorSeed(){
+  const today=DB.days[todayStr()]||normalizeDay({}), st=streak(), totals=practiceTotals();
+  return (DB.xp||0)+st*17+totals.days*31+(today.series||0)*7+(today.clavier||0)*11+(today.perfect?101:0);
+}
+function pickMirror(){
+  const p=DB.profile||{affinity:"classique",aspiration:"interprete"};
+  let pool=MUSIC_MIRRORS.filter(function(m){return m.aff.indexOf(p.affinity)>=0 || m.asp.indexOf(p.aspiration)>=0;});
+  if(!pool.length) pool=MUSIC_MIRRORS;
+  return pool[mirrorSeed()%pool.length];
+}
+/* Intro du miroir : reflète le comportement réel du jour (précision, régularité, reprise, volume),
+   sans inventer de faits — uniquement ce que les stats locales montrent. */
+function mirrorIntro(){
+  const today=DB.days[todayStr()]||normalizeDay({});
+  const st=streak();
+  const sessions=(today.series||0)+(today.rafales||0)+(today.clavier||0)+(today.revisions||0);
+  let v=0,e=0; Object.keys(DB.noteStats||{}).forEach(function(k){v+=DB.noteStats[k].v||0;e+=DB.noteStats[k].e||0;});
+  const prec=v?Math.round((v-e)/v*100):null;
+  const back=(DB.events||[]).slice(-8).some(function(x){return x.type==="retour_apres_pause" && Date.now()-(x.t||0)<36*36e5;});
+  if(today.perfect) return "Sans faute aujourd'hui — la précision d'abord, c'est exactement ça. ";
+  if(back && sessions>0) return "Revenir après une pause et retravailler : c'est la vraie discipline. ";
+  if(sessions>=5) return "Grosse journée d'entraînement — pense aussi à souffler. ";
+  if(st>=10) return "Tu installes une vraie continuité. ";
+  if(prec!==null && v>=30 && prec>=90) return "Ta précision globale tient au-dessus de 90 %. ";
+  if(st>=3) return "Trois jours et plus dans la même direction. ";
+  return "";
+}
+function renderOracle(){
+  const m=pickMirror(), p=DB.profile||{};
+  const intro=mirrorIntro();
+  $("oracleBox").innerHTML='<h3>Miroir musical</h3><p><b>'+esc(m.t)+'.</b> '+esc(intro+m.x)+'</p>'+
+    '<span class="src">'+esc(labelFrom(PROFILE_AFFINITIES,p.affinity))+' · '+esc(labelFrom(PROFILE_ASPIRATIONS,p.aspiration))+' — '+esc(m.s)+'</span>'+
+    '<button id="btnProfileEdit">Profil musical</button>';
+  $("btnProfileEdit").onclick=openMusicProfile;
+}
+function optionHtml(list,val){
+  return list.map(function(o){return '<option value="'+esc(o.id)+'"'+(o.id===val?' selected':'')+'>'+esc(o.label)+'</option>';}).join("");
+}
+function openMusicProfile(){
+  const p=DB.profile||{};
+  $("cardBox").innerHTML='<h3>Profil musical</h3><h2>Ton miroir Solado</h2>'+
+    '<p>Choisis une couleur de jeu. Les messages restent positifs, parfois un peu taquins, toujours côté musicien.</p>'+
+    '<div class="profileGrid">'+
+      '<label>Affinité<select id="profAffinity">'+optionHtml(PROFILE_AFFINITIES,p.affinity)+'</select></label>'+
+      '<label>Aspiration<select id="profAspiration">'+optionHtml(PROFILE_ASPIRATIONS,p.aspiration)+'</select></label>'+
+    '</div><button id="profSave">Enregistrer</button>';
+  $("overlay").classList.add("on");
+  $("profSave").onclick=function(){
+    DB.profile={affinity:$("profAffinity").value,aspiration:$("profAspiration").value};
+    ensureStructure(DB); save(); $("overlay").classList.remove("on"); renderHome();
+  };
+}
+
+function renderHome(){
+  header();
+  if(DB.mode!=="libre" && !tierUnlocked(DB.mode)) DB.mode="zen";
+  if(!playableInMode(DB.sel,DB.mode)){
+    const first=PALIERS.find(function(p){return playableInMode(p.id,DB.mode)&&(DB.mode==="libre"||!DB.paliers[p.id][DB.mode].ok);})
+      ||PALIERS.find(function(p){return playableInMode(p.id,DB.mode);});
+    if(first) DB.sel=first.id;
+  }
+  const day=DB.days[todayStr()], nbToday=day?day.series:0;
+  $("missionTxt").innerHTML = DB.mode==="libre"
+    ? "Mode Libre : rien n'est compté, tout s'apprend. Chante chaque note avec le piano."
+    : nbToday===0 ? "Mission du jour : 3 séries de 10 au niveau "+modeLabel(DB.mode)+". Précision d'abord."
+    : nbToday<3 ? "Encore "+(3-nbToday)+" série"+(3-nbToday>1?"s":"")+" pour le badge du jour."
+    : "Badge du jour gagné. Pousse le niveau, ou souffle en Libre.";
+  renderRitual();
+  renderOracle();
+  renderTrophies();
+  // niveaux : conquis + le suivant seulement (brume)
+  const row=$("tierRow"); row.innerHTML="";
+  const lb=document.createElement("button");
+  lb.className="tier"+(DB.mode==="libre"?" sel":"");
+  lb.innerHTML="Libre<small>chante</small>";
+  lb.onclick=function(){DB.mode="libre";save();renderHome();};
+  row.appendChild(lb);
+  for(let i=0;i<TIERS.length;i++){
+    const t=TIERS[i], un=tierUnlocked(t.id);
+    const b=document.createElement("button");
+    if(un){
+      b.className="tier"+(DB.mode===t.id?" sel":"");
+      b.innerHTML=t.label+"<small>"+(t.n===1?"sans chrono":t.n+" notes · "+(t.ms/1000)+" s")+"</small>";
+      b.onclick=(function(tid){return function(){DB.mode=tid;save();renderHome();};})(t.id);
+      row.appendChild(b);
+    } else {
+      b.className="tier off";
+      b.innerHTML=t.label+"<small>"+(t.future?"bientôt":"verrouillé")+"</small>";
+      row.appendChild(b);
+      break; // brume : rien au-delà du prochain niveau
+    }
+  }
+  // paliers : débloqués + UNE série mystère (brume)
+  const list=$("palierList"); list.innerHTML="";
+  visiblePaliers().forEach(function(v){
+    const p=v.p;
+    const div=document.createElement("button");
+    if(v.mystery){
+      div.className="palier mystery";
+      div.innerHTML='<span class="pl">???<small>Série mystère — termine la précédente pour la révéler</small></span>'+
+        '<span class="chip">Verrouillé</span>';
+      list.appendChild(div); return;
+    }
+    const st=DB.paliers[p.id], play=playableInMode(p.id,DB.mode);
+    div.className="palier"+(p.id===DB.sel?" sel":"")+(play?"":" locked");
+    let chip;
+    if(DB.mode==="libre") chip='<span class="chip cur">Libre</span>';
+    else chip=play?'<span class="chip '+(st[DB.mode].ok?"ok":"cur")+'">'+valProgress(p.id,DB.mode)+'</span>'
+      :'<span class="chip">Verrouillé à ce niveau</span>';
+    // pastilles : seulement les niveaux déjà conquis quelque part (pas de spoiler)
+    let dots="";
+    TIERS.forEach(function(t){ if(st[t.id].ok) dots+='<i class="on" style="background:var(--accent);border-color:var(--accent)"></i>'; });
+    const sr=st.star;
+    if(sr && sr.level>0) dots+='<span style="color:var(--gold);font-size:11px;letter-spacing:1px">'+"★".repeat(sr.level)+'</span>';
+    if(sr && sr.started && sr.level<5 && (sr.due||0)<=Date.now())
+      dots+='<span class="chip" style="background:rgba(255,209,102,.15);color:var(--gold)">★ à réviser</span>';
+    div.innerHTML='<span class="pl">'+p.t+'<small>'+p.sub+'</small></span>'+
+      '<span class="pright">'+chip+(dots?'<span class="mdots">'+dots+'</span>':'')+'</span>';
+    if(play) div.onclick=function(){DB.sel=p.id;save();renderHome();};
+    list.appendChild(div);
+  });
+  const sc=$("starCTA"); sc.innerHTML="";
+  // Révision du jour (SRS) : disponible dès qu'il y a des notes dues
+  const ndue=dueCount();
+  if(ndue>0){
+    const rb=document.createElement("button");
+    rb.className="secbtn";
+    rb.textContent="↻ Révision du jour ("+ndue+" note"+(ndue>1?"s":"")+")";
+    rb.onclick=startRevision;
+    sc.appendChild(rb);
+  }
+  // Révision d'étoile due : la répétition espacée, déguisée en prestige
+  const sdue=starDuePaliers();
+  if(sdue.length){
+    const b=document.createElement("button");
+    b.className="secbtn"; b.style.borderColor="var(--gold)"; b.style.color="var(--gold)";
+    const lv=DB.paliers[sdue[0].id].star.level;
+    b.textContent="★ Révision d'étoile : "+sdue[0].t+(lv?" ("+starLabel(lv)+" → "+starLabel(lv+1)+")":" (1ʳᵉ étoile)");
+    b.onclick=(function(pid){return function(){startStarReview(pid);};})(sdue[0].id);
+    sc.appendChild(b);
+  }
+  $("btnSerie").textContent="Série de 10 · "+modeLabel(DB.mode);
+  const nd=dueCount();
+  $("defiTxt").textContent = nd>0 ? ("↻ "+nd+" note"+(nd>1?"s":"")+" à revoir")
+    : (day&&day.perfect ? "★ Défi parfait réussi" : "★ Défi parfait : tente une Rafale");
+}
+
+/* ---- moteur ---- */
+let EX=null, rafTimer=null, qInt=null, qTo=null;
+function clearQTimers(){ if(qInt!==null){clearInterval(qInt);qInt=null;} if(qTo!==null){clearTimeout(qTo);qTo=null;} }
+/* ===== SRS — répétition espacée (Leitner 5 boîtes) ===== */
+// box 1..5 ; jours avant la prochaine échéance par boîte. box 5 = ancré.
+const SRS_DAYS=[0,0,1,3,7,16];
+function srs(id){ const s=noteStat(id); if(s.box===undefined)s.box=0; if(s.due===undefined)s.due=0; return s; }
+function srsReview(id,correct){
+  const s=srs(id);
+  s.box = correct ? Math.min(5,(s.box||0)+1) : 1; // juste → on monte d'une boîte ; faux → retour boîte 1
+  s.due = Date.now() + (SRS_DAYS[s.box]||0)*864e5;
+}
+function isDue(id){ const s=DB.noteStats[id]; return !!(s && s.box>=1 && (s.due||0)<=Date.now()); }
+function unlockedNoteIds(){
+  const set={};
+  PALIERS.forEach(function(p){ if(palierPlayable(p.id,"zen")) p.notes.forEach(function(id){set[id]=1;}); });
+  return Object.keys(set);
+}
+function dueCount(){ let n=0; unlockedNoteIds().forEach(function(id){ if(isDue(id)) n++; }); return n; }
+// Sélection pilotée par le SRS : neuves à introduire, dues prioritaires (d'autant plus en retard), ancrées rares.
+function weightedPick(pool,exclude){
+  const now=Date.now();
+  const w=pool.map(function(id){
+    const s=DB.noteStats[id];
+    let wt;
+    if(!s || !s.box){ wt=2.2; }                                   // note neuve
+    else if((s.due||0)<=now){ const over=(now-(s.due||0))/864e5; wt=2.6+Math.min(over,10)*0.15; } // due
+    else { wt=0.5+(6-s.box)*0.12; }                               // pas encore due (ancrée → rare)
+    if(s && s.e>=2) wt+=0.8;                                      // fragile historique
+    if(id===exclude) wt*=0.15;
+    return wt;
+  });
+  let tot=w.reduce(function(a,b){return a+b;},0), r=Math.random()*tot;
+  for(let i=0;i<pool.length;i++){ r-=w[i]; if(r<=0) return pool[i]; }
+  return pool[pool.length-1];
+}
+/* ===== Étoiles — stabilité dans le temps (revalidation espacée d'un palier) ===== */
+const STAR_DAYS=[7,30,90,180,365]; // délai jusqu'à l'étoile suivante
+function starState(pid){ const st=DB.paliers[pid]; if(!st.star) st.star=freshStar(); return st.star; }
+function startStarSchedule(pid){
+  const s=starState(pid);
+  if(!s.started){ s.started=true; s.firstAt=Date.now(); s.due=Date.now()+STAR_DAYS[0]*864e5; }
+}
+function starDuePaliers(){
+  return PALIERS.filter(function(p){
+    const s=DB.paliers[p.id].star;
+    return s && s.started && s.level<5 && (s.due||0)<=Date.now();
+  });
+}
+function starLabel(l){ return l>=5?"5 Étoiles":(l+(l>1?" Étoiles":" Étoile")); }
+function pickSeq(pool,n){
+  const first=weightedPick(pool,EX?EX.last:null);
+  const clef=NOTES[first].clef;
+  const sub=pool.filter(function(id){return NOTES[id].clef===clef;});
+  const seq=[first];
+  for(let i=1;i<n;i++) seq.push(weightedPick(sub,seq[i-1]));
+  return seq;
+}
+// Notes neuves d'un palier = celles absentes du palier précédent (pour P1 : toutes)
+function newNotesOf(pid){
+  const i=PALIERS.findIndex(function(p){return p.id===pid;});
+  const cur=PALIERS[i].notes, prev=i>0?PALIERS[i-1].notes:[];
+  const neuves=cur.filter(function(id){return prev.indexOf(id)<0;});
+  return neuves.length?neuves:cur;
+}
+function startSerie(){
+  if(DB.mode!=="libre" && !tierUnlocked(DB.mode)) return;
+  if(!DB.seen[DB.sel]){
+    showDecouverte(DB.sel, function(){ showSeriePreview(DB.sel, beginSerie); });
+    return;
+  }
+  showSeriePreview(DB.sel, beginSerie);
+}
+function beginSerie(){
+  const p=PALIERS.find(function(x){return x.id===DB.sel;});
+  const td=DB.mode==="libre"?null:tierDef(DB.mode);
+  const n=td?td.n:1, msNote=td?td.ms:null;
+  EX={kind:"serie",mode:DB.mode,n:10,groupN:n,msNote:msNote,limit:msNote?msNote*n:null,
+      palier:p,i:0,ok:0,errs:[],times:[],hist:[],last:null,waiting:false,done:false,qid:0,
+      qtype:"lect",seq:[],k:0,writePos:4};
+  logEvent("serie_start",{palier:p.id,mode:DB.mode,groupe:n});
+  $("exMode").textContent=p.t+" · "+modeLabel(DB.mode)+(n>1?" · groupes de "+n:"");
+  $("timerbar").classList.toggle("on",!!EX.limit);
+  show("scrEx"); nextQuestion();
+}
+function trainingFocusText(mode){
+  if(mode==="libre") return "Mode Libre : reconnaître, écouter, chanter. Rien n'est chronométré.";
+  const td=tierDef(mode);
+  if(!td || td.n<=1) return "Objectif : retrouver chaque note seule, proprement, sans vitesse inutile.";
+  return "Objectif : retrouver des groupes de "+td.n+" notes dans l'ordre"+(td.ms?" avec "+(td.ms/1000)+" s par note.":".");
+}
+function previewNoteHtml(id,withListen){
+  const nt=NOTES[id];
+  return '<div class="prepNote">'+
+    '<div class="prepStaff">'+staffSVG(nt.clef,[{p:nt.p,color:"#05070a",x:STAFF.W*0.58,big:2}])+'</div>'+
+    '<div class="prepTxt"><b>'+esc(nt.n.toUpperCase())+'</b> · clé de '+(nt.clef==="sol"?"sol":"fa")+
+    '<br>'+esc(nt.mn)+(withListen?'<br><button class="hearbtn" onclick="tone(NOTES[\''+id+'\'].midi,3.2)">♪ écouter — chante-la</button>':'')+'</div></div>';
+}
+function showSeriePreview(pid,onContinue){
+  const p=PALIERS.find(function(x){return x.id===pid;});
+  if(!p){ if(onContinue) onContinue(); return; }
+  const notes=p.notes.slice();
+  const sol=notes.filter(function(id){return NOTES[id].clef==="sol";});
+  const fa=notes.filter(function(id){return NOTES[id].clef==="fa";});
+  let body='<h3>Préparation — '+esc(p.id)+'</h3><h2>Ce que tu vas retrouver</h2>'+
+    '<p>'+esc(p.t)+' · '+esc(p.sub)+'</p>'+
+    '<p><b>'+esc(trainingFocusText(DB.mode))+'</b></p>'+
+    '<p class="src">Phase d\'observation — rien n\'est compté ici. Regarde chaque note, écoute-la, chante-la ; la série commencera seulement quand tu appuieras sur le bouton.</p>';
+  if(sol.length) body+='<p style="margin-top:10px"><b>Clé de sol</b></p><div class="prepNotes">'+sol.map(function(id){return previewNoteHtml(id,true);}).join("")+'</div>';
+  if(fa.length) body+='<p style="margin-top:10px"><b>Clé de fa</b></p><div class="prepNotes">'+fa.map(function(id){return previewNoteHtml(id,true);}).join("")+'</div>';
+  $("cardBox").innerHTML=body+'<button id="btnPrepGo">Commencer la série</button>';
+  $("overlay").classList.add("on");
+  $("btnPrepGo").onclick=function(){
+    $("overlay").classList.remove("on");
+    logEvent("serie_preview",{palier:pid,mode:DB.mode,notes:notes.length});
+    if(onContinue) onContinue();
+  };
+}
+// Écran Découverte : je montre la/les note(s) neuve(s) avant de tester (I-do → You-do)
+function showDecouverte(pid, onContinue){
+  const p=PALIERS.find(function(x){return x.id===pid;});
+  const neuves=newNotesOf(pid).slice(0,6);
+  logEvent("decouverte",{palier:pid,nb:neuves.length});
+  let body='<h3>Découverte — '+p.t+'</h3><h2>'+(neuves.length>1?"De nouvelles notes":"Une nouvelle note")+'</h2>'+
+    '<p style="margin-bottom:10px">Regarde où elle se place, écoute-la, puis on la teste. Pas de pression : rien n\'est compté ici.</p>';
+  body+='<div class="prepNotes">'+neuves.map(function(id){return previewNoteHtml(id,true);}).join("")+'</div>';
+  $("cardBox").innerHTML=body+'<button id="btnDecGo">Je suis prêt — commencer</button>';
+  $("overlay").classList.add("on");
+  $("btnDecGo").onclick=function(){
+    DB.seen[pid]=true; save();
+    $("overlay").classList.remove("on");
+    if(onContinue) onContinue();
+  };
+}
+function startRafale(){
+  const p=PALIERS.find(function(x){return x.id===DB.sel;});
+  EX={kind:"rafale",mode:"rafale",n:Infinity,groupN:1,msNote:null,limit:null,
+      palier:p,i:0,ok:0,errs:[],times:[],hist:[],last:null,waiting:false,done:false,qid:0,
+      qtype:"lect",seq:[],k:0,writePos:4,end:Date.now()+RAFALE_S*1000};
+  $("exMode").textContent=p.t+" · rafale "+RAFALE_S+" s";
+  $("timerbar").classList.add("on");
+  show("scrEx");
+  rafTimer=setInterval(function(){
+    const left=EX.end-Date.now();
+    $("timerfill").style.width=Math.max(0,left/(RAFALE_S*10))+"%";
+    if(left<=0) finishRafale();
+  },100);
+  nextQuestion();
+}
+function renderDots(){
+  const d=$("exDots"); d.innerHTML="";
+  if(EX.kind!=="serie"){$("exCount").textContent=EX.ok+" justes";return;}
+  for(let i=0;i<10;i++){const s=document.createElement("span");s.className="dot";d.appendChild(s);}
+  const dots=d.children;
+  EX.hist.forEach(function(ok,i){ if(dots[i]) dots[i].className="dot "+(ok?"g":"b"); });
+  $("exCount").textContent=EX.i+"/10";
+}
+function ecritLabel(nt,targetId){
+  const twin=EX.palier.notes.find(function(o){
+    return o!==targetId && NOTES[o].clef===nt.clef && NOTES[o].n===nt.n;});
+  if(!twin) return nt.n.toUpperCase();
+  return nt.n.toUpperCase()+(nt.p>NOTES[twin].p?" (l'aigu)":" (le grave)");
+}
+function drawChunk(){
+  const clef=NOTES[EX.seq[0]].clef, xs=chunkXs(EX.seq.length), single=EX.seq.length===1;
+  const notes=EX.seq.map(function(id,i){
+    let color="#1c2230";
+    if(i<EX.k) color="#2e7d4f";
+    return {p:NOTES[id].p,color:color,x:xs[i],big:single?1:0}; // note seule = grand format
+  });
+  $("staffbox").innerHTML=staffSVG(clef,notes,EX.seq.length>1?xs[EX.k]:null);
+}
+function drawWriteStaff(){
+  const nt=NOTES[EX.seq[0]];
+  $("staffbox").innerHTML=staffSVG(nt.clef,[{p:EX.writePos,color:"#4cc2ff",x:STAFF.W*0.62,big:1}]);
+  const svg=$("staffsvg");
+  if(svg&&svg.addEventListener) svg.addEventListener("click",function(ev){
+    if(EX.waiting||EX.done||EX.qtype!=="ecrit") return;
+    const r=svg.getBoundingClientRect();
+    if(!r.height) return;
+    EX.writePos=pOfY((ev.clientY-r.top)/r.height*STAFF.H);
+    drawWriteStaff();
+  });
+}
+function nextQuestion(){
+  if(EX.done) return;
+  clearQTimers();
+  if(EX.kind==="serie" && EX.i>=EX.n) return finishSerie();
+  const ecritOk=(EX.mode==="libre"||EX.mode==="zen") && EX.kind==="serie";
+  EX.qtype=(ecritOk && Math.random()<ECRIT_RATIO)?"ecrit":"lect";
+  EX.seq=pickSeq(EX.palier.notes, EX.qtype==="ecrit"?1:EX.groupN);
+  EX.last=EX.seq[EX.seq.length-1];
+  EX.k=0; EX.t0=Date.now(); EX.waiting=false; EX.qid++;
+  $("feedback").className="feedback";
+  $("btnNext").style.display="none";
+  $("btnNext").textContent="Continuer";
+  if(EX.qtype==="lect"){
+    drawChunk();
+    $("feedback").innerHTML=EX.seq.length>1?"Lis le groupe, dans l'ordre.":"Quelle est cette note ?";
+    renderAnswers(true);
+  } else {
+    EX.writePos=4;
+    drawWriteStaff();
+    $("feedback").innerHTML="Place sur la portée : <span class='big'>"+ecritLabel(NOTES[EX.seq[0]],EX.seq[0])+"</span>";
+    renderWriteControls();
+  }
+  renderDots();
+  if(EX.kind==="serie" && EX.limit){
+    const qid=EX.qid, lim=EX.limit;
+    $("timerfill").style.width="100%";
+    qInt=setInterval(function(){
+      const left=lim-(Date.now()-EX.t0);
+      $("timerfill").style.width=Math.max(0,left/lim*100)+"%";
+    },80);
+    qTo=setTimeout(function(){ timeUp(qid); }, lim);
+  }
+}
+function renderAnswers(enabled){
+  const a=$("answers"); a.className="answers"; a.innerHTML="";
+  NAMES.forEach(function(nm){
+    const b=document.createElement("button");
+    b.textContent=nm;
+    if(enabled) b.onclick=function(){answer(nm);};
+    else b.disabled=true;
+    a.appendChild(b);
+  });
+}
+function renderWriteControls(){
+  const a=$("answers"); a.className="answers wmode"; a.innerHTML="";
+  const down=document.createElement("button"); down.textContent="▼";
+  down.onclick=function(){ if(!EX.waiting&&!EX.done){EX.writePos=Math.max(-3,EX.writePos-1);drawWriteStaff();} };
+  const up=document.createElement("button"); up.textContent="▲";
+  up.onclick=function(){ if(!EX.waiting&&!EX.done){EX.writePos=Math.min(11,EX.writePos+1);drawWriteStaff();} };
+  const ok=document.createElement("button"); ok.textContent="Valider";
+  ok.onclick=function(){ answerPos(EX.writePos); };
+  a.appendChild(down);a.appendChild(up);a.appendChild(ok);
+}
+function noteStat(id){ if(!DB.noteStats[id])DB.noteStats[id]={v:0,e:0}; return DB.noteStats[id]; }
+function hearHtml(id){ return '<br><button class="hearbtn" onclick="tone(NOTES[\''+id+'\'].midi)">♪ réécouter — chante-la</button>'; }
+function correctionHtml(failId,msg){
+  const nt=NOTES[failId], clef=nt.clef==="sol"?"clé de sol":"clé de fa";
+  const pos=(EX&&EX.qtype==="lect"&&EX.seq&&EX.seq.length>1)?EX.k+1:null;
+  let html='<div class="corrBox"><h4>Correction à valider</h4>'+
+    '<p><b>'+esc(msg)+'</b></p>';
+  if(pos) html+='<p>Élément '+pos+'/'+EX.seq.length+' du groupe : la note à cet endroit était <b>'+esc(nt.n.toUpperCase())+'</b>.</p>';
+  else if(EX&&EX.qtype==="ecrit") html+='<p>En écriture, il fallait placer <b>'+esc(nt.n.toUpperCase())+'</b> exactement sur sa ligne ou son interligne.</p>';
+  else html+='<p>La note attendue était <b>'+esc(nt.n.toUpperCase())+'</b>.</p>';
+  html+='<p><b>Repère :</b> '+esc(nt.mn)+'</p>'+
+    '<p><b>Avant de continuer :</b> regarde sa position sur la portée, réécoute, redis le repère.</p>'+
+    '<p class="src">'+clef+' · correction note par note</p></div>';
+  return html;
+}
+function afterGood(){
+  EX.ok++; DB.xp++; EX.hist.push(true); EX.i++;
+  EX.times.push(Date.now()-EX.t0);
+  if(EX.seq.length>1) sfxMelody(EX.seq); else sfxGood(NOTES[EX.seq[0]].midi);
+  vibrate(15);
+  $("feedback").className="feedback good";
+  $("feedback").innerHTML='<span class="big">✓ '+EX.seq.map(function(id){return NOTES[id].n;}).join(" · ")+'</span>'+
+    (EX.mode==="libre"&&DB.soundLong?'<br>Chante pendant que ça sonne.':'');
+  EX.waiting=true;
+  const adv=(EX.mode==="libre"&&DB.soundLong)?1300:(EX.seq.length>1?700:380);
+  setTimeout(function(){ if(EX&&!EX.done){ nextQuestion(); } }, adv);
+  renderDots(); save();
+}
+function afterWrong(failId,msg){
+  noteStat(failId).e++;
+  EX.errs.push(failId); EX.hist.push(false); EX.i++;
+  EX.times.push(Date.now()-EX.t0);
+  sfxBad(); vibrate([40,30,40]);
+  const nt=NOTES[failId];
+  $("feedback").className="feedback bad";
+  $("feedback").innerHTML=correctionHtml(failId,msg)+hearHtml(failId);
+  tone(nt.midi,undefined,0.4);
+  if(EX.kind==="serie"){
+    EX.waiting=true;
+    if(EX.qtype==="lect") renderAnswers(false); else $("answers").innerHTML="";
+    $("btnNext").textContent="J'ai lu la correction";
+    $("btnNext").style.display="block";
+  } else {
+    EX.waiting=true;
+    setTimeout(function(){ if(EX&&!EX.done){ nextQuestion(); } }, 900);
+  }
+  renderDots(); save();
+}
+function timeUp(qid){
+  if(!EX||EX.done||EX.waiting||EX.qid!==qid) return;
+  clearQTimers();
+  const failId=EX.seq[Math.min(EX.k,EX.seq.length-1)];
+  noteStat(failId).v++;          // seule la note non répondue est comptée ici (les précédentes l'ont été dans answer)
+  srsReview(failId,false);
+  if(EX.qtype==="ecrit"){
+    const nt=NOTES[failId];
+    $("staffbox").innerHTML=staffSVG(nt.clef,[{p:nt.p,color:"#1c2230",mark:"good",x:STAFF.W*0.62,big:1}]);
+  } else if(EX.seq.length>1){
+    const xs=chunkXs(EX.seq.length);
+    $("staffbox").innerHTML=staffSVG(NOTES[EX.seq[0]].clef,EX.seq.map(function(id,i){
+      return {p:NOTES[id].p,color:i<EX.k?"#2e7d4f":(i===EX.k?"#c0392b":"#1c2230"),mark:i===EX.k?"bad":undefined,x:xs[i]};}),null);
+  }
+  afterWrong(failId,"✕ Trop tard — la note "+(EX.k+1)+" était "+NOTES[failId].n.toUpperCase());
+}
+function answer(nm){
+  if(!EX||EX.waiting||EX.done||EX.qtype!=="lect") return;
+  const id=EX.seq[EX.k], nt=NOTES[id];
+  noteStat(id).v++;
+  if(nm===nt.n){
+    srsReview(id,true);
+    EX.k++;
+    if(EX.k>=EX.seq.length){ clearQTimers(); if(EX.seq.length>1) drawChunk(); afterGood(); }
+    else drawChunk();
+  } else {
+    srsReview(id,false);
+    clearQTimers();
+    if(EX.seq.length>1){
+      const xs=chunkXs(EX.seq.length);
+      $("staffbox").innerHTML=staffSVG(nt.clef,EX.seq.map(function(sid,i){
+        return {p:NOTES[sid].p,color:i<EX.k?"#2e7d4f":(i===EX.k?"#c0392b":"#1c2230"),mark:i===EX.k?"bad":undefined,x:xs[i]};}),null);
+      afterWrong(id,"✕ La note "+(EX.k+1)+" était "+nt.n.toUpperCase());
+    } else {
+      $("staffbox").innerHTML=staffSVG(nt.clef,[{p:nt.p,color:"#c0392b",mark:"bad",x:STAFF.W*0.62,big:1}]);
+      afterWrong(id,"✕ C'était "+nt.n.toUpperCase());
+    }
+  }
+}
+function answerPos(p){
+  if(!EX||EX.waiting||EX.done||EX.qtype!=="ecrit") return;
+  clearQTimers();
+  const id=EX.seq[0], nt=NOTES[id];
+  noteStat(id).v++;
+  if(p===nt.p){
+    srsReview(id,true);
+    $("staffbox").innerHTML=staffSVG(nt.clef,[{p:nt.p,color:"#2e7d4f",mark:"good",x:STAFF.W*0.62,big:1}]);
+    afterGood();
+  } else {
+    srsReview(id,false);
+    // ta note (rouge) et la bonne position (sombre) côte à côte : comparaison immédiate, marques lisibles
+    $("staffbox").innerHTML=staffSVG(nt.clef,[{p:p,color:"#c0392b",mark:"bad",x:STAFF.W*0.5,big:1},{p:nt.p,color:"#1c2230",mark:"good",x:STAFF.W*0.74,big:1}]);
+    afterWrong(id,"✕ "+nt.n.toUpperCase()+" était à droite (note sombre ✓)");
+  }
+}
+function avgMs(){ return EX.times.length?Math.round(EX.times.reduce(function(a,b){return a+b;},0)/EX.times.length):0; }
+function jarvisMsg(ok,n){
+  if(ok===n) return "Parfait. C'est exactement le niveau attendu. On ancre : même chose, même calme.";
+  if(ok>=n-1) return "Très solide. Relis le repère de la note ratée, puis enchaîne : la validation est proche.";
+  if(ok>=n-3) return "Bonne base. Lis chaque correction ci-dessous, puis rejoue sans te presser : la précision commande.";
+  return "On ralentit. Trop d'erreurs = trop de vitesse ou palier trop haut. Repasse en Libre ou au niveau en dessous : c'est une stratégie, pas un recul.";
+}
+function finishSerie(){
+  EX.done=true; clearQTimers();
+  const p=EX.palier, errs=EX.errs.length;
+  if(EX.review==="star"){ markDay("revision",EX.ok); return finishStarReview(errs); }
+  if(EX.review==="due"){ markDay("revision",EX.ok); return finishDueReview(errs); }
+  markDay("serie",EX.ok);
+  let newlyPalier=false, newlyTier=null;
+  if(EX.mode!=="libre"){
+    const td=tierDef(EX.mode), m=DB.paliers[p.id][EX.mode];
+    m.series.push({ts:Date.now(),e:errs});
+    if(errs<=1) DB.xp+=10;
+    if(!m.ok && checkValidation(m.series)){
+      m.ok=true; DB.xp+=td.xp; newlyPalier=true;
+      if(EX.mode==="rhodium") startStarSchedule(p.id); // étoiles : seulement après validation au Rhodium (axe temps, après la vitesse)
+      if(tierComplete(EX.mode)){ newlyTier=EX.mode; DB.xp+=100; }
+    }
+  }
+  logEvent("serie_end",{palier:p.id,mode:EX.mode,ok:EX.ok,errs:errs,avgMs:avgMs(),valide:newlyPalier});
+  save(); header(); syncPush();
+  $("resScore").innerHTML=EX.ok+"<small>/10</small>";
+  $("resSub").textContent="Précision "+(EX.ok*10)+"% · "+(avgMs()/1000).toFixed(1)+" s par question · "+modeLabel(EX.mode==="rafale"?"zen":EX.mode);
+  $("resSolado").textContent=jarvisMsg(EX.ok,10);
+  const eb=$("resErrs");
+  if(errs){ eb.style.display="block";
+    eb.innerHTML=EX.errs.map(function(id){const nt=NOTES[id];
+      return '<div class="er"><b>'+nt.n+'</b> ('+ (nt.clef==="sol"?"clé de sol":"clé de fa") +') — '+nt.mn+'</div>';}).join("");
+  } else eb.style.display="none";
+  if(EX.mode==="libre"){
+    $("resVal").textContent="Libre : rien n'est compté, tout est appris.";
+  } else {
+    const m=DB.paliers[p.id][EX.mode];
+    $("resVal").innerHTML = m.ok
+      ? (newlyPalier?'<b>Palier validé — niveau '+tierDef(EX.mode).label+' !</b>':"Déjà validé à ce niveau — révision utile.")
+      : "Validation "+tierDef(EX.mode).label+" : <b>"+valProgress(p.id,EX.mode)+"</b>";
+  }
+  show("scrRes");
+  if(newlyTier){ sfxWin(); const t=newlyTier; setTimeout(function(){showTierCard(t);},600); }
+  else if(newlyPalier){
+    sfxWin();
+    if(EX.mode==="zen" && CARDS[p.id]) setTimeout(function(){showCard(p.id);},600);
+  }
+}
+function startRevision(){
+  const pool=unlockedNoteIds().filter(isDue).slice(0,40);
+  if(!pool.length) return;
+  EX={kind:"serie",mode:"libre",review:"due",n:10,groupN:1,msNote:null,limit:null,
+      palier:{id:"REV",t:"Révision du jour",notes:pool},i:0,ok:0,errs:[],times:[],hist:[],last:null,waiting:false,done:false,qid:0,
+      qtype:"lect",seq:[],k:0,writePos:4};
+  logEvent("due_review_start",{nb:pool.length});
+  $("exMode").textContent="↻ Révision du jour";
+  $("timerbar").classList.remove("on");
+  show("scrEx"); nextQuestion();
+}
+function finishDueReview(errs){
+  DB.xp+=EX.ok;
+  logEvent("due_review_end",{ok:EX.ok,errs:errs});
+  save(); header(); syncPush();
+  $("resScore").innerHTML=EX.ok+"<small>/10</small>";
+  $("resSub").textContent="Révision du jour · rappel espacé";
+  $("resSolado").textContent= errs===0
+    ? "Mémoire solide. Le rappel espacé, c'est ce qui fait tenir un acquis dans le temps."
+    : "Bien. Les notes manquées reviendront vite, les réussies s'espaceront : le moteur travaille pour toi.";
+  const eb=$("resErrs");
+  if(errs){ eb.style.display="block";
+    eb.innerHTML=EX.errs.map(function(id){const nt=NOTES[id];
+      return '<div class="er"><b>'+nt.n+'</b> ('+(nt.clef==="sol"?"clé de sol":"clé de fa")+') — '+nt.mn+'</div>';}).join("");
+  } else eb.style.display="none";
+  const left=unlockedNoteIds().filter(isDue).length;
+  $("resVal").innerHTML = left ? "Encore <b>"+left+"</b> note"+(left>1?"s":"")+" à revoir aujourd'hui." : "<b>Révisions du jour terminées.</b>";
+  show("scrRes");
+}
+function startStarReview(pid){
+  const p=PALIERS.find(function(x){return x.id===pid;});
+  EX={kind:"serie",mode:"libre",review:"star",starPid:pid,n:10,groupN:1,msNote:null,limit:null,
+      palier:p,i:0,ok:0,errs:[],times:[],hist:[],last:null,waiting:false,done:false,qid:0,
+      qtype:"lect",seq:[],k:0,writePos:4};
+  logEvent("star_review_start",{palier:pid,level:DB.paliers[pid].star.level});
+  $("exMode").textContent="★ Révision d'étoile · "+p.t;
+  $("timerbar").classList.remove("on");
+  show("scrEx"); nextQuestion();
+}
+function finishStarReview(errs){
+  const pid=EX.starPid, s=DB.paliers[pid].star, clean=errs<=1;
+  let advanced=false;
+  if(clean && s.level<5){
+    s.level++; advanced=true; DB.xp+=40+s.level*10;
+    s.due = s.level>=5 ? 0 : Date.now()+STAR_DAYS[s.level]*864e5;
+  } else if(!clean){
+    s.due = Date.now()+3*864e5; // braise : on repropose sous quelques jours, aucune étoile perdue
+  }
+  logEvent("star_review_end",{palier:pid,ok:EX.ok,errs:errs,level:s.level,advanced:advanced});
+  save(); header(); syncPush();
+  $("resScore").innerHTML=EX.ok+"<small>/10</small>";
+  $("resSub").textContent="Révision d'étoile · "+EX.palier.t;
+  $("resSolado").textContent= advanced
+    ? "Stabilité confirmée. Cet acquis tient dans le temps — c'est exactement ce que mesure une étoile."
+    : (clean ? "Déjà au maximum : 5 étoiles, acquis définitif." : "Pas tout à fait. Aucune étoile perdue — on repropose la révision bientôt. Rien n'est jamais perdu.");
+  const eb=$("resErrs");
+  if(errs){ eb.style.display="block";
+    eb.innerHTML=EX.errs.map(function(id){const nt=NOTES[id];
+      return '<div class="er"><b>'+nt.n+'</b> — '+nt.mn+'</div>';}).join("");
+  } else eb.style.display="none";
+  $("resVal").innerHTML = advanced
+    ? '<b>'+starLabel(s.level)+' obtenue sur '+EX.palier.t+' !</b>'
+    : "Étoiles actuelles : "+(s.level?starLabel(s.level):"aucune encore");
+  show("scrRes");
+  if(advanced) sfxWin();
+}
+function finishRafale(){
+  if(EX.done) return; EX.done=true;
+  clearInterval(rafTimer); clearQTimers();
+  const total=EX.ok+EX.errs.length;
+  const prec= total?Math.round(EX.ok/total*100):0;
+  markDay("rafale",EX.ok);
+  const day=DB.days[todayStr()];
+  let star=false;
+  if(!day.perfect && EX.ok>=10 && EX.errs.length===0){ day.perfect=true; star=true; DB.xp+=20; }
+  if(prec>=90 && EX.ok>DB.paliers[EX.palier.id].bestRafale) DB.paliers[EX.palier.id].bestRafale=EX.ok;
+  logEvent("rafale_end",{palier:EX.palier.id,ok:EX.ok,errs:EX.errs.length,prec:prec,star:star});
+  save(); header(); syncPush();
+  $("resScore").innerHTML=EX.ok+"<small> justes en "+RAFALE_S+" s</small>";
+  $("resSub").textContent="Précision "+prec+"% (record : "+DB.paliers[EX.palier.id].bestRafale+")"+(prec<90?" — le record exige ≥ 90 %":"");
+  $("resSolado").textContent= star ? "★ Défi parfait réussi : 10 sur 10 sans faute. C'est ça, la lecture automatique."
+    : (prec>=90?"Bonne rafale. La vitesse ne compte que parce que ta précision tient.":"Trop d'erreurs pour compter. Ralentis d'un cran.");
+  const eb=$("resErrs");
+  if(EX.errs.length){ eb.style.display="block";
+    eb.innerHTML=EX.errs.map(function(id){const nt=NOTES[id];
+      return '<div class="er"><b>'+nt.n+'</b> — '+nt.mn+'</div>';}).join("");
+  } else eb.style.display="none";
+  $("resVal").textContent="La Rafale ne valide pas les niveaux : elle entraîne l'automatisme.";
+  show("scrRes");
+}
+function showCard(pid){
+  const c=CARDS[pid]; if(!c) return;
+  $("cardBox").innerHTML='<h3>Carte débloquée</h3><h2>'+c.t+'</h2><p>'+c.x+'</p><p class="src">'+c.s+'</p>'+
+    '<button onclick="document.getElementById(\'overlay\').classList.remove(\'on\')">Garder la carte</button>';
+  $("overlay").classList.add("on");
+}
+function showTierCard(tid){
+  const c=CARDS_TIER[tid], td=tierDef(tid);
+  const i=TIER_IDS.indexOf(tid);
+  const next=i<TIER_IDS.length-1?TIERS[i+1]:null;
+  $("cardBox").innerHTML='<h3>Niveau '+td.label+' conquis sur tout le monde !</h3>'+
+    (next?'<p><b>'+(next.future?'Un niveau mystérieux approche : '+next.label+'…':'Le niveau '+next.label+' est débloqué.')+'</b></p>':'<p><b>Tu as tout terminé.</b></p>')+
+    (c?('<h2>'+c.t+'</h2><p>'+c.x+'</p><p class="src">'+c.s+'</p>'):'')+
+    '<button onclick="document.getElementById(\'overlay\').classList.remove(\'on\')">Continuer</button>';
+  $("overlay").classList.add("on");
+}
+
+/* ---- stats + sauvegarde ---- */
+function stashPreimport(){
+  try{ localStorage.setItem(LS_PREIMPORT, JSON.stringify(DB)); }catch(e){} // filet avant écrasement
+}
+function recoveryCodeInfo(txt){
+  const raw=String(txt||"").trim().toUpperCase().replace(/\s+/g,"");
+  const m=raw.match(/^(P\d+|B\d+)([+!]|OK|VALID[EÉ])?$/);
+  if(!m) return null;
+  const idx=PALIERS.findIndex(function(p){return p.id===m[1];});
+  if(idx<0) return null;
+  return {code:m[1],idx:idx,complete:!!m[2]};
+}
+function applyRecoveryCode(txt){
+  const info=recoveryCodeInfo(txt);
+  if(!info) return null;
+  stashPreimport();
+  for(let i=0;i<info.idx;i++){
+    const st=DB.paliers[PALIERS[i].id].zen;
+    st.ok=true;
+    if(!st.series.length) st.series=[{ts:Date.now()-DAY_MS*(info.idx-i),e:0},{ts:Date.now()-DAY_MS*(info.idx-i)+1,e:0},{ts:Date.now()-DAY_MS*(info.idx-i)+2,e:0}];
+    DB.seen[PALIERS[i].id]=true;
+  }
+  if(info.complete){
+    const st=DB.paliers[PALIERS[info.idx].id].zen;
+    st.ok=true;
+    st.series=[{ts:Date.now()-2,e:0},{ts:Date.now()-1,e:0},{ts:Date.now(),e:0}];
+    DB.seen[PALIERS[info.idx].id]=true;
+    const next=PALIERS[info.idx+1]||PALIERS[info.idx];
+    DB.sel=next.id;
+  } else {
+    const st=DB.paliers[PALIERS[info.idx].id].zen;
+    if(!st.series.length) st.series.push({ts:Date.now(),e:0}); // trace la série parfaite que tu viens de faire
+    DB.sel=PALIERS[info.idx].id;
+  }
+  DB.mode="zen";
+  DB.xp=Math.max(DB.xp||0, 80 + info.idx*35 + (info.complete?40:0));
+  markDay("serie",10);
+  logEvent("recovery_code",{code:txt,sel:DB.sel,complete:info.complete});
+  save();
+  return "Reprise appliquée : "+(info.complete?info.code+" validé, palier suivant ouvert.":info.code+" restauré avec une série parfaite comptée.");
+}
+function recoveryParam(){
+  let v="";
+  try{
+    const url=new URL(location.href);
+    v=url.searchParams.get("recup")||url.searchParams.get("recover")||url.searchParams.get("restore")||"";
+    if(!v && location.hash){
+      const h=new URLSearchParams(location.hash.replace(/^#/,""));
+      v=h.get("recup")||h.get("recover")||h.get("restore")||"";
+    }
+  }catch(e){}
+  return v;
+}
+function applyStartupRecovery(){
+  const code=recoveryParam();
+  if(!code) return;
+  const msg=applyRecoveryCode(code);
+  if(!msg) return;
+  try{ history.replaceState(null,"",location.pathname); }catch(e){}
+  setTimeout(function(){
+    $("cardBox").innerHTML='<h3>Progression restaurée</h3><h2>On ne recommence pas à zéro.</h2><p>'+esc(msg)+'</p>'+
+      '<p class="src">Si ce n\'est pas le bon niveau, va dans Stats & sauvegarde → Annuler l\'import.</p>'+
+      '<button onclick="document.getElementById(\'overlay\').classList.remove(\'on\')">Continuer</button>';
+    $("overlay").classList.add("on");
+  },200);
+}
+function importSave(txt){
+  txt=(txt||"").trim();
+  if(!txt) return "Rien à charger.";
+  const recovered=applyRecoveryCode(txt);
+  if(recovered) return recovered+" Ancien état conservé — « Annuler l'import » pour revenir.";
+  let obj;
+  try{ obj=JSON.parse(txt); }
+  catch(e){ return "Code invalide : ni JSON de sauvegarde, ni code palier (ex. P4, P4+, B2). Rien n'a été modifié."; }
+  if(!obj||typeof obj!=="object"||!obj.paliers||typeof obj.paliers!=="object")
+    return "JSON invalide (pas de progression reconnaissable). Rien n'a été modifié.";
+  stashPreimport();
+  DB=ensureStructure(obj);
+  save();
+  return "Sauvegarde chargée. XP : "+DB.xp+". Ancien état conservé — « Annuler l'import » pour revenir.";
+}
+function undoImport(){
+  const prev=readKey(LS_PREIMPORT);
+  if(!prev) return "Aucun import récent à annuler.";
+  DB=ensureStructure(prev); save();
+  try{ localStorage.removeItem(LS_PREIMPORT); }catch(e){}
+  return "Import annulé : l'état précédent a été restauré.";
+}
+function renderStats(){
+  let v=0,e=0; Object.keys(DB.noteStats).forEach(function(k){v+=DB.noteStats[k].v;e+=DB.noteStats[k].e;});
+  const prec=v?Math.round((v-e)/v*100):0;
+  let series=0,medals=0,total=0;
+  PALIERS.forEach(function(p){TIERS.forEach(function(t){
+    if(t.future)return;
+    total++;
+    series+=DB.paliers[p.id][t.id].series.length;
+    if(DB.paliers[p.id][t.id].ok)medals++;});});
+  const totals=practiceTotals(), weeks=weekStats();
+  const days=totals.days;
+  const stars=Object.keys(DB.days).filter(function(k){return DB.days[k].perfect;}).length;
+  $("statGrid").innerHTML=
+    '<div class="stat"><div class="v">'+prec+'%</div><div class="l">précision globale</div></div>'+
+    '<div class="stat"><div class="v">'+streak()+'</div><div class="l">jours de suite</div></div>'+
+    '<div class="stat"><div class="v">'+longestStreak()+'</div><div class="l">meilleure suite</div></div>'+
+    '<div class="stat"><div class="v">'+weeks.current+'</div><div class="l">semaines d\'affilée</div></div>'+
+    '<div class="stat"><div class="v">'+medals+'/'+total+'</div><div class="l">validations ('+days+' jours)</div></div>'+
+    '<div class="stat"><div class="v star">★ '+stars+'</div><div class="l">défis parfaits</div></div>'+
+    '<div class="stat"><div class="v">'+trophiesEarned()+'/'+trophyDefs().length+'</div><div class="l">trophées</div></div>';
+  const frag=Object.keys(DB.noteStats)
+    .filter(function(k){const s=DB.noteStats[k];return s.e>=2 && s.e/s.v>0.2;})
+    .sort(function(a,b){return DB.noteStats[b].e-DB.noteStats[a].e;}).slice(0,4);
+  let ancrees=0; Object.keys(DB.noteStats).forEach(function(k){ if(DB.noteStats[k].box>=5) ancrees++; });
+  const aRevoir=unlockedNoteIds().filter(isDue).length;
+  const memLine='<br><br><b>Mémoire (répétition espacée) :</b> '+ancrees+' note'+(ancrees>1?'s':'')+' ancrée'+(ancrees>1?'s':'')+' (boîte 5), '+aRevoir+' à revoir aujourd\'hui.'+
+    '<br><b>Investissement :</b> '+totals.series+' série'+(totals.series>1?'s':'')+', '+totals.rafales+' rafale'+(totals.rafales>1?'s':'')+', '+totals.clavier+' clavier, '+totals.revisions+' révision'+(totals.revisions>1?'s':'')+'.';
+  $("fragBox").innerHTML = (frag.length
+    ? "<b>Notes fragiles :</b> "+frag.map(function(k){return NOTES[k].n+" ("+(NOTES[k].clef==="sol"?"sol":"fa")+")";}).join(", ")+".<br>Solado : elles seront servies plus souvent, en lecture ET en écriture."
+    : "Aucune note fragile détectée. Continue comme ça.") + memLine;
+  const rc=currentRecoveryCode();
+  $("saveCode").textContent = rc
+    ? "Code de secours : "+rc+" — à taper dans Restaurer pour reprendre ici."
+    : "Ton code de secours apparaîtra ici dès ton premier palier validé.";
+  $("expArea").value=JSON.stringify(DB);
+  $("impArea").value=""; $("saveMsg").textContent="";
+  $("syncState").textContent=syncStateText(); $("syncMsg").textContent="";
+  show("scrStats");
+}
+
+/* ================= MES PARTITIONS — Premier regard ================= */
+// Œuvres intégrées. Questions = faits vérifiables (tempo, chiffrage, caractère), aucune note ni parole reproduite.
+const PIECES_BUILTIN=[
+ {id:"carol", titre:"Carol of the Bells", compositeur:"Leontovytch (arr.)", pd:false,
+  info:"La mineur, 3/4, Vivace (≈170). Bâtie sur un motif de quatre notes répété — le « Shchedryk » (chant traditionnel ukrainien). Idéale pour la lecture par motif répété et la pulsation.",
+  q:[ {q:"Quel est le chiffrage de mesure ?", choix:["2/4","3/4","4/4","6/8"], rep:1},
+      {q:"Quelle est l'indication de tempo ?", choix:["Lento","Adagio","Vivace","Andante"], rep:2},
+      {q:"La main droite joue surtout…", choix:["des accords tenus","un motif court répété","une longue mélodie lente","des silences"], rep:1} ]},
+ {id:"avril", titre:"Avril 14th", compositeur:"Aphex Twin (arr.)", pd:false,
+  info:"Tonalité à bémols, lent, deux mains entrelacées façon boîte à musique. Idéale pour le legato et la coordination des mains.",
+  q:[ {q:"Le tempo est plutôt…", choix:["très rapide","modéré et lent","accéléré","libre, sans pulsation"], rep:1},
+      {q:"L'armure comporte…", choix:["des dièses","des bémols","rien (do majeur)","ça change à chaque mesure"], rep:1},
+      {q:"Les deux mains…", choix:["jouent à l'unisson","s'entrelacent en croches","alternent des accords","ne jouent que des silences"], rep:1} ]},
+ {id:"carnaval-lion", titre:"Carnaval des animaux — Marche royale du lion", compositeur:"Saint-Saëns", pd:true,
+  info:"Domaine public. Caractère majestueux ; des gammes graves imitent le rugissement. Bon pour le caractère et la lecture des deux clés.",
+  q:[ {q:"Le caractère de la marche est…", choix:["léger et dansant","majestueux","triste et lent","comique"], rep:1},
+      {q:"L'introduction est marquée…", choix:["Presto","Andante maestoso","Largo","Vivace"], rep:1} ]},
+ {id:"carnaval-cygne", titre:"Carnaval des animaux — Le Cygne", compositeur:"Saint-Saëns", pd:true,
+  info:"Domaine public. Lent, lyrique, très legato — la pièce la plus chantante du recueil. Parfaite pour travailler la ligne mélodique.",
+  q:[ {q:"Le caractère du Cygne est…", choix:["rapide et brillant","lent et lyrique","comique","martial"], rep:1},
+      {q:"La mélodie est plutôt…", choix:["aiguë et piquée","longue et legato","faite de silences","en accords plaqués"], rep:1} ]}
+];
+function allPieces(){ return PIECES_BUILTIN.concat(DB.pieces||[]); }
+function renderPieces(){
+  const list=$("pieceList"); list.innerHTML="";
+  allPieces().forEach(function(p){
+    const div=document.createElement("button");
+    div.className="palier";
+    const tag=p.pd?'<span class="chip ok">domaine public</span>':(p.compositeur&&/perso/i.test(p.compositeur)?'<span class="chip">perso</span>':'<span class="chip">partition en main</span>');
+    div.innerHTML='<span class="pl">'+esc(p.titre)+'<small>'+esc(p.compositeur||'')+(p.key?' · '+esc(p.key):'')+'</small></span><span class="pright">'+tag+'</span>';
+    div.onclick=function(){ startPremierRegard(p.id); };
+    list.appendChild(div);
+  });
+  $("pieceMsg").textContent="";
+  show("scrPieces");
+}
+let PR=null;
+function startPremierRegard(pid){
+  const p=allPieces().find(function(x){return x.id===pid;});
+  if(!p) return;
+  if(!p.q || !p.q.length){ // partition perso : auto-vérification (l'app ne connaît pas son contenu)
+    $("cardBox").innerHTML='<h3>Premier regard — '+esc(p.titre)+'</h3><h2>À toi de vérifier</h2>'+
+      '<p>Ouvre ta partition et repère, dans l\'ordre : la <b>clé</b>, l\'<b>armure</b> (dièses/bémols), le <b>chiffrage de mesure</b>, le <b>tempo</b>, le <b>caractère</b>. C\'est le réflexe n°1 du lecteur.</p>'+
+      '<p class="src">'+esc(p.info||'Partition perso.')+'</p>'+
+      '<button onclick="document.getElementById(\'overlay\').classList.remove(\'on\')">C\'est fait</button>';
+    $("overlay").classList.add("on"); return;
+  }
+  PR={piece:p,i:0,ok:0};
+  logEvent("premier_regard_start",{piece:pid});
+  renderPRQuestion();
+  $("overlay").classList.add("on");
+}
+function renderPRQuestion(){
+  const q=PR.piece.q[PR.i];
+  $("cardBox").innerHTML='<h3>Premier regard — '+esc(PR.piece.titre)+'</h3><h2>Question '+(PR.i+1)+'/'+PR.piece.q.length+'</h2><p>'+esc(q.q)+'</p><div id="prChoices"></div>';
+  const box=$("prChoices");
+  q.choix.forEach(function(c,idx){
+    const b=document.createElement("button");
+    b.className="secbtn"; b.style.marginBottom="6px"; b.textContent=c;
+    b.onclick=function(){ prAnswer(idx); };
+    box.appendChild(b);
+  });
+}
+function prAnswer(idx){
+  const q=PR.piece.q[PR.i], ok=idx===q.rep;
+  if(ok){ PR.ok++; vibrate(15); } else vibrate([40,30,40]);
+  $("prChoices").innerHTML=(ok?'<p style="color:var(--good)">✓ Exact.</p>':'<p style="color:var(--bad)">✕ La bonne réponse : <b>'+esc(q.choix[q.rep])+'</b></p>')+
+    '<button class="bigbtn" id="prNext">'+((PR.i+1<PR.piece.q.length)?'Question suivante':'Terminer')+'</button>';
+  $("prNext").onclick=function(){ PR.i++; if(PR.i<PR.piece.q.length) renderPRQuestion(); else finishPR(); };
+}
+function finishPR(){
+  logEvent("premier_regard_end",{piece:PR.piece.id,ok:PR.ok,total:PR.piece.q.length});
+  $("cardBox").innerHTML='<h3>Premier regard — '+esc(PR.piece.titre)+'</h3><h2>'+PR.ok+'/'+PR.piece.q.length+'</h2>'+
+    '<p class="src">'+esc(PR.piece.info||'')+'</p>'+
+    '<button onclick="document.getElementById(\'overlay\').classList.remove(\'on\')">Fermer</button>';
+}
+function addPiece(){
+  const t=($("pcTitle").value||"").trim();
+  if(!t){ $("pieceMsg").textContent="Donne un titre."; return; }
+  const piece={id:"u"+Date.now(), titre:t, compositeur:"(perso)", clef:$("pcClef").value, key:($("pcKey").value||"").trim(), q:[], info:"Partition perso — fais ton premier regard sur ta copie."};
+  DB.pieces.push(piece); save();
+  $("pcTitle").value=""; $("pcKey").value="";
+  renderPieces();
+  $("pieceMsg").textContent="Ajoutée : "+t+".";
+}
+
+/* ================= CLAVIER — module d'entraînement (libre) ================= */
+// Isolé : état KX dédié, écran scrKbd dédié. Ne touche NI EX, NI la validation des paliers (sauvegardes protégées).
+let KX=null;
+function renderKbd(target,interactive,marks){
+  marks=marks||{};
+  const r=kbdRangeFor(KX.clef), keys=buildKeyboard(r[0],r[1]);
+  const whites=keys.filter(function(k){return k.white;}), nWhite=whites.length, wpct=100/nWhite;
+  const cont=$("kKbd"); cont.innerHTML="";
+  whites.forEach(function(k){
+    const el=document.createElement("button"); el.type="button"; el.className="wkey";
+    el.setAttribute("data-midi",String(k.midi));
+    el.setAttribute("aria-label",PC_NAMES[pcOf(k.midi)].join(" ou "));
+    if(KX.dir==="name" && target && k.midi===target.midi) el.className+=" tgt";
+    if(marks[k.midi]) el.className+=" "+marks[k.midi];
+    if(pcOf(k.midi)===0){ const l=document.createElement("span"); l.className="lbl"; l.textContent="do"; el.appendChild(l); }
+    if(interactive) el.onclick=function(){ kbdTap(k.midi); };
+    cont.appendChild(el);
+  });
+  keys.filter(function(k){return !k.white;}).forEach(function(k){
+    const below=whites.filter(function(w){return w.midi<k.midi;}).length;
+    const el=document.createElement("button"); el.type="button"; el.className="bkey";
+    el.setAttribute("data-midi",String(k.midi));
+    el.setAttribute("aria-label",PC_NAMES[pcOf(k.midi)].join(" ou "));
+    if(KX.dir==="name" && target && k.midi===target.midi) el.className+=" tgt";
+    if(marks[k.midi]) el.className+=" "+marks[k.midi];
+    el.style.width=(wpct*0.62)+"%";
+    el.style.left="calc("+(below*wpct)+"% - "+(wpct*0.31)+"%)";
+    if(interactive) el.onclick=function(ev){ ev.stopPropagation(); kbdTap(k.midi); };
+    cont.appendChild(el);
+  });
+}
+function kbdDots(){
+  const d=$("kDots"); d.innerHTML="";
+  for(let i=0;i<KX.n;i++){ const s=document.createElement("span"); s.className="dot"; d.appendChild(s); }
+  KX.hist.forEach(function(ok,i){ if(d.children[i]) d.children[i].className="dot "+(ok?"g":"b"); });
+  $("kCount").textContent=KX.i+"/"+KX.n;
+}
+function writtenLabelOf(o){ if(typeof o==="number") o={midi:o}; return (o&&o.name?o.name:PC_NAMES[pcOf(o.midi)][0])+(o&&o.acc?o.acc:""); }
+function kbdLabelOf(o){
+  if(typeof o==="number") o={midi:o};
+  const exact=writtenLabelOf(o), all=PC_NAMES[pcOf(o.midi)].join(" / ");
+  return all===exact ? exact : exact+" · même touche que "+all;
+}
+function recordKbdAnswer(correct,o){
+  if(!DB.kbdStats) DB.kbdStats={total:0,ok:0,byPc:{}};
+  DB.kbdStats.total++; if(correct) DB.kbdStats.ok++;
+  const pc=String(pcOf(o.midi));
+  if(!DB.kbdStats.byPc[pc]) DB.kbdStats.byPc[pc]={v:0,e:0};
+  DB.kbdStats.byPc[pc].v++;
+  if(!correct) DB.kbdStats.byPc[pc].e++;
+  if(o.id){ const s=noteStat(o.id); s.v++; if(!correct) s.e++; srsReview(o.id,correct); }
+}
+function startClavier(){
+  let cfg={clef:"sol",dir:"read",acc:false};
+  function seg(label,opts,key){
+    return '<div class="lab">'+label+'</div><div class="seg" data-key="'+key+'">'+
+      opts.map(function(o){return '<button data-val="'+o.v+'"'+(cfg[key]===o.v?' class="on"':'')+'>'+o.t+'</button>';}).join("")+'</div>';
+  }
+  function draw(){
+    $("cardBox").innerHTML='<h3>Clavier</h3><h2>Lire &amp; jouer</h2><div class="kbdcfg">'+
+      seg("Clé",[{v:"sol",t:"Clé de sol"},{v:"fa",t:"Clé de fa"}],"clef")+
+      seg("Sens",[{v:"read",t:"Note → touche"},{v:"name",t:"Touche → nom"}],"dir")+
+      seg("Altérations",[{v:false,t:"Naturelles"},{v:true,t:"Avec ♯ ♭"}],"acc")+
+      '</div><button id="kGo">Commencer</button>';
+    $("cardBox").querySelectorAll(".seg").forEach(function(s){
+      const key=s.getAttribute("data-key");
+      s.querySelectorAll("button").forEach(function(b){
+        b.onclick=function(){ let v=b.getAttribute("data-val"); if(v==="true")v=true; else if(v==="false")v=false; cfg[key]=v; draw(); };
+      });
+    });
+    $("kGo").onclick=function(){ $("overlay").classList.remove("on"); beginClavier(cfg); };
+  }
+  draw(); $("overlay").classList.add("on");
+}
+function beginClavier(cfg){
+  KX={clef:cfg.clef,dir:cfg.dir,acc:!!cfg.acc,n:10,i:0,ok:0,errs:[],hist:[],cur:null,prev:null,done:false,waiting:false,cfg:cfg,t0:0};
+  logEvent("clavier_start",{clef:KX.clef,dir:KX.dir,acc:KX.acc});
+  $("kHead").textContent=(KX.dir==="read"?"Lis et joue":"Trouve le nom")+" · clé de "+(KX.clef==="sol"?"sol":"fa")+(KX.acc?" · ♯♭":"");
+  $("kFb").className="feedback"; show("scrKbd"); nextKbd();
+}
+function nextKbd(){
+  if(KX.done) return;
+  if(KX.i>=KX.n) return finishClavier();
+  KX.waiting=false; KX.t0=Date.now();
+  KX.cur=pickKbdTarget(KX.clef,KX.acc,KX.prev); KX.prev=KX.cur.midi;
+  if(KX.dir==="read"){
+    $("kStaff").style.display="";
+    $("kStaff").innerHTML=staffSVG(KX.cur.clef,[{p:KX.cur.p,acc:KX.cur.acc,color:"#1c2230",x:STAFF.W*0.55,big:1}]);
+    $("kFb").className="feedback"; $("kFb").textContent="Appuie sur la bonne touche.";
+    $("kNames").style.display="none";
+    renderKbd(KX.cur,true);
+  } else {
+    $("kStaff").style.display="none";
+    $("kFb").className="feedback"; $("kFb").textContent="Quel nom porte cette touche ?";
+    renderKbd(KX.cur,false);
+    const box=$("kNames"); box.style.display="grid"; box.style.gridTemplateColumns="1fr 1fr"; box.innerHTML="";
+    nameOptions(KX.cur.midi).forEach(function(opt){
+      const b=document.createElement("button"); b.textContent=opt.label;
+      b.onclick=function(){ kbdName(opt); }; box.appendChild(b);
+    });
+  }
+  kbdDots();
+}
+function finishKbdAnswer(correct,marks,msg){
+  KX.waiting=true; KX.hist.push(correct); KX.i++;
+  recordKbdAnswer(correct,KX.cur);
+  if(correct){ KX.ok++; DB.xp++; vibrate(15); $("kFb").className="feedback good"; }
+  else { KX.errs.push(KX.cur); vibrate([40,30,40]); $("kFb").className="feedback bad"; }
+  $("kFb").innerHTML=msg;
+  renderKbd(KX.cur,false,marks); tone(KX.cur.midi);
+  if(KX.dir==="name") $("kNames").style.display="none";
+  logEvent("clavier_answer",{dir:KX.dir,midi:KX.cur.midi,acc:!!KX.cur.acc,correct:correct,ms:Date.now()-KX.t0});
+  kbdDots(); save();
+  setTimeout(function(){ if(KX&&!KX.done) nextKbd(); }, correct?750:1300);
+}
+function kbdTap(midi){
+  if(!KX||KX.waiting||KX.done||KX.dir!=="read") return;
+  const ok=midi===KX.cur.midi, marks={}; marks[KX.cur.midi]="good"; if(!ok) marks[midi]="bad";
+  finishKbdAnswer(ok,marks, ok?('<span class="big">✓ '+kbdLabelOf(KX.cur)+'</span>')
+    :('<span class="big">✕ C\'était '+kbdLabelOf(KX.cur)+'</span> — la touche en vert'));
+}
+function kbdName(opt){
+  if(!KX||KX.waiting||KX.done||KX.dir!=="name") return;
+  const marks={}; marks[KX.cur.midi]=opt.correct?"good":"bad";
+  finishKbdAnswer(opt.correct,marks, opt.correct?('<span class="big">✓ '+kbdLabelOf(KX.cur)+'</span>')
+    :('<span class="big">✕ C\'était '+kbdLabelOf(KX.cur)+'</span>'));
+}
+function finishClavier(){
+  KX.done=true;
+  markDay("clavier",KX.ok);
+  logEvent("clavier_end",{dir:KX.dir,clef:KX.clef,acc:KX.acc,ok:KX.ok,errs:KX.errs.length});
+  save(); header(); syncPush();
+  const cfg=KX.cfg, ok=KX.ok;
+  const errHtml=KX.errs.length?'<p class="src">À revoir : '+esc(KX.errs.map(function(o){return kbdLabelOf(o);}).join(", "))+'</p>':'';
+  $("cardBox").innerHTML='<h3>Clavier — '+(KX.dir==="read"?"lis et joue":"trouve la note")+'</h3><h2>'+ok+'/'+KX.n+'</h2>'+
+    '<p>'+(ok>=9?"Excellente géographie du clavier.":ok>=7?"Bien. Bientôt automatique.":"On consolide : refais une série tranquille, la précision d\'abord.")+'</p>'+errHtml+
+    '<button id="kAgain">Refaire une série</button>'+
+    '<button id="kHomeBtn" style="margin-top:8px;background:var(--panel2);color:var(--ink)">Accueil</button>';
+  $("overlay").classList.add("on");
+  $("kAgain").onclick=function(){ $("overlay").classList.remove("on"); beginClavier(cfg); };
+  $("kHomeBtn").onclick=function(){ $("overlay").classList.remove("on"); KX=null; renderHome(); show("scrHome"); };
+}
+
+/* ================= SYNCHRO ENTRE APPAREILS (Gist GitHub) ================= */
+/* Principe : la sauvegarde compacte vit dans un gist SECRET du compte GitHub de Youcef.
+   - push après chaque session terminée (et au passage en arrière-plan) ;
+   - pull au lancement ;
+   - règle d'or anti-perte : on n'écrase JAMAIS un état plus avancé (comparaison XP, monotone) ;
+   - le jeton reste dans une clé locale SÉPARÉE : jamais dans DB, ni dans les exports, ni dans le QR. */
+const LS_SYNC="solado_sync", GIST_FILE="solado-save.json", GIST_DESC="Sauvegarde Solado (auto)";
+let syncBusy=false, syncLastPush=0;
+function syncCfg(){ return readKey(LS_SYNC)||{}; }
+function syncSet(patch){ const c=Object.assign({},syncCfg(),patch); try{ localStorage.setItem(LS_SYNC,JSON.stringify(c)); }catch(e){} return c; }
+function syncClear(){ try{ localStorage.removeItem(LS_SYNC); }catch(e){} }
+function syncEnabled(){ const c=syncCfg(); return !!(c.token&&c.gistId); }
+// Décision pure (testée) : qui est devant ?
+function syncDecision(localXp,remoteXp){
+  if((remoteXp||0)>(localXp||0)) return "pull";
+  if((localXp||0)>(remoteXp||0)) return "push";
+  return "none";
+}
+function syncStatus(msg){ const el=document.getElementById("syncMsg"); if(el) el.textContent=msg||""; }
+function gistApi(method,path,body,cb){
+  const c=syncCfg();
+  if(!c.token||typeof fetch==="undefined"||typeof navigator==="undefined"||navigator.onLine===false){ cb(null); return; }
+  try{
+    fetch("https://api.github.com"+path,{
+      method:method,
+      keepalive:method==="PATCH",
+      headers:{"Authorization":"Bearer "+c.token,"Accept":"application/vnd.github+json","Content-Type":"application/json"},
+      body:body?JSON.stringify(body):undefined
+    }).then(function(r){
+      if(r.status===401||r.status===403){ syncStatus("Jeton refusé — refais un jeton (permission gist) et recolle-le."); return null; }
+      return r.ok?r.json():null;
+    }).then(function(j){ cb(j||null); }).catch(function(){ cb(null); });
+  }catch(e){ cb(null); }
+}
+function parseRemote(g){
+  const f=g&&g.files&&g.files[GIST_FILE];
+  if(!f||!f.content) return null;
+  let o=null; try{ o=JSON.parse(f.content); }catch(e){ return null; }
+  return (o&&typeof o==="object"&&o.paliers)?o:null;
+}
+// Trouve (ou crée) le gist de sauvegarde ; ne demande que le jeton sur un nouvel appareil.
+function syncEnsure(cb){
+  const c=syncCfg();
+  if(!c.token){ cb(false); return; }
+  if(c.gistId){ cb(true); return; }
+  gistApi("GET","/gists?per_page=100",null,function(list){
+    const hit=Array.isArray(list)?list.find(function(g){return g.files&&g.files[GIST_FILE];}):null;
+    if(hit){ syncSet({gistId:hit.id}); cb(true); return; }
+    gistApi("POST","/gists",{description:GIST_DESC,public:false,files:{"solado-save.json":{content:compactSave()}}},function(g){
+      if(g&&g.id){ syncSet({gistId:g.id}); cb(true); } else cb(false);
+    });
+  });
+}
+// Adopte l'état distant (plus avancé), avec filet « Annuler l'import ».
+function syncAdopt(remote){
+  stashPreimport();
+  const before=DB.xp||0;
+  DB=ensureStructure(remote); save();
+  syncSet({lastSync:Date.now()});
+  logEvent("sync_pull",{xp:DB.xp});
+  renderHome(); header();
+  $("cardBox").innerHTML='<h3>Synchro</h3><h2>Progression récupérée</h2>'+
+    '<p>Ton autre appareil était plus avancé ('+(DB.xp||0)+' XP contre '+before+' ici). C\'est maintenant cette version qui est active.</p>'+
+    '<p class="src">Pas d\'accord ? Stats & sauvegarde → Annuler l\'import.</p>'+
+    '<button onclick="document.getElementById(\'overlay\').classList.remove(\'on\')">Continuer</button>';
+  $("overlay").classList.add("on");
+}
+/* Push sûr : on relit l'état distant AVANT d'écrire. S'il est devant, on le récupère au lieu de l'écraser. */
+function syncPush(force){
+  if(!syncEnabled()) return;
+  if(!force && Date.now()-syncLastPush<20000) return; // douceur avec l'API
+  if(syncBusy) return; syncBusy=true;
+  gistApi("GET","/gists/"+syncCfg().gistId,null,function(g){
+    const remote=parseRemote(g);
+    if(remote && syncDecision(DB.xp||0,remote.xp||0)==="pull"){ syncBusy=false; syncAdopt(remote); return; }
+    gistApi("PATCH","/gists/"+syncCfg().gistId,{files:{"solado-save.json":{content:compactSave()}}},function(res){
+      syncBusy=false;
+      if(res){ syncLastPush=Date.now(); syncSet({lastSync:Date.now()}); syncStatus("Synchronisé ✓"); }
+    });
+  });
+}
+// Push aveugle (fermeture de page : pas le temps de vérifier) — cet appareil vient de jouer, il est devant.
+function syncPushBlind(){
+  if(!syncEnabled()) return;
+  gistApi("PATCH","/gists/"+syncCfg().gistId,{files:{"solado-save.json":{content:compactSave()}}},function(){});
+}
+function syncPull(){
+  if(!syncEnabled()) return;
+  gistApi("GET","/gists/"+syncCfg().gistId,null,function(g){
+    const remote=parseRemote(g);
+    if(!remote) return;
+    const dec=syncDecision(DB.xp||0,remote.xp||0);
+    if(dec==="pull") syncAdopt(remote);
+    else if(dec==="push") syncPush(true);
+    else { syncSet({lastSync:Date.now()}); syncStatus("À jour ✓"); }
+  });
+}
+function syncStateText(){
+  const c=syncCfg();
+  if(!(c.token&&c.gistId)) return "Non activée sur cet appareil. Crée un jeton GitHub (classic, permission « gist »), colle-le ci-dessous : une seule fois par appareil.";
+  const t=c.lastSync?Math.round((Date.now()-c.lastSync)/60000):null;
+  return "Activée ✓ — dernière synchro : "+(t===null?"jamais":(t<1?"à l'instant":"il y a "+t+" min"))+".";
+}
+function activateSync(){
+  const t=($("syncToken").value||"").trim();
+  if(!t){ syncStatus("Colle d'abord ton jeton GitHub (permission gist)."); return; }
+  syncSet({token:t});
+  syncStatus("Connexion à GitHub…");
+  syncEnsure(function(ok){
+    if(!ok){ syncStatus("Échec : jeton invalide, sans permission gist, ou pas de réseau."); syncClear(); return; }
+    $("syncToken").value="";
+    $("syncState").textContent=syncStateText();
+    syncStatus("Synchro activée ✓ — récupération en cours…");
+    logEvent("sync_on",{});
+    syncPull();
+  });
+}
+
+/* ================= TRANSFERT QR (hors-ligne) ================= */
+// Sauvegarde compacte pour le QR : on n'exporte que l'utile (niveaux vides omis) ; ensureStructure reconstruit le reste à l'import.
+function compactSave(){
+  const out={v:DB.v,xp:DB.xp,sound:DB.sound,soundLong:DB.soundLong,haptic:DB.haptic,mode:DB.mode,sel:DB.sel,
+             days:DB.days,seen:DB.seen,noteStats:{},paliers:{},pieces:DB.pieces||[],profile:DB.profile,kbdStats:DB.kbdStats};
+  Object.keys(DB.noteStats||{}).forEach(function(k){ const s=DB.noteStats[k]; if(s&&(s.v||s.e||s.box||s.due)) out.noteStats[k]=s; });
+  Object.keys(DB.paliers||{}).forEach(function(pid){
+    const st=DB.paliers[pid], o={};
+    TIER_IDS.forEach(function(t){ if(st[t]&&(st[t].ok||(st[t].series&&st[t].series.length))) o[t]=st[t]; });
+    if(st.bestRafale) o.bestRafale=st.bestRafale;
+    if(st.star&&(st.star.started||st.star.level)) o.star=st.star;
+    if(Object.keys(o).length) out.paliers[pid]=o;
+  });
+  return JSON.stringify(out);
+}
+function showSaveQR(){
+  const data=compactSave();
+  let svg=null;
+  try{
+    const qr=qrcode(0,"L"); qr.addData(data); qr.make();
+    const n=qr.getModuleCount(), cell=Math.max(2,Math.floor(248/(n+16)));
+    svg=qr.createSvgTag({cellSize:cell,margin:8});
+  }catch(e){ svg=null; }
+  if(!svg){
+    $("cardBox").innerHTML='<h3>Transfert QR</h3><h2>Sauvegarde trop grande</h2>'+
+      '<p>Ta progression dépasse la capacité d\'un QR code. Utilise « Télécharger (fichier) » puis AirDrop / câble pour la passer sur l\'autre appareil.</p>'+
+      '<button onclick="document.getElementById(\'overlay\').classList.remove(\'on\')">OK</button>';
+  } else {
+    $("cardBox").innerHTML='<h3>Transfert QR — sans internet</h3><h2>Scanne avec ton autre appareil</h2>'+
+      '<div style="background:#fff;border-radius:10px;padding:10px;display:flex;justify-content:center">'+svg+'</div>'+
+      '<p style="font-size:12.5px;margin-top:8px">Sur le 2ᵉ appareil : ouvre l\'appareil photo, vise ce code, copie le texte obtenu, puis colle-le dans <b>Restaurer → Charger (collé)</b>. Aucune connexion nécessaire.</p>'+
+      '<button onclick="document.getElementById(\'overlay\').classList.remove(\'on\')">Fermer</button>';
+  }
+  $("overlay").classList.add("on");
+}
+
+/* ================= LIAISONS ================= */
+$("btnSerie").onclick=startSerie;
+$("btnRafale").onclick=startRafale;
+$("btnClavier").onclick=startClavier;
+$("kQuit").onclick=function(){ if(KX&&!KX.done)logEvent("clavier_quit",{i:KX.i}); KX=null; renderHome(); show("scrHome"); };
+$("btnStats").onclick=renderStats;
+$("btnStatsBack").onclick=function(){renderHome();show("scrHome");};
+$("btnPieces").onclick=renderPieces;
+$("btnPiecesBack").onclick=function(){renderHome();show("scrHome");};
+$("btnAddPiece").onclick=addPiece;
+$("btnQR").onclick=showSaveQR;
+$("btnNext").onclick=function(){
+  if(EX&&EX.waiting&&!EX.done){
+    logEvent("correction_lue",{palier:EX.palier?EX.palier.id:null,mode:EX.mode,question:EX.i});
+    nextQuestion();
+  }
+};
+$("btnQuit").onclick=function(){ if(EX&&!EX.done)logEvent("abandon",{palier:EX.palier?EX.palier.id:null,mode:EX.mode,i:EX.i}); if(rafTimer)clearInterval(rafTimer); clearQTimers(); if(EX)EX.done=true; save(); renderHome(); show("scrHome"); };
+$("btnAgain").onclick=function(){
+  if(EX.review==="due"){ if(unlockedNoteIds().filter(isDue).length){ startRevision(); } else { renderHome(); show("scrHome"); } return; }
+  if(EX.review==="star"){ renderHome(); show("scrHome"); return; }
+  if(EX.kind==="rafale") startRafale(); else startSerie();
+};
+$("btnHome").onclick=function(){ renderHome(); show("scrHome"); };
+$("btnSound").onclick=function(){
+  if(DB.sound&&DB.soundLong){DB.soundLong=false;}
+  else if(DB.sound){DB.sound=false;}
+  else {DB.sound=true;DB.soundLong=true;}
+  save(); header(); syncPush();
+};
+$("btnCopy").onclick=function(){
+  const t=$("expArea");
+  t.select(); t.setSelectionRange(0,999999);
+  let ok=false;
+  try{ ok=document.execCommand("copy"); }catch(e){}
+  if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(t.value); ok=true; }
+  $("saveMsg").textContent= ok?"Sauvegarde copiée. Colle-la dans une note pour la garder.":"Sélectionne le texte et copie-le manuellement.";
+};
+$("btnImport").onclick=function(){
+  const msg=importSave($("impArea").value);
+  renderStats(); $("saveMsg").textContent=msg; header();
+};
+$("btnUndoImport").onclick=function(){
+  const msg=undoImport();
+  renderStats(); $("saveMsg").textContent=msg; header();
+};
+$("btnImportFile").onclick=function(){ $("fileInput").click(); };
+$("fileInput").onchange=function(e){
+  const f=e.target.files&&e.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=function(){ const msg=importSave(String(r.result)); renderStats(); $("saveMsg").textContent=msg; header(); e.target.value=""; };
+  r.onerror=function(){ $("saveMsg").textContent="Lecture du fichier impossible."; };
+  r.readAsText(f);
+};
+$("btnSyncOn").onclick=activateSync;
+$("btnSyncNow").onclick=function(){
+  if(!syncEnabled()){ syncStatus("Active d'abord la synchro : jeton GitHub à coller ci-dessus."); return; }
+  syncStatus("Vérification…"); syncPull();
+};
+$("btnSyncOff").onclick=function(){
+  syncClear(); logEvent("sync_off",{});
+  $("syncState").textContent=syncStateText();
+  syncStatus("Synchro désactivée sur cet appareil (le gist et les autres appareils ne sont pas touchés).");
+};
+$("btnDownload").onclick=function(){
+  try{
+    const blob=new Blob([JSON.stringify(DB)],{type:"application/json"});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement("a");
+    a.href=url; a.download="solado-sauvegarde-"+todayStr()+".json";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){URL.revokeObjectURL(url);},1000);
+    $("saveMsg").textContent="Fichier de sauvegarde téléchargé.";
+  }catch(e){ $("saveMsg").textContent="Téléchargement impossible sur cet appareil — utilise « Copier »."; }
+};
+
+load(); renderHome(); applyStartupRecovery(); idbRescue(); syncPull();
+// Sauvegarde de dernière chance quand l'app passe en arrière-plan ou se ferme (mobile surtout).
+window.addEventListener("pagehide",function(){ try{ save(); syncPushBlind(); }catch(e){} });
+document.addEventListener("visibilitychange",function(){ if(document.visibilityState==="hidden"){ try{ save(); syncPushBlind(); }catch(e){} } });
+if("serviceWorker" in navigator){ window.addEventListener("load",function(){ navigator.serviceWorker.register("sw.js").catch(function(){}); }); }
+</script>
+</body>
+</html>
