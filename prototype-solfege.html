@@ -229,6 +229,10 @@
       <button class="linkbtn" id="btnPieces">Mes partitions</button>
       <span class="defi" id="defiTxt"></span>
     </div>
+    <div class="linkrow">
+      <button class="linkbtn" id="btnFeedback">💬 Donner un retour (bêta)</button>
+      <span style="color:var(--dim);font-size:11px" id="verTag"></span>
+    </div>
   </div>
 
   <div class="screen" id="scrEx">
@@ -271,8 +275,9 @@
     <div class="savebox">
       <h4>Synchro entre appareils</h4>
       <div class="savemsg" id="syncState" style="margin:0 0 8px;color:var(--ink)"></div>
-      <input id="syncToken" type="password" autocomplete="off" placeholder="Jeton GitHub (permission gist)" style="width:100%;background:var(--panel2);border:1px solid #2c3645;color:var(--ink);border-radius:8px;padding:9px;font-size:13.5px;-webkit-user-select:text;user-select:text">
-      <div class="row"><button id="btnSyncOn">Activer sur cet appareil</button><button id="btnSyncNow">Synchroniser maintenant</button></div>
+      <div class="row"><button id="btnSyncHelp" style="background:var(--accent);color:#04222f;font-weight:700">1 · Créer mon code de synchro</button></div>
+      <input id="syncToken" type="password" autocomplete="off" placeholder="2 · Colle ici le code (il commence par ghp_)" style="width:100%;margin-top:8px;background:var(--panel2);border:1px solid #2c3645;color:var(--ink);border-radius:8px;padding:9px;font-size:13.5px;-webkit-user-select:text;user-select:text">
+      <div class="row"><button id="btnSyncOn" style="background:var(--good);color:#04331b;font-weight:700">3 · Activer</button><button id="btnSyncNow">Synchroniser maintenant</button></div>
       <div class="row"><button id="btnSyncOff">Désactiver (cet appareil)</button></div>
       <div class="savemsg" id="syncMsg"></div>
     </div>
@@ -321,6 +326,7 @@ function esc(s){
   });
 }
 /* ================= DONNÉES ================= */
+const APP_VERSION="v11"; // garder aligné avec CACHE_NAME de sw.js (testé)
 const NOTES = {
   do4 :{n:"do", clef:"sol", p:-2, midi:60, mn:"Le do du milieu est transpercé par sa petite ligne, rien qu'à lui."},
   re4 :{n:"ré", clef:"sol", p:-1, midi:62, mn:"Collé juste sous la portée."},
@@ -1059,6 +1065,7 @@ function openMusicProfile(){
 
 function renderHome(){
   header();
+  $("verTag").textContent="Solado "+APP_VERSION;
   if(DB.mode!=="libre" && !tierUnlocked(DB.mode)) DB.mode="zen";
   if(!playableInMode(DB.sel,DB.mode)){
     const first=PALIERS.find(function(p){return playableInMode(p.id,DB.mode)&&(DB.mode==="libre"||!DB.paliers[p.id][DB.mode].ok);})
@@ -2101,19 +2108,31 @@ function syncPull(){
     else { syncSet({lastSync:Date.now()}); syncStatus("À jour ✓"); }
   });
 }
+const SYNC_TOKEN_URL="https://github.com/settings/tokens/new?scopes=gist&description=Solado%20synchro";
+// Le « code de synchro » est un jeton GitHub. Vérification pure (testée) : ce n'est PAS un mot de passe.
+function looksLikeToken(t){
+  return /^(gh[pousr]_[A-Za-z0-9_]{20,}|github_pat_[A-Za-z0-9_]{20,})$/.test(t);
+}
 function syncStateText(){
   const c=syncCfg();
-  if(!(c.token&&c.gistId)) return "Non activée sur cet appareil. Crée un jeton GitHub (classic, permission « gist »), colle-le ci-dessous : une seule fois par appareil.";
+  if(!(c.token&&c.gistId)) return "Pour retrouver ta progression sur ton téléphone ET ton ordinateur. "+
+    "Étape 1 : touche le bouton bleu — GitHub s'ouvre, descends en bas et touche le bouton vert « Generate token ». "+
+    "Étape 2 : copie le code vert qui s'affiche (il commence par ghp_) — ce n'est PAS ton mot de passe. "+
+    "Étape 3 : colle-le ci-dessous et touche Activer. Le même code sert sur tous tes appareils.";
   const t=c.lastSync?Math.round((Date.now()-c.lastSync)/60000):null;
   return "Activée ✓ — dernière synchro : "+(t===null?"jamais":(t<1?"à l'instant":"il y a "+t+" min"))+".";
 }
 function activateSync(){
-  const t=($("syncToken").value||"").trim();
-  if(!t){ syncStatus("Colle d'abord ton jeton GitHub (permission gist)."); return; }
+  const t=($("syncToken").value||"").replace(/\s+/g,"");
+  if(!t){ syncStatus("Étape 2 manquante : colle d'abord le code dans la case ci-dessus."); return; }
+  if(!looksLikeToken(t)){
+    syncStatus("Ce n'est pas le bon code : le code de synchro commence par « ghp_ » (ce n'est pas ton mot de passe GitHub, ni ton email). Touche le bouton bleu 1, puis le bouton vert « Generate token » en bas de la page GitHub, et copie le code vert affiché.");
+    return;
+  }
   syncSet({token:t});
   syncStatus("Connexion à GitHub…");
   syncEnsure(function(ok){
-    if(!ok){ syncStatus("Échec : jeton invalide, sans permission gist, ou pas de réseau."); syncClear(); return; }
+    if(!ok){ syncStatus("Échec : code refusé par GitHub ou pas de réseau. Refais un code (bouton 1) en laissant la case « gist » cochée."); syncClear(); return; }
     $("syncToken").value="";
     $("syncState").textContent=syncStateText();
     syncStatus("Synchro activée ✓ — récupération en cours…");
@@ -2211,6 +2230,16 @@ $("fileInput").onchange=function(e){
   r.onload=function(){ const msg=importSave(String(r.result)); renderStats(); $("saveMsg").textContent=msg; header(); e.target.value=""; };
   r.onerror=function(){ $("saveMsg").textContent="Lecture du fichier impossible."; };
   r.readAsText(f);
+};
+$("btnFeedback").onclick=function(){
+  const p=PALIERS.find(function(x){return x.id===DB.sel;});
+  const body="Bonjour Youcef,\n\nMon retour sur Solado :\n- Ce que j'aime :\n- Ce qui me gêne :\n- Bug éventuel (que s'est-il passé, sur quel écran ?) :\n\n—\nInfos utiles : "+APP_VERSION+" · palier "+(p?p.id:"?")+" · "+(DB.xp||0)+" XP · "+String(navigator.userAgent||"").slice(0,90);
+  logEvent("feedback_open",{});
+  location.href="mailto:youcef.gatt@gmail.com?subject="+encodeURIComponent("Retour Solado (bêta)")+"&body="+encodeURIComponent(body);
+};
+$("btnSyncHelp").onclick=function(){
+  syncStatus("GitHub s'ouvre dans un nouvel onglet : descends en bas, touche le bouton vert « Generate token », puis copie le code vert (ghp_…).");
+  try{ window.open(SYNC_TOKEN_URL,"_blank"); }catch(e){}
 };
 $("btnSyncOn").onclick=activateSync;
 $("btnSyncNow").onclick=function(){
