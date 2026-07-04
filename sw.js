@@ -1,9 +1,9 @@
-/* Solado — service worker : app installable + hors-ligne.
+/* Sezam — service worker : app installable + hors-ligne.
    Stratégie :
    - documents HTML → réseau d'abord (on récupère toujours la dernière version quand on est en ligne),
      cache en secours (l'app reste utilisable hors-ligne) ;
    - autres ressources → cache d'abord, mise à jour en fond (stale-while-revalidate). */
-const CACHE_NAME = "solado-v11";
+const CACHE_NAME = "sezam-v12";
 const ASSETS = [
   "./",
   "./index.html",

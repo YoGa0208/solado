@@ -3,32 +3,37 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#10141a">
+<meta name="theme-color" content="#1a1612">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" type="image/svg+xml" href="icon.svg">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Solado">
-<title>Solado — entraînement musical</title>
+<meta name="apple-mobile-web-app-title" content="Sezam">
+<title>Sezam — entraînement musical</title>
 <style>
   :root{
-    --bg:#10141a; --panel:#1a2029; --panel2:#222a36; --ink:#e8edf4; --dim:#8a97a8;
-    --accent:#4cc2ff; --good:#3ddc84; --bad:#ff5d6c; --gold:#ffd166;
+    /* Charte SEZAM (Manuel de style v1.1) — variante circadienne « crépuscule » :
+       encre #1a1612, papier #f5edd6, or #b8893a, gueules #a8472a, lichen/sauge pour l'assentiment.
+       Les tons éclaircis (--accent, --bad) sont des dérivés lisibilité-écran des tokens de la charte. */
+    --bg:#1a1612; --panel:#252017; --panel2:#2f2a1e; --ink:#f5edd6; --dim:#a89e88;
+    --accent:#dcb88a; --or:#b8893a; --or-deep:#8d6826; --good:#9caa92; --bad:#d98a63; --gueules:#a8472a; --gold:#f5ebc8;
     --bronze:#cd8a4e; --argent:#cfd6df; --vermeil:#e8a87c; --rhod:#9fd8e8;
+    --serif:"Iowan Old Style","Charter","Sabon","Georgia","Times New Roman",serif;
+    --sans:"Inter",-apple-system,BlinkMacSystemFont,"Helvetica Neue","Segoe UI",sans-serif;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
   html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    font-family:var(--sans);
     touch-action:manipulation; user-select:none;-webkit-user-select:none}
   #app{max-width:430px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;
     padding:max(10px,env(safe-area-inset-top)) 14px max(14px,env(safe-area-inset-bottom))}
   header{display:flex;align-items:center;justify-content:space-between;padding:6px 2px 10px}
-  header h1{font-size:15px;margin:0;font-weight:600;letter-spacing:.4px;color:var(--dim)}
+  header h1{font-size:15px;margin:0;font-weight:700;letter-spacing:1.6px;color:var(--accent);font-family:var(--serif)}
   .hstats{display:flex;gap:10px;align-items:center;font-size:13px;color:var(--dim)}
   .hstats b{color:var(--ink)}
-  #btnSound{background:var(--panel);border:1px solid #2c3645;color:var(--ink);
+  #btnSound{background:var(--panel);border:1px solid #3d3628;color:var(--ink);
     border-radius:8px;padding:4px 10px;font-size:12.5px}
   .screen{display:none;flex:1;flex-direction:column}
   .screen.active{display:flex}
@@ -36,9 +41,10 @@
 
   .mission{background:var(--panel);border-radius:14px;padding:14px;margin-bottom:12px;
     font-size:14px;line-height:1.45;color:var(--ink)}
-  .mission .who{color:var(--accent);font-weight:600;font-size:12px;letter-spacing:.6px;text-transform:uppercase}
+  .mission .who{color:var(--accent);font-weight:700;font-size:12.5px;letter-spacing:1px;text-transform:uppercase;
+    font-family:var(--serif);border-bottom:2px solid var(--or);padding-bottom:1px} /* wordmark souligné du filet d'or (charte SEZAM) */
   .tiers{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
-  .tier{padding:8px 10px;font-size:12px;border-radius:10px;border:1px solid #2c3645;
+  .tier{padding:8px 10px;font-size:12px;border-radius:10px;border:1px solid #3d3628;
     background:var(--panel);color:var(--dim);font-weight:600;flex:1 1 28%}
   .tier small{display:block;font-weight:400;font-size:10px;margin-top:1px}
   .tier.sel{border-color:var(--accent);color:var(--ink)}
@@ -48,16 +54,16 @@
     padding:10px 12px;display:flex;justify-content:space-between;align-items:center;color:var(--ink);gap:8px}
   .palier.sel{border-color:var(--accent)}
   .palier.locked{opacity:.42}
-  .palier.mystery{border-style:dashed;border-color:#3a4456;opacity:.6}
+  .palier.mystery{border-style:dashed;border-color:#4a4130;opacity:.6}
   .palier .pl{font-size:14px;font-weight:600;text-align:left;flex:1}
   .palier .pl small{display:block;font-weight:400;color:var(--dim);font-size:12px;margin-top:2px}
   .pright{display:flex;flex-direction:column;align-items:flex-end;gap:5px}
   .chip{font-size:11px;padding:3px 8px;border-radius:99px;background:var(--panel2);color:var(--dim);white-space:nowrap}
-  .chip.ok{background:rgba(61,220,132,.15);color:var(--good)}
-  .chip.cur{background:rgba(76,194,255,.15);color:var(--accent)}
+  .chip.ok{background:rgba(156,170,146,.18);color:var(--good)}
+  .chip.cur{background:rgba(220,184,138,.16);color:var(--accent)}
   .bigbtn{width:100%;padding:16px;border:none;border-radius:14px;background:var(--accent);
-    color:#04222f;font-size:18px;font-weight:700;margin-bottom:8px}
-  .secbtn{width:100%;padding:13px;border:1px solid #2c3645;border-radius:14px;
+    color:#1a1612;font-size:18px;font-weight:700;margin-bottom:8px}
+  .secbtn{width:100%;padding:13px;border:1px solid #3d3628;border-radius:14px;
     background:var(--panel);color:var(--ink);font-size:15px;font-weight:600;margin-bottom:8px}
   .linkrow{display:flex;justify-content:space-between;align-items:center;margin-top:4px}
   .linkbtn{background:none;border:none;color:var(--dim);font-size:13px;text-decoration:underline}
@@ -70,19 +76,19 @@
   .timerbar{height:6px;border-radius:3px;background:var(--panel2);overflow:hidden;margin:2px 0 8px;visibility:hidden}
   .timerbar.on{visibility:visible}
   .timerbar div{height:100%;background:var(--gold);width:100%}
-  .staffbox{background:#f6f1e7;border-radius:16px;padding:6px 0;margin-bottom:10px}
+  .staffbox{background:#f5edd6;border-radius:16px;padding:6px 0;margin-bottom:10px}
   .feedback{min-height:64px;text-align:center;font-size:15px;line-height:1.35;padding:4px 8px;color:var(--dim)}
   .feedback .big{font-size:17px;font-weight:700}
   .feedback.good .big{color:var(--good)} .feedback.bad .big{color:var(--bad)}
-  .hearbtn{background:var(--panel2);border:1px solid #2c3645;color:var(--ink);border-radius:8px;
+  .hearbtn{background:var(--panel2);border:1px solid #3d3628;color:var(--ink);border-radius:8px;
     padding:5px 12px;font-size:13px;margin-top:6px}
   .answers{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:auto}
   .answers button{padding:16px 0;font-size:17px;font-weight:700;border:none;border-radius:12px;
     background:var(--panel2);color:var(--ink)}
-  .answers button:active{background:#2e3a4a}
+  .answers button:active{background:#3a3222}
   .answers.wmode{grid-template-columns:1fr 1fr 2fr}
   #btnNext{display:none;width:100%;padding:14px;border:none;border-radius:12px;
-    background:var(--ink);color:#10141a;font-size:16px;font-weight:700;margin-top:10px}
+    background:var(--ink);color:#1a1612;font-size:16px;font-weight:700;margin-top:10px}
   .quit{background:none;border:none;color:var(--dim);font-size:12px;margin-top:10px;text-decoration:underline}
 
   .score{font-size:44px;font-weight:800;text-align:center;margin:14px 0 2px}
@@ -91,7 +97,7 @@
   .jarvis{background:var(--panel);border-left:3px solid var(--accent);border-radius:10px;
     padding:11px 13px;font-size:14px;line-height:1.45;margin-bottom:12px}
   .errlist{background:var(--panel);border-radius:12px;padding:4px 13px;margin-bottom:12px}
-  .errlist .er{padding:9px 0;border-bottom:1px solid #242d3a;font-size:13.5px;line-height:1.4}
+  .errlist .er{padding:9px 0;border-bottom:1px solid #352e20;font-size:13.5px;line-height:1.4}
   .errlist .er:last-child{border-bottom:none}
   .errlist .er b{color:var(--bad)}
   .valprog{font-size:13px;color:var(--dim);text-align:center;margin-bottom:12px}
@@ -105,54 +111,56 @@
   .fragiles b{color:var(--bad)}
   .savebox{background:var(--panel);border-radius:12px;padding:12px;margin-bottom:12px}
   .savebox h4{margin:0 0 8px;font-size:13px;color:var(--dim);letter-spacing:.4px;text-transform:uppercase}
-  .savebox textarea{width:100%;height:64px;background:var(--panel2);border:1px solid #2c3645;color:var(--ink);
+  .savebox textarea{width:100%;height:64px;background:var(--panel2);border:1px solid #3d3628;color:var(--ink);
     border-radius:8px;font-size:11px;padding:8px;resize:none;font-family:monospace;-webkit-user-select:text;user-select:text}
   .savebox .row{display:flex;gap:8px;margin-top:8px}
   .savebox .row button{flex:1;padding:10px;border:none;border-radius:9px;font-weight:600;font-size:13.5px;
-    background:var(--panel2);color:var(--ink);border:1px solid #2c3645}
+    background:var(--panel2);color:var(--ink);border:1px solid #3d3628}
   .savemsg{font-size:12.5px;color:var(--good);margin-top:7px;min-height:16px}
 
   #overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);display:none;align-items:center;
     justify-content:center;padding:24px;z-index:10}
   #overlay.on{display:flex}
-  .card{background:linear-gradient(160deg,#2a3344,#1a2029);border:1px solid #3a4860;border-radius:18px;
+  .card{background:linear-gradient(160deg,#332b1d,#201b12);border:1px solid #4a4130;border-radius:18px;
     padding:20px;max-width:min(390px,92vw);max-height:88vh;overflow:auto;animation:pop .35s ease}
   .card h3{margin:0 0 4px;font-size:13px;color:var(--gold);letter-spacing:.8px;text-transform:uppercase}
   .card h2{margin:0 0 10px;font-size:19px}
-  .card p{margin:0 0 8px;font-size:14.5px;line-height:1.55;color:#cdd7e4}
+  .card p{margin:0 0 8px;font-size:14.5px;line-height:1.55;color:#e9dfc6}
   .card .src{font-size:11.5px;color:var(--dim);font-style:italic}
   .card button{margin-top:14px;width:100%;padding:12px;border:none;border-radius:10px;
-    background:var(--gold);color:#332600;font-weight:700;font-size:15px}
+    background:var(--gold);color:#1a1612;font-weight:700;font-size:15px}
   @keyframes pop{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
   .star{color:var(--gold)}
   .mdots{display:flex;align-items:center;gap:3px;flex-wrap:wrap;justify-content:flex-end}
   .mdots i{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent)}
+  /* Charte SEZAM : titres et labels éditoriaux en serif (Iowan/Charter), corps en sans */
+  .who,.card h2,.card h3,.oracle h3,.score,.savebox h4,.ritualTop .who{font-family:var(--serif)}
 
   /* ===== Clavier tactile ===== */
   .kbd{position:relative;height:150px;margin-top:auto;margin-bottom:10px;display:flex;
     user-select:none;-webkit-user-select:none;touch-action:manipulation}
-  .wkey{flex:1;background:#f6f1e7;border:1px solid #b9ad97;border-top:none;border-radius:0 0 7px 7px;
+  .wkey{flex:1;background:#f5edd6;border:1px solid #b9ad97;border-top:none;border-radius:0 0 7px 7px;
     position:relative;z-index:1;display:flex;align-items:flex-end;justify-content:center;padding-bottom:6px}
   .wkey+.wkey{margin-left:-1px}
   .wkey .lbl{font-size:11px;color:#8a7f68;font-weight:600;pointer-events:none}
-  .wkey.act{background:#bfe3ff}
-  .wkey.tgt{background:#ffe2a0}
-  .wkey.good{background:#bdf0cf} .wkey.bad{background:#ffc1c8}
-  .bkey{position:absolute;top:0;height:62%;background:#222a36;border:1px solid #11151c;border-radius:0 0 6px 6px;
+  .wkey.act{background:#e8dcc6}
+  .wkey.tgt{background:#f5ebc8}
+  .wkey.good{background:#e6ebdd} .wkey.bad{background:#f1d8cb}
+  .bkey{position:absolute;top:0;height:62%;background:#2a2419;border:1px solid #15110b;border-radius:0 0 6px 6px;
     z-index:2;display:flex;align-items:flex-end;justify-content:center;padding-bottom:5px}
-  .bkey .lbl{font-size:9px;color:#aeb8c6;font-weight:600;pointer-events:none}
-  .bkey.act{background:#2f5f8f} .bkey.tgt{background:#b98a2e}
-  .bkey.good{background:#2e7d4f} .bkey.bad{background:#a23b45}
+  .bkey .lbl{font-size:9px;color:#cdbfa4;font-weight:600;pointer-events:none}
+  .bkey.act{background:#7a5b3e} .bkey.tgt{background:#8d6826}
+  .bkey.good{background:#5e6e51} .bkey.bad{background:#7a3826}
   .kbdcfg{display:flex;flex-direction:column;gap:10px}
   .kbdcfg .seg{display:flex;gap:6px}
-  .kbdcfg .seg button{flex:1;padding:11px 6px;border-radius:10px;border:1px solid #2c3645;
+  .kbdcfg .seg button{flex:1;padding:11px 6px;border-radius:10px;border:1px solid #3d3628;
     background:var(--panel2);color:var(--dim);font-size:13px;font-weight:600}
-  .kbdcfg .seg button.on{border-color:var(--accent);color:var(--ink);background:#243243}
+  .kbdcfg .seg button.on{border-color:var(--accent);color:var(--ink);background:#3a3222}
   .kbdcfg .lab{font-size:11.5px;color:var(--dim);letter-spacing:.4px;text-transform:uppercase;margin-bottom:-4px}
   .wkey,.bkey{border-top:0;font-family:inherit}
 
   /* ===== Rituel quotidien, calendrier, trophées ===== */
-  .ritual{background:var(--panel);border:1px solid #2c3645;border-radius:12px;padding:12px;margin-bottom:12px}
+  .ritual{background:var(--panel);border:1px solid #3d3628;border-radius:12px;padding:12px;margin-bottom:12px}
   .ritualTop{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}
   .ritualTop .who{color:var(--accent);font-weight:700;font-size:11px;letter-spacing:.6px;text-transform:uppercase}
   .ritualTop b{font-size:13px;color:var(--ink);text-align:right}
@@ -162,44 +170,44 @@
   .rstat .l{font-size:10.5px;color:var(--dim);white-space:normal}
   .calHead,.calGrid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
   .calHead{margin-bottom:4px;color:var(--dim);font-size:10px;text-align:center}
-  .calDay{height:26px;border-radius:7px;background:#151b23;border:1px solid #26303e;color:#647186;
+  .calDay{height:26px;border-radius:7px;background:#211c12;border:1px solid #352e20;color:#8d8471;
     font-size:10px;display:flex;align-items:center;justify-content:center;position:relative}
-  .calDay.on{background:rgba(76,194,255,.18);border-color:rgba(76,194,255,.55);color:var(--ink);font-weight:700}
-  .calDay.perfect{background:rgba(255,209,102,.2);border-color:rgba(255,209,102,.65);color:var(--gold)}
+  .calDay.on{background:rgba(184,137,58,.2);border-color:rgba(184,137,58,.6);color:var(--ink);font-weight:700}
+  .calDay.perfect{background:rgba(184,137,58,.22);border-color:rgba(184,137,58,.65);color:var(--gold)}
   .calDay.today:after{content:"";position:absolute;left:50%;bottom:3px;width:4px;height:4px;border-radius:50%;background:var(--good);transform:translateX(-50%)}
   .calDay.empty{visibility:hidden}
   .ritualNote{font-size:12.5px;line-height:1.4;color:var(--dim);margin-top:8px}
-  .oracle{background:linear-gradient(160deg,#1a2029,#202735);border-left:3px solid var(--gold);
+  .oracle{background:linear-gradient(160deg,#201b12,#2a2417);border-left:3px solid var(--gold);
     border-radius:12px;padding:11px 12px;margin-bottom:12px}
   .oracle h3{margin:0 0 5px;color:var(--gold);font-size:11px;letter-spacing:.7px;text-transform:uppercase}
-  .oracle p{margin:0;font-size:13.5px;line-height:1.45;color:#d3deea}
+  .oracle p{margin:0;font-size:13.5px;line-height:1.45;color:#e9dfc6}
   .oracle .src{display:block;color:var(--dim);font-size:11.5px;margin-top:6px;font-style:italic}
-  .oracle button{margin-top:9px;background:none;border:1px solid #3a4860;color:var(--ink);border-radius:8px;padding:7px 9px;font-size:12px}
+  .oracle button{margin-top:9px;background:none;border:1px solid #4a4130;color:var(--ink);border-radius:8px;padding:7px 9px;font-size:12px}
   .trophyStrip{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:12px}
-  .trophy{background:var(--panel);border:1px solid #2c3645;border-radius:10px;padding:8px 6px;min-height:58px;text-align:center;color:var(--dim)}
-  .trophy.on{border-color:rgba(255,209,102,.65);background:rgba(255,209,102,.1);color:var(--ink)}
+  .trophy{background:var(--panel);border:1px solid #3d3628;border-radius:10px;padding:8px 6px;min-height:58px;text-align:center;color:var(--dim)}
+  .trophy.on{border-color:rgba(184,137,58,.65);background:rgba(184,137,58,.12);color:var(--ink)}
   .trophy .ico{display:block;font-size:17px;line-height:1.1;margin-bottom:3px}
   .trophy b{display:block;font-size:11.5px;line-height:1.15}
   .trophy small{display:block;font-size:10px;line-height:1.15;color:var(--dim);margin-top:2px}
   .profileGrid{display:grid;grid-template-columns:1fr;gap:8px;margin-top:10px}
   .profileGrid label{font-size:11.5px;color:var(--dim);letter-spacing:.4px;text-transform:uppercase}
-  .profileGrid select{width:100%;margin-top:4px;background:var(--panel2);border:1px solid #2c3645;color:var(--ink);border-radius:8px;padding:9px;font-size:13.5px}
+  .profileGrid select{width:100%;margin-top:4px;background:var(--panel2);border:1px solid #3d3628;color:var(--ink);border-radius:8px;padding:9px;font-size:13.5px}
   .prepNotes{display:grid;grid-template-columns:1fr;gap:10px;margin:10px 0}
-  .prepNote{display:block;background:rgba(255,255,255,.045);border:1px solid #303b4d;border-radius:12px;padding:10px}
-  .prepStaff{width:100%;background:#f6f1e7;border:1px solid #d6c7a9;border-radius:12px;padding:6px 0;margin-bottom:9px}
-  .prepTxt{font-size:14px;line-height:1.4;color:#d8e2ee}
+  .prepNote{display:block;background:rgba(255,255,255,.045);border:1px solid #4a4130;border-radius:12px;padding:10px}
+  .prepStaff{width:100%;background:#f5edd6;border:1px solid #d5d0c0;border-radius:12px;padding:6px 0;margin-bottom:9px}
+  .prepTxt{font-size:14px;line-height:1.4;color:#e9dfc6}
   .prepTxt b{color:var(--gold);font-size:17px}
-  .prepTxt .hearbtn{width:100%;margin-top:9px;background:var(--gold);color:#332600;border:none;font-size:15px;font-weight:800}
-  .corrBox{margin-top:8px;background:rgba(255,255,255,.05);border:1px solid #3a4860;border-radius:10px;padding:9px;text-align:left}
+  .prepTxt .hearbtn{width:100%;margin-top:9px;background:var(--gold);color:#1a1612;border:none;font-size:15px;font-weight:800}
+  .corrBox{margin-top:8px;background:rgba(255,255,255,.05);border:1px solid #4a4130;border-radius:10px;padding:9px;text-align:left}
   .corrBox h4{margin:0 0 5px;font-size:12px;color:var(--gold);letter-spacing:.4px;text-transform:uppercase}
-  .corrBox p{margin:5px 0;font-size:13px;line-height:1.4;color:#d3deea}
+  .corrBox p{margin:5px 0;font-size:13px;line-height:1.4;color:#e9dfc6}
   .corrBox b{color:var(--ink)}
 </style>
 </head>
 <body>
 <div id="app">
   <header>
-    <h1>SOLADO · ENTRAÎNEMENT MUSICAL</h1>
+    <h1>SEZAM · ENTRAÎNEMENT MUSICAL</h1>
     <div class="hstats">
       <span>XP <b id="hXp">0</b></span>
       <span>Jours <b id="hStreak">0</b></span>
@@ -208,7 +216,7 @@
   </header>
 
   <div class="screen active" id="scrHome">
-    <div class="mission"><span class="who">Solado</span><br><span id="missionTxt"></span></div>
+    <div class="mission"><span class="who">Sezam</span><br><span id="missionTxt"></span></div>
     <div class="ritual" id="ritualBox">
       <div class="ritualTop"><span class="who">Rituel</span><b id="ritualTitle"></b></div>
       <div class="ritualStats" id="ritualStats"></div>
@@ -275,9 +283,9 @@
     <div class="savebox">
       <h4>Synchro entre appareils</h4>
       <div class="savemsg" id="syncState" style="margin:0 0 8px;color:var(--ink)"></div>
-      <div class="row"><button id="btnSyncHelp" style="background:var(--accent);color:#04222f;font-weight:700">1 · Créer mon code de synchro</button></div>
-      <input id="syncToken" type="password" autocomplete="off" placeholder="2 · Colle ici le code (il commence par ghp_)" style="width:100%;margin-top:8px;background:var(--panel2);border:1px solid #2c3645;color:var(--ink);border-radius:8px;padding:9px;font-size:13.5px;-webkit-user-select:text;user-select:text">
-      <div class="row"><button id="btnSyncOn" style="background:var(--good);color:#04331b;font-weight:700">3 · Activer</button><button id="btnSyncNow">Synchroniser maintenant</button></div>
+      <div class="row"><button id="btnSyncHelp" style="background:var(--accent);color:#1a1612;font-weight:700">1 · Créer mon code de synchro</button></div>
+      <input id="syncToken" type="password" autocomplete="off" placeholder="2 · Colle ici le code (il commence par ghp_)" style="width:100%;margin-top:8px;background:var(--panel2);border:1px solid #3d3628;color:var(--ink);border-radius:8px;padding:9px;font-size:13.5px;-webkit-user-select:text;user-select:text">
+      <div class="row"><button id="btnSyncOn" style="background:var(--good);color:#1a1612;font-weight:700">3 · Activer</button><button id="btnSyncNow">Synchroniser maintenant</button></div>
       <div class="row"><button id="btnSyncOff">Désactiver (cet appareil)</button></div>
       <div class="savemsg" id="syncMsg"></div>
     </div>
@@ -285,14 +293,14 @@
   </div>
 
   <div class="screen" id="scrPieces">
-    <div class="mission"><span class="who">Solado</span><br>Tes œuvres. Travaille le « premier regard » : clé, armure, mesure, tempo, caractère — le réflexe du lecteur, sans jouer une note.</div>
+    <div class="mission"><span class="who">Sezam</span><br>Tes œuvres. Travaille le « premier regard » : clé, armure, mesure, tempo, caractère — le réflexe du lecteur, sans jouer une note.</div>
     <div class="paliers" id="pieceList"></div>
     <div class="savebox">
       <h4>Ajouter une partition</h4>
-      <input id="pcTitle" placeholder="Titre (ex. Le Cygne)" style="width:100%;background:var(--panel2);border:1px solid #2c3645;color:var(--ink);border-radius:8px;padding:9px;font-size:13.5px;-webkit-user-select:text;user-select:text">
+      <input id="pcTitle" placeholder="Titre (ex. Le Cygne)" style="width:100%;background:var(--panel2);border:1px solid #3d3628;color:var(--ink);border-radius:8px;padding:9px;font-size:13.5px;-webkit-user-select:text;user-select:text">
       <div class="row" style="margin-top:8px">
-        <select id="pcClef" style="flex:1;background:var(--panel2);border:1px solid #2c3645;color:var(--ink);border-radius:8px;padding:9px;font-size:13.5px"><option value="sol">Clé de sol</option><option value="fa">Clé de fa</option><option value="deux">Les deux clés</option></select>
-        <input id="pcKey" placeholder="Tonalité (ex. La M)" style="flex:1;background:var(--panel2);border:1px solid #2c3645;color:var(--ink);border-radius:8px;padding:9px;font-size:13.5px;-webkit-user-select:text;user-select:text">
+        <select id="pcClef" style="flex:1;background:var(--panel2);border:1px solid #3d3628;color:var(--ink);border-radius:8px;padding:9px;font-size:13.5px"><option value="sol">Clé de sol</option><option value="fa">Clé de fa</option><option value="deux">Les deux clés</option></select>
+        <input id="pcKey" placeholder="Tonalité (ex. La M)" style="flex:1;background:var(--panel2);border:1px solid #3d3628;color:var(--ink);border-radius:8px;padding:9px;font-size:13.5px;-webkit-user-select:text;user-select:text">
       </div>
       <div class="row" style="margin-top:8px"><button id="btnAddPiece">Ajouter</button></div>
       <div class="savemsg" id="pieceMsg"></div>
@@ -326,7 +334,7 @@ function esc(s){
   });
 }
 /* ================= DONNÉES ================= */
-const APP_VERSION="v11"; // garder aligné avec CACHE_NAME de sw.js (testé)
+const APP_VERSION="v12"; // garder aligné avec CACHE_NAME de sw.js (testé)
 const NOTES = {
   do4 :{n:"do", clef:"sol", p:-2, midi:60, mn:"Le do du milieu est transpercé par sa petite ligne, rien qu'à lui."},
   re4 :{n:"ré", clef:"sol", p:-1, midi:62, mn:"Collé juste sous la portée."},
@@ -933,7 +941,7 @@ function noteGlyph(x,p,color,acc,big){
   for(let q=10;q<=p;q+=2) s+='<line x1="'+(x-led)+'" y1="'+yOf(q)+'" x2="'+(x+led)+'" y2="'+yOf(q)+'" stroke="#4a4337" stroke-width="'+(big?2.2:1.8)+'"/>';
   for(let q=-2;q>=p;q-=2) s+='<line x1="'+(x-led)+'" y1="'+yOf(q)+'" x2="'+(x+led)+'" y2="'+yOf(q)+'" stroke="#4a4337" stroke-width="'+(big?2.2:1.8)+'"/>';
   if(acc) s+='<text x="'+(x-(big?27:19))+'" y="'+(y+(big?10:8))+'" text-anchor="middle" font-size="'+(big?36:28)+'" font-weight="700" font-family="serif" fill="'+color+'">'+acc+'</text>';
-  if(big===2) s+='<ellipse cx="'+x+'" cy="'+y+'" rx="'+(rx+5.5)+'" ry="'+(ry+4)+'" transform="rotate(-14 '+x+' '+y+')" fill="rgba(255,187,60,.45)"/>';
+  if(big===2) s+='<ellipse cx="'+x+'" cy="'+y+'" rx="'+(rx+5.5)+'" ry="'+(ry+4)+'" transform="rotate(-14 '+x+' '+y+')" fill="rgba(184,137,58,.55)"/>';
   s+='<ellipse cx="'+x+'" cy="'+y+'" rx="'+rx+'" ry="'+ry+'" transform="rotate(-14 '+x+' '+y+')" fill="'+color+'"/>';
   if(p<4) s+='<line x1="'+(x+rx*.9)+'" y1="'+y+'" x2="'+(x+rx*.9)+'" y2="'+(y-stem)+'" stroke="'+color+'" stroke-width="'+sw+'"/>';
   else    s+='<line x1="'+(x-rx*.9)+'" y1="'+y+'" x2="'+(x-rx*.9)+'" y2="'+(y+stem)+'" stroke="'+color+'" stroke-width="'+sw+'"/>';
@@ -950,18 +958,18 @@ function staffSVG(clef,notes,caretX){ // notes=[{p,color,x,acc,big,mark}]
   let s='<svg id="staffsvg" viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block">';
   for(let i=0;i<5;i++){const y=STAFF.top+i*2*STAFF.half;
     s+='<line x1="14" y1="'+y+'" x2="'+(W-14)+'" y2="'+y+'" stroke="#4a4337" stroke-width="1.6"/>';}
-  if(clef==="sol") s+='<text x="20" y="'+(yOf(2)+14)+'" font-size="80" font-family="serif" fill="#33415c">\u{1D11E}</text>';
-  else s+='<text x="22" y="'+(yOf(6)+7)+'" font-size="52" font-family="serif" fill="#33415c">\u{1D122}</text>';
+  if(clef==="sol") s+='<text x="20" y="'+(yOf(2)+14)+'" font-size="80" font-family="serif" fill="#3d4250">\u{1D11E}</text>';
+  else s+='<text x="22" y="'+(yOf(6)+7)+'" font-size="52" font-family="serif" fill="#3d4250">\u{1D122}</text>';
   (notes||[]).forEach(function(nx){
-    s+=noteGlyph(nx.x,nx.p,nx.color||"#1c2230",nx.acc,nx.big===2?2:(nx.big?1:0));
+    s+=noteGlyph(nx.x,nx.p,nx.color||"#15171c",nx.acc,nx.big===2?2:(nx.big?1:0));
     if(nx.mark){ // 2e canal : forme/texte, lisible sans la couleur (daltonisme)
       let my=yOf(nx.p)-26; if(my<18) my=yOf(nx.p)+34; // près du bord haut : marque sous la note
       const ok=nx.mark==="good";
-      s+='<text x="'+nx.x+'" y="'+my+'" text-anchor="middle" font-size="24" font-weight="700" fill="'+(ok?"#2e7d4f":"#c0392b")+'">'+(ok?"✓":"✕")+'</text>';
+      s+='<text x="'+nx.x+'" y="'+my+'" text-anchor="middle" font-size="24" font-weight="700" fill="'+(ok?"#5e6e51":"#a8472a")+'">'+(ok?"✓":"✕")+'</text>';
     }
   });
   if(caretX!==undefined && caretX!==null)
-    s+='<path d="M '+(caretX-7)+' '+(H-6)+' L '+(caretX+7)+' '+(H-6)+' L '+caretX+' '+(H-18)+' Z" fill="#4cc2ff"/>';
+    s+='<path d="M '+(caretX-7)+' '+(H-6)+' L '+(caretX+7)+' '+(H-6)+' L '+caretX+' '+(H-18)+' Z" fill="#b8893a"/>';
   s+='<text x="'+(W-16)+'" y="14" text-anchor="end" font-size="11" fill="#9a8f7a" font-family="sans-serif">clé de '+(clef==="sol"?"sol":"fa")+'</text>';
   s+='</svg>';
   return s;
@@ -1050,7 +1058,7 @@ function optionHtml(list,val){
 }
 function openMusicProfile(){
   const p=DB.profile||{};
-  $("cardBox").innerHTML='<h3>Profil musical</h3><h2>Ton miroir Solado</h2>'+
+  $("cardBox").innerHTML='<h3>Profil musical</h3><h2>Ton miroir Sezam</h2>'+
     '<p>Choisis une couleur de jeu. Les messages restent positifs, parfois un peu taquins, toujours côté musicien.</p>'+
     '<div class="profileGrid">'+
       '<label>Affinité<select id="profAffinity">'+optionHtml(PROFILE_AFFINITIES,p.affinity)+'</select></label>'+
@@ -1065,7 +1073,7 @@ function openMusicProfile(){
 
 function renderHome(){
   header();
-  $("verTag").textContent="Solado "+APP_VERSION;
+  $("verTag").textContent="Sezam "+APP_VERSION;
   if(DB.mode!=="libre" && !tierUnlocked(DB.mode)) DB.mode="zen";
   if(!playableInMode(DB.sel,DB.mode)){
     const first=PALIERS.find(function(p){return playableInMode(p.id,DB.mode)&&(DB.mode==="libre"||!DB.paliers[p.id][DB.mode].ok);})
@@ -1126,7 +1134,7 @@ function renderHome(){
     const sr=st.star;
     if(sr && sr.level>0) dots+='<span style="color:var(--gold);font-size:11px;letter-spacing:1px">'+"★".repeat(sr.level)+'</span>';
     if(sr && sr.started && sr.level<5 && (sr.due||0)<=Date.now())
-      dots+='<span class="chip" style="background:rgba(255,209,102,.15);color:var(--gold)">★ à réviser</span>';
+      dots+='<span class="chip" style="background:rgba(184,137,58,.18);color:var(--gold)">★ à réviser</span>';
     div.innerHTML='<span class="pl">'+p.t+'<small>'+p.sub+'</small></span>'+
       '<span class="pright">'+chip+(dots?'<span class="mdots">'+dots+'</span>':'')+'</span>';
     if(play) div.onclick=function(){DB.sel=p.id;save();renderHome();};
@@ -1252,7 +1260,7 @@ function trainingFocusText(mode){
 function previewNoteHtml(id,withListen){
   const nt=NOTES[id];
   return '<div class="prepNote">'+
-    '<div class="prepStaff">'+staffSVG(nt.clef,[{p:nt.p,color:"#05070a",x:STAFF.W*0.58,big:2}])+'</div>'+
+    '<div class="prepStaff">'+staffSVG(nt.clef,[{p:nt.p,color:"#15171c",x:STAFF.W*0.58,big:2}])+'</div>'+
     '<div class="prepTxt"><b>'+esc(nt.n.toUpperCase())+'</b> · clé de '+(nt.clef==="sol"?"sol":"fa")+
     '<br>'+esc(nt.mn)+(withListen?'<br><button class="hearbtn" onclick="tone(NOTES[\''+id+'\'].midi,3.2)">♪ écouter — chante-la</button>':'')+'</div></div>';
 }
@@ -1324,15 +1332,15 @@ function ecritLabel(nt,targetId){
 function drawChunk(){
   const clef=NOTES[EX.seq[0]].clef, xs=chunkXs(EX.seq.length), single=EX.seq.length===1;
   const notes=EX.seq.map(function(id,i){
-    let color="#1c2230";
-    if(i<EX.k) color="#2e7d4f";
+    let color="#15171c";
+    if(i<EX.k) color="#5e6e51";
     return {p:NOTES[id].p,color:color,x:xs[i],big:single?1:0}; // note seule = grand format
   });
   $("staffbox").innerHTML=staffSVG(clef,notes,EX.seq.length>1?xs[EX.k]:null);
 }
 function drawWriteStaff(){
   const nt=NOTES[EX.seq[0]];
-  $("staffbox").innerHTML=staffSVG(nt.clef,[{p:EX.writePos,color:"#4cc2ff",x:STAFF.W*0.62,big:1}]);
+  $("staffbox").innerHTML=staffSVG(nt.clef,[{p:EX.writePos,color:"#b8893a",x:STAFF.W*0.62,big:1}]);
   const svg=$("staffsvg");
   if(svg&&svg.addEventListener) svg.addEventListener("click",function(ev){
     if(EX.waiting||EX.done||EX.qtype!=="ecrit") return;
@@ -1451,11 +1459,11 @@ function timeUp(qid){
   srsReview(failId,false);
   if(EX.qtype==="ecrit"){
     const nt=NOTES[failId];
-    $("staffbox").innerHTML=staffSVG(nt.clef,[{p:nt.p,color:"#1c2230",mark:"good",x:STAFF.W*0.62,big:1}]);
+    $("staffbox").innerHTML=staffSVG(nt.clef,[{p:nt.p,color:"#15171c",mark:"good",x:STAFF.W*0.62,big:1}]);
   } else if(EX.seq.length>1){
     const xs=chunkXs(EX.seq.length);
     $("staffbox").innerHTML=staffSVG(NOTES[EX.seq[0]].clef,EX.seq.map(function(id,i){
-      return {p:NOTES[id].p,color:i<EX.k?"#2e7d4f":(i===EX.k?"#c0392b":"#1c2230"),mark:i===EX.k?"bad":undefined,x:xs[i]};}),null);
+      return {p:NOTES[id].p,color:i<EX.k?"#5e6e51":(i===EX.k?"#a8472a":"#15171c"),mark:i===EX.k?"bad":undefined,x:xs[i]};}),null);
   }
   afterWrong(failId,"✕ Trop tard — la note "+(EX.k+1)+" était "+NOTES[failId].n.toUpperCase());
 }
@@ -1474,10 +1482,10 @@ function answer(nm){
     if(EX.seq.length>1){
       const xs=chunkXs(EX.seq.length);
       $("staffbox").innerHTML=staffSVG(nt.clef,EX.seq.map(function(sid,i){
-        return {p:NOTES[sid].p,color:i<EX.k?"#2e7d4f":(i===EX.k?"#c0392b":"#1c2230"),mark:i===EX.k?"bad":undefined,x:xs[i]};}),null);
+        return {p:NOTES[sid].p,color:i<EX.k?"#5e6e51":(i===EX.k?"#a8472a":"#15171c"),mark:i===EX.k?"bad":undefined,x:xs[i]};}),null);
       afterWrong(id,"✕ La note "+(EX.k+1)+" était "+nt.n.toUpperCase());
     } else {
-      $("staffbox").innerHTML=staffSVG(nt.clef,[{p:nt.p,color:"#c0392b",mark:"bad",x:STAFF.W*0.62,big:1}]);
+      $("staffbox").innerHTML=staffSVG(nt.clef,[{p:nt.p,color:"#a8472a",mark:"bad",x:STAFF.W*0.62,big:1}]);
       afterWrong(id,"✕ C'était "+nt.n.toUpperCase());
     }
   }
@@ -1489,12 +1497,12 @@ function answerPos(p){
   noteStat(id).v++;
   if(p===nt.p){
     srsReview(id,true);
-    $("staffbox").innerHTML=staffSVG(nt.clef,[{p:nt.p,color:"#2e7d4f",mark:"good",x:STAFF.W*0.62,big:1}]);
+    $("staffbox").innerHTML=staffSVG(nt.clef,[{p:nt.p,color:"#5e6e51",mark:"good",x:STAFF.W*0.62,big:1}]);
     afterGood();
   } else {
     srsReview(id,false);
     // ta note (rouge) et la bonne position (sombre) côte à côte : comparaison immédiate, marques lisibles
-    $("staffbox").innerHTML=staffSVG(nt.clef,[{p:p,color:"#c0392b",mark:"bad",x:STAFF.W*0.5,big:1},{p:nt.p,color:"#1c2230",mark:"good",x:STAFF.W*0.74,big:1}]);
+    $("staffbox").innerHTML=staffSVG(nt.clef,[{p:p,color:"#a8472a",mark:"bad",x:STAFF.W*0.5,big:1},{p:nt.p,color:"#15171c",mark:"good",x:STAFF.W*0.74,big:1}]);
     afterWrong(id,"✕ "+nt.n.toUpperCase()+" était à droite (note sombre ✓)");
   }
 }
@@ -1770,7 +1778,7 @@ function renderStats(){
   const memLine='<br><br><b>Mémoire (répétition espacée) :</b> '+ancrees+' note'+(ancrees>1?'s':'')+' ancrée'+(ancrees>1?'s':'')+' (boîte 5), '+aRevoir+' à revoir aujourd\'hui.'+
     '<br><b>Investissement :</b> '+totals.series+' série'+(totals.series>1?'s':'')+', '+totals.rafales+' rafale'+(totals.rafales>1?'s':'')+', '+totals.clavier+' clavier, '+totals.revisions+' révision'+(totals.revisions>1?'s':'')+'.';
   $("fragBox").innerHTML = (frag.length
-    ? "<b>Notes fragiles :</b> "+frag.map(function(k){return NOTES[k].n+" ("+(NOTES[k].clef==="sol"?"sol":"fa")+")";}).join(", ")+".<br>Solado : elles seront servies plus souvent, en lecture ET en écriture."
+    ? "<b>Notes fragiles :</b> "+frag.map(function(k){return NOTES[k].n+" ("+(NOTES[k].clef==="sol"?"sol":"fa")+")";}).join(", ")+".<br>Sezam : elles seront servies plus souvent, en lecture ET en écriture."
     : "Aucune note fragile détectée. Continue comme ça.") + memLine;
   const rc=currentRecoveryCode();
   $("saveCode").textContent = rc
@@ -1955,7 +1963,7 @@ function nextKbd(){
   KX.cur=pickKbdTarget(KX.clef,KX.acc,KX.prev); KX.prev=KX.cur.midi;
   if(KX.dir==="read"){
     $("kStaff").style.display="";
-    $("kStaff").innerHTML=staffSVG(KX.cur.clef,[{p:KX.cur.p,acc:KX.cur.acc,color:"#1c2230",x:STAFF.W*0.55,big:1}]);
+    $("kStaff").innerHTML=staffSVG(KX.cur.clef,[{p:KX.cur.p,acc:KX.cur.acc,color:"#15171c",x:STAFF.W*0.55,big:1}]);
     $("kFb").className="feedback"; $("kFb").textContent="Appuie sur la bonne touche.";
     $("kNames").style.display="none";
     renderKbd(KX.cur,true);
@@ -2017,7 +2025,7 @@ function finishClavier(){
    - pull au lancement ;
    - règle d'or anti-perte : on n'écrase JAMAIS un état plus avancé (comparaison XP, monotone) ;
    - le jeton reste dans une clé locale SÉPARÉE : jamais dans DB, ni dans les exports, ni dans le QR. */
-const LS_SYNC="solado_sync", GIST_FILE="solado-save.json", GIST_DESC="Sauvegarde Solado (auto)";
+const LS_SYNC="solado_sync", GIST_FILE="solado-save.json", GIST_DESC="Sauvegarde Sezam (auto)";
 let syncBusy=false, syncLastPush=0;
 function syncCfg(){ return readKey(LS_SYNC)||{}; }
 function syncSet(patch){ const c=Object.assign({},syncCfg(),patch); try{ localStorage.setItem(LS_SYNC,JSON.stringify(c)); }catch(e){} return c; }
@@ -2108,7 +2116,7 @@ function syncPull(){
     else { syncSet({lastSync:Date.now()}); syncStatus("À jour ✓"); }
   });
 }
-const SYNC_TOKEN_URL="https://github.com/settings/tokens/new?scopes=gist&description=Solado%20synchro";
+const SYNC_TOKEN_URL="https://github.com/settings/tokens/new?scopes=gist&description=Sezam%20synchro";
 // Le « code de synchro » est un jeton GitHub. Vérification pure (testée) : ce n'est PAS un mot de passe.
 function looksLikeToken(t){
   return /^(gh[pousr]_[A-Za-z0-9_]{20,}|github_pat_[A-Za-z0-9_]{20,})$/.test(t);
@@ -2233,9 +2241,9 @@ $("fileInput").onchange=function(e){
 };
 $("btnFeedback").onclick=function(){
   const p=PALIERS.find(function(x){return x.id===DB.sel;});
-  const body="Bonjour Youcef,\n\nMon retour sur Solado :\n- Ce que j'aime :\n- Ce qui me gêne :\n- Bug éventuel (que s'est-il passé, sur quel écran ?) :\n\n—\nInfos utiles : "+APP_VERSION+" · palier "+(p?p.id:"?")+" · "+(DB.xp||0)+" XP · "+String(navigator.userAgent||"").slice(0,90);
+  const body="Bonjour Youcef,\n\nMon retour sur Sezam :\n- Ce que j'aime :\n- Ce qui me gêne :\n- Bug éventuel (que s'est-il passé, sur quel écran ?) :\n\n—\nInfos utiles : "+APP_VERSION+" · palier "+(p?p.id:"?")+" · "+(DB.xp||0)+" XP · "+String(navigator.userAgent||"").slice(0,90);
   logEvent("feedback_open",{});
-  location.href="mailto:youcef.gatt@gmail.com?subject="+encodeURIComponent("Retour Solado (bêta)")+"&body="+encodeURIComponent(body);
+  location.href="mailto:youcef.gatt@gmail.com?subject="+encodeURIComponent("Retour Sezam (bêta)")+"&body="+encodeURIComponent(body);
 };
 $("btnSyncHelp").onclick=function(){
   syncStatus("GitHub s'ouvre dans un nouvel onglet : descends en bas, touche le bouton vert « Generate token », puis copie le code vert (ghp_…).");

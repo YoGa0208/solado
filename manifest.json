@@ -1,11 +1,11 @@
 {
-  "name": "Solado",
-  "short_name": "Solado",
-  "description": "Entraînement de solfège hors-ligne avec progression, clavier, calendrier et trophées.",
+  "name": "Sezam",
+  "short_name": "Sezam",
+  "description": "Entraînement musical hors-ligne : lecture de notes, clavier, progression, calendrier et synchro entre appareils.",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#10141a",
-  "theme_color": "#10141a",
+  "background_color": "#1a1612",
+  "theme_color": "#1a1612",
   "icons": [
     {
       "src": "icon.svg",
