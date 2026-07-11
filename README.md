@@ -4,6 +4,8 @@ Borne d'arcade musicale adaptative, offline-first, où **la partition est le ter
 
 Chaque joueur peut régler son instrument, son niveau, son parcours, sa date cible, son temps disponible, sa cadence et les domaines à travailler. Un seul bouton lance une séance plafonnée au temps choisi : 20 % de rappel à froid, 60 % de cible, 10 % de réparation et 10 % de transfert. Chaque tranche persistante de 10 questions Cible devient une preuve ; SEZAM avance automatiquement au prochain palier ou au grade suivant. Une erreur ne revient jamais avant deux autres questions, puis un contraste vérifie le transfert. Quand le travail prévu est terminé avant le chrono, un atelier bonus transforme le temps restant en petits mystères facultatifs. Ces secrets rapportent quelques XP mais ne comptent jamais dans l'évaluation.
 
+Depuis la v28, plusieurs personnes peuvent utiliser le même appareil. Le bouton du joueur sur l'accueil permet de créer puis de changer de profil en un geste. XP, paliers, mémoire espacée, erreurs, calendrier, réglages et partitions restent strictement séparés ; la progression v27 existante devient automatiquement le premier joueur, sans remise à zéro.
+
 ## Taille du parcours
 
 - 6 grades de maîtrise, de Zen à Rhodium ;
@@ -27,12 +29,12 @@ Un seul fichier applicatif: `index.html` (HTML + CSS + JS, zéro dépendance d'e
 - **Memory Engine** (`srsReview`): cinq boîtes espacées à 1, 3, 7, 16 et 30 jours. Une réponse anticipée ou une réparation immédiate consolide sans augmenter artificiellement la stabilité.
 - **Partition Engine**: pièces avec mélodies réelles (`PIECES_BUILTIN`), passages ancrés sur les mesures (`mesFrom`/`mesTo`), 5 états (À découvrir, En travail, Fragile, Validé, Maîtrisé), ambitions du joueur, carte de conquête SVG (`pieceMapSVG`).
 - **Session scriptée**: jouer un passage = lire ses notes dans l'ordre réel (`segmentScript`); un passage fragile repasse en réparation pondérée SRS.
-- **Storage Engine**: trois copies locales synchronisées, secours IndexedDB lu avant toute première écriture et Gist secret GitHub optionnel avec détection de conflit. Les imports sont bornés et normalisés ; le token reste en session et les pièces jointes restent locales. Clés historiques intouchables: `solfegeProto1`, `soladoBackup`, `sezam-progress.json`.
+- **Player & Storage Engine**: registre familial local, cache triple du joueur actif et coffre IndexedDB distinct pour chaque joueur. Le changement est transactionnel : le joueur courant est mis à l'abri avant le chargement du suivant. Imports et annulations restent limités au joueur actif. Chaque joueur possède aussi sa configuration et son fichier Gist ; une réponse réseau tardive de l'ancien joueur est ignorée. Le token reste en session et les pièces jointes restent locales. Les clés historiques `solfegeProto1` et l'ancien coffre `save` restent lus pour migrer la v27.
 
 ## Développement
 
 ```bash
-npm test            # 466 tests moteur (charge le vrai script d'index.html, zéro duplication)
+npm test            # 537 contrôles moteur (charge le vrai script d'index.html, zéro duplication)
 npm run serve       # http://localhost:4173
 npm run build:watch # régénère la veille musicale (fallback hors-ligne intégré)
 ```

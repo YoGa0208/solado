@@ -74,7 +74,20 @@
     font-family:var(--serif);border-bottom:2px solid var(--or);padding-bottom:1px} /* wordmark souligné du filet d'or (charte SEZAM) */
   .cockpit{background:linear-gradient(150deg,var(--paper),rgba(127,184,194,.32) 58%,rgba(216,169,77,.25));border:2px solid rgba(184,137,58,.5);border-radius:26px 9px 24px 11px;padding:15px;margin-bottom:12px;position:relative;overflow:hidden}
   .cockpit:after{content:"";position:absolute;right:-22px;bottom:18px;width:168px;height:62px;border:1px solid rgba(15,76,92,.2);border-left:0;border-bottom:0;border-radius:50%;transform:rotate(-9deg)}
-  .coachKicker{font-family:var(--serif);font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:var(--or-deep);font-weight:700;margin-bottom:5px}
+  .coachTop{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:5px;position:relative;z-index:2}
+  .coachKicker{font-family:var(--serif);font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:var(--or-deep);font-weight:700;min-width:0}
+  .playerSwitch{display:flex;align-items:center;gap:6px;min-height:44px;max-width:52%;padding:5px 9px 5px 6px;border:1px solid rgba(15,76,92,.2);border-radius:999px;background:rgba(255,253,247,.82);color:var(--petrole);font-size:12px;font-weight:800;box-shadow:0 2px 8px rgba(15,76,92,.06);overflow:hidden}
+  .playerSwitch .playerAvatar,.playerPick .playerAvatar{display:inline-flex;align-items:center;justify-content:center;flex:none;width:29px;height:29px;border-radius:50%;background:linear-gradient(135deg,var(--ceramique2),rgba(184,137,58,.3));border:1px solid rgba(184,137,58,.5);color:var(--petrole);font-family:var(--serif);font-weight:900}
+  .playerSwitch .playerName{min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .playerRows{display:flex;flex-direction:column;gap:8px;margin:12px 0}
+  .playerRow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px;align-items:stretch}
+  .playerPick{min-height:58px;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:9px;text-align:left;border:1px solid rgba(15,76,92,.16);border-radius:18px 7px 18px 7px;background:linear-gradient(145deg,var(--paper),rgba(127,184,194,.18));color:var(--petrole);padding:8px 10px}
+  .playerPick[aria-current="true"]{border-color:var(--or);box-shadow:inset 4px 0 0 var(--or)}
+  .playerPick b,.playerPick small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .playerPick small{margin-top:2px;color:var(--dim);font-size:11px;font-weight:500}
+  .playerCheck{color:var(--or-deep);font-weight:900}
+  .playerEdit{min-width:48px;border:1px solid rgba(15,76,92,.16);border-radius:12px 6px 12px 6px;background:var(--panel2);color:var(--petrole);font-size:18px}
+  .playerDanger{background:transparent!important;color:var(--bad)!important;border:1px solid rgba(180,95,75,.35)!important}
   .cockpit h2{font-family:var(--serif);font-size:34px;line-height:.95;letter-spacing:0;margin:0;color:var(--petrole)}
   .cockpit p{font-size:14px;line-height:1.38;margin:8px 0 12px;color:var(--petrole);position:relative;z-index:1}
   .cockpitMeta{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:10px 0 12px;position:relative;z-index:1}
@@ -194,16 +207,20 @@
   .savemsg{font-size:12.5px;color:var(--good);margin-top:7px;min-height:16px}
 
   #overlay{position:fixed;inset:0;background:rgba(15,76,92,.38);display:none;align-items:center;
-    justify-content:center;padding:24px;z-index:10}
+    justify-content:center;padding:max(12px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));z-index:10}
   #overlay.on{display:flex}
   .card{background:linear-gradient(160deg,#fffaf0,#f4eddc 54%,#d7e9e8);border:1px solid rgba(15,76,92,.2);border-radius:28px 10px 24px 12px;
-    padding:20px;max-width:min(390px,92vw);max-height:88vh;overflow:auto;animation:pop .35s ease}
+    padding:20px;max-width:min(390px,92vw);max-height:calc(100dvh - 24px);overflow:auto;animation:pop .35s ease}
   .card h3{margin:0 0 4px;font-size:13px;color:var(--or-deep);letter-spacing:.8px;text-transform:uppercase}
   .card h2{margin:0 0 10px;font-size:19px}
   .card p{margin:0 0 8px;font-size:14.5px;line-height:1.55;color:var(--petrole)}
   .card .src{font-size:11.5px;color:var(--dim);font-style:italic}
   .card button{margin-top:14px;width:100%;padding:12px;border:none;border-radius:10px;
     background:var(--gold);color:var(--petrole2);font-weight:700;font-size:15px}
+  .card .playerPick{margin-top:0;width:100%;min-height:58px;padding:8px 10px;border:1px solid rgba(15,76,92,.16);border-radius:18px 7px 18px 7px;background:linear-gradient(145deg,var(--paper),rgba(127,184,194,.18));color:var(--petrole);font-size:inherit}
+  .card .playerPick[aria-current="true"]{border-color:var(--or);box-shadow:inset 4px 0 0 var(--or)}
+  .card .playerEdit{margin-top:0;width:48px;min-width:48px;min-height:58px;padding:0;border:1px solid rgba(15,76,92,.16);border-radius:12px 6px 12px 6px;background:var(--panel2);color:var(--petrole);font-size:18px}
+  @media(max-width:350px){.coachKicker{font-size:10px;letter-spacing:.35px}.playerSwitch{max-width:48%}}
   @keyframes pop{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
   .star{color:var(--gold)}
   .mdots{display:flex;align-items:center;gap:3px;flex-wrap:wrap;justify-content:flex-end}
@@ -378,7 +395,10 @@
 
   <div class="screen active" id="scrHome">
     <section class="cockpit" id="cockpitBox">
-      <div class="coachKicker" id="coachKicker">Coach invisible</div>
+      <div class="coachTop">
+        <div class="coachKicker" id="coachKicker">Coach invisible</div>
+        <button class="playerSwitch" id="btnPlayerSwitch" aria-haspopup="dialog" aria-label="Changer de joueur"><span class="playerAvatar" id="playerAvatar" aria-hidden="true">J</span><span class="playerName" id="currentPlayerName">Joueur 1</span><span aria-hidden="true">⌄</span></button>
+      </div>
       <h2>JOUER</h2>
       <p id="coachPitch"></p>
       <div class="cockpitMeta" id="cockpitMeta"></div>
@@ -451,12 +471,12 @@
       <div class="savemsg" id="themeMsg"></div>
     </div>
     <div class="savebox">
-      <h4>Sauvegarde — exporter</h4>
+      <h4 id="saveExportTitle">Sauvegarde — exporter</h4>
       <div class="savemsg" id="saveCode" style="margin:0 0 8px;color:var(--gold)"></div>
       <textarea id="expArea" readonly></textarea>
       <div class="row"><button id="btnCopy">Copier</button><button id="btnDownload">Télécharger (fichier)</button></div>
       <div class="row"><button id="btnQR">Transfert QR (hors-ligne)</button></div>
-      <h4 style="margin-top:14px">Restaurer</h4>
+      <h4 id="saveRestoreTitle" style="margin-top:14px">Restaurer</h4>
       <textarea id="impArea" placeholder="Colle ici une sauvegarde complète, ou un code palier (ex. P4, P4+, B2) pour reprendre où tu en étais."></textarea>
       <div class="row"><button id="btnImport">Charger (collé)</button><button id="btnUndoImport">Annuler l'import</button></div>
       <div class="row"><button id="btnImportFile">Charger depuis un fichier .json</button></div>
@@ -464,7 +484,7 @@
       <div class="savemsg" id="saveMsg"></div>
     </div>
     <div class="savebox">
-      <h4>Synchro cloud</h4>
+      <h4 id="syncTitle">Synchro cloud</h4>
       <p class="savemsg" style="margin:0 0 8px">Optionnelle : envoie profil et progression dans un Gist secret (non indexé, mais lisible par toute personne ayant son lien, avec historique de versions). Les pièces jointes restent sur cet appareil. Le token n'est gardé qu'en mémoire et disparaît au rechargement ou à la fermeture.</p>
       <div class="savemsg" id="syncState" style="margin:0 0 8px;color:var(--ink)"></div>
       <input id="syncToken" type="password" autocomplete="off" placeholder="Token de synchronisation" aria-label="Token de synchronisation" style="width:100%;background:var(--paper);border:1px solid rgba(15,76,92,.18);color:var(--petrole);border-radius:8px;padding:9px;font-size:13.5px;-webkit-user-select:text;user-select:text">
@@ -544,7 +564,7 @@ function esc(s){
   });
 }
 /* ================= DONNÉES ================= */
-const APP_VERSION="v27"; // garder aligné avec CACHE_NAME de sw.js (testé)
+const APP_VERSION="v28"; // garder aligné avec CACHE_NAME de sw.js (testé)
 const NOTES = {
   do4 :{n:"do", clef:"sol", p:-2, midi:60, mn:"Le do du milieu est transpercé par sa petite ligne, rien qu'à lui."},
   re4 :{n:"ré", clef:"sol", p:-1, midi:62, mn:"Collé juste sous la portée."},
@@ -1192,7 +1212,7 @@ function backupToDb(o){
   if(o.history && Array.isArray(o.history.events)) db.events=o.history.events;
   db._sezam={
     app:"SEZAM",
-    schema:11,
+    schema:12,
     userId:cleanId(o.userId,"user"),
     createdAt:clampInt(o.createdAt||o.timestamp,0,Number.MAX_SAFE_INTEGER,Date.now()),
     updatedAt:clampInt(o.timestamp,0,Number.MAX_SAFE_INTEGER,Date.now()),
@@ -1204,9 +1224,10 @@ function backupToDb(o){
 function ensureMeta(db){
   if(!db._sezam||typeof db._sezam!=="object") db._sezam={};
   db._sezam.app="SEZAM";
-  db._sezam.schema=11;
+  db._sezam.schema=12;
   if(!db._sezam.userId) db._sezam.userId=makeLocalId("user");
   db._sezam.userId=cleanId(db._sezam.userId,"user");
+  if(db._sezam.playerId&&!isSafeId(db._sezam.playerId)) delete db._sezam.playerId;
   const ts=stateTimestamp(db);
   if(!db._sezam.createdAt) db._sezam.createdAt=ts||Date.now();
   if(!db._sezam.updatedAt) db._sezam.updatedAt=ts||db._sezam.createdAt;
@@ -1304,14 +1325,56 @@ function ensureStructure(db){
   if(!db.mode||(db.mode!=="libre"&&TIER_IDS.indexOf(db.mode)<0)) db.mode="zen";
   if(db.mode!=="libre" && tierDef(db.mode) && tierDef(db.mode).future) db.mode="zen";
   if(!PALIERS.find(function(p){return p.id===db.sel;})) db.sel="P1";
-  db.v=10;
+  db.v=11;
   return db;
 }
 const LS_KEY="solfegeProto1", LS_MIRROR="solfegeProto1_mirror", LS_PREIMPORT="solfegeProto1_preimport", LS_CHECKPOINT="solfegeProto1_checkpoint";
-let saveFailed=false;
+const PLAYER_REGISTRY_KEY="sezam_players_v1", PLAYER_FALLBACK_PREFIX="sezam_player_slot_", MAX_LOCAL_PLAYERS=8;
+let saveFailed=false, PLAYER_REGISTRY=null, ACTIVE_PLAYER_ID="", PLAYER_EPOCH=0, hadPlayerRegistryLocal=false, playerOperationBusy=false;
 function readKey(k){ try{ const s=localStorage.getItem(k); return s?JSON.parse(s):null; }catch(e){ return null; } }
 function recognizableStoredState(value){ return isRecord(value)&&isRecord(value.paliers); }
-function bestLocalState(){
+function normalizePlayerName(value,def){ return cleanText(value,40,def===undefined?"Joueur":def); }
+function normalizePlayerRegistry(value){
+  const out={schema:1,activeId:"",players:[]}, seen=safeMap();
+  if(!isRecord(value)||!Array.isArray(value.players)) return out;
+  value.players.forEach(function(raw,idx){
+    if(out.players.length>=MAX_LOCAL_PLAYERS)return;
+    if(!isRecord(raw)||!isSafeId(raw.id)||seen[raw.id]) return;
+    seen[raw.id]=1;
+    out.players.push({
+      id:String(raw.id),
+      userId:isSafeId(raw.userId)?String(raw.userId):String(raw.id),
+      name:normalizePlayerName(raw.name,"Joueur "+(idx+1)),
+      createdAt:clampInt(raw.createdAt,0,Number.MAX_SAFE_INTEGER,Date.now()),
+      lastPlayedAt:clampInt(raw.lastPlayedAt,0,Number.MAX_SAFE_INTEGER,0),
+      xp:clampInt(raw.xp,0,999999999,0),
+      sel:validPalierId(raw.sel,"P1"),
+      legacyCloud:raw.legacyCloud===true
+    });
+  });
+  out.activeId=out.players.some(function(p){return p.id===value.activeId;})?String(value.activeId):(out.players[0]?out.players[0].id:"");
+  return out;
+}
+function activePlayerMeta(){
+  return PLAYER_REGISTRY&&PLAYER_REGISTRY.players?PLAYER_REGISTRY.players.find(function(p){return p.id===ACTIVE_PLAYER_ID;})||null:null;
+}
+function playerMetaById(id){
+  return PLAYER_REGISTRY&&PLAYER_REGISTRY.players?PLAYER_REGISTRY.players.find(function(p){return p.id===id;})||null:null;
+}
+function playerFallbackKey(id){ return PLAYER_FALLBACK_PREFIX+(isSafeId(id)?id:"invalid"); }
+function playerPreimportKey(id){ return LS_PREIMPORT+"_"+(isSafeId(id)?id:"invalid"); }
+function stateBelongsToPlayer(value,id){
+  if(!recognizableStoredState(value)||!id) return false;
+  const meta=playerMetaById(id), sezam=isRecord(value._sezam)?value._sezam:{};
+  return sezam.playerId===id || (!!meta&&sezam.userId===meta.userId);
+}
+function playerIdForState(value){
+  if(!recognizableStoredState(value)||!PLAYER_REGISTRY)return "";
+  const sezam=isRecord(value._sezam)?value._sezam:{};
+  const hit=PLAYER_REGISTRY.players.find(function(meta){return sezam.playerId===meta.id||sezam.userId===meta.userId;});
+  return hit?hit.id:"";
+}
+function legacyBestLocalState(){
   const primary=readKey(LS_KEY);
   if(recognizableStoredState(primary)) return primary;
   const mirror=readKey(LS_MIRROR);
@@ -1319,9 +1382,43 @@ function bestLocalState(){
   const checkpoint=readKey(LS_CHECKPOINT);
   return recognizableStoredState(checkpoint)?checkpoint:null;
 }
-/* ---- Niveau 2 IndexedDB : copie persistante offline quand localStorage est purgé (iOS/ménage navigateur) ---- */
+function bestLocalState(){
+  const candidate=legacyBestLocalState();
+  if(!candidate) return null;
+  if(!ACTIVE_PLAYER_ID||!PLAYER_REGISTRY||!PLAYER_REGISTRY.players.length) return candidate;
+  return stateBelongsToPlayer(candidate,ACTIVE_PLAYER_ID)?candidate:null;
+}
+function writePlayerRegistry(skipIdb){
+  if(!PLAYER_REGISTRY) return false;
+  PLAYER_REGISTRY=normalizePlayerRegistry(PLAYER_REGISTRY);
+  if(!PLAYER_REGISTRY.players.length) return false;
+  PLAYER_REGISTRY.activeId=ACTIVE_PLAYER_ID=PLAYER_REGISTRY.activeId||PLAYER_REGISTRY.players[0].id;
+  let str=""; try{str=JSON.stringify(PLAYER_REGISTRY);}catch(e){return false;}
+  try{localStorage.setItem(PLAYER_REGISTRY_KEY,str);}catch(e){return false;}
+  if(!skipIdb) idbSaveRegistry(str);
+  return true;
+}
+function initializePlayerRegistry(){
+  const stored=readKey(PLAYER_REGISTRY_KEY), normalized=normalizePlayerRegistry(stored);
+  hadPlayerRegistryLocal=normalized.players.length>0;
+  if(hadPlayerRegistryLocal){
+    PLAYER_REGISTRY=normalized; ACTIVE_PLAYER_ID=normalized.activeId;
+    const active=bestLocalState(), fallback=readKey(playerFallbackKey(ACTIVE_PLAYER_ID));
+    const raw=active||(stateBelongsToPlayer(fallback,ACTIVE_PLAYER_ID)?fallback:null);
+    return {raw:raw,hadState:!!raw,migrated:false};
+  }
+  const legacy=legacyBestLocalState(), candidate=ensureStructure(legacy||{});
+  const id=cleanId(candidate._sezam&&candidate._sezam.userId?candidate._sezam.userId:makeLocalId("player"),"player");
+  candidate._sezam.playerId=id;
+  const name=normalizePlayerName(candidate.profile&&candidate.profile.displayName,"Joueur 1");
+  candidate.profile=normalizeProfile(Object.assign({},candidate.profile||{},{displayName:name}));
+  PLAYER_REGISTRY={schema:1,activeId:id,players:[{id:id,userId:candidate._sezam.userId,name:name,createdAt:Date.now(),lastPlayedAt:Date.now(),xp:candidate.xp||0,sel:candidate.sel||"P1",legacyCloud:true}]};
+  ACTIVE_PLAYER_ID=id; writePlayerRegistry(true);
+  return {raw:candidate,hadState:!!legacy,migrated:!!legacy};
+}
+/* ---- Niveau 2 IndexedDB : un coffre distinct par joueur, plus le registre familial. ---- */
 const IDB_NAME="soladoBackup", IDB_STORE="kv";
-let idbReady=false, idbQueuedSave=null, hadRecognizableLocal=false;
+let idbReady=false, idbQueuedSave=safeMap(), hadRecognizableLocal=false;
 function idbOpen(cb){
   try{
     if(typeof indexedDB==="undefined"){ cb(null); return; }
@@ -1331,42 +1428,97 @@ function idbOpen(cb){
     rq.onerror=function(){ cb(null); };
   }catch(e){ cb(null); }
 }
-function idbSave(str){
-  if(!idbReady){idbQueuedSave=str;return;}
+function idbPut(str,key,cb){
+  if(!idbReady){idbQueuedSave[key]=str;if(cb)cb(true);return;}
   idbOpen(function(db){
-    if(!db) return;
-    try{ db.transaction(IDB_STORE,"readwrite").objectStore(IDB_STORE).put(str,"save"); }catch(e){}
+    if(!db){if(cb)cb(false);return;}
+    try{
+      const tx=db.transaction(IDB_STORE,"readwrite");let settled=false;
+      const done=function(ok){if(settled)return;settled=true;if(cb)cb(ok);};
+      tx.oncomplete=function(){done(true);};tx.onerror=function(){done(false);};tx.onabort=function(){done(false);};
+      tx.objectStore(IDB_STORE).put(str,key);
+    }catch(e){if(cb)cb(false);}
   });
 }
-function idbLoad(cb){
+function idbGet(key,cb){
   idbOpen(function(db){
     if(!db){ cb(null); return; }
     try{
-      const rq=db.transaction(IDB_STORE,"readonly").objectStore(IDB_STORE).get("save");
+      const rq=db.transaction(IDB_STORE,"readonly").objectStore(IDB_STORE).get(key);
       rq.onsuccess=function(){ cb(rq.result||null); };
       rq.onerror=function(){ cb(null); };
     }catch(e){ cb(null); }
   });
 }
+function idbSave(str,playerId,cb){
+  playerId=isSafeId(playerId)?playerId:ACTIVE_PLAYER_ID;
+  idbPut(str,"save:"+playerId,function(ok){
+    if(ok){try{localStorage.removeItem(playerFallbackKey(playerId));}catch(e){}}
+    else {try{localStorage.setItem(playerFallbackKey(playerId),str);ok=true;}catch(e){}}
+    if(cb)cb(!!ok);
+  });
+}
+function idbLoad(cb,playerId){
+  playerId=isSafeId(playerId)?playerId:ACTIVE_PLAYER_ID;
+  const fallback=readKey(playerFallbackKey(playerId));
+  if(stateBelongsToPlayer(fallback,playerId)){cb(JSON.stringify(fallback));return;}
+  idbGet("save:"+playerId,cb);
+}
+function idbSaveRegistry(str){ idbPut(str,"players"); }
+function idbLoadRegistry(cb){ idbGet("players",cb); }
+function idbDeletePlayer(playerId){
+  if(!isSafeId(playerId)) return;
+  try{localStorage.removeItem(playerFallbackKey(playerId));localStorage.removeItem(playerPreimportKey(playerId));}catch(e){}
+  idbOpen(function(db){
+    if(!db)return;
+    try{const s=db.transaction(IDB_STORE,"readwrite").objectStore(IDB_STORE);s.delete("save:"+playerId);s.delete("preimport:"+playerId);}catch(e){}
+  });
+}
 // IndexedDB est lu avant sa première écriture. Une copie locale valide reste
 // prioritaire : une suppression volontaire ne doit jamais être « réparée ».
 function idbRescue(done){
-  idbLoad(function(str){
-    let restored=false, obj=null;
-    if(!hadRecognizableLocal&&str){
-      try{obj=JSON.parse(str);}catch(e){obj=null;}
-      obj=backupToDb(obj);
-      if(recognizableStoredState(obj)){DB=ensureStructure(obj);restored=true;logEvent("idb_rescue",{xp:DB.xp});}
+  idbLoadRegistry(function(registryStr){
+    let registryRestored=false;
+    if(!hadPlayerRegistryLocal&&registryStr){
+      let parsed=null;try{parsed=JSON.parse(registryStr);}catch(e){}
+      const recovered=normalizePlayerRegistry(parsed);
+      if(recovered.players.length){PLAYER_REGISTRY=recovered;ACTIVE_PLAYER_ID=recovered.activeId;registryRestored=true;writePlayerRegistry(true);}
     }
-    idbReady=true; idbQueuedSave=null; applyTheme(); save({touch:false,cloud:false});
-    if(done) done(restored);
-    if(restored){
-      $("cardBox").innerHTML='<h3>Sauvegarde de secours</h3><h2>Progression retrouvée</h2>'+
-        '<p>SEZAM a restauré la copie persistante de cet appareil ('+(DB.xp||0)+' XP).</p>'+
-        '<p class="src">Pense aussi à exporter de temps en temps : Stats & sauvegarde → Copier ou Télécharger.</p>'+
-        '<button onclick="document.getElementById(\'overlay\').classList.remove(\'on\')">Continuer</button>';
-      $("overlay").classList.add("on");
-    }
+    const finish=function(str){
+      let restored=false,obj=null;
+      if((!hadRecognizableLocal||!stateBelongsToPlayer(DB,ACTIVE_PLAYER_ID))&&str){
+        try{obj=JSON.parse(str);}catch(e){obj=null;}
+        obj=backupToDb(obj);
+        if(recognizableStoredState(obj)){
+          DB=ensureStructure(obj);DB._sezam.playerId=ACTIVE_PLAYER_ID;restored=true;logEvent("idb_rescue",{xp:DB.xp,playerId:ACTIVE_PLAYER_ID});
+          const meta=activePlayerMeta();if(meta&&DB.profile&&DB.profile.displayName)meta.name=normalizePlayerName(DB.profile.displayName,meta.name);
+        }
+      }
+      if(!stateBelongsToPlayer(DB,ACTIVE_PLAYER_ID)){
+        let ownerId=playerIdForState(DB);
+        if(!ownerId&&PLAYER_REGISTRY.players.length<MAX_LOCAL_PLAYERS){
+          ownerId=cleanId(DB._sezam&&DB._sezam.playerId?DB._sezam.playerId:makeLocalId("recovered"),"recovered");
+          while(playerMetaById(ownerId))ownerId=cleanId(makeLocalId("recovered"),"recovered");
+          const recoveredName=normalizePlayerName(DB.profile&&DB.profile.displayName,"Joueur retrouvé");
+          PLAYER_REGISTRY.players.push({id:ownerId,userId:DB._sezam.userId,name:recoveredName,createdAt:Date.now(),lastPlayedAt:Date.now(),xp:DB.xp||0,sel:DB.sel||"P1",legacyCloud:false});
+        }
+        if(ownerId){ACTIVE_PLAYER_ID=ownerId;PLAYER_REGISTRY.activeId=ownerId;DB._sezam.playerId=ownerId;}
+        else DB=freshPlayerState(ACTIVE_PLAYER_ID,activePlayerMeta()?activePlayerMeta().name:"Joueur");
+      }
+      idbReady=true;idbQueuedSave=safeMap();applyTheme();save({touch:false,cloud:false});
+      if(done)done(restored||registryRestored);
+      if(restored||registryRestored){
+        $("cardBox").innerHTML='<h3>Sauvegarde de secours</h3><h2>Profils retrouvés</h2>'+
+          '<p>SEZAM a restauré '+esc(activePlayerMeta()?activePlayerMeta().name:"le joueur")+' et sa progression ('+(DB.xp||0)+' XP).</p>'+
+          '<p class="src">Les autres joueurs restent accessibles avec le bouton du joueur sur l’accueil.</p>'+
+          '<button onclick="document.getElementById(\'overlay\').classList.remove(\'on\')">Continuer</button>';
+        $("overlay").classList.add("on");
+      }
+    };
+    idbLoad(function(str){
+      if(str||hadRecognizableLocal){finish(str);return;}
+      idbGet("save",finish); // compatibilité avec le coffre unique v27
+    },ACTIVE_PLAYER_ID);
   });
 }
 function logEvent(type,data){
@@ -1386,23 +1538,37 @@ function saveBanner(show){
 }
 function load(){
   if(navigator.storage && navigator.storage.persist){ try{ navigator.storage.persist(); }catch(e){} }
-  const raw=bestLocalState(); // niveau 1 : localStorage instantané + miroirs anti-corruption
-  hadRecognizableLocal=recognizableStoredState(raw);
+  const startup=initializePlayerRegistry(), raw=startup.raw;
+  hadRecognizableLocal=!!startup.hadState;
   DB=ensureStructure(raw||{});
+  DB._sezam.playerId=ACTIVE_PLAYER_ID;
+  const meta=activePlayerMeta();
+  if(meta&&!DB.profile.displayName) DB.profile=normalizeProfile(Object.assign({},DB.profile,{displayName:meta.name}));
   const dk=activeDayKeys();
   if(dk.length){
     const gap=Math.round((Date.now()-new Date(dk[dk.length-1]+"T00:00:00").getTime())/864e5);
     if(gap>=5) logEvent("retour_apres_pause",{gapJours:gap});
   }
-  logEvent("ouverture",{});
+  logEvent("ouverture",{playerId:ACTIVE_PLAYER_ID});
   applyTheme();
   save({touch:false,cloud:false});
+}
+function updateActivePlayerMeta(touch){
+  const meta=activePlayerMeta();if(!meta||!DB)return;
+  const profileName=DB.profile&&cleanText(DB.profile.displayName,40,"");
+  if(profileName)meta.name=normalizePlayerName(profileName,meta.name);
+  meta.userId=DB._sezam&&DB._sezam.userId?DB._sezam.userId:meta.userId;
+  meta.xp=clampInt(DB.xp,0,999999999,0);meta.sel=validPalierId(DB.sel,"P1");
+  if(touch!==false)meta.lastPlayedAt=Date.now();
+  PLAYER_REGISTRY.activeId=ACTIVE_PLAYER_ID;
 }
 function save(opts){
   opts=opts||{};
   if(DB){
     ensureMeta(DB);
+    DB._sezam.playerId=ACTIVE_PLAYER_ID;
     if(opts.touch!==false) DB._sezam.updatedAt=Date.now();
+    updateActivePlayerMeta(opts.touch);
   }
   let str;
   try{ str=JSON.stringify(DB); }catch(e){ saveFailed=true; saveBanner(true); return false; }
@@ -1410,10 +1576,133 @@ function save(opts){
   try{ localStorage.setItem(LS_KEY,str); ok=true; }catch(e){}
   try{ localStorage.setItem(LS_MIRROR,str); }catch(e){} // écriture redondante
   try{ localStorage.setItem(LS_CHECKPOINT,str); }catch(e){} // troisième copie du même état validé, y compris après suppression volontaire
-  idbSave(str); // niveau 2 : IndexedDB (asynchrone, sans blocage)
-  saveFailed=!ok; saveBanner(!ok);
-  if(ok && opts.cloud!==false) queueCloudSync();
-  return ok;
+  idbSave(str,ACTIVE_PLAYER_ID); // coffre propre au joueur actif
+  const registryOk=writePlayerRegistry();
+  saveFailed=!ok||!registryOk; saveBanner(saveFailed);
+  if(ok&&registryOk&&opts.cloud!==false) queueCloudSync();
+  return ok&&registryOk;
+}
+function freshPlayerState(id,name){
+  const db=ensureStructure({_sezam:{app:"SEZAM",schema:12,userId:id,playerId:id,createdAt:Date.now(),updatedAt:Date.now()},profile:{displayName:name}});
+  db._sezam.playerId=id;return db;
+}
+function playerSummary(state){
+  state=ensureStructure(state||{});
+  const p=PALIERS.find(function(x){return x.id===state.sel;})||PALIERS[0];
+  return p.id+" · "+(state.xp||0)+" XP";
+}
+function stopPlayerAsyncWork(){
+  PLAYER_EPOCH++;
+  if(typeof syncQueued!=="undefined"&&syncQueued){clearTimeout(syncQueued);syncQueued=null;}
+  if(typeof syncPendingRemote!=="undefined")syncPendingRemote=null;
+  if(typeof syncBusy!=="undefined")syncBusy=false;
+}
+function activatePlayerState(id,state){
+  const meta=playerMetaById(id);if(!meta||!recognizableStoredState(state))return false;
+  const previousId=ACTIVE_PLAYER_ID,previousDB=DB,previousRegistry=JSON.stringify(PLAYER_REGISTRY);
+  stopPlayerAsyncWork();ACTIVE_PLAYER_ID=id;PLAYER_REGISTRY.activeId=id;meta.lastPlayedAt=Date.now();
+  DB=ensureStructure(state);DB._sezam.playerId=id;
+  if(!DB.profile.displayName)DB.profile=normalizeProfile(Object.assign({},DB.profile,{displayName:meta.name}));
+  applyTheme();
+  if(!save({touch:false,cloud:false})){
+    ACTIVE_PLAYER_ID=previousId;PLAYER_REGISTRY=normalizePlayerRegistry(JSON.parse(previousRegistry));DB=previousDB;applyTheme();
+    return false;
+  }
+  show("scrHome");renderHome();
+  if(syncEnabled())syncPull();
+  return true;
+}
+function switchPlayer(id,cb){
+  cb=typeof cb==="function"?cb:function(){};
+  if(!idbReady){cb(false,"Les profils finissent de se charger. Réessaie dans un instant.");return false;}
+  if(playerOperationBusy){cb(false,"Un changement de joueur est déjà en cours.");return false;}
+  if(!isSafeId(id)||!playerMetaById(id)){cb(false,"Joueur introuvable.");return false;}
+  if(id===ACTIVE_PLAYER_ID){cb(true,"");return true;}
+  if((typeof EX!=="undefined"&&EX&&!EX.done)||(typeof KX!=="undefined"&&KX&&!KX.done)){
+    cb(false,"Termine ou quitte l’exercice avant de changer de joueur.");return false;
+  }
+  playerOperationBusy=true;
+  if(!save({cloud:false})){playerOperationBusy=false;cb(false,"La progression actuelle n’a pas pu être sauvegardée. Changement annulé.");return false;}
+  const currentId=ACTIVE_PLAYER_ID,currentStr=JSON.stringify(DB);
+  idbSave(currentStr,currentId,function(saved){
+    if(!saved){playerOperationBusy=false;cb(false,"La progression actuelle n’a pas pu être mise à l’abri. Changement annulé.");return;}
+    idbLoad(function(str){
+      let target=null;try{target=str?JSON.parse(str):null;}catch(e){target=null;}
+      target=target?backupToDb(target):null;
+      if(!recognizableStoredState(target)||!stateBelongsToPlayer(target,id)){
+        playerOperationBusy=false;cb(false,"La progression de ce joueur est momentanément inaccessible. Rien n’a été remplacé.");return;
+      }
+      const ok=activatePlayerState(id,target);playerOperationBusy=false;cb(ok,ok?"":"Changement impossible.");
+    },id);
+  });
+  return true;
+}
+function createPlayer(name,cb){
+  cb=typeof cb==="function"?cb:function(){};
+  if(!idbReady){cb(false,"Les profils finissent de se charger. Réessaie dans un instant.");return false;}
+  if(playerOperationBusy){cb(false,"Une opération sur les joueurs est déjà en cours.");return false;}
+  name=normalizePlayerName(name,"");
+  if(!name){cb(false,"Entre un prénom ou un nom d’usage.");return false;}
+  if(PLAYER_REGISTRY.players.length>=MAX_LOCAL_PLAYERS){cb(false,"Limite atteinte : "+MAX_LOCAL_PLAYERS+" joueurs sur cet appareil.");return false;}
+  if(PLAYER_REGISTRY.players.some(function(p){return p.name.toLocaleLowerCase()===name.toLocaleLowerCase();})){
+    cb(false,"Ce nom existe déjà. Choisis un repère différent.");return false;
+  }
+  playerOperationBusy=true;
+  if(!save({cloud:false})){playerOperationBusy=false;cb(false,"La progression actuelle n’a pas pu être sauvegardée.");return false;}
+  const currentId=ACTIVE_PLAYER_ID,currentStr=JSON.stringify(DB);
+  idbSave(currentStr,currentId,function(currentStored){
+    if(!currentStored){playerOperationBusy=false;cb(false,"La progression actuelle n’a pas pu être mise à l’abri.");return;}
+    let id=cleanId(makeLocalId("player"),"player");while(playerMetaById(id))id=cleanId(makeLocalId("player"),"player");
+    const state=freshPlayerState(id,name),str=JSON.stringify(state);
+    idbSave(str,id,function(stored){
+    if(!stored){playerOperationBusy=false;cb(false,"Impossible de créer un enregistrement séparé sur cet appareil.");return;}
+    const previous=JSON.stringify(PLAYER_REGISTRY);
+    PLAYER_REGISTRY.players.push({id:id,userId:id,name:name,createdAt:Date.now(),lastPlayedAt:Date.now(),xp:0,sel:"P1",legacyCloud:false});
+    PLAYER_REGISTRY.activeId=id;ACTIVE_PLAYER_ID=id;
+    if(!writePlayerRegistry()){
+      PLAYER_REGISTRY=normalizePlayerRegistry(JSON.parse(previous));ACTIVE_PLAYER_ID=PLAYER_REGISTRY.activeId;idbDeletePlayer(id);
+      playerOperationBusy=false;cb(false,"Création annulée : stockage indisponible.");return;
+    }
+    const ok=activatePlayerState(id,state);if(ok)logEvent("player_created",{playerId:id});save({cloud:false});
+    playerOperationBusy=false;cb(ok,ok?"Bienvenue "+name+" !":"Création impossible.");
+    });
+  });
+  return true;
+}
+function renamePlayer(id,name,cb){
+  cb=typeof cb==="function"?cb:function(){};name=normalizePlayerName(name,"");
+  if(!idbReady){cb(false,"Les profils finissent de se charger.");return false;}
+  if(playerOperationBusy){cb(false,"Une opération sur les joueurs est déjà en cours.");return false;}
+  const meta=playerMetaById(id);
+  if(!meta||!name){cb(false,"Nom invalide.");return false;}
+  if(PLAYER_REGISTRY.players.some(function(p){return p.id!==id&&p.name.toLocaleLowerCase()===name.toLocaleLowerCase();})){
+    cb(false,"Ce nom est déjà utilisé.");return false;
+  }
+  playerOperationBusy=true;
+  const finish=function(state){
+    const previousRegistry=JSON.stringify(PLAYER_REGISTRY),previousDB=DB,previousName=meta.name;
+    state=ensureStructure(state);const previousState=JSON.stringify(state);
+    state.profile=normalizeProfile(Object.assign({},state.profile,{displayName:name}));state._sezam.updatedAt=Date.now();state._sezam.playerId=id;
+    idbSave(JSON.stringify(state),id,function(ok){
+      if(!ok){playerOperationBusy=false;cb(false,"Renommage impossible : sauvegarde indisponible.");return;}
+      meta.name=name;if(id===ACTIVE_PLAYER_ID)DB=state;
+      const persisted=id===ACTIVE_PLAYER_ID?save({cloud:false}):writePlayerRegistry();
+      if(!persisted){PLAYER_REGISTRY=normalizePlayerRegistry(JSON.parse(previousRegistry));const restoredMeta=playerMetaById(id);if(restoredMeta)restoredMeta.name=previousName;if(id===ACTIVE_PLAYER_ID)DB=previousDB;idbSave(previousState,id);playerOperationBusy=false;cb(false,"Renommage annulé : stockage indisponible.");return;}
+      if(id===ACTIVE_PLAYER_ID)renderHome();playerOperationBusy=false;cb(true,"");
+    });
+  };
+  if(id===ACTIVE_PLAYER_ID)finish(DB);
+  else idbLoad(function(str){let state=null;try{state=str?JSON.parse(str):null;}catch(e){}if(!recognizableStoredState(state)){playerOperationBusy=false;cb(false,"Progression inaccessible.");return;}finish(state);},id);
+  return true;
+}
+function deletePlayer(id){
+  if(playerOperationBusy||!idbReady||!isSafeId(id)||!playerMetaById(id)||id===ACTIVE_PLAYER_ID||PLAYER_REGISTRY.players.length<=1)return false;
+  playerOperationBusy=true;
+  const previous=JSON.stringify(PLAYER_REGISTRY);
+  PLAYER_REGISTRY.players=PLAYER_REGISTRY.players.filter(function(p){return p.id!==id;});
+  if(!writePlayerRegistry()){PLAYER_REGISTRY=normalizePlayerRegistry(JSON.parse(previous));ACTIVE_PLAYER_ID=PLAYER_REGISTRY.activeId;playerOperationBusy=false;return false;}
+  idbDeletePlayer(id);if(typeof removePlayerSyncLocal==="function")removePlayerSyncLocal(id);
+  playerOperationBusy=false;return true;
 }
 function themeModeLabel(id){
   const t=THEME_MODES.find(function(x){return x.id===id;});
@@ -1855,6 +2144,8 @@ if(typeof MutationObserver!=="undefined"){
   const overlayObserver=new MutationObserver(function(){
     const open=$("overlay").classList.contains("on");
     if(open){
+      const labelled=$("cardBox").getAttribute("aria-labelledby");
+      if(labelled&&!document.getElementById(labelled))$("cardBox").removeAttribute("aria-labelledby");
       if(document.activeElement&&document.activeElement!==document.body) overlayReturnFocus=document.activeElement;
       try{$("cardBox").focus();}catch(e){}
     } else if(overlayReturnFocus){
@@ -1864,8 +2155,21 @@ if(typeof MutationObserver!=="undefined"){
   });
   overlayObserver.observe($("overlay"),{attributes:true,attributeFilter:["class"]});
 }
+document.addEventListener("keydown",function(ev){
+  if(!$("overlay").classList.contains("on"))return;
+  if(ev.key==="Escape"){ev.preventDefault();$("overlay").classList.remove("on");return;}
+  if(ev.key!=="Tab")return;
+  const focusable=Array.from($("cardBox").querySelectorAll('button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])'));
+  if(!focusable.length){ev.preventDefault();$("cardBox").focus();return;}
+  const first=focusable[0],last=focusable[focusable.length-1];
+  if(ev.shiftKey&&document.activeElement===first){ev.preventDefault();last.focus();}
+  else if(!ev.shiftKey&&document.activeElement===last){ev.preventDefault();first.focus();}
+});
 function soundLabel(){ return !DB.sound?"muet":(DB.soundLong?"♪ chant":"♪ court"); }
-function header(){ $("hXp").textContent=DB.xp; $("hStreak").textContent=streak(); $("btnSound").textContent=soundLabel(); }
+function header(){
+  $("hXp").textContent=DB.xp; $("hStreak").textContent=streak(); $("btnSound").textContent=soundLabel();
+  renderPlayerSwitchButton();
+}
 function modeLabel(m){ return m==="libre"?"Libre":tierDef(m).label; }
 function labelFrom(list,id){ const x=list.find(function(o){return o.id===id;}); return x?x.label:list[0].label; }
 function renderCalendar(){
@@ -1939,6 +2243,73 @@ function renderOracle(){
 }
 function optionHtml(list,val){
   return list.map(function(o){return '<option value="'+esc(o.id)+'"'+(o.id===val?' selected':'')+'>'+esc(o.label)+'</option>';}).join("");
+}
+function playerInitial(name){
+  const chars=Array.from(normalizePlayerName(name,"Joueur"));return (chars[0]||"J").toLocaleUpperCase();
+}
+function renderPlayerSwitchButton(){
+  const meta=activePlayerMeta();if(!meta)return;
+  $("playerAvatar").textContent=playerInitial(meta.name);$("currentPlayerName").textContent=meta.name;
+  $("btnPlayerSwitch").setAttribute("aria-label","Joueur actuel : "+meta.name+". Changer de joueur");
+}
+function openPlayerSwitcher(){
+  const rows=PLAYER_REGISTRY.players.map(function(p){
+    const active=p.id===ACTIVE_PLAYER_ID;
+    return '<div class="playerRow"><button type="button" class="playerPick" data-player-pick="'+esc(p.id)+'" aria-current="'+(active?'true':'false')+'">'+
+      '<span class="playerAvatar" aria-hidden="true">'+esc(playerInitial(p.name))+'</span><span><b>'+esc(p.name)+'</b><small>'+esc((p.sel||"P1")+' · '+(p.xp||0)+' XP')+'</small></span>'+
+      '<span class="playerCheck" aria-hidden="true">'+(active?'✓':'›')+'</span></button>'+
+      '<button type="button" class="playerEdit" data-player-edit="'+esc(p.id)+'" aria-label="Modifier '+esc(p.name)+'">✎</button></div>';
+  }).join("");
+  $("cardBox").setAttribute("aria-labelledby","playerDialogTitle");
+  $("cardBox").innerHTML='<h3>Joueurs sur cet appareil</h3><h2 id="playerDialogTitle">Qui joue ?</h2>'+
+    '<p>Chaque joueur garde ses XP, ses paliers, ses erreurs, ses réglages et ses partitions.</p><div class="playerRows">'+rows+'</div>'+
+    '<p class="src" id="playerSwitchMsg" role="status" aria-live="polite">Le changement est disponible depuis l’accueil, jamais au milieu d’un exercice.</p>'+
+    '<button type="button" id="playerAdd">+ Ajouter un joueur</button><button type="button" id="playerClose" style="margin-top:8px;background:var(--panel2);color:var(--ink)">Fermer</button>';
+  $("overlay").classList.add("on");
+  $("cardBox").querySelectorAll("[data-player-pick]").forEach(function(btn){btn.onclick=function(){
+    const id=btn.getAttribute("data-player-pick");if(id===ACTIVE_PLAYER_ID){$("overlay").classList.remove("on");return;}
+    $("cardBox").querySelectorAll("button").forEach(function(x){x.disabled=true;});
+    $("playerSwitchMsg").textContent="Enregistrement puis ouverture de la progression…";
+    switchPlayer(id,function(ok,msg){if(ok)$("overlay").classList.remove("on");else {$("playerSwitchMsg").textContent=msg;$("cardBox").querySelectorAll("button").forEach(function(x){x.disabled=false;});}});
+  };});
+  $("cardBox").querySelectorAll("[data-player-edit]").forEach(function(btn){btn.onclick=function(){openPlayerEditor(btn.getAttribute("data-player-edit"));};});
+  $("playerAdd").onclick=openAddPlayer;$("playerClose").onclick=function(){$("cardBox").removeAttribute("aria-labelledby");$("overlay").classList.remove("on");};
+  setTimeout(function(){try{$("cardBox").focus();}catch(e){}},0);
+}
+function openAddPlayer(){
+  $("cardBox").setAttribute("aria-labelledby","playerAddTitle");
+  $("cardBox").innerHTML='<h3>Nouveau joueur</h3><h2 id="playerAddTitle">Créer une progression séparée</h2>'+
+    '<p>Le nouveau joueur commencera à P1 avec 0 XP. Ta progression actuelle restera intacte.</p><form id="playerAddForm">'+
+    '<div class="profileGrid"><label>Nom affiché<input id="newPlayerName" maxlength="40" autocomplete="nickname" placeholder="Ex. Paul"></label></div>'+
+    '<p class="src" id="newPlayerMsg" role="status" aria-live="polite"></p><button type="submit" id="newPlayerCreate">Créer et jouer</button>'+
+    '<button type="button" id="newPlayerCancel" style="margin-top:8px;background:var(--panel2);color:var(--ink)">Annuler</button></form>';
+  $("newPlayerCancel").onclick=openPlayerSwitcher;
+  $("playerAddForm").onsubmit=function(ev){
+    ev.preventDefault();$("newPlayerCreate").disabled=true;$("newPlayerCancel").disabled=true;
+    $("newPlayerMsg").textContent="Enregistrement du nouveau joueur…";
+    createPlayer($("newPlayerName").value,function(ok,msg){if(ok){$("overlay").classList.remove("on");}else {$("newPlayerMsg").textContent=msg;$("newPlayerCreate").disabled=false;$("newPlayerCancel").disabled=false;}});
+  };
+  setTimeout(function(){try{$("newPlayerName").focus();}catch(e){}},0);
+}
+function openPlayerEditor(id){
+  const meta=playerMetaById(id);if(!meta){openPlayerSwitcher();return;}
+  const canDelete=id!==ACTIVE_PLAYER_ID&&PLAYER_REGISTRY.players.length>1;
+  const activeHelp=id===ACTIVE_PLAYER_ID?(PLAYER_REGISTRY.players.length===1?'Il faut conserver au moins un joueur. Crée-en un autre avant de supprimer celui-ci.':'C’est le joueur actif. Passe d’abord sur un autre joueur pour le supprimer.'):'Tu peux le renommer sans perdre sa progression.';
+  $("cardBox").setAttribute("aria-labelledby","playerEditTitle");
+  $("cardBox").innerHTML='<h3>Joueur</h3><h2 id="playerEditTitle">Modifier '+esc(meta.name)+'</h2><form id="playerEditForm">'+
+    '<div class="profileGrid"><label>Nom affiché<input id="editPlayerName" maxlength="40" autocomplete="nickname" value="'+esc(meta.name)+'"></label></div>'+
+    '<p class="src" id="editPlayerMsg" role="status" aria-live="polite">'+activeHelp+'</p>'+
+    '<button type="submit" id="editPlayerSave">Renommer</button>'+
+    (canDelete?'<button type="button" class="playerDanger" id="editPlayerDelete" style="margin-top:8px">Supprimer ce joueur de cet appareil</button>':'')+
+    '<button type="button" id="editPlayerBack" style="margin-top:8px;background:var(--panel2);color:var(--ink)">Retour</button></form>';
+  $("editPlayerBack").onclick=openPlayerSwitcher;
+  $("playerEditForm").onsubmit=function(ev){ev.preventDefault();$("cardBox").querySelectorAll("button").forEach(function(x){x.disabled=true;});renamePlayer(id,$("editPlayerName").value,function(ok,msg){if(ok)openPlayerSwitcher();else {$("editPlayerMsg").textContent=msg;$("cardBox").querySelectorAll("button").forEach(function(x){x.disabled=false;});}});};
+  if(canDelete)$("editPlayerDelete").onclick=function(){
+    const question="Supprimer "+meta.name+" et toute sa progression sur cet appareil ? Une éventuelle sauvegarde GitHub ne sera pas supprimée.";
+    if(typeof window.confirm==="function"&&!window.confirm(question))return;
+    if(deletePlayer(id))openPlayerSwitcher();else $("editPlayerMsg").textContent="Suppression impossible.";
+  };
+  setTimeout(function(){try{$("editPlayerName").focus();$("editPlayerName").select();}catch(e){}},0);
 }
 function openMusicProfile(){
   const p=normalizeProfile(DB.profile), selected={};
@@ -2161,7 +2532,7 @@ function dailyPlan(decision){
   ];
   const minutes=splitPlanMinutes(total,specs.map(function(x){return x.weight;}));
   const done=(DB.dailyProgress&&DB.dailyProgress[todayStr()])||{};
-  const signature="v27:"+decision.palier.id+":"+(piece?piece.id:"aucune")+":"+total;
+  const signature="v28:"+decision.palier.id+":"+(piece?piece.id:"aucune")+":"+total;
   const sessionDone=done.session===true||done.session===signature;
   return {
     total:total,
@@ -3655,8 +4026,9 @@ function showTierCard(tid){
 /* ---- stats + sauvegarde ---- */
 function stashPreimport(){
   try{
-    localStorage.setItem(LS_PREIMPORT, JSON.stringify(DB));
-    return !!localStorage.getItem(LS_PREIMPORT);
+    const key=playerPreimportKey(ACTIVE_PLAYER_ID);
+    localStorage.setItem(key, JSON.stringify(DB));
+    return !!localStorage.getItem(key);
   }catch(e){ return false; } // filet avant écrasement
 }
 function recoveryCodeInfo(txt){
@@ -3752,6 +4124,9 @@ function importSave(txt){
   if(!recognizableStoredState(candidate)) return "JSON invalide : progression incomplète. Rien n'a été modifié.";
   if(!stashPreimport()) return "Import impossible : l'état actuel n'a pas pu être mis à l'abri. Rien n'a été modifié.";
   const previous=DB;
+  const identityUserId=DB._sezam.userId,identityCreatedAt=DB._sezam.createdAt,identityName=activePlayerMeta()?activePlayerMeta().name:"";
+  candidate._sezam.playerId=ACTIVE_PLAYER_ID;candidate._sezam.userId=identityUserId;candidate._sezam.createdAt=identityCreatedAt;
+  if(identityName)candidate.profile=normalizeProfile(Object.assign({},candidate.profile,{displayName:identityName}));
   DB=candidate; applyTheme();
   if(!save()){
     DB=previous; applyTheme(); save({cloud:false});
@@ -3760,13 +4135,14 @@ function importSave(txt){
   return "Sauvegarde chargée. XP : "+DB.xp+". Ancien état conservé — « Annuler l'import » pour revenir.";
 }
 function undoImport(){
-  const prev=readKey(LS_PREIMPORT);
+  const key=playerPreimportKey(ACTIVE_PLAYER_ID), prev=readKey(key);
   if(!prev) return "Aucun import récent à annuler.";
-  DB=ensureStructure(prev); applyTheme(); save();
-  try{ localStorage.removeItem(LS_PREIMPORT); }catch(e){}
+  DB=ensureStructure(prev); DB._sezam.playerId=ACTIVE_PLAYER_ID; applyTheme(); save();
+  try{ localStorage.removeItem(key); }catch(e){}
   return "Import annulé : l'état précédent a été restauré.";
 }
 function renderStats(){
+  const playerName=activePlayerMeta()?activePlayerMeta().name:"Joueur";
   let v=0,e=0; Object.keys(DB.noteStats).forEach(function(k){v+=DB.noteStats[k].v;e+=DB.noteStats[k].e;});
   const prec=v?Math.round((v-e)/v*100):0;
   let series=0,medals=0,total=0;
@@ -3802,6 +4178,9 @@ function renderStats(){
     ? "Code de secours : "+rc+" — à taper dans Restaurer pour reprendre ici."
     : "Ton code de secours apparaîtra ici dès ton premier palier validé.";
   $("expArea").value=JSON.stringify(DB);
+  $("saveExportTitle").textContent="Sauvegarde de "+playerName+" — exporter";
+  $("saveRestoreTitle").textContent="Restaurer la progression de "+playerName;
+  $("syncTitle").textContent="Synchro cloud de "+playerName;
   $("impArea").value=""; $("saveMsg").textContent="";
   $("syncState").textContent=syncStateText(); $("syncMsg").textContent="";
   show("scrStats");
@@ -4842,30 +5221,44 @@ function finishClavier(){
    Le token reste uniquement en mémoire de session : jamais dans localStorage, DB, exports ou QR. */
 const LS_SYNC="sezam_sync", LS_SYNC_LEGACY="solado_sync",
   GIST_FILE="sezam-progress.json", GIST_FILE_LEGACY="solado-save.json", GIST_DESC="SEZAM progression (auto)";
-let syncBusy=false, syncLastPush=0, syncQueued=null, syncTokenSession="";
+let syncBusy=false, syncLastPush=0, syncQueued=null, syncTokenSessions=safeMap();
 function canSyncNow(){ return typeof navigator==="undefined" || navigator.onLine!==false; }
-function sessionTokenGet(){return syncTokenSession;}
-function sessionTokenSet(token){syncTokenSession=String(token||"");}
+function syncStorageKey(playerId){return LS_SYNC+":"+(isSafeId(playerId)?playerId:"invalid");}
+function playerGistFile(playerId){
+  playerId=isSafeId(playerId)?playerId:ACTIVE_PLAYER_ID;
+  const meta=playerMetaById(playerId),userId=meta&&isSafeId(meta.userId)?meta.userId:playerId;
+  return "sezam-progress-"+(isSafeId(userId)?userId:"joueur")+".json";
+}
+function legacyGistAllowed(){const meta=activePlayerMeta();return !!(meta&&meta.legacyCloud);}
+function sessionTokenGet(playerId){playerId=isSafeId(playerId)?playerId:ACTIVE_PLAYER_ID;return syncTokenSessions[playerId]||"";}
+function sessionTokenSet(token,playerId){playerId=isSafeId(playerId)?playerId:ACTIVE_PLAYER_ID;syncTokenSessions[playerId]=String(token||"");}
 function syncCfg(){
-  const stored=readKey(LS_SYNC)||readKey(LS_SYNC_LEGACY)||{};
+  const key=syncStorageKey(ACTIVE_PLAYER_ID), scoped=readKey(key);
+  const stored=scoped||(legacyGistAllowed()?(readKey(LS_SYNC)||readKey(LS_SYNC_LEGACY)):null)||{};
   let token=sessionTokenGet();
   // Migration de sécurité : retire tout ancien token persistant dès la première lecture.
   if(!token&&stored.token){ token=String(stored.token); sessionTokenSet(token); }
   if(stored.token){
     delete stored.token;
-    try{localStorage.setItem(LS_SYNC,JSON.stringify(stored));localStorage.removeItem(LS_SYNC_LEGACY);}catch(e){}
+    try{localStorage.setItem(key,JSON.stringify(stored));localStorage.removeItem(LS_SYNC);localStorage.removeItem(LS_SYNC_LEGACY);}catch(e){}
+  } else if(!scoped&&(stored.gistId||stored.clientId||stored.lastSync)){
+    try{localStorage.setItem(key,JSON.stringify(stored));localStorage.removeItem(LS_SYNC);localStorage.removeItem(LS_SYNC_LEGACY);}catch(e){}
   }
   return Object.assign({},stored,{token:token});
 }
 function syncSet(patch){
   patch=Object.assign({},patch||{});
   if(Object.prototype.hasOwnProperty.call(patch,"token")){ sessionTokenSet(String(patch.token||"")); delete patch.token; }
-  const current=readKey(LS_SYNC)||readKey(LS_SYNC_LEGACY)||{}; delete current.token;
+  const key=syncStorageKey(ACTIVE_PLAYER_ID), current=readKey(key)||(legacyGistAllowed()?(readKey(LS_SYNC)||readKey(LS_SYNC_LEGACY)):null)||{}; delete current.token;
   const stored=Object.assign({},current,patch);
-  try{ localStorage.setItem(LS_SYNC,JSON.stringify(stored)); localStorage.removeItem(LS_SYNC_LEGACY); }catch(e){}
+  try{ localStorage.setItem(key,JSON.stringify(stored)); localStorage.removeItem(LS_SYNC); localStorage.removeItem(LS_SYNC_LEGACY); }catch(e){}
   return Object.assign({},stored,{token:sessionTokenGet()});
 }
-function syncClear(){ sessionTokenSet(""); try{ localStorage.removeItem(LS_SYNC); localStorage.removeItem(LS_SYNC_LEGACY); }catch(e){} }
+function syncClear(){ sessionTokenSet(""); try{ localStorage.removeItem(syncStorageKey(ACTIVE_PLAYER_ID)); if(legacyGistAllowed()){localStorage.removeItem(LS_SYNC);localStorage.removeItem(LS_SYNC_LEGACY);} }catch(e){} }
+function removePlayerSyncLocal(playerId){
+  if(!isSafeId(playerId))return;delete syncTokenSessions[playerId];
+  try{localStorage.removeItem(syncStorageKey(playerId));}catch(e){}
+}
 function syncClientId(){
   const c=syncCfg();
   if(c.clientId) return c.clientId;
@@ -4901,10 +5294,11 @@ function syncStatus(msg){ const el=document.getElementById("syncMsg"); if(el) el
 function queueCloudSync(delay){
   if(!syncEnabled()||!canSyncNow()) return;
   if(syncQueued) clearTimeout(syncQueued);
-  syncQueued=setTimeout(function(){ syncQueued=null; syncPush(false); }, delay||1600);
+  const playerId=ACTIVE_PLAYER_ID,epoch=PLAYER_EPOCH;
+  syncQueued=setTimeout(function(){ syncQueued=null; if(playerId===ACTIVE_PLAYER_ID&&epoch===PLAYER_EPOCH)syncPush(false); }, delay||1600);
 }
 function gistApi(method,path,body,cb){
-  const c=syncCfg();
+  const c=syncCfg(),playerId=ACTIVE_PLAYER_ID,epoch=PLAYER_EPOCH;
   if(!c.token||typeof fetch==="undefined"||!canSyncNow()){ cb(null); return; }
   try{
     fetch("https://api.github.com"+path,{
@@ -4912,21 +5306,34 @@ function gistApi(method,path,body,cb){
       headers:{"Authorization":"Bearer "+c.token,"Accept":"application/vnd.github+json","Content-Type":"application/json"},
       body:body?JSON.stringify(body):undefined
     }).then(function(r){
+      if(playerId!==ACTIVE_PLAYER_ID||epoch!==PLAYER_EPOCH)return null;
       if(r.status===401||r.status===403){ syncStatus("Token refusé par GitHub. Crée un nouveau token avec la permission gist, puis recolle-le."); return null; }
       if(!r.ok) return null;
       return r.status===204?{}:r.json();
-    }).then(function(j){ cb(j||null); }).catch(function(){ cb(null); });
+    }).then(function(j){ if(playerId===ACTIVE_PLAYER_ID&&epoch===PLAYER_EPOCH)cb(j||null); }).catch(function(){ if(playerId===ACTIVE_PLAYER_ID&&epoch===PLAYER_EPOCH)cb(null); });
   }catch(e){ cb(null); }
 }
+function remoteFileName(g){
+  if(!g||!g.files)return "";
+  const specific=playerGistFile(ACTIVE_PLAYER_ID);
+  if(g.files[specific])return specific;
+  if(legacyGistAllowed()&&g.files[GIST_FILE])return GIST_FILE;
+  if(legacyGistAllowed()&&g.files[GIST_FILE_LEGACY])return GIST_FILE_LEGACY;
+  return "";
+}
 function remoteFile(g){
-  return g&&g.files&&(g.files[GIST_FILE]||g.files[GIST_FILE_LEGACY]);
+  const name=remoteFileName(g);return name&&g&&g.files?g.files[name]:null;
 }
 function parseRemote(g){
-  const f=remoteFile(g);
+  const fileName=remoteFileName(g),f=remoteFile(g);
   if(!f||f.truncated||!f.content) return null;
   let o=null; try{ o=JSON.parse(f.content); }catch(e){ return null; }
   if(!o||typeof o!=="object") return null;
+  const expectedUserId=DB&&DB._sezam?DB._sezam.userId:"",isLegacy=fileName===GIST_FILE||fileName===GIST_FILE_LEGACY;
+  if(!isLegacy&&(!o.userId||o.userId!==expectedUserId)) return null;
+  if(isLegacy&&o.userId&&expectedUserId&&o.userId!==expectedUserId) return null;
   const db=ensureStructure(backupToDb(o));
+  db._sezam.playerId=ACTIVE_PLAYER_ID;
   const ts=stateTimestamp(o)||Date.parse(g&&g.updated_at||"")||stateTimestamp(db);
   if(ts) db._sezam.updatedAt=ts;
   return db;
@@ -4959,10 +5366,11 @@ function syncEnsure(cb){
   if(!c.token||!canSyncNow()){ cb(false); return; }
   if(c.gistId){ cb(true); return; }
   gistApi("GET","/gists?per_page=100",null,function(list){
-    const hit=Array.isArray(list)?list.find(function(g){return g.files&&(g.files[GIST_FILE]||g.files[GIST_FILE_LEGACY]);}):null;
+    const hit=Array.isArray(list)?list.find(function(g){return !!remoteFile(g);}):null;
     if(hit){ syncSet({gistId:hit.id}); cb(true); return; }
-    const files={}; files[GIST_FILE]={content:cloudSaveContent()};
-    gistApi("POST","/gists",{description:GIST_DESC,public:false,files:files},function(g){
+    const files={}; files[playerGistFile(ACTIVE_PLAYER_ID)]={content:cloudSaveContent()};
+    const name=activePlayerMeta()?activePlayerMeta().name:"joueur";
+    gistApi("POST","/gists",{description:GIST_DESC+" — "+name,public:false,files:files},function(g){
       if(g&&g.id){ syncSet({gistId:g.id}); cb(true); } else cb(false);
     });
   });
@@ -4977,6 +5385,7 @@ function syncAdopt(remote){
   stashPreimport();
   const before=DB.xp||0;
   DB=ensureStructure(remote);
+  DB._sezam.playerId=ACTIVE_PLAYER_ID;
   applyTheme();
   logEvent("sync_pull",{xp:DB.xp,ts:stateTimestamp(DB)});
   save({touch:false,cloud:false});
@@ -5010,7 +5419,7 @@ function syncPush(force){
     const decision=remote?syncTransferDecision(DB,remote):"push";
     if(decision==="conflict"){syncBusy=false;syncConflictStatus();return;}
     if(remote && decision==="pull"){ syncBusy=false; syncAdopt(remote); return; }
-    const files={}; files[GIST_FILE]={content:cloudSaveContent()};
+    const files={},fileName=remoteFileName(g)||playerGistFile(ACTIVE_PLAYER_ID); files[fileName]={content:cloudSaveContent()};
     gistApi("PATCH","/gists/"+syncCfg().gistId,{files:files},function(res){
       syncBusy=false;
       if(res){ syncLastPush=Date.now(); syncSet({lastSync:Date.now(),lastRemoteTs:stateTimestamp(DB)}); syncStatus("Synchronisé ✓"); }
@@ -5120,6 +5529,7 @@ function showSaveQR(){
 
 /* ================= LIAISONS ================= */
 $("btnPlayNow").onclick=startDailySession;
+$("btnPlayerSwitch").onclick=openPlayerSwitcher;
 $("btnProfileQuick").onclick=openMusicProfile;
 $("btnSerie").onclick=startSerie;
 $("btnRafale").onclick=startRafale;
@@ -5248,7 +5658,9 @@ $("btnDownload").onclick=function(){
     const blob=new Blob([JSON.stringify(DB)],{type:"application/json"});
     const url=URL.createObjectURL(blob);
     const a=document.createElement("a");
-    a.href=url; a.download="sezam-sauvegarde-"+todayStr()+".json";
+    const name=activePlayerMeta()?activePlayerMeta().name:"joueur";
+    const slug=name.normalize?name.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-zA-Z0-9_-]+/g,"-").replace(/^-+|-+$/g,"").toLowerCase():"joueur";
+    a.href=url; a.download="sezam-"+(slug||"joueur")+"-"+todayStr()+".json";
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(function(){URL.revokeObjectURL(url);},1000);
     $("saveMsg").textContent="Fichier de sauvegarde téléchargé.";

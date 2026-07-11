@@ -243,6 +243,12 @@ Ils sont facultatifs et séparés de l'évaluation. Remettre trois fois la clé 
 
 Cette distinction est volontairement écrite noir sur blanc : SEZAM ne prétend pas écouter ni corriger ce qu'il ne mesure pas encore.
 
+## Plusieurs joueurs sur le même appareil
+
+Le bouton du joueur, placé sur l'accueil, permet de créer jusqu'à huit progressions locales et de passer de l'une à l'autre. Chaque joueur conserve séparément ses XP, ses paliers, ses statistiques de notes, sa mémoire espacée, ses réparations, son calendrier, ses trophées, ses réglages et ses partitions. La progression présente avant la v28 devient automatiquement le premier joueur.
+
+Un changement n'est autorisé que depuis l'accueil et après la mise à l'abri du joueur courant. Un joueur actif ou le dernier joueur restant ne peut pas être supprimé. Les exports, QR, annulations d'import et synchronisations GitHub concernent uniquement le joueur actuellement sélectionné ; chaque joueur synchronisé possède son propre Gist.
+
 ## Résumé final
 
 - **Campagne** : 90 validations.

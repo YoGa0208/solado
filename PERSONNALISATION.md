@@ -21,7 +21,9 @@ La lecture de notes, le clavier, les séries, les révisions espacées et les pa
 
 ## Autonomie des données
 
-Le profil, le plan accompli, les secrets trouvés et la progression sont d'abord enregistrés sur l'appareil et inclus dans les exports/QR. Si le joueur active GitHub, ils sont aussi envoyés dans un Gist secret : il n'est pas indexé, mais toute personne possédant son lien peut le lire et son historique conserve les anciennes versions. Les pièces jointes restent locales. Le token GitHub n'est gardé qu'en mémoire, jusqu'au rechargement ou à la fermeture. Aucun compte n'est nécessaire pour jouer et l'application reste utilisable hors ligne après la première ouverture en HTTPS.
+Plusieurs joueurs peuvent partager le même appareil sans partager leurs scores. Un registre local indique seulement qui joue ; chaque joueur possède un coffre complet distinct pour son profil, son plan, ses secrets, sa mémoire espacée, ses partitions et sa progression. Le bouton du joueur permet de basculer depuis l'accueil. Avant le changement, SEZAM confirme la mise à l'abri du joueur courant ; un exercice en cours bloque le basculement.
+
+Les exports et QR concernent toujours le joueur actif. Si ce joueur active GitHub, sa progression est envoyée dans son propre Gist secret, séparé des autres profils : il n'est pas indexé, mais toute personne possédant son lien peut le lire et son historique conserve les anciennes versions. Les pièces jointes restent locales. Le token GitHub est lui aussi isolé par joueur et n'est gardé qu'en mémoire, jusqu'au rechargement ou à la fermeture. Aucun compte n'est nécessaire pour jouer et l'application reste utilisable hors ligne après la première ouverture en HTTPS.
 
 ## Prochaine étape pédagogique
 
