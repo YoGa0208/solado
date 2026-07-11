@@ -1,0 +1,354 @@
+{
+  "schemaVersion": 1,
+  "catalogId": "sezam-cursus-musical-fr",
+  "updatedAt": "2026-07-11",
+  "positioning": {
+    "kind": "complement_numerique_non_certifiant",
+    "statement": "SEZAM accompagne certaines compétences mesurables du cursus musical. Il ne remplace ni le professeur, ni la pratique instrumentale ou vocale, ni le collectif, ni la validation d'un établissement.",
+    "currentScope": "La version 29 évalue la lecture et la mémorisation des notes en clés de sol et de fa, avec un premier transfert sur partitions. Les autres domaines sont guidés ou prévus, sans validation de cycle."
+  },
+  "references": [
+    {
+      "id": "snop-2026",
+      "title": "Schéma national d'orientation pédagogique de l'enseignement public spécialisé de la musique (2026)",
+      "publisher": "Ministère de la Culture",
+      "url": "https://www.culture.gouv.fr/content/download/383713/pdf_file/BO%20Hors-s%C3%A9rie%20n%C2%B0%206%20%28janvier%202026%29.pdf?inLanguage=fre-FR&version=1"
+    },
+    {
+      "id": "cmf-pedagogie",
+      "title": "Ressources pédagogiques de formation musicale",
+      "publisher": "Confédération Musicale de France",
+      "url": "https://www.cmf-musique.org/ressources-pedagogiques/pedagogie/"
+    }
+  ],
+  "deliveryStatuses": [
+    {
+      "id": "available_measured",
+      "label": "Disponible et évalué",
+      "meaning": "L'application produit des preuves objectives, conserve les erreurs et vérifie la stabilité dans le temps."
+    },
+    {
+      "id": "guided_unmeasured",
+      "label": "Mission guidée, non évaluée",
+      "meaning": "L'application propose une activité, mais ne prétend pas valider la compétence."
+    },
+    {
+      "id": "planned",
+      "label": "Prévu",
+      "meaning": "Le référentiel et les prérequis sont prêts, mais aucun exercice ni résultat n'est affiché au joueur."
+    }
+  ],
+  "evidenceTypes": [
+    "recognition",
+    "production",
+    "retention",
+    "transfer",
+    "self_assessment",
+    "teacher_validation"
+  ],
+  "domains": [
+    { "id": "reading", "label": "Lecture et langage écrit" },
+    { "id": "rhythm", "label": "Rythme et coordination" },
+    { "id": "ear", "label": "Écoute et mémoire" },
+    { "id": "voice", "label": "Chant et justesse" },
+    { "id": "theory", "label": "Théorie, écriture et relevé" },
+    { "id": "analysis", "label": "Culture et analyse" },
+    { "id": "creation", "label": "Créativité et improvisation" },
+    { "id": "collective", "label": "Pratique collective et scène" },
+    { "id": "autonomy", "label": "Autonomie et projet artistique" }
+  ],
+  "cycles": [
+    {
+      "id": "c1",
+      "label": "Cycle 1",
+      "officialDurationYears": { "min": 3, "max": 5 },
+      "digitalActiveHoursEstimate": { "min": 75, "max": 200 },
+      "purpose": "Construire des repères sensoriels, corporels, vocaux, instrumentaux et écrits, puis commencer à s'autoévaluer.",
+      "appSummary": "Lecture en clés de sol et fa disponible et évaluée ici ; le reste du cycle n'est pas validé.",
+      "appStatus": "partial"
+    },
+    {
+      "id": "c2",
+      "label": "Cycle 2",
+      "officialDurationYears": { "min": 3, "max": 5 },
+      "digitalActiveHoursEstimate": { "min": 75, "max": 200 },
+      "purpose": "Consolider les acquis, élargir les langages et gagner en autonomie dans la pratique et l'interprétation.",
+      "appSummary": "Aucune validation disponible dans cette version.",
+      "appStatus": "planned"
+    },
+    {
+      "id": "c3",
+      "label": "Cycle 3",
+      "officialDurationYears": { "min": 2, "max": 4 },
+      "digitalActiveHoursEstimate": { "min": 50, "max": 160 },
+      "purpose": "Conduire un projet artistique cohérent, autonome et critique, dans une pratique amateur confirmée.",
+      "appSummary": "Aucune validation disponible dans cette version.",
+      "appStatus": "planned"
+    }
+  ],
+  "competencies": [
+    {
+      "id": "c1-reading-landmarks",
+      "cycleId": "c1",
+      "domainId": "reading",
+      "title": "Identifier les notes en clés de sol et de fa",
+      "deliveryStatus": "available_measured",
+      "evidence": ["recognition", "retention"],
+      "evidenceRequirements": {
+        "recognition": { "minimumCovered": 23 },
+        "retention": { "minimumCovered": 23 }
+      },
+      "prerequisites": [],
+      "currentModule": "P1 à B5, grades Zen à Rhodium"
+    },
+    {
+      "id": "c1-reading-continuity",
+      "cycleId": "c1",
+      "domainId": "reading",
+      "title": "Lire un court passage sans perdre ses repères",
+      "deliveryStatus": "available_measured",
+      "evidence": ["recognition", "retention", "transfer"],
+      "evidenceRequirements": {
+        "recognition": { "minimumCovered": 1 },
+        "retention": { "minimumCovered": 1 },
+        "transfer": { "minimumCovered": 1 }
+      },
+      "prerequisites": ["c1-reading-landmarks"],
+      "currentModule": "Bibliothèque de partitions et passages maîtrisés"
+    },
+    {
+      "id": "c1-rhythm-pulse",
+      "cycleId": "c1",
+      "domainId": "rhythm",
+      "title": "Sentir et reproduire une pulsation et des rythmes simples",
+      "deliveryStatus": "guided_unmeasured",
+      "evidence": ["production"],
+      "prerequisites": []
+    },
+    {
+      "id": "c1-ear-memory",
+      "cycleId": "c1",
+      "domainId": "ear",
+      "title": "Mémoriser, comparer et reconnaître de courtes cellules musicales",
+      "deliveryStatus": "guided_unmeasured",
+      "evidence": ["recognition", "production"],
+      "prerequisites": []
+    },
+    {
+      "id": "c1-voice-phrase",
+      "cycleId": "c1",
+      "domainId": "voice",
+      "title": "Chanter une phrase courte avec justesse et direction",
+      "deliveryStatus": "guided_unmeasured",
+      "evidence": ["production", "teacher_validation"],
+      "prerequisites": ["c1-ear-memory"]
+    },
+    {
+      "id": "c1-theory-write",
+      "cycleId": "c1",
+      "domainId": "theory",
+      "title": "Écrire et relier les premiers signes, intervalles et tonalités",
+      "deliveryStatus": "guided_unmeasured",
+      "evidence": ["production"],
+      "prerequisites": ["c1-reading-landmarks"]
+    },
+    {
+      "id": "c1-analysis-context",
+      "cycleId": "c1",
+      "domainId": "analysis",
+      "title": "Décrire une écoute et situer une œuvre dans son contexte",
+      "deliveryStatus": "guided_unmeasured",
+      "evidence": ["self_assessment", "teacher_validation"],
+      "prerequisites": []
+    },
+    {
+      "id": "c1-creation-explore",
+      "cycleId": "c1",
+      "domainId": "creation",
+      "title": "Inventer ou transformer une courte proposition musicale",
+      "deliveryStatus": "guided_unmeasured",
+      "evidence": ["production", "self_assessment"],
+      "prerequisites": ["c1-rhythm-pulse"]
+    },
+    {
+      "id": "c1-collective-place",
+      "cycleId": "c1",
+      "domainId": "collective",
+      "title": "Tenir une place simple dans un groupe et se présenter en public",
+      "deliveryStatus": "planned",
+      "evidence": ["teacher_validation"],
+      "prerequisites": []
+    },
+    {
+      "id": "c1-autonomy-review",
+      "cycleId": "c1",
+      "domainId": "autonomy",
+      "title": "Identifier une difficulté et choisir une manière de la retravailler",
+      "deliveryStatus": "guided_unmeasured",
+      "evidence": ["self_assessment", "teacher_validation"],
+      "prerequisites": ["c1-reading-continuity"]
+    },
+    {
+      "id": "c2-reading-polyphonic",
+      "cycleId": "c2",
+      "domainId": "reading",
+      "title": "Lire plusieurs voix et des clés complémentaires dans un contexte musical",
+      "deliveryStatus": "planned",
+      "evidence": ["recognition", "production", "transfer"],
+      "prerequisites": ["c1-reading-continuity"]
+    },
+    {
+      "id": "c2-rhythm-complex",
+      "cycleId": "c2",
+      "domainId": "rhythm",
+      "title": "Coordonner subdivisions, changements de mesure et polyrythmie simple",
+      "deliveryStatus": "planned",
+      "evidence": ["production", "retention", "transfer"],
+      "prerequisites": ["c1-rhythm-pulse"]
+    },
+    {
+      "id": "c2-ear-transcribe",
+      "cycleId": "c2",
+      "domainId": "ear",
+      "title": "Relever, mémoriser et transposer des éléments mélodiques ou harmoniques",
+      "deliveryStatus": "planned",
+      "evidence": ["recognition", "production", "transfer"],
+      "prerequisites": ["c1-ear-memory", "c1-theory-write"]
+    },
+    {
+      "id": "c2-voice-decode",
+      "cycleId": "c2",
+      "domainId": "voice",
+      "title": "Déchiffrer vocalement et tenir une ligne dans une texture à plusieurs voix",
+      "deliveryStatus": "planned",
+      "evidence": ["production", "teacher_validation"],
+      "prerequisites": ["c1-voice-phrase", "c2-ear-transcribe"]
+    },
+    {
+      "id": "c2-theory-harmony",
+      "cycleId": "c2",
+      "domainId": "theory",
+      "title": "Comprendre accords, cadences, modulations et chiffrages usuels",
+      "deliveryStatus": "planned",
+      "evidence": ["recognition", "production", "transfer"],
+      "prerequisites": ["c1-theory-write"]
+    },
+    {
+      "id": "c2-analysis-style",
+      "cycleId": "c2",
+      "domainId": "analysis",
+      "title": "Analyser une œuvre et relier les choix d'écriture à un style et une époque",
+      "deliveryStatus": "planned",
+      "evidence": ["production", "teacher_validation"],
+      "prerequisites": ["c1-analysis-context", "c2-theory-harmony"]
+    },
+    {
+      "id": "c2-creation-arrange",
+      "cycleId": "c2",
+      "domainId": "creation",
+      "title": "Improviser, composer ou arranger à partir de contraintes musicales",
+      "deliveryStatus": "planned",
+      "evidence": ["production", "self_assessment", "teacher_validation"],
+      "prerequisites": ["c1-creation-explore", "c2-theory-harmony"]
+    },
+    {
+      "id": "c2-collective-role",
+      "cycleId": "c2",
+      "domainId": "collective",
+      "title": "Assumer un rôle musical autonome dans un ensemble et en public",
+      "deliveryStatus": "planned",
+      "evidence": ["teacher_validation"],
+      "prerequisites": ["c1-collective-place"]
+    },
+    {
+      "id": "c2-autonomy-interpret",
+      "cycleId": "c2",
+      "domainId": "autonomy",
+      "title": "Planifier son travail et justifier des choix d'interprétation",
+      "deliveryStatus": "planned",
+      "evidence": ["self_assessment", "teacher_validation"],
+      "prerequisites": ["c1-autonomy-review", "c2-analysis-style"]
+    },
+    {
+      "id": "c3-reading-score",
+      "cycleId": "c3",
+      "domainId": "reading",
+      "title": "Lire et parcourir une partition complexe avec une stratégie autonome",
+      "deliveryStatus": "planned",
+      "evidence": ["recognition", "production", "retention", "transfer"],
+      "prerequisites": ["c2-reading-polyphonic"]
+    },
+    {
+      "id": "c3-rhythm-language",
+      "cycleId": "c3",
+      "domainId": "rhythm",
+      "title": "Interpréter des organisations rythmiques complexes ou contemporaines",
+      "deliveryStatus": "planned",
+      "evidence": ["production", "transfer", "teacher_validation"],
+      "prerequisites": ["c2-rhythm-complex"]
+    },
+    {
+      "id": "c3-ear-critical",
+      "cycleId": "c3",
+      "domainId": "ear",
+      "title": "Relever, restituer et commenter une musique avec une écoute critique",
+      "deliveryStatus": "planned",
+      "evidence": ["recognition", "production", "teacher_validation"],
+      "prerequisites": ["c2-ear-transcribe", "c2-analysis-style"]
+    },
+    {
+      "id": "c3-voice-interpret",
+      "cycleId": "c3",
+      "domainId": "voice",
+      "title": "Préparer et interpréter vocalement un texte musical exigeant",
+      "deliveryStatus": "planned",
+      "evidence": ["production", "self_assessment", "teacher_validation"],
+      "prerequisites": ["c2-voice-decode"]
+    },
+    {
+      "id": "c3-theory-specialize",
+      "cycleId": "c3",
+      "domainId": "theory",
+      "title": "Mobiliser écriture, harmonie ou contrepoint au service d'un projet",
+      "deliveryStatus": "planned",
+      "evidence": ["production", "transfer", "teacher_validation"],
+      "prerequisites": ["c2-theory-harmony"]
+    },
+    {
+      "id": "c3-analysis-critical",
+      "cycleId": "c3",
+      "domainId": "analysis",
+      "title": "Construire une analyse esthétique et critique argumentée",
+      "deliveryStatus": "planned",
+      "evidence": ["production", "teacher_validation"],
+      "prerequisites": ["c2-analysis-style"]
+    },
+    {
+      "id": "c3-creation-signature",
+      "cycleId": "c3",
+      "domainId": "creation",
+      "title": "Développer une démarche personnelle de création ou d'improvisation",
+      "deliveryStatus": "planned",
+      "evidence": ["production", "self_assessment", "teacher_validation"],
+      "prerequisites": ["c2-creation-arrange"]
+    },
+    {
+      "id": "c3-collective-responsibility",
+      "cycleId": "c3",
+      "domainId": "collective",
+      "title": "Prendre une responsabilité artistique dans un projet collectif",
+      "deliveryStatus": "planned",
+      "evidence": ["teacher_validation"],
+      "prerequisites": ["c2-collective-role"]
+    },
+    {
+      "id": "c3-autonomy-project",
+      "cycleId": "c3",
+      "domainId": "autonomy",
+      "title": "Concevoir, réaliser, présenter et évaluer un projet artistique cohérent",
+      "deliveryStatus": "planned",
+      "evidence": ["production", "self_assessment", "teacher_validation"],
+      "prerequisites": ["c2-autonomy-interpret", "c3-analysis-critical"]
+    }
+  ]
+}

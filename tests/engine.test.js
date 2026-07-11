@@ -43,13 +43,55 @@ function makeDocument() {
   };
   return doc;
 }
-function makeLocalStorage() {
-  const m = new Map();
+function makeLocalStorage(seed) {
+  const m = new Map(), failures = new Map();
+  if (seed && typeof seed === "object") Object.keys(seed).forEach(k => m.set(k, String(seed[k])));
   return {
     getItem(k) { return m.has(k) ? m.get(k) : null; },
-    setItem(k, v) { m.set(k, String(v)); },
-    removeItem(k) { m.delete(k); }
+    setItem(k, v) {
+      if (failures.has(k)) {
+        const left = failures.get(k) - 1;
+        if (left <= 0) { failures.delete(k); throw new Error("quota simulé pour " + k); }
+        failures.set(k, left);
+      }
+      m.set(k, String(v));
+    },
+    removeItem(k) { m.delete(k); },
+    failAfter(k, calls) { failures.set(k, Math.max(1, Number(calls) || 1)); },
+    dump() { return Object.fromEntries(m.entries()); }
   };
+}
+function makeFakeIndexedDB(seed) {
+  const store = seed instanceof Map ? seed : new Map(Object.entries(seed || {}));
+  const db = {
+    createObjectStore() {},
+    transaction() {
+      const tx = { oncomplete: null, onerror: null, onabort: null };
+      tx.objectStore = function() {
+        return {
+          put(value, key) { store.set(key, value); if (tx.oncomplete) tx.oncomplete(); },
+          get(key) {
+            const rq = { result: store.has(key) ? store.get(key) : undefined };
+            Object.defineProperty(rq, "onsuccess", { set(fn) { fn(); } });
+            Object.defineProperty(rq, "onerror", { set() {} });
+            return rq;
+          },
+          delete(key) { store.delete(key); }
+        };
+      };
+      return tx;
+    }
+  };
+  const indexedDB = {
+    open() {
+      const rq = { result: db };
+      Object.defineProperty(rq, "onupgradeneeded", { set(fn) { fn(); } });
+      Object.defineProperty(rq, "onsuccess", { set(fn) { fn(); } });
+      Object.defineProperty(rq, "onerror", { set() {} });
+      return rq;
+    }
+  };
+  return { indexedDB, store };
 }
 const navigatorStub = {
   vibrate() {}, storage: { persist() { return Promise.resolve(); } },
@@ -59,7 +101,8 @@ const navigatorStub = {
 const windowStub = { addEventListener() {}, AudioContext: undefined, webkitAudioContext: undefined };
 
 /* ---------- chargement du vrai script ---------- */
-function loadEngine() {
+function loadEngine(runtime) {
+  runtime = runtime || {};
   const html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
   const blocks = html.match(/<script>([\s\S]*?)<\/script>/g) || [];
   let src = null;
@@ -77,6 +120,7 @@ function loadEngine() {
     "writtenLabelOf", "kbdLabelOf", "recoveryCodeInfo", "applyRecoveryCode",
     "trainingFocusText", "stateTimestamp", "stateScore", "shouldAdopt", "backupToDb", "THEME_MODES", "themeModeLabel", "watchHomeItems",
     "PROFILE_INSTRUMENTS", "PROFILE_PATHS", "PROFILE_LEVELS", "PRACTICE_DOMAINS", "normalizeProfile", "normalizeDailyProgress", "normalizeValidationDrafts", "validationDraftKey",
+    "CURRICULUM_CATALOG_VERSION", "CURRICULUM_SCOPE", "CURRICULUM_EVIDENCE_TYPES", "CURRICULUM_PROGRESS_STATUSES", "normalizeCurriculumProof", "normalizeCurriculumState", "validCurriculumCatalog", "curriculumCompetency", "curriculumStatusFromProofs", "setCurriculumCatalog", "backfillCurriculumFromGame", "curriculumScopeHtml",
     "profileStartPalier", "applyProfileStartPlacement", "profileStartText", "coachPalier", "coachDecision", "repairPool", "fragileNoteIds", "globalPrecision", "sessionCountToday",
     "dailyPlan", "splitPlanMinutes", "targetCadence", "dailyMission", "dailyFocusDomain", "DAILY_BLOCK_IDS", "runDailyBlock",
     "buildDailySession", "dailyPhaseAt", "dailyPhasePool", "dailyPhaseLabel", "dailyTransferReadyForBonus", "dailyBonusTask", "startDailySession", "dailyDraftRecords", "storeDailyDraft", "nextCampaignTarget", "configureDailyCampaignTarget", "advanceDailyCampaignTarget", "recordDailyTargetEvidence", "dailyActiveElapsed", "pauseDailySession", "resumeDailySession", "dailyScoredCount", "dailySessionQualified",
@@ -93,13 +137,18 @@ function loadEngine() {
     "beginClavier", "nextKbd", "kbdTap", "renderKbd",
     "STAFF", "staffSVG", "bonusStaffSVG", "clefSVG", "noteGlyph", "yOf", "previewNoteHtml",
     "currentRecoveryCode", "mirrorIntro", "tone", "save", "readKey", "bestLocalState", "recognizableStoredState", "utf8ByteLength", "decodedBase64Bytes", "MAX_IMPORT_TEXT_BYTES",
-    "syncDecision", "syncCfg", "syncSet", "syncClear", "syncEnabled", "syncPush", "syncPull", "parseRemote", "sessionTokenGet",
+    "normalizePlayerRegistry", "normalizePlayerName", "activePlayerMeta", "playerMetaById", "createPlayer", "switchPlayer", "renamePlayer", "deletePlayer", "playerInitial", "openPlayerSwitcher", "MAX_LOCAL_PLAYERS", "PLAYER_REGISTRY_KEY", "PLAYER_FALLBACK_PREFIX",
+    "syncDecision", "syncCfg", "syncSet", "syncClear", "syncEnabled", "syncPush", "syncPull", "parseRemote", "sessionTokenGet", "playerGistFile", "legacyPlayerGistFile", "GIST_CLOUD_SCHEMA", "syncStorageKey", "remoteFileName",
     "cloudDocument", "cloudSaveContent", "cloudPieces", "looksLikeToken", "persistOnExit", "APP_VERSION"
   ];
   const footer = "\n;return {" + exportsList.map(n => n + ":(typeof " + n + "!=='undefined'?" + n + ":undefined)").join(",") +
-    ",getDB:function(){return DB;},setDB:function(x){DB=x;},getKX:function(){return KX;},getEX:function(){return EX;},getEl:function(id){return document.getElementById(id);},haltEX:function(){if(EX)EX.done=true;}};";
-  const fn = new Function("document", "localStorage", "navigator", "window", "sessionStorage", src + footer);
-  return fn(makeDocument(), makeLocalStorage(), navigatorStub, windowStub, makeLocalStorage());
+    ",getDB:function(){return DB;},setDB:function(x){DB=x;},getPlayerRegistry:function(){return JSON.parse(JSON.stringify(PLAYER_REGISTRY));},getActivePlayerId:function(){return ACTIVE_PLAYER_ID;},isIdbReady:function(){return idbReady;},getKX:function(){return KX;},getEX:function(){return EX;},getEl:function(id){return document.getElementById(id);},haltEX:function(){if(EX)EX.done=true;}};";
+  const fn = new Function("document", "localStorage", "navigator", "window", "sessionStorage", "indexedDB", src + footer);
+  const local = runtime.localStorage || makeLocalStorage();
+  const session = runtime.sessionStorage || makeLocalStorage();
+  const engine = fn(runtime.document || makeDocument(), local, runtime.navigator || navigatorStub, runtime.window || windowStub, session, runtime.indexedDB);
+  engine.localStorage = local;
+  return engine;
 }
 
 /* ---------- mini-runner ---------- */
@@ -695,8 +744,9 @@ ok(/continuité/.test(E.mirrorIntro()), "streak ≥ 10 jours → intro continuit
 /* 13) Service worker & synchronisation des fichiers */
 group("Service worker & fichiers — garde-fous de livraison");
 const swSrc = fs.readFileSync(path.join(__dirname, "..", "sw.js"), "utf8");
+const appSource = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
 const mv = swSrc.match(/sezam-solado-v(\d+)/);
-ok(mv && Number(mv[1]) >= 27, "CACHE_NAME dédié à l'app et incrémenté (≥ sezam-solado-v27)");
+ok(mv && Number(mv[1]) >= 28, "CACHE_NAME dédié à l'app et incrémenté (≥ sezam-solado-v28)");
 ok(/navigate/.test(swSrc), "documents servis réseau d'abord (plus de vieille version à vie)");
 ok(/new URL\(req\.url\)\.origin !== self\.location\.origin/.test(swSrc), "le SW compare réellement les origines et n'intercepte pas l'API GitHub");
 ok(/key\.startsWith\(CACHE_PREFIX\) && key !== CACHE_NAME/.test(swSrc), "le SW ne supprime que les anciens caches SEZAM, jamais ceux d'une autre app");
@@ -705,6 +755,35 @@ ok(/skipWaiting/.test(swSrc) && /clients\.claim/.test(swSrc), "activation imméd
 ok(/icon-180\.png/.test(swSrc), "icône iOS précachée");
 ok(/icon-192\.png/.test(swSrc) && /icon-512\.png/.test(swSrc), "icônes PWA 192/512 précachées");
 ok(/data\/music-watch\.json/.test(swSrc), "veille musicale précachée pour le mode hors-ligne");
+ok(/data\/curriculum-v1\.json/.test(swSrc), "référentiel des cycles précaché pour le mode hors-ligne");
+const curriculumCatalog = JSON.parse(fs.readFileSync(path.join(__dirname, "..", "data", "curriculum-v1.json"), "utf8"));
+eq(curriculumCatalog.schemaVersion, 1, "catalogue de cursus versionné");
+ok(E.setCurriculumCatalog(curriculumCatalog) === true, "l'application charge le fichier de cursus comme source de vérité runtime");
+eq(curriculumCatalog.cycles.map(c => c.id), ["c1", "c2", "c3"], "les trois cycles sont décrits sans les confondre avec les grades du jeu");
+eq(curriculumCatalog.cycles.reduce((n,c) => n + c.officialDurationYears.min, 0), 8, "durée officielle minimale C1→C3 : 8 ans");
+eq(curriculumCatalog.cycles.reduce((n,c) => n + c.officialDurationYears.max, 0), 14, "durée officielle maximale C1→C3 : 14 ans");
+const curriculumIds = curriculumCatalog.competencies.map(c => c.id);
+eq(new Set(curriculumIds).size, curriculumIds.length, "chaque compétence du cursus possède un identifiant unique");
+ok(curriculumCatalog.competencies.every(c => curriculumCatalog.cycles.some(x => x.id === c.cycleId) && curriculumCatalog.domains.some(x => x.id === c.domainId)),
+  "toute compétence référence un cycle et un domaine connus");
+ok(curriculumCatalog.competencies.every(c => c.prerequisites.every(id => curriculumIds.indexOf(id) >= 0)),
+  "tous les prérequis du cursus existent dans le catalogue");
+const curriculumDeliveryIds = curriculumCatalog.deliveryStatuses.map(s => s.id);
+ok(curriculumCatalog.competencies.every(c => curriculumDeliveryIds.indexOf(c.deliveryStatus) >= 0),
+  "toute compétence possède un statut de livraison explicite");
+ok(curriculumCatalog.competencies.every(c => c.evidence.length && c.evidence.every(type => curriculumCatalog.evidenceTypes.indexOf(type) >= 0)),
+  "toute compétence annonce au moins un type de preuve connu");
+const curriculumCycleRank = {c1:1,c2:2,c3:3}, curriculumById = Object.fromEntries(curriculumCatalog.competencies.map(c => [c.id,c]));
+ok(curriculumCatalog.competencies.every(c => c.prerequisites.every(id => curriculumCycleRank[curriculumById[id].cycleId] <= curriculumCycleRank[c.cycleId])),
+  "aucun prérequis ne dépend d'un cycle ultérieur");
+let curriculumCycleFree=true,visiting=new Set(),visited=new Set();
+function visitCurriculum(id){if(visiting.has(id)){curriculumCycleFree=false;return;}if(visited.has(id))return;visiting.add(id);curriculumById[id].prerequisites.forEach(visitCurriculum);visiting.delete(id);visited.add(id);}
+curriculumIds.forEach(visitCurriculum);
+ok(curriculumCycleFree, "le graphe des prérequis ne contient aucun cycle interne");
+eq(E.CURRICULUM_SCOPE.currentCompetencies.slice().sort(), curriculumCatalog.competencies.filter(c => c.deliveryStatus === "available_measured").map(c => c.id).sort(),
+  "le périmètre mesuré embarqué correspond exactement au catalogue publié");
+ok(appSource.indexOf("loadCurriculumCatalog()") >= 0 && appSource.indexOf("window.fetch(CURRICULUM_SCOPE.catalog") >= 0,
+  "l'application charge réellement le catalogue JSON au démarrage");
 ok(fs.readFileSync(path.join(__dirname, "..", "prototype-solfege.html"), "utf8") === fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8"),
   "prototype-solfege.html strictement synchronisé avec index.html");
 
@@ -731,8 +810,12 @@ eq(E.sessionTokenGet(), "tok_SECRET_123", "le token existe seulement dans la mé
 ok(E.compactSave().indexOf("tok_SECRET_123") < 0, "le jeton n'apparaît JAMAIS dans la sauvegarde compacte (QR/gist)");
 E.getDB().xp = 7; E.save({ cloud: false });
 ok(JSON.stringify(E.readKey("solfegeProto1")).indexOf("tok_SECRET_123") < 0, "le jeton n'apparaît jamais dans l'export complet (DB)");
+E.getDB().noteStats.sol4=E.normalizeNoteStat({v:3,e:0,coldV:1,coldE:0,last:40,lastCold:44});
 const cloud = E.cloudDocument();
 ok(cloud.progress && cloud.scores && cloud.settings && cloud.timestamp, "cloudDocument produit le fichier unique progress/scores/settings/timestamp");
+eq(cloud.schema, E.GIST_CLOUD_SCHEMA, "l'enveloppe cloud est versionnée pour protéger les nouveaux champs");
+ok(cloud.progress.curriculum && cloud.progress.curriculum.catalogVersion === E.CURRICULUM_CATALOG_VERSION, "le suivi de cursus voyage dans la sauvegarde cloud");
+eq(cloud.progress.curriculum.progress["c1-reading-landmarks"].proofs.recognition.attempts,3,"une nouvelle activité alimente immédiatement l'export cloud, sans ouvrir les stats ni recharger");
 ok(JSON.stringify(cloud).indexOf("tok_SECRET_123") < 0, "le token n'est jamais dans le document cloud");
 E.getDB().pieces=[E.normalizePiece({titre:"Avec scan",attachment:{name:"scan.png",type:"image/png",size:4,dataUrl:"data:image/png;base64,QUJDRA=="}})];
 E.getDB().events=[{t:1,type:"test",detail:"local"}];
@@ -740,11 +823,34 @@ const safeCloud = E.cloudDocument();
 ok(JSON.stringify(safeCloud).indexOf("data:image/png") < 0, "les pièces jointes restent locales et ne partent pas dans le Gist");
 eq(safeCloud.history.events, [], "le journal détaillé reste local et n'alourdit pas le Gist");
 ok(E.parseRemote({ files: { "sezam-progress.json": { content: JSON.stringify(cloud) } } }).xp === cloud.scores.xp, "parseRemote lit le nouveau fichier gist SEZAM");
+const v2File=E.playerGistFile(E.getActivePlayerId()),v1File=E.legacyPlayerGistFile(E.getActivePlayerId());
+ok(v2File !== v1File && v2File.indexOf("sezam-progress-v2-") === 0, "le fichier cloud v2 est séparé du fichier v28 pour empêcher un ancien onglet d'effacer le cursus");
+const oldCloud=JSON.parse(JSON.stringify(cloud));oldCloud.schema=1;delete oldCloud.progress.curriculum;
+const legacySpecific={files:{}};legacySpecific.files[v1File]={content:JSON.stringify(oldCloud)};
+ok(E.parseRemote(legacySpecific) !== null, "v29 sait encore migrer le fichier cloud propre à un joueur v28");
+const bothCloud={files:{}};bothCloud.files[v1File]={content:JSON.stringify(oldCloud)};bothCloud.files[v2File]={content:JSON.stringify(cloud)};
+eq(E.remoteFileName(bothCloud),v2File,"quand les deux formats coexistent, v29 choisit toujours le fichier protégé v2");
+const newerOld=JSON.parse(JSON.stringify(oldCloud));newerOld.timestamp=cloud.timestamp+1000;newerOld.scores.xp=77;
+const racedCloud={files:{}};racedCloud.files[v1File]={content:JSON.stringify(newerOld)};racedCloud.files[v2File]={content:JSON.stringify(cloud)};
+eq(E.remoteFileName(racedCloud),v1File,"une progression v28 plus récente n'est pas silencieusement ignorée après la création du fichier v2");
+const racedMerged=E.parseRemote(racedCloud);
+eq(racedMerged.xp,77,"la progression de jeu v28 plus récente est récupérée");
+ok(racedMerged.curriculum&&racedMerged.curriculum.progress["c1-reading-landmarks"],"le cursus v2 est conservé pendant la récupération du jeu v28 plus récent");
+const futureCloud=JSON.parse(JSON.stringify(cloud));futureCloud.schema=E.GIST_CLOUD_SCHEMA+1;
+const futureFiles={files:{}};futureFiles.files[v2File]={content:JSON.stringify(futureCloud)};
+ok(E.parseRemote(futureFiles)===null,"une enveloppe cloud future est refusée plutôt que dégradée par une ancienne app");
 ok(E.parseRemote({ files: { "solado-save.json": { content: '{"paliers":{},"xp":5}' } } }).xp === 5, "parseRemote lit encore l'ancien fichier gist en compatibilité");
 ok(E.parseRemote({ files: { "sezam-progress.json": { content: "pas du json" } } }) === null, "parseRemote rejette un contenu corrompu sans exception");
 ok(E.parseRemote({ files: { "sezam-progress.json": { content: "{}", truncated: true, raw_url:"https://example.invalid/raw" } } }) === null,
   "parseRemote refuse un Gist tronqué au lieu de l'assimiler à un état vide");
 ok(E.parseRemote(null) === null, "parseRemote tolère une réponse vide");
+E.getDB().noteStats.sol4=E.normalizeNoteStat({v:12,e:0,coldV:2,coldE:0,last:40,lastCold:44});
+E.getDB().paliers.B5.rhodium.ok=true;
+E.getDB().curriculum.progress["c1-reading-landmarks"]={status:"stable",moduleId:"reading_engine_v1",updatedAt:44,selfRating:0,proofs:{recognition:{attempts:12,successes:12,lastAt:40},retention:{attempts:2,successes:2,lastAt:44}}};
+const curriculumCompact=JSON.parse(E.compactSave());
+eq(curriculumCompact.curriculum.progress["c1-reading-landmarks"].status,"learning","le transfert QR conserve une preuve de cursus non vide sans exagérer sa stabilité");
+const curriculumRoundTrip=E.ensureStructure(E.backupToDb(E.cloudDocument()));
+eq(curriculumRoundTrip.curriculum.progress["c1-reading-landmarks"].proofs.retention.successes,2,"un aller-retour cloud conserve les preuves de rétention");
 E.syncClear();
 ok(E.syncEnabled() === false, "désactivation : la config locale est effacée");
 threw = null; try { E.syncPush(true); E.syncPull(); } catch (e) { threw = e; }
@@ -771,7 +877,7 @@ eq(E.getDB().profile.parcours, "libre", "ancien joueur : parcours libre par déf
 eq(E.getDB().profile.dailyMinutes, 20, "durée de séance par défaut : 20 minutes");
 eq(E.getDB().profile.daysPerWeek, 5, "cadence par défaut : 5 jours par semaine");
 eq(E.getDB().profile.domains, E.PRACTICE_DOMAINS.map(d => d.id), "les six domaines sont proposés par défaut");
-eq(E.getDB()._sezam.schema, 11, "schéma local v11 pour les preuves quotidiennes persistantes");
+eq(E.getDB()._sezam.schema, 13, "schéma local v13 pour le cursus versionné et les profils isolés");
 const sanitizedProfile = E.normalizeProfile({
   displayName: "  <Youcef>   Test  ", instrument: "inconnu", parcours: "rattrapage_a2",
   niveauDepart: "annee2", targetDate: "2026-02-30", dailyMinutes: 999, daysPerWeek: 0,
@@ -783,6 +889,35 @@ eq(sanitizedProfile.parcours, "rattrapage_a2", "parcours guidé valide conservé
 eq(sanitizedProfile.targetDate, "", "date impossible rejetée");
 eq(sanitizedProfile.dailyMinutes, 20, "budget hors liste ramené à 20 minutes");
 eq(sanitizedProfile.domains, ["lecture", "rythme"], "domaines inconnus et doublons retirés");
+const unsafeCurriculum = E.normalizeCurriculumState(JSON.parse('{"catalogVersion":1,"progress":{"c1-reading-landmarks":{"status":"stable","moduleId":"lecture_1","updatedAt":42,"selfRating":9,"proofs":{"recognition":{"attempts":12,"successes":20,"lastAt":40},"pirate":{"attempts":999}}},"constructor":{"status":"stable"},"id avec espaces":{"status":"stable"}}}'));
+eq(unsafeCurriculum.catalogVersion, 1, "la version courante du catalogue est conservée");
+eq(Object.keys(unsafeCurriculum.progress), ["c1-reading-landmarks"], "identifiants dangereux ou invalides retirés du suivi de cursus");
+eq(unsafeCurriculum.progress["c1-reading-landmarks"].selfRating, 4, "autoévaluation bornée sans devenir une validation");
+eq(Object.keys(unsafeCurriculum.progress["c1-reading-landmarks"].proofs), ["recognition"], "seuls les types de preuve documentés sont conservés");
+eq(unsafeCurriculum.progress["c1-reading-landmarks"].proofs.recognition.successes, 12, "les réussites de preuve ne peuvent pas dépasser les tentatives");
+const badCurriculumStatus=E.normalizeCurriculumState({progress:{competence:{status:"certifie",proofs:{}}}});
+ok(!badCurriculumStatus.progress.competence, "une compétence absente du catalogue publié est retirée");
+const plannedFake=E.normalizeCurriculumState({catalogVersion:1,progress:{"c2-reading-polyphonic":{status:"stable",proofs:{}}}});
+eq(plannedFake.progress["c2-reading-polyphonic"].status, "not_started", "une compétence prévue ne peut pas s'auto-déclarer stable sans preuve ni module livré");
+const weakStable=E.normalizeCurriculumState({catalogVersion:1,progress:{"c1-reading-landmarks":{status:"stable",proofs:{recognition:{attempts:10,successes:10}}}}});
+eq(weakStable.progress["c1-reading-landmarks"].status, "learning", "la reconnaissance seule ne devient jamais une stabilité sans preuve de rétention");
+const futureLocal=E.ensureStructure({paliers:{},curriculum:{catalogVersion:2,progress:{"c4-future-safe":{status:"stable",moduleId:"future_module",proofs:{new_future_proof:{attempts:1,payload:{x:9}}}}}}});
+eq(Object.keys(futureLocal.curriculum.progress).length,0,"une ancienne app n'interprète pas les preuves d'un futur catalogue");
+ok(futureLocal.curriculum.futureOpaque.indexOf("new_future_proof")>=0&&futureLocal.curriculum.futureOpaque.indexOf('"x":9')>=0,"les champs inconnus d'un futur catalogue sont conservés de façon opaque et intacte");
+ok(E.curriculumScopeHtml().indexOf("Aucune validation disponible dans cette version") >= 0 && E.curriculumScopeHtml().indexOf("ne remplace ni le professeur") >= 0,
+  "l'interface expose clairement le périmètre non certifiant des Cycles 1 à 3");
+
+const oldV28=E.ensureStructure({});
+delete oldV28.curriculum;
+Object.keys(E.NOTES).forEach((id,i)=>{oldV28.noteStats[id]=E.normalizeNoteStat({v:30,e:1,coldV:2,coldE:0,last:100+i,lastCold:90+i});});
+E.PALIERS.forEach(p=>{oldV28.paliers[p.id].rhodium.ok=true;});
+oldV28.pieceProgress.aclair={aclair_p1:E.normalizeSegmentState({attempts:2,ok:10,errs:0,last:200,lastPrec:100,mastery:3,cleanAt:[1,200]})};
+const migratedCurriculum=E.ensureStructure(oldV28).curriculum;
+eq(migratedCurriculum.progress["c1-reading-landmarks"].status, "stable", "migration v28→v29 : les preuves de lecture existantes alimentent le cursus");
+eq(migratedCurriculum.progress["c1-reading-continuity"].status, "stable", "migration v28→v29 : les passages déjà maîtrisés ne deviennent pas un cursus vide");
+const incompleteV28=E.ensureStructure({paliers:{}});delete incompleteV28.curriculum;
+incompleteV28.noteStats.sol4=E.normalizeNoteStat({v:30,e:0,coldV:2,coldE:0,last:100,lastCold:90});incompleteV28.paliers.B5.rhodium.ok=true;
+eq(E.ensureStructure(incompleteV28).curriculum.progress["c1-reading-landmarks"].status,"learning","B5 et une seule note retenue ne suffisent jamais à déclarer les deux clés stables");
 freshDB();
 let firstDecision = E.coachDecision();
 let plan = E.dailyPlan(firstDecision);
@@ -1220,6 +1355,145 @@ ok(idx2.indexOf("À retravailler") >= 0 && idx2.indexOf("Vu en cours") >= 0,
   "le joueur peut agir : marquer un passage à retravailler ou vu en cours");
 ok(idx2.indexOf("data-feel") >= 0, "le joueur déclare son ressenti (facile / juste bien / difficile) après un passage");
 ok(idx2.indexOf("Choisir mon ambition") >= 0 || idx2.indexOf("Changer d'ambition") >= 0, "le choix d'ambition est offert dans la fiche de pièce");
+
+group("Multi-joueurs — migration, isolation et changement rapide");
+freshDB();
+ok(E.isIdbReady() === true, "le coffre des joueurs est prêt avant d'autoriser un changement");
+let family = E.getPlayerRegistry();
+eq(family.players.length, 1, "une installation existante devient exactement un premier joueur");
+eq(family.activeId, E.getActivePlayerId(), "le registre pointe vers le joueur réellement chargé");
+const parentId = E.getActivePlayerId();
+let renamed = null;
+E.renamePlayer(parentId, "Dexter", (yes, msg) => { renamed = { yes, msg }; });
+ok(renamed && renamed.yes === true, "le joueur v27 peut être nommé sans toucher à sa progression");
+E.getDB().xp = 432; E.getDB().sel = "P10"; E.getDB().themeMode = "nocturne";
+E.PALIERS.slice(0, 9).forEach(p => { E.getDB().paliers[p.id].zen.ok = true; });
+  E.getDB().noteStats.sol2 = E.normalizeNoteStat({ v: 20, e: 3, box: 3, due: 123 });
+  E.getDB().pieces = [E.normalizePiece({ id: "persoA", titre: "Partition de Dexter" })];
+  E.getDB().curriculum.progress["c1-ear-memory"] = E.normalizeCurriculumState({progress:{"c1-ear-memory":{status:"learning",moduleId:"mission_oreille",selfRating:3,proofs:{self_assessment:{attempts:1,successes:1,lastAt:123}}}}}).progress["c1-ear-memory"];
+  E.save({ cloud: false });
+let created = null;
+E.createPlayer("Alice", (yes, msg) => { created = { yes, msg }; });
+ok(created && created.yes === true, "un deuxième joueur est créé avec un coffre séparé");
+const aliceId = E.getActivePlayerId();
+ok(aliceId !== parentId, "le nom n'est jamais utilisé comme identifiant de stockage");
+eq(E.getDB().xp, 0, "un nouveau joueur commence à 0 XP");
+eq(E.getDB().sel, "P1", "un nouveau joueur commence à P1");
+eq(Object.keys(E.getDB().noteStats).length, 0, "les fragilités du parent ne fuient pas chez le nouveau joueur");
+eq(E.getDB().pieces.length, 0, "les partitions personnelles restent propres à chaque joueur");
+eq(Object.keys(E.getDB().curriculum.progress).length, 0, "les futures preuves de cursus restent propres à chaque joueur");
+E.getDB().xp = 99; E.getDB().sel = "P3"; E.getDB().themeMode = "partition"; E.save({ cloud: false });
+E.syncSet({ token: "tok_ALICE", gistId: "gist-alice" });
+eq(E.syncCfg().gistId, "gist-alice", "Alice possède sa propre configuration cloud");
+E.beginSerie({ sessionMode: "session", n: 1, palier: E.PALIERS[0], pool: ["sol4"], mode: "zen", groupN: 1, cold: false });
+let blockedSwitch = null;
+ok(E.switchPlayer(parentId, (yes, msg) => { blockedSwitch = { yes, msg }; }) === false, "un exercice en cours bloque immédiatement le changement de joueur");
+ok(blockedSwitch && blockedSwitch.yes === false && blockedSwitch.msg.indexOf("exercice") >= 0, "le joueur comprend pourquoi le changement est reporté");
+E.haltEX();
+let switched = null;
+E.switchPlayer(parentId, (yes, msg) => { switched = { yes, msg }; });
+ok(switched && switched.yes === true, "un toucher suffit à revenir au premier joueur");
+eq(E.getDB().xp, 432, "le retour restaure exactement les XP du parent");
+eq(E.getDB().sel, "P10", "le retour restaure exactement son palier");
+eq(E.getDB().themeMode, "nocturne", "le thème est personnel");
+eq(E.getDB().noteStats.sol2.box, 3, "la mémoire espacée est personnelle");
+eq(E.getDB().pieces[0].titre, "Partition de Dexter", "les partitions du parent sont retrouvées");
+eq(E.getDB().curriculum.progress["c1-ear-memory"].selfRating, 3, "le suivi de cursus du parent est restauré sans mélange");
+ok(E.syncCfg().gistId !== "gist-alice" && E.sessionTokenGet() !== "tok_ALICE", "token et Gist d'Alice ne sont jamais réutilisés pour Dexter");
+E.syncSet({ token: "tok_DEXTER", gistId: "gist-dexter" });
+ok(E.syncStorageKey(parentId) !== E.syncStorageKey(aliceId), "les configurations cloud utilisent des clés différentes");
+ok(E.playerGistFile(parentId) !== E.playerGistFile(aliceId), "chaque joueur utilise un fichier Gist distinct");
+E.switchPlayer(aliceId, () => {});
+eq(E.getDB().xp, 99, "Alice retrouve ses propres XP après l'aller-retour");
+eq(E.syncCfg().gistId, "gist-alice", "Alice retrouve son propre Gist");
+eq(E.sessionTokenGet(), "tok_ALICE", "Alice retrouve seulement son token de session");
+const aliceUserId = E.getDB()._sezam.userId, aliceGistFile = E.playerGistFile(aliceId), aliceName = E.activePlayerMeta().name;
+const aliceReplacement = E.ensureStructure({ xp: 5, sel: "P1", profile: { displayName: "Import Alice" }, paliers: {} });
+ok(E.importSave(JSON.stringify(aliceReplacement)).indexOf("Sauvegarde chargée") >= 0, "un import vise uniquement le joueur actif");
+eq(E.getDB().xp, 5, "l'import remplace temporairement la progression d'Alice");
+eq(E.getDB()._sezam.userId, aliceUserId, "un import ne vole jamais l'identité cloud d'un autre joueur");
+eq(E.playerGistFile(aliceId), aliceGistFile, "le fichier Gist d'Alice reste stable après import");
+eq(E.activePlayerMeta().name, aliceName, "le nom du joueur actif n'est pas remplacé par le nom du fichier importé");
+ok(E.undoImport().indexOf("restauré") >= 0, "l'annulation d'import reste disponible pour Alice");
+eq(E.getDB().xp, 99, "annuler l'import rend exactement ses XP à Alice");
+let renameAlice = null;
+E.renamePlayer(aliceId, "Maman", (yes, msg) => { renameAlice = { yes, msg }; });
+ok(renameAlice && renameAlice.yes === true && E.activePlayerMeta().name === "Maman", "renommer un joueur conserve son identité et ses scores");
+eq(E.getDB().xp, 99, "le renommage ne remet jamais la progression à zéro");
+ok(E.deletePlayer(aliceId) === false, "le joueur actif ne peut pas être supprimé par erreur");
+E.switchPlayer(parentId, () => {});
+ok(E.deletePlayer(aliceId) === true, "un joueur inactif peut être supprimé après confirmation de l'interface");
+eq(E.getPlayerRegistry().players.length, 1, "la suppression ne touche pas au joueur restant");
+ok(E.deletePlayer(parentId) === false, "le dernier joueur n'est jamais supprimable");
+E.createPlayer("Test quota", () => {}); const quotaPlayerId = E.getActivePlayerId(); E.getDB().xp = 7; E.save({ cloud: false });
+E.switchPlayer(parentId, () => {});
+E.localStorage.failAfter(E.PLAYER_REGISTRY_KEY, 2);
+let failedRegistrySwitch = null;
+E.switchPlayer(quotaPlayerId, (yes, msg) => { failedRegistrySwitch = { yes, msg }; });
+ok(failedRegistrySwitch && failedRegistrySwitch.yes === false, "un switch n'est jamais annoncé réussi si l'actif ne peut pas être persisté");
+eq(E.getActivePlayerId(), parentId, "un échec d'écriture du registre garde l'ancien joueur en mémoire");
+const quotaReload = loadEngine({ localStorage: E.localStorage });
+eq(quotaReload.getActivePlayerId(), parentId, "après cet échec, un rechargement garde aussi l'ancien joueur");
+quotaReload.localStorage.failAfter(quotaReload.PLAYER_REGISTRY_KEY, 1);
+ok(quotaReload.deletePlayer(quotaPlayerId) === false, "une suppression est annulée si le registre ne peut pas être enregistré");
+eq(quotaReload.getPlayerRegistry().players.length, 2, "le joueur reste inscrit après l'échec transactionnel de suppression");
+ok(!!quotaReload.readKey(quotaReload.PLAYER_FALLBACK_PREFIX + quotaPlayerId), "son coffre local n'est pas effacé avant la réussite du registre");
+
+const legacy = E.ensureStructure({ xp: 777, sel: "P10", profile: { displayName: "Ancien P10" }, paliers: {} });
+E.PALIERS.slice(0, 9).forEach(p => { legacy.paliers[p.id].zen.ok = true; });
+delete legacy._sezam.playerId;
+const sharedStore = makeLocalStorage({ solfegeProto1: JSON.stringify(legacy) });
+const M = loadEngine({ localStorage: sharedStore });
+eq(M.getPlayerRegistry().players.length, 1, "migration v27 : aucun doublon de joueur n'est créé");
+eq(M.getDB().xp, 777, "migration v27 : les XP sont intacts");
+eq(M.getDB().sel, "P10", "migration v27 : le palier P10 est intact");
+eq(M.activePlayerMeta().name, "Ancien P10", "migration v27 : le nom existant devient le premier joueur");
+ok(!!M.readKey(M.PLAYER_REGISTRY_KEY), "migration v27 : le registre familial est persisté");
+const migratedId = M.getActivePlayerId();
+M.createPlayer("Fils", () => {}); M.getDB().xp = 12; M.getDB().sel = "P2"; M.save({ cloud: false });
+const childId = M.getActivePlayerId();
+const MReload = loadEngine({ localStorage: sharedStore });
+eq(MReload.getActivePlayerId(), childId, "le joueur actif survit à un rechargement complet");
+eq(MReload.getDB().xp, 12, "le score du fils survit au rechargement");
+MReload.switchPlayer(migratedId, () => {});
+eq(MReload.getDB().xp, 777, "le profil v27 migré reste récupérable après plusieurs changements");
+eq(MReload.getDB().sel, "P10", "aucun changement de joueur ne dégrade le palier migré");
+ok(MReload.switchPlayer("__proto__", () => {}) === false, "un identifiant dangereux est refusé sans toucher au joueur actif");
+eq(MReload.getActivePlayerId(), migratedId, "un switch invalide laisse le joueur courant intact");
+MReload.switchPlayer(childId, () => {});
+ok(MReload.deletePlayer(migratedId) === true, "le profil historique peut être supprimé seulement après avoir choisi un autre joueur");
+eq(MReload.remoteFileName({ files: { "sezam-progress.json": { content: "{}" } } }), "", "un nouveau joueur ne peut jamais adopter l'ancien Gist générique après cette suppression");
+MReload.openPlayerSwitcher();
+ok(MReload.getEl("cardBox").innerHTML.indexOf("Qui joue ?") >= 0, "l'interface expose un sélecteur unique « Qui joue ? »");
+ok(idx2.indexOf('id="btnPlayerSwitch"') >= 0 && idx2.indexOf('aria-haspopup="dialog"') >= 0,
+  "le bouton de changement est visible sur l'accueil et annoncé comme dialogue");
+ok(idx2.indexOf("playerId===ACTIVE_PLAYER_ID&&epoch===PLAYER_EPOCH") >= 0,
+  "une réponse cloud tardive est ignorée après un changement de joueur");
+const wrongCloud = E.cloudDocument(); wrongCloud.userId = "user_etranger";
+const wrongSpecific = {}; wrongSpecific[E.playerGistFile(E.getActivePlayerId())] = { content: JSON.stringify(wrongCloud) };
+ok(E.parseRemote({ files: wrongSpecific }) === null, "un document cloud portant l'identité d'un autre joueur est refusé");
+
+group("Multi-joueurs — coffres IndexedDB et restauration familiale");
+const fakeIdb = makeFakeIndexedDB(), familyLocal = makeLocalStorage();
+const I1 = loadEngine({ localStorage: familyLocal, indexedDB: fakeIdb.indexedDB });
+const iParent = I1.getActivePlayerId();
+I1.renamePlayer(iParent, "Parent IDB", () => {}); I1.getDB().xp = 111; I1.getDB().sel = "P4";
+I1.PALIERS.slice(0, 3).forEach(p => { I1.getDB().paliers[p.id].zen.ok = true; }); I1.save({ cloud: false });
+I1.createPlayer("Enfant IDB", () => {}); const iChild = I1.getActivePlayerId(); I1.getDB().xp = 22; I1.getDB().sel = "P2"; I1.save({ cloud: false });
+ok(fakeIdb.store.has("players"), "IndexedDB conserve aussi le registre familial");
+ok(fakeIdb.store.has("save:" + iParent) && fakeIdb.store.has("save:" + iChild), "IndexedDB possède un coffre distinct pour chaque joueur");
+const purgedLocal = makeLocalStorage();
+const I2 = loadEngine({ localStorage: purgedLocal, indexedDB: fakeIdb.indexedDB });
+eq(I2.getActivePlayerId(), iChild, "après purge locale, IndexedDB restaure le dernier joueur actif");
+eq(I2.getDB().xp, 22, "après purge locale, le score de l'enfant est restauré");
+I2.switchPlayer(iParent, () => {});
+eq(I2.getDB().xp, 111, "après restauration familiale, le parent retrouve son propre coffre");
+eq(I2.getDB().sel, "P4", "le palier du parent est restauré depuis IndexedDB");
+ok(I2.deletePlayer(iChild) === true, "supprimer un joueur inactif retire son entrée de façon contrôlée");
+ok(!fakeIdb.store.has("save:" + iChild), "le coffre IndexedDB supprimé ne peut pas ressusciter");
+const I3 = loadEngine({ localStorage: makeLocalStorage(), indexedDB: fakeIdb.indexedDB });
+eq(I3.getPlayerRegistry().players.length, 1, "un rechargement après suppression ne recrée pas le joueur effacé");
+eq(I3.getDB().xp, 111, "le joueur restant demeure intact après suppression et restauration");
 
 /* ---------- bilan ---------- */
 console.log("\n──────────────────────────────");

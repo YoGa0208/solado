@@ -3,7 +3,7 @@
    - documents HTML → réseau d'abord (on récupère toujours la dernière version quand on est en ligne),
      cache en secours (l'app reste utilisable hors-ligne) ;
    - autres ressources → cache d'abord, mise à jour en fond (stale-while-revalidate). */
-const CACHE_NAME = "sezam-solado-v27";
+const CACHE_NAME = "sezam-solado-v29";
 const CACHE_PREFIX = "sezam-solado-";
 const LEGACY_CACHE_NAMES = ["sezam-v12", "sezam-v21", "sezam-v23"];
 const ASSETS = [
@@ -12,6 +12,7 @@ const ASSETS = [
   "./prototype-solfege.html",
   "./manifest.json",
   "./data/music-watch.json",
+  "./data/curriculum-v1.json",
   "./icon.svg",
   "./icon-180.png",
   "./icon-192.png",
