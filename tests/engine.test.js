@@ -67,21 +67,21 @@ function loadEngine() {
   if (!src) throw new Error("Script principal introuvable dans index.html");
   src = src.replace(/^<script>/, "").replace(/<\/script>$/, "");
   const exportsList = [
-    "esc", "checkValidation", "seriesCover", "recentCoveredIds", "validationMissingIds", "srs", "srsReview", "isDue", "coldRecallId", "ensureStructure",
+    "esc", "checkValidation", "seriesCover", "recentCoveredIds", "validationMissingIds", "srs", "srsReview", "isDue", "coldRecallId", "ensureStructure", "cleanId", "isSafeId", "safeMap", "hasOwn",
     "importSave", "compactSave", "undoImport", "tierUnlocked", "tierComplete",
-    "palierPlayable", "valProgress", "PALIERS", "TIERS", "TIER_IDS", "NOTES",
+    "palierPlayable", "playableInMode", "visiblePaliers", "valProgress", "PALIERS", "TIERS", "TIER_IDS", "NOTES",
     "buildKeyboard", "pcOf", "isWhite", "pickKbdTarget", "nameOptions", "withAcc",
     "baseNoteObj", "kbdRangeFor", "freshPalierState", "SRS_DAYS", "normalizePiece", "normalizeAttachment", "normalizeSegment", "MAX_PIECE_ATTACHMENT_BYTES", "MAX_TOTAL_ATTACHMENT_BYTES", "SAFE_ATTACHMENT_TYPES", "pieceFileType",
-    "normalizeQuestion", "normalizeDay", "normalizeSegmentState", "normalizeNoteStat", "normalizeConfusions", "normalizeRepairItem", "normalizeRepairQueue", "normalizeEasterEggs", "markDay", "activeDayKeys", "streak", "todayStr",
+    "normalizeQuestion", "normalizeDay", "normalizeSegmentState", "normalizeNoteStat", "normalizeConfusions", "normalizeRepairItem", "normalizeRepairQueue", "normalizeEasterEggs", "normalizeSeriesRecord", "normalizeTierProgress", "normalizeStar", "normalizeSeen", "normalizeKbdStats", "markDay", "activeDayKeys", "streak", "todayStr",
     "longestStreak", "weekStats", "practiceTotals", "trophyDefs", "shownTrophyDefs", "trophiesEarned", "BONUS_EGG_DEFS", "awardEasterEgg",
     "writtenLabelOf", "kbdLabelOf", "recoveryCodeInfo", "applyRecoveryCode",
     "trainingFocusText", "stateTimestamp", "stateScore", "shouldAdopt", "backupToDb", "THEME_MODES", "themeModeLabel", "watchHomeItems",
-    "PROFILE_INSTRUMENTS", "PROFILE_PATHS", "PROFILE_LEVELS", "PRACTICE_DOMAINS", "normalizeProfile", "normalizeDailyProgress",
-    "coachDecision", "repairPool", "fragileNoteIds", "globalPrecision", "sessionCountToday",
+    "PROFILE_INSTRUMENTS", "PROFILE_PATHS", "PROFILE_LEVELS", "PRACTICE_DOMAINS", "normalizeProfile", "normalizeDailyProgress", "normalizeValidationDrafts", "validationDraftKey",
+    "profileStartPalier", "applyProfileStartPlacement", "profileStartText", "coachPalier", "coachDecision", "repairPool", "fragileNoteIds", "globalPrecision", "sessionCountToday",
     "dailyPlan", "splitPlanMinutes", "targetCadence", "dailyMission", "dailyFocusDomain", "DAILY_BLOCK_IDS", "runDailyBlock",
-    "buildDailySession", "dailyPhaseAt", "dailyPhasePool", "dailyPhaseLabel", "dailyTransferReadyForBonus", "dailyBonusTask", "startDailySession",
+    "buildDailySession", "dailyPhaseAt", "dailyPhasePool", "dailyPhaseLabel", "dailyTransferReadyForBonus", "dailyBonusTask", "startDailySession", "dailyDraftRecords", "storeDailyDraft", "nextCampaignTarget", "configureDailyCampaignTarget", "advanceDailyCampaignTarget", "recordDailyTargetEvidence", "dailyActiveElapsed", "pauseDailySession", "resumeDailySession", "dailyScoredCount", "dailySessionQualified",
     "pendingRepairIds", "responseKey", "confusedNoteId", "recordConfusion", "scheduleRepair", "dueRepairForSession", "repairBlockedIds", "ordinaryQuestionPool", "nearTransferId", "advanceRepair",
-    "validationRecordFromQuestions", "questionTask", "completeMission", "solveBonusEgg", "startRevision", "timeUp", "updateDailyClock", "clearQTimers", "clearDailyTimer",
+    "validationRecordFromQuestions", "questionTask", "completeMission", "solveBonusEgg", "startRevision", "representativeNoteSample", "starReviewSample", "starReviewCoverage", "starReviewRepairsClear", "startStarReview", "timeUp", "updateDailyClock", "clearQTimers", "clearDailyTimer",
     "recentErrorsCount", "longPauseSignal", "timeSinceLastSession", "lastPracticeAt", "LONG_BREAK_MS",
     "pieceSegments", "segmentNotePool", "segmentQuestionCount", "segmentGroupN", "segmentProgress", "segmentProgressLabel",
     "segmentMastery", "recordSegmentResult", "SEGMENT_MASTERY_GAP_MS", "nextSegmentForPiece", "PIECE_SEGMENT_HANDS", "PIECE_SEGMENT_FOCUSES",
@@ -92,7 +92,7 @@ function loadEngine() {
     "setSegmentFeel", "feelLabel", "beginSerie", "answer", "answerPos", "startPieceSegment", "renderResPiece", "nextQuestion",
     "beginClavier", "nextKbd", "kbdTap", "renderKbd",
     "STAFF", "staffSVG", "bonusStaffSVG", "clefSVG", "noteGlyph", "yOf", "previewNoteHtml",
-    "currentRecoveryCode", "mirrorIntro", "tone", "save", "readKey",
+    "currentRecoveryCode", "mirrorIntro", "tone", "save", "readKey", "bestLocalState", "recognizableStoredState", "utf8ByteLength", "decodedBase64Bytes", "MAX_IMPORT_TEXT_BYTES",
     "syncDecision", "syncCfg", "syncSet", "syncClear", "syncEnabled", "syncPush", "syncPull", "parseRemote", "sessionTokenGet",
     "cloudDocument", "cloudSaveContent", "cloudPieces", "looksLikeToken", "persistOnExit", "APP_VERSION"
   ];
@@ -239,6 +239,16 @@ eq(E.getEX().hist.length, 6, "réparation et transfert remplacent des questions 
 eq(E.getEX().n, 6, "la boucle active ne rallonge jamais le nombre prévu de questions");
 eq(E.getDB().repairQueue.length, 0, "la réparation réelle est refermée après le transfert");
 freshDB();
+E.beginSerie({sessionMode:"piece",n:1,palier:E.PALIERS[0],pool:["sol4","la4"],mode:"bronze",groupN:2,cold:false,
+  segment:{pieceId:"aclair",segmentId:"aclair_p1",segmentTitle:"Phrase 1"}});
+let partialGroup=E.getEX();
+partialGroup.qtype="lect"; partialGroup.seq=["sol4","la4"]; partialGroup.k=0;
+partialGroup.currentTask={role:"transfer",phase:"transfert"}; partialGroup.currentQuestionTested=[];
+E.answer("la");
+eq(partialGroup.currentQuestionTested,["sol4"],"l’erreur au début du groupe ne teste réellement que sa première note");
+eq(partialGroup.seenIds,["sol4"],"le bilan partition n’attribue plus la fin jamais lue du groupe");
+E.haltEX();
+freshDB();
 const reviewNow=Date.now();
 E.getDB().noteStats.sol4=E.normalizeNoteStat({v:4,e:0,box:1,due:reviewNow-1000});
 E.startRevision();
@@ -287,6 +297,44 @@ const repairRoundTrip = E.ensureStructure(JSON.parse(E.compactSave()));
 eq(repairRoundTrip.repairQueue[0].sourceId, "si4", "la réparation tardive survit à l'export et à l'import");
 ok(E.cloudDocument().progress.repairQueue[0].sourceId === "si4", "la file de réparation voyage aussi dans la sauvegarde cloud");
 
+group("Révision d’étoile — couverture et stabilité honnêtes");
+freshDB();
+const bossSample=E.starReviewSample(E.PALIERS.find(p => p.id === "B5"));
+eq(bossSample.length,10,"un grand palier produit un échantillon représentatif plafonné à dix notes");
+ok(bossSample.some(id => E.NOTES[id].clef === "sol") && bossSample.some(id => E.NOTES[id].clef === "fa"),
+  "l’échantillon du boss couvre réellement les deux clés");
+ok(E.starReviewCoverage(["sol4","la4"],[{ids:["sol4"]}]) === false,
+  "une note prévue mais jamais testée interdit l’étoile");
+ok(E.starReviewCoverage(["sol4","la4"],[{ids:["sol4"]},{ids:["la4"]}]) === true,
+  "la couverture ne compte que les identifiants réellement testés");
+E.scheduleRepair("fa3",{kind:"timeout",value:""},{pool:["fa3","sol3","la3"],qtype:"lect",palierId:"P6"});
+ok(E.starReviewRepairsClear(E.starReviewSample(E.PALIERS[0]))===true,
+  "une réparation sans rapport avec le palier ne bloque pas inutilement sa révision d’étoile");
+E.getDB().repairQueue=[];
+E.startStarReview("P1");
+for(let guard=0;guard<80&&!E.getEX().done;guard++){
+  if(E.getEX().waiting) E.nextQuestion(); else answerCurrentCorrect();
+}
+ok(E.getEX().done === true, "la révision d’étoile propre se termine en dix questions");
+ok(E.starReviewCoverage(E.getEX().starSample,E.getEX().questionRecords),
+  "le moteur sert toutes les notes de l’échantillon avant les répétitions");
+eq(E.getDB().paliers.P1.star.level,1,"couverture complète sans réparation → étoile accordée");
+freshDB();
+E.startStarReview("P1");
+for(let guard=0;guard<80;guard++){
+  const ex=E.getEX();
+  if(ex.i>=9&&!ex.waiting) break;
+  if(ex.waiting) E.nextQuestion(); else answerCurrentCorrect();
+}
+const starLast=E.getEX(), starTarget=starLast.seq[starLast.k];
+if(starLast.qtype==="ecrit") E.answerPos(E.NOTES[starTarget].p===11?10:E.NOTES[starTarget].p+1);
+else E.answer(E.NOTES[starTarget].n==="do"?"ré":"do");
+E.nextQuestion();
+ok(E.starReviewCoverage(E.getEX().starSample,E.getEX().questionRecords),
+  "le scénario d’erreur tardive avait pourtant couvert tout l’échantillon");
+ok(E.getDB().repairQueue.length>0,"l’erreur tardive ouvre une réparation explicite");
+eq(E.getDB().paliers.P1.star.level,0,"une réparation ouverte interdit l’étoile malgré la couverture complète");
+
 /* 4) Import / Export */
 group("Sauvegarde — import / export non destructifs");
 freshDB();
@@ -319,6 +367,11 @@ eq(E.getDB().pieces[0].q.length, 1, "import : seules les questions valides sont 
 ok(E.getDB().pieces[0].titre.indexOf("<") >= 0, "normalisation garde le texte brut ; l'échappement se fait au rendu");
 const validAttachment = E.normalizeAttachment({ name: "scan.pdf", type: "application/pdf", size: 3, dataUrl: "data:application/pdf;base64,QUJD" });
 ok(validAttachment && validAttachment.name === "scan.pdf", "pièce jointe PDF valide conservée");
+eq(E.decodedBase64Bytes("data:application/pdf;base64,QUJDRA=="), 4, "taille binaire réelle calculée depuis le base64");
+ok(E.normalizeAttachment({ name: "taille-fausse.pdf", type: "application/pdf", size: 1, dataUrl: "data:application/pdf;base64,QUJDRA==" }) === null,
+  "pièce jointe dont la taille déclarée ment sur le base64 rejetée");
+ok(E.normalizeAttachment({ name: "bombe.pdf", type: "application/pdf", size: 1, dataUrl: "data:application/pdf;base64," + "A".repeat(700000) }) === null,
+  "un gros base64 ne contourne pas la limite avec size=1");
 ok(E.normalizeAttachment({ name: "script.html", type: "text/html", size: 20, dataUrl: "data:text/html;base64,PGgxPk5vPC9oMT4=" }) === null,
   "pièce jointe hors PDF/image rejetée");
 ok(E.normalizeAttachment({ name: "actif.svg", type: "image/svg+xml", size: 20, dataUrl: "data:image/svg+xml;base64,PHN2Zy8+" }) === null,
@@ -333,6 +386,35 @@ E.importSave(JSON.stringify({ paliers: {}, pieces: [
 ] }));
 ok(E.getDB().pieces[0].attachment && E.getDB().pieces[0].attachment.name === "scan.png",
   "import : pièce jointe image de partition conservée");
+const safeId = E.cleanId("__proto__", "u");
+ok(E.isSafeId(safeId) && safeId !== "__proto__", "id dangereux __proto__ remplacé par un id sûr");
+const poisoned = E.ensureStructure(JSON.parse('{"paliers":{},"pieces":[{"id":"__proto__","titre":"Piège"}],"pieceProgress":{"__proto__":{"pollutedSegment":{"attempts":9}}},"pieceGoals":{"constructor":{"id":"lire"}}}'));
+ok(Object.getPrototypeOf(poisoned.pieceProgress) === null && Object.keys(poisoned.pieceProgress).length === 0,
+  "maps importées sans prototype et clés dangereuses éliminées");
+E.setDB(poisoned);
+E.segmentProgress("__proto__", "pollutedSegment");
+ok(!E.hasOwn(poisoned.pieceProgress, "pollutedSegment") && poisoned.pieceProgress.pollutedSegment === undefined,
+  "segmentProgress ne peut plus polluer Object.prototype");
+const dirtyState = E.ensureStructure({
+  xp:"pas-un-nombre", seen:"P1", paliers:{P1:{zen:"cassé",bronze:{series:"cassées",ok:"true"},star:"cassée",bestRafale:"12"}},
+  kbdStats:{total:"10",ok:"99",byPc:{0:{v:"3",e:"9"}}}
+});
+eq(dirtyState.xp, 0, "XP importés toujours ramenés à un entier sûr");
+ok(Object.getPrototypeOf(dirtyState.seen) === null && Object.keys(dirtyState.seen).length === 0,
+  "seen mal formé devient une map sûre vide");
+ok(Array.isArray(dirtyState.paliers.P1.zen.series) && dirtyState.paliers.P1.zen.ok === false && dirtyState.paliers.P1.star.level === 0,
+  "états tier/series/star mal formés reconstruits canoniquement");
+eq(dirtyState.kbdStats.ok, 10, "réussites clavier bornées par le total");
+eq(dirtyState.kbdStats.byPc[0], {v:3,e:3}, "statistiques clavier par touche normalisées et bornées");
+freshDB(); E.getDB().xp=77; const beforeBadShape=JSON.stringify(E.getDB());
+const badShapeMsg=E.importSave(JSON.stringify({paliers:[],xp:999999}));
+ok(/invalide/i.test(badShapeMsg) && JSON.stringify(E.getDB())===beforeBadShape,
+  "import structurellement invalide rejeté transactionnellement sans remplacer DB");
+const oversizedImport=" ".repeat(E.MAX_IMPORT_TEXT_BYTES+1);
+const beforeOversized=JSON.stringify(E.getDB());
+ok(/volumineuse/i.test(E.importSave(oversizedImport)) && JSON.stringify(E.getDB())===beforeOversized,
+  "import texte au-delà de 4 Mo rejeté avant JSON.parse sans modifier DB");
+eq(E.utf8ByteLength("é🎵"), 6, "limite d'import mesurée en octets UTF-8");
 const seg = E.normalizeSegment({ title: "Mesures 1-4", bars: "1-4", level: "P3", hand: "droite", focus: "rythme", notes: ["sol4", "bad"] }, 0, { clef: "sol" });
 ok(seg && seg.level === "P3" && seg.hand === "droite" && seg.focus === "rythme", "segment de partition : niveau, main et objectif conservés");
 eq(seg.notes, ["sol4"], "segment de partition : notes ciblées filtrées sur le dictionnaire");
@@ -347,6 +429,16 @@ ok(E.segmentNotePool(segmentedPiece.segments[1], segmentedPiece).every(id => E.N
   "segment lié à une partition clé de sol : pool filtré sur la bonne clé");
 ok(E.pieceSegments(E.normalizePiece({ titre: "Sans découpe", clef: "fa" })).some(s => s.level === "P6"),
   "partition sans découpe manuelle : segments automatiques adaptés à la clé de fa");
+freshDB();
+const personalLookPiece=E.normalizePiece({id:"regard-perso",titre:"Regard perso",clef:"sol",q:[]});
+E.getDB().pieces.push(personalLookPiece);
+const personalLook=E.pieceSegments(personalLookPiece)[0];
+E.startPieceSegment(personalLookPiece.id,personalLook.id);
+ok(E.segmentProgress(personalLookPiece.id,personalLook.id).seen === false,
+  "ouvrir le premier regard ne le crédite pas avant la confirmation du joueur");
+E.getEl("prSelfDone").onclick();
+ok(E.segmentProgress(personalLookPiece.id,personalLook.id).seen === true,
+  "« C’est fait » marque réellement le premier regard personnel comme vu");
 freshDB();
 const gamePiece = E.normalizePiece({ id: "piece-jeu", titre: "Partition jeu", clef: "sol", segments: [
   { id: "seg-a", title: "Mesures 1-2", level: "P1", focus: "notes" },
@@ -411,6 +503,9 @@ ok(E.palierPlayable("P1", "zen") === true, "P1 jouable en Zen");
 ok(E.palierPlayable("P2", "zen") === false, "P2 verrouillé tant que P1 non validé");
 E.getDB().paliers.P1.zen.ok = true;
 ok(E.palierPlayable("P2", "zen") === true, "P1 validé → P2 jouable");
+E.getDB().sel = "P1";
+let nextCoach = E.coachDecision("session");
+eq(nextCoach.palier.id, "P2", "le coach avance automatiquement vers le prochain palier jouable non validé");
 E.PALIERS.forEach(p => { E.getDB().paliers[p.id].zen.ok = true; });
 ok(E.tierComplete("zen") === true, "tous les paliers Zen validés → niveau Zen complet");
 ok(E.tierUnlocked("bronze") === true, "Zen complet → Bronze débloqué");
@@ -418,6 +513,19 @@ ok(E.tierUnlocked("diamantbleu") === false, "les gemmes (future) restent verroui
 ok(/retrouver chaque note seule/.test(E.trainingFocusText("zen")), "préparation Zen : annonce la recherche note par note");
 ok(/groupes de 2 notes/.test(E.trainingFocusText("bronze")), "préparation Bronze : annonce le travail par groupes");
 ok(/Mode Libre/.test(E.trainingFocusText("libre")), "préparation Libre : annonce l'écoute et le chant");
+freshDB();
+E.getDB().mode = "libre";
+eq(E.coachDecision("session").mode, "libre", "le coach conserve réellement le mode Libre choisi par le joueur");
+eq(E.visiblePaliers().length, E.PALIERS.length, "Libre rend les quinze paliers visibles sans brume");
+ok(E.PALIERS.every(p => E.playableInMode(p.id,"libre")), "Libre permet d'explorer chaque palier sans valider artificiellement Zen");
+eq(E.profileStartPalier("annee1"), "P3", "niveau année 1 → point de départ P3");
+eq(E.profileStartPalier("annee2"), "P6", "niveau année 2 → point de départ P6");
+eq(E.profileStartPalier("fin_c1"), "B1", "fin de Cycle 1 → point de départ B1");
+E.applyProfileStartPlacement("annee2");
+eq([E.getDB().mode,E.getDB().sel], ["libre","P6"], "le placement de niveau ouvre Libre sur le palier cohérent");
+ok(/Aucun acquis n’est validé automatiquement/.test(E.profileStartText("annee2","P6")),
+  "le placement explique qu'il explore sans fabriquer de validation");
+ok(E.getDB().paliers.P1.zen.ok === false, "un niveau déclaré ne valide aucun palier à la place du joueur");
 
 /* 7) ModeSelector verrouillé — hiérarchie produit */
 group("ModeSelector — hiérarchie REPAIR > FLASH > SESSION");
@@ -511,6 +619,8 @@ freshDB();
 ok(E.STAFF.half >= 9 && E.STAFF.H >= 160, "portée agrandie (interligne ≥ 9, hauteur ≥ 160)");
 const svgBig = E.staffSVG("sol", [{ p: 2, color: "#000", x: 200, big: 1 }]);
 ok(svgBig.indexOf('viewBox="0 0 ' + E.STAFF.W + ' ' + E.STAFF.H + '"') >= 0, "staffSVG utilise la hauteur H du viewBox (plus de 130 codé en dur)");
+ok(svgBig.indexOf('role="img"')>=0&&svgBig.indexOf('aria-label="Portée en clé de sol. Une note à identifier sur la deuxième ligne.')>=0,
+  "la portée expose au lecteur d’écran la clé et la position spatiale sans révéler le nom de la note");
 ok(svgBig.indexOf('rx="13.5"') >= 0, "note seule (big=1) : grande tête de note");
 const svgGroup = E.staffSVG("sol", [{ p: 2, color: "#000", x: 200 }]);
 ok(svgGroup.indexOf('rx="10"') >= 0, "note de groupe : tête agrandie (rx 10)");
@@ -550,16 +660,20 @@ E.applyRecoveryCode("P3+");
 eq(E.currentRecoveryCode(), "P3+", "round-trip : appliquer le code redonne exactement le même code");
 
 /* 11) Sauvegarde multi-filets */
-group("Sauvegarde — écriture réelle, checkpoint jamais dégradé");
+group("Sauvegarde — principal prioritaire, checkpoint de secours");
 freshDB(); E.getDB().xp = 9999; E.markDay("serie", 10); E.save();
 eq(E.readKey("solfegeProto1").xp, 9999, "save écrit la clé principale");
 eq(E.readKey("solfegeProto1_mirror").xp, 9999, "save écrit le miroir");
 eq(E.readKey("solfegeProto1_checkpoint").xp, 9999, "save écrit le checkpoint");
 E.setDB(E.ensureStructure({})); E.save();
 eq(E.readKey("solfegeProto1").xp, 0, "un état vierge s'écrit normalement en principal");
-eq(E.readKey("solfegeProto1_checkpoint").xp, 9999, "le checkpoint garde le MEILLEUR état connu (un vide n'écrase jamais une progression)");
-ok(E.shouldAdopt(E.readKey("solfegeProto1_checkpoint"), E.readKey("solfegeProto1")) === true,
-  "au chargement, le checkpoint meilleur gagne même si l'état principal est plus récent");
+eq(E.readKey("solfegeProto1_checkpoint").xp, 0, "le checkpoint suit le dernier état validé, y compris une remise à zéro volontaire");
+eq(E.bestLocalState().xp, 0, "au chargement, un principal valide gagne ; le checkpoint n'est qu'un secours");
+freshDB();
+E.getDB().pieces=[E.normalizePiece({id:"piece-a-supprimer",titre:"À supprimer",attachment:{name:"scan.pdf",type:"application/pdf",size:3,dataUrl:"data:application/pdf;base64,QUJD"}})];
+E.save({cloud:false});
+E.getDB().pieces=[]; E.save({cloud:false});
+eq(E.bestLocalState().pieces.length, 0, "une suppression volontaire de partition n'est pas ressuscitée par un checkpoint plus riche");
 threw = null; try { E.tone(60); } catch (e) { threw = e; }
 ok(threw === null, "tone() sans AudioContext (environnement de test) ne lève aucune exception");
 
@@ -582,7 +696,7 @@ ok(/continuité/.test(E.mirrorIntro()), "streak ≥ 10 jours → intro continuit
 group("Service worker & fichiers — garde-fous de livraison");
 const swSrc = fs.readFileSync(path.join(__dirname, "..", "sw.js"), "utf8");
 const mv = swSrc.match(/sezam-solado-v(\d+)/);
-ok(mv && Number(mv[1]) >= 26, "CACHE_NAME dédié à l'app et incrémenté (≥ sezam-solado-v26)");
+ok(mv && Number(mv[1]) >= 27, "CACHE_NAME dédié à l'app et incrémenté (≥ sezam-solado-v27)");
 ok(/navigate/.test(swSrc), "documents servis réseau d'abord (plus de vieille version à vie)");
 ok(/new URL\(req\.url\)\.origin !== self\.location\.origin/.test(swSrc), "le SW compare réellement les origines et n'intercepte pas l'API GitHub");
 ok(/key\.startsWith\(CACHE_PREFIX\) && key !== CACHE_NAME/.test(swSrc), "le SW ne supprime que les anciens caches SEZAM, jamais ceux d'une autre app");
@@ -603,6 +717,9 @@ eq(E.syncDecision(150, 150), "none", "timestamps égaux → rien à faire");
 eq(E.syncDecision(0, 0), "none", "deux états vides → rien à faire");
 const remoteProgress = E.ensureStructure({ xp: 40, days: { "2026-07-04": { series: 1, xp: 10, last: 1 } }, paliers: {} });
 eq(E.syncDecision(E.ensureStructure({}), remoteProgress), "pull", "un appareil vierge n'écrase jamais une progression distante");
+const richerLocal=E.ensureStructure({xp:1000}), poorerRemote=E.ensureStructure({xp:1});
+richerLocal._sezam.updatedAt=100; poorerRemote._sezam.updatedAt=200;
+eq(E.syncDecision(richerLocal,poorerRemote),"conflict","un timestamp distant plus récent ne peut plus effacer une progression locale nettement plus riche");
 ok(E.syncEnabled() === false, "synchro désactivée par défaut");
 E.syncSet({ token: "tok_SECRET_123" });
 ok(E.syncEnabled() === false, "jeton seul sans gist → pas encore activée");
@@ -654,7 +771,7 @@ eq(E.getDB().profile.parcours, "libre", "ancien joueur : parcours libre par déf
 eq(E.getDB().profile.dailyMinutes, 20, "durée de séance par défaut : 20 minutes");
 eq(E.getDB().profile.daysPerWeek, 5, "cadence par défaut : 5 jours par semaine");
 eq(E.getDB().profile.domains, E.PRACTICE_DOMAINS.map(d => d.id), "les six domaines sont proposés par défaut");
-eq(E.getDB()._sezam.schema, 10, "schéma local v10 pour les bonus secrets persistants");
+eq(E.getDB()._sezam.schema, 11, "schéma local v11 pour les preuves quotidiennes persistantes");
 const sanitizedProfile = E.normalizeProfile({
   displayName: "  <Youcef>   Test  ", instrument: "inconnu", parcours: "rattrapage_a2",
   niveauDepart: "annee2", targetDate: "2026-02-30", dailyMinutes: 999, daysPerWeek: 0,
@@ -733,8 +850,64 @@ timedDaily.endAt=Date.now()-1;
 E.updateDailyClock();
 eq(E.getEl("btnQuit").textContent,"Terminer maintenant","à l'échéance, le bouton annonce clairement la fin");
 E.getEl("btnQuit").onclick();
-ok(E.getEX().done===true&&E.getDB().dailyProgress[E.todayStr()].session,"le clic d'échéance termine et enregistre réellement le bilan quotidien");
+ok(E.getEX().done===true&&!(E.getDB().dailyProgress[E.todayStr()]||{}).session,
+  "une seule réponse produit un bilan partiel sans déclarer mensongèrement la séance terminée");
 E.clearQTimers(); E.clearDailyTimer();
+freshDB();
+const proofStart=Date.now(), proofDaily=E.buildDailySession(E.coachDecision(),proofStart);
+proofDaily.blocks[0].endAt=proofStart-1;
+E.beginSerie({sessionMode:"daily",palier:E.PALIERS[0],pool:E.PALIERS[0].notes,mode:"zen",groupN:1,openEnded:true,daily:proofDaily,cold:false});
+for(let i=0;i<30;i++) E.recordDailyTargetEvidence({phase:"cible",role:"baseline",ok:true,ids:[E.PALIERS[0].notes[i%3]]});
+ok(E.getDB().paliers.P1.zen.ok===true&&E.getEX().palier.id==="P2"&&E.getDB().sel==="P2",
+  "trois tranches quotidiennes propres valident P1 et avancent automatiquement vers P2");
+eq(E.getEX().daily.proofs.length,3,"chaque tranche de 10 questions Cible devient une preuve distincte");
+eq(E.getEX().daily.promotions.map(x=>x.pid),["P1"],"le bilan conserve les promotions gagnées pendant la même séance");
+E.clearQTimers(); E.clearDailyTimer(); E.haltEX();
+freshDB();
+E.getDB().mode="zen"; E.getDB().sel="B5";
+E.PALIERS.slice(0,-1).forEach(p=>{E.getDB().paliers[p.id].zen.ok=true;});
+const allB5=E.PALIERS[E.PALIERS.length-1].notes.slice(), oldProof={ts:Date.now(),e:0,ids:allB5};
+E.getDB().paliers.B5.zen.series=[oldProof,Object.assign({},oldProof,{ts:Date.now()+1})];
+const tierStart=Date.now(), tierDaily=E.buildDailySession(E.coachDecision(),tierStart);
+tierDaily.blocks[0].endAt=tierStart-1;
+E.beginSerie({sessionMode:"daily",palier:E.PALIERS[E.PALIERS.length-1],pool:allB5,mode:"zen",groupN:1,openEnded:true,daily:tierDaily,cold:false});
+for(let i=0;i<10;i++) E.recordDailyTargetEvidence({phase:"cible",role:"baseline",ok:true,ids:[allB5[i%allB5.length]]});
+ok(E.getDB().paliers.B5.zen.ok===true&&E.getEX().mode==="bronze"&&E.getEX().palier.id==="P1",
+  "après B5, la même séance poursuit automatiquement sur P1 du grade suivant");
+E.clearQTimers(); E.clearDailyTimer(); E.haltEX();
+freshDB();
+const draftStart=Date.now(), draftDaily=E.buildDailySession(E.coachDecision(),draftStart);
+draftDaily.blocks[0].endAt=draftStart-1;
+E.beginSerie({sessionMode:"daily",palier:E.PALIERS[0],pool:E.PALIERS[0].notes,mode:"zen",groupN:1,openEnded:true,daily:draftDaily,cold:false});
+for(let i=0;i<7;i++) E.recordDailyTargetEvidence({phase:"cible",role:"baseline",ok:true,ids:[E.PALIERS[0].notes[i%3]]});
+eq(E.getDB().validationDrafts["zen:P1"].length,7,"une tranche incomplète est sauvegardée au lieu d'être perdue au chrono");
+ok(E.compactSave().indexOf('"validationDrafts"')>=0&&E.cloudDocument().progress.validationDrafts["zen:P1"].length===7,
+  "les preuves partielles suivent les sauvegardes compacte et cloud");
+const oldEnd=draftDaily.endAt, pauseAt=Date.now();
+ok(E.pauseDailySession(pauseAt)===true&&E.resumeDailySession(pauseAt+5000)===true,
+  "une séance quotidienne peut être suspendue puis reprise après un passage en arrière-plan");
+eq(draftDaily.endAt,oldEnd+5000,"le temps passé en arrière-plan ne consomme pas le chrono pédagogique");
+ok(E.dailyActiveElapsed(draftDaily,pauseAt+5000)<1000,"le temps actif exclut la pause en arrière-plan");
+E.clearQTimers(); E.clearDailyTimer(); E.haltEX();
+freshDB();
+const completeStart=Date.now(), completeDaily=E.buildDailySession(E.coachDecision(),completeStart);
+E.beginSerie({sessionMode:"daily",palier:E.PALIERS[0],pool:E.PALIERS[0].notes,mode:"zen",groupN:1,openEnded:true,daily:completeDaily,cold:false});
+E.getEX().questionRecords=Array.from({length:10},(_,i)=>({phase:"cible",role:"baseline",ok:true,ids:[E.PALIERS[0].notes[i%3]]}));
+E.getEX().hist=Array(10).fill(true); E.getEX().ok=10; E.getEX().i=10; E.getEX().stopRequested=true;
+E.getEl("btnQuit").onclick();
+ok(E.getDB().dailyProgress[E.todayStr()].session===true,
+  "dix vraies questions suffisent à marquer honnêtement la séance quotidienne terminée");
+E.clearQTimers(); E.clearDailyTimer();
+freshDB();
+["sol4","la4","si4"].forEach((id,i)=>{
+  const item=E.scheduleRepair(id,{kind:"timeout",value:""},{pool:["sol4","la4","si4"],qtype:"lect",palierId:"P1"});
+  item.dueQuestion=1;
+});
+const blockedStart=Date.now(), blockedDaily=E.buildDailySession(E.coachDecision(),blockedStart);
+E.beginSerie({sessionMode:"daily",palier:E.PALIERS[0],pool:E.PALIERS[0].notes,mode:"zen",groupN:1,openEnded:true,daily:blockedDaily,cold:false});
+ok(E.getEX().currentTask.role!=="spacing"&&E.getEX().seq.length===1,
+  "un vocabulaire entièrement en réparation due reste jouable au lieu de produire des intervalles passifs en boucle");
+E.clearQTimers(); E.clearDailyTimer(); E.haltEX();
 freshDB();
 const bonusStart=Date.now(), bonusDaily=E.buildDailySession(E.coachDecision(),bonusStart);
 bonusDaily.blocks.slice(0,3).forEach(b => { b.endAt=bonusStart-1; });
@@ -875,6 +1048,17 @@ ok(E.compactSave().indexOf('"seen"') >= 0 || E.compactSave().indexOf('"pieceProg
 group("Partition — ambitions du joueur");
 freshDB();
 ok(E.pieceGoal("aclair") === null, "aucune ambition par défaut");
+E.setPieceGoal("aclair", "fluide");
+E.pieceSegments(E.pieceById("aclair")).forEach(s => E.markSegmentSeen("aclair",s.id));
+let fluidAmb=E.ambitionProgress(E.pieceById("aclair"));
+ok(fluidAmb.done === false && fluidAmb.pct === 0,
+  "« Jouer sans blocage » ne peut pas être gagné en cochant seulement « vu en cours »");
+E.pieceSegments(E.pieceById("aclair")).forEach(s => {
+  E.recordSegmentResult({pieceId:"aclair",segmentId:s.id},5,5,0);
+});
+fluidAmb=E.ambitionProgress(E.pieceById("aclair"));
+ok(fluidAmb.done === true,"une vraie tentative propre sur chaque passage valide « Jouer sans blocage »");
+freshDB();
 E.setPieceGoal("aclair", "lire");
 let amb = E.ambitionProgress(E.pieceById("aclair"));
 ok(amb && amb.def.id === "lire" && amb.pct === 0 && amb.done === false, "ambition « lire » posée : 0 %, en cours");
@@ -998,6 +1182,8 @@ ok(/window\.scrollTo\(0,0\)/.test(idxA), "chaque écran s'ouvre en haut de page"
 ok(/\^https\?:\\\/\\\//.test(idxA), "la veille n'ouvre jamais d'URL non http(s)");
 ok(idxA.indexOf("seenIds:[]") >= 0 && /end:Date\.now\(\)\+RAFALE_S\*1000,script:null,scriptIdx:0,seenIds:\[\]/.test(idxA),
   "la rafale trace aussi les notes vues (bilan partition inclus)");
+ok(/left\/\(RAFALE_S\*1000\)\*100/.test(idxA),
+  "la barre de Rafale part de 100 % et non de 10 000 %");
 ok(idxA.indexOf("segPromotion") >= 0, "une promotion de passage (Validé/Maîtrisé) rapporte des XP");
 // persistance de l'ambition atteinte
 E.setPieceGoal("aclair", "cours");

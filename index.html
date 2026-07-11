@@ -18,7 +18,7 @@
        fond blanc, texte bleu pétrole, volumes bleu céramique, or pour les contrastes. */
     --bg:#ffffff; --panel:#ffffff; --panel2:#eef5f4; --ink:#0f4c5c; --dim:#5e777b;
     --creme:#ffffff; --paper:#ffffff; --petrole:#0f4c5c; --petrole2:#083947; --ceramique:#7fb8c2; --ceramique2:#d7e9e8;
-    --vert:#819d70; --rouge:#b45f4b; --accent:var(--petrole); --or:#b8893a; --or-deep:#8d6826; --good:var(--vert); --bad:var(--rouge); --gueules:var(--rouge); --gold:#d8a94d;
+    --vert:#819d70; --rouge:#b45f4b; --accent:var(--petrole); --or:#b8893a; --or-deep:#8d6826; --good:#4f6f43; --bad:var(--rouge); --gueules:var(--rouge); --gold:#d8a94d;
     --bronze:#c77d48; --argent:#8fa7b0; --vermeil:#d17e62; --rhod:#5e9daf;
     --serif:"Iowan Old Style","Charter","Sabon","Georgia","Times New Roman",serif;
     --sans:"Inter",-apple-system,BlinkMacSystemFont,"Helvetica Neue","Segoe UI",sans-serif;
@@ -26,19 +26,19 @@
   :root[data-theme="partition"]{
     --bg:#f8f1df; --panel:#fffaf0; --panel2:#e3f0ef; --ink:#0f4c5c; --dim:#5e777b;
     --creme:#f8f1df; --paper:#fffdf7; --petrole:#0f4c5c; --petrole2:#083947; --ceramique:#7fb8c2; --ceramique2:#d7e9e8;
-    --vert:#819d70; --rouge:#b45f4b; --accent:var(--petrole); --or:#b8893a; --or-deep:#8d6826; --good:var(--vert); --bad:var(--rouge); --gueules:var(--rouge); --gold:#d8a94d;
+    --vert:#819d70; --rouge:#b45f4b; --accent:var(--petrole); --or:#b8893a; --or-deep:#8d6826; --good:#4f6f43; --bad:var(--rouge); --gueules:var(--rouge); --gold:#d8a94d;
     --bronze:#c77d48; --argent:#8fa7b0; --vermeil:#d17e62; --rhod:#5e9daf;
   }
   :root[data-theme="nocturne"]{
     --bg:#e8f0ee; --panel:#fff9ec; --panel2:#d8e8e6; --ink:#0c3f4d; --dim:#547074;
     --creme:#e8f0ee; --paper:#fffdf7; --petrole:#0c3f4d; --petrole2:#062b35; --ceramique:#2e6f7a; --ceramique2:#d8e8e6;
-    --vert:#78966f; --rouge:#b86150; --accent:#0c3f4d; --or:#c4933d; --or-deep:#8d6826; --good:var(--vert); --bad:var(--rouge); --gueules:var(--rouge); --gold:#d9ac55;
+    --vert:#78966f; --rouge:#b86150; --accent:#0c3f4d; --or:#c4933d; --or-deep:#8d6826; --good:#46653e; --bad:var(--rouge); --gueules:var(--rouge); --gold:#d9ac55;
     --bronze:#bd7b48; --argent:#8fa9af; --vermeil:#d58b72; --rhod:#6aa8b1;
   }
   :root[data-theme="luthier"]{
     --bg:#f3e3c5; --panel:#fff6e4; --panel2:#ead7b8; --ink:#173f45; --dim:#776b59;
     --creme:#f3e3c5; --paper:#fffaf0; --petrole:#173f45; --petrole2:#0f3035; --ceramique:#7aa5a2; --ceramique2:#eadbc0;
-    --vert:#778f5d; --rouge:#aa5439; --accent:#173f45; --or:#b88038; --or-deep:#8b5d24; --good:var(--vert); --bad:var(--rouge); --gueules:var(--rouge); --gold:#d49a36;
+    --vert:#778f5d; --rouge:#aa5439; --accent:#173f45; --or:#b88038; --or-deep:#8b5d24; --good:#486137; --bad:var(--rouge); --gueules:var(--rouge); --gold:#d49a36;
     --bronze:#bd7141; --argent:#8fa7b0; --vermeil:#d17e62; --rhod:#6aa4ad;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
@@ -63,6 +63,9 @@
   .screen{display:none;flex:1;flex-direction:column}
   .screen.active{display:flex}
   button{font-family:inherit;cursor:pointer}
+  button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible,[tabindex="0"]:focus-visible{
+    outline:3px solid var(--or);outline-offset:3px}
+  @media (prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 
   .mission{background:linear-gradient(135deg,rgba(255,253,247,.96),rgba(215,233,232,.72) 58%,rgba(216,169,77,.16));border:1px solid rgba(184,137,58,.36);border-radius:24px 9px 22px 12px;padding:15px;margin-bottom:12px;
     font-size:14px;line-height:1.45;color:var(--ink);position:relative;overflow:hidden}
@@ -421,7 +424,7 @@
     <div class="exhead"><span id="exMode"></span><div class="dots" id="exDots"></div><span id="exCount"></span></div>
     <div class="timerbar" id="timerbar"><div id="timerfill"></div></div>
     <div class="staffbox" id="staffbox"></div>
-    <div class="feedback" id="feedback">Quelle est cette note ?</div>
+    <div class="feedback" id="feedback" role="status" aria-live="polite" aria-atomic="true">Quelle est cette note ?</div>
     <div class="answers" id="answers"></div>
     <button id="btnNext">Continuer</button>
     <button class="quit" id="btnQuit">Abandonner la série</button>
@@ -479,29 +482,29 @@
     <div class="paliers" id="pieceList"></div>
     <div class="savebox">
       <h4>Ajouter une partition</h4>
-      <input id="pcTitle" placeholder="Titre (ex. Le Cygne)" style="width:100%;background:var(--paper);border:1px solid rgba(15,76,92,.18);color:var(--petrole);border-radius:8px;padding:9px;font-size:13.5px;-webkit-user-select:text;user-select:text">
+      <input id="pcTitle" aria-label="Titre de la partition" placeholder="Titre (ex. Le Cygne)" style="width:100%;background:var(--paper);border:1px solid rgba(15,76,92,.18);color:var(--petrole);border-radius:8px;padding:9px;font-size:13.5px;-webkit-user-select:text;user-select:text">
       <div class="row" style="margin-top:8px">
-        <select id="pcClef" style="flex:1;background:var(--paper);border:1px solid rgba(15,76,92,.18);color:var(--petrole);border-radius:8px;padding:9px;font-size:13.5px"><option value="sol">Clé de sol</option><option value="fa">Clé de fa</option><option value="deux">Les deux clés</option></select>
-        <input id="pcKey" placeholder="Tonalité (ex. La M)" style="flex:1;background:var(--paper);border:1px solid rgba(15,76,92,.18);color:var(--petrole);border-radius:8px;padding:9px;font-size:13.5px;-webkit-user-select:text;user-select:text">
+        <select id="pcClef" aria-label="Clé de la partition" style="flex:1;background:var(--paper);border:1px solid rgba(15,76,92,.18);color:var(--petrole);border-radius:8px;padding:9px;font-size:13.5px"><option value="sol">Clé de sol</option><option value="fa">Clé de fa</option><option value="deux">Les deux clés</option></select>
+        <input id="pcKey" aria-label="Tonalité de la partition" placeholder="Tonalité (ex. La M)" style="flex:1;background:var(--paper);border:1px solid rgba(15,76,92,.18);color:var(--petrole);border-radius:8px;padding:9px;font-size:13.5px;-webkit-user-select:text;user-select:text">
       </div>
-      <input id="pcFile" type="file" accept="application/pdf,image/png,image/jpeg,image/gif,image/webp,image/bmp,image/heic,image/heif,.pdf,.png,.jpg,.jpeg,.gif,.webp,.bmp,.heic,.heif" style="width:100%;margin-top:8px;background:var(--paper);border:1px solid rgba(15,76,92,.18);color:var(--petrole);border-radius:8px;padding:9px;font-size:13.5px;-webkit-user-select:text;user-select:text">
+      <input id="pcFile" aria-label="Fichier de partition facultatif" type="file" accept="application/pdf,image/png,image/jpeg,image/gif,image/webp,image/bmp,image/heic,image/heif,.pdf,.png,.jpg,.jpeg,.gif,.webp,.bmp,.heic,.heif" style="width:100%;margin-top:8px;background:var(--paper);border:1px solid rgba(15,76,92,.18);color:var(--petrole);border-radius:8px;padding:9px;font-size:13.5px;-webkit-user-select:text;user-select:text">
       <div class="row" style="margin-top:8px"><button id="btnAddPiece">Ajouter</button><button id="btnClearPieceFile" type="button">Retirer fichier</button></div>
       <div class="savemsg" id="pieceMsg"></div>
     </div>
     <div class="savebox segmentForm">
       <h4>Découper une partition</h4>
-      <select id="segPiece" class="field"></select>
+      <select id="segPiece" class="field" aria-label="Partition à découper"></select>
       <div class="row" style="margin-top:8px">
-        <input id="segTitle" class="field" placeholder="Segment (ex. mesures 1-4)">
-        <input id="segBars" class="field" placeholder="Mesures">
+        <input id="segTitle" class="field" aria-label="Nom du segment" placeholder="Segment (ex. mesures 1-4)">
+        <input id="segBars" class="field" aria-label="Mesures du segment" placeholder="Mesures">
       </div>
       <div class="row" style="margin-top:8px">
-        <select id="segLevel" class="field"></select>
-        <select id="segHand" class="field"></select>
+        <select id="segLevel" class="field" aria-label="Palier du segment"></select>
+        <select id="segHand" class="field" aria-label="Main du segment"></select>
       </div>
       <div class="row" style="margin-top:8px">
-        <select id="segFocus" class="field"></select>
-        <input id="segNotes" class="field" placeholder="Notes ciblées : sol4, la4">
+        <select id="segFocus" class="field" aria-label="Objectif du segment"></select>
+        <input id="segNotes" class="field" aria-label="Notes ciblées du segment" placeholder="Notes ciblées : sol4, la4">
       </div>
       <div class="row" style="margin-top:8px"><button id="btnAddSegment">Ajouter segment</button></div>
       <div class="savemsg" id="segMsg"></div>
@@ -518,14 +521,14 @@
   <div class="screen" id="scrKbd">
     <div class="exhead"><span id="kHead">Clavier</span><div class="dots" id="kDots"></div><span id="kCount"></span></div>
     <div class="staffbox" id="kStaff"></div>
-    <div class="feedback" id="kFb"></div>
+    <div class="feedback" id="kFb" role="status" aria-live="polite" aria-atomic="true"></div>
     <div class="kbd" id="kKbd"></div>
     <div class="answers" id="kNames" style="display:none"></div>
     <button class="quit" id="kQuit">Quitter le clavier</button>
   </div>
 </div>
 
-<div id="overlay"><div class="card" id="cardBox"></div></div>
+<div id="overlay"><div class="card" id="cardBox" role="dialog" aria-modal="true" tabindex="-1"></div></div>
 
 <script>/* qrcode-generator (Kazuhiko Arase, MIT) — minifié, embarqué pour le transfert QR hors-ligne */
 var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],f={},c=function(t,r){o=function(t){for(var r=new Array(t),e=0;e<t;e+=1){r[e]=new Array(t);for(var n=0;n<t;n+=1)r[e][n]=null}return r}(i=4*e+17),l(0,0),l(i-7,0),l(0,i-7),s(),h(),d(t,r),e>=7&&v(t),null==a&&(a=p(e,n,u)),w(a,r)},l=function(t,r){for(var e=-1;e<=7;e+=1)if(!(t+e<=-1||i<=t+e))for(var n=-1;n<=7;n+=1)r+n<=-1||i<=r+n||(o[t+e][r+n]=0<=e&&e<=6&&(0==n||6==n)||0<=n&&n<=6&&(0==e||6==e)||2<=e&&e<=4&&2<=n&&n<=4)},h=function(){for(var t=8;t<i-8;t+=1)null==o[t][6]&&(o[t][6]=t%2==0);for(var r=8;r<i-8;r+=1)null==o[6][r]&&(o[6][r]=r%2==0)},s=function(){for(var t=B.getPatternPosition(e),r=0;r<t.length;r+=1)for(var n=0;n<t.length;n+=1){var i=t[r],a=t[n];if(null==o[i][a])for(var u=-2;u<=2;u+=1)for(var f=-2;f<=2;f+=1)o[i+u][a+f]=-2==u||2==u||-2==f||2==f||0==u&&0==f}},v=function(t){for(var r=B.getBCHTypeNumber(e),n=0;n<18;n+=1){var a=!t&&1==(r>>n&1);o[Math.floor(n/3)][n%3+i-8-3]=a}for(n=0;n<18;n+=1){a=!t&&1==(r>>n&1);o[n%3+i-8-3][Math.floor(n/3)]=a}},d=function(t,r){for(var e=n<<3|r,a=B.getBCHTypeInfo(e),u=0;u<15;u+=1){var f=!t&&1==(a>>u&1);u<6?o[u][8]=f:u<8?o[u+1][8]=f:o[i-15+u][8]=f}for(u=0;u<15;u+=1){f=!t&&1==(a>>u&1);u<8?o[8][i-u-1]=f:u<9?o[8][15-u-1+1]=f:o[8][15-u-1]=f}o[i-8][8]=!t},w=function(t,r){for(var e=-1,n=i-1,a=7,u=0,f=B.getMaskFunction(r),c=i-1;c>0;c-=2)for(6==c&&(c-=1);;){for(var g=0;g<2;g+=1)if(null==o[n][c-g]){var l=!1;u<t.length&&(l=1==(t[u]>>>a&1)),f(n,c-g)&&(l=!l),o[n][c-g]=l,-1==(a-=1)&&(u+=1,a=7)}if((n+=e)<0||i<=n){n-=e,e=-e;break}}},p=function(t,r,e){for(var n=A.getRSBlocks(t,r),o=b(),i=0;i<e.length;i+=1){var a=e[i];o.put(a.getMode(),4),o.put(a.getLength(),B.getLengthInBits(a.getMode(),t)),a.write(o)}var u=0;for(i=0;i<n.length;i+=1)u+=n[i].dataCount;if(o.getLengthInBits()>8*u)throw"code length overflow. ("+o.getLengthInBits()+">"+8*u+")";for(o.getLengthInBits()+4<=8*u&&o.put(0,4);o.getLengthInBits()%8!=0;)o.putBit(!1);for(;!(o.getLengthInBits()>=8*u||(o.put(236,8),o.getLengthInBits()>=8*u));)o.put(17,8);return function(t,r){for(var e=0,n=0,o=0,i=new Array(r.length),a=new Array(r.length),u=0;u<r.length;u+=1){var f=r[u].dataCount,c=r[u].totalCount-f;n=Math.max(n,f),o=Math.max(o,c),i[u]=new Array(f);for(var g=0;g<i[u].length;g+=1)i[u][g]=255&t.getBuffer()[g+e];e+=f;var l=B.getErrorCorrectPolynomial(c),h=k(i[u],l.getLength()-1).mod(l);for(a[u]=new Array(l.getLength()-1),g=0;g<a[u].length;g+=1){var s=g+h.getLength()-a[u].length;a[u][g]=s>=0?h.getAt(s):0}}var v=0;for(g=0;g<r.length;g+=1)v+=r[g].totalCount;var d=new Array(v),w=0;for(g=0;g<n;g+=1)for(u=0;u<r.length;u+=1)g<i[u].length&&(d[w]=i[u][g],w+=1);for(g=0;g<o;g+=1)for(u=0;u<r.length;u+=1)g<a[u].length&&(d[w]=a[u][g],w+=1);return d}(o,n)};f.addData=function(t,r){var e=null;switch(r=r||"Byte"){case"Numeric":e=M(t);break;case"Alphanumeric":e=x(t);break;case"Byte":e=m(t);break;case"Kanji":e=L(t);break;default:throw"mode:"+r}u.push(e),a=null},f.isDark=function(t,r){if(t<0||i<=t||r<0||i<=r)throw t+","+r;return o[t][r]},f.getModuleCount=function(){return i},f.make=function(){if(e<1){for(var t=1;t<40;t++){for(var r=A.getRSBlocks(t,n),o=b(),i=0;i<u.length;i++){var a=u[i];o.put(a.getMode(),4),o.put(a.getLength(),B.getLengthInBits(a.getMode(),t)),a.write(o)}var g=0;for(i=0;i<r.length;i++)g+=r[i].dataCount;if(o.getLengthInBits()<=8*g)break}e=t}c(!1,function(){for(var t=0,r=0,e=0;e<8;e+=1){c(!0,e);var n=B.getLostPoint(f);(0==e||t>n)&&(t=n,r=e)}return r}())},f.createTableTag=function(t,r){t=t||2;var e="";e+='<table style="',e+=" border-width: 0px; border-style: none;",e+=" border-collapse: collapse;",e+=" padding: 0px; margin: "+(r=void 0===r?4*t:r)+"px;",e+='">',e+="<tbody>";for(var n=0;n<f.getModuleCount();n+=1){e+="<tr>";for(var o=0;o<f.getModuleCount();o+=1)e+='<td style="',e+=" border-width: 0px; border-style: none;",e+=" border-collapse: collapse;",e+=" padding: 0px; margin: 0px;",e+=" width: "+t+"px;",e+=" height: "+t+"px;",e+=" background-color: ",e+=f.isDark(n,o)?"#000000":"#ffffff",e+=";",e+='"/>';e+="</tr>"}return e+="</tbody>",e+="</table>"},f.createSvgTag=function(t,r,e,n){var o={};"object"==typeof arguments[0]&&(t=(o=arguments[0]).cellSize,r=o.margin,e=o.alt,n=o.title),t=t||2,r=void 0===r?4*t:r,(e="string"==typeof e?{text:e}:e||{}).text=e.text||null,e.id=e.text?e.id||"qrcode-description":null,(n="string"==typeof n?{text:n}:n||{}).text=n.text||null,n.id=n.text?n.id||"qrcode-title":null;var i,a,u,c,g=f.getModuleCount()*t+2*r,l="";for(c="l"+t+",0 0,"+t+" -"+t+",0 0,-"+t+"z ",l+='<svg version="1.1" xmlns="http://www.w3.org/2000/svg"',l+=o.scalable?"":' width="'+g+'px" height="'+g+'px"',l+=' viewBox="0 0 '+g+" "+g+'" ',l+=' preserveAspectRatio="xMinYMin meet"',l+=n.text||e.text?' role="img" aria-labelledby="'+y([n.id,e.id].join(" ").trim())+'"':"",l+=">",l+=n.text?'<title id="'+y(n.id)+'">'+y(n.text)+"</title>":"",l+=e.text?'<description id="'+y(e.id)+'">'+y(e.text)+"</description>":"",l+='<rect width="100%" height="100%" fill="white" cx="0" cy="0"/>',l+='<path d="',a=0;a<f.getModuleCount();a+=1)for(u=a*t+r,i=0;i<f.getModuleCount();i+=1)f.isDark(a,i)&&(l+="M"+(i*t+r)+","+u+c);return l+='" stroke="transparent" fill="black"/>',l+="</svg>"},f.createDataURL=function(t,r){t=t||2,r=void 0===r?4*t:r;var e=f.getModuleCount()*t+2*r,n=r,o=e-r;return I(e,e,function(r,e){if(n<=r&&r<o&&n<=e&&e<o){var i=Math.floor((r-n)/t),a=Math.floor((e-n)/t);return f.isDark(a,i)?0:1}return 1})},f.createImgTag=function(t,r,e){t=t||2,r=void 0===r?4*t:r;var n=f.getModuleCount()*t+2*r,o="";return o+="<img",o+=' src="',o+=f.createDataURL(t,r),o+='"',o+=' width="',o+=n,o+='"',o+=' height="',o+=n,o+='"',e&&(o+=' alt="',o+=y(e),o+='"'),o+="/>"};var y=function(t){for(var r="",e=0;e<t.length;e+=1){var n=t.charAt(e);switch(n){case"<":r+="&lt;";break;case">":r+="&gt;";break;case"&":r+="&amp;";break;case'"':r+="&quot;";break;default:r+=n}}return r};return f.createASCII=function(t,r){if((t=t||1)<2)return function(t){t=void 0===t?2:t;var r,e,n,o,i,a=1*f.getModuleCount()+2*t,u=t,c=a-t,g={"██":"█","█ ":"▀"," █":"▄","  ":" "},l={"██":"▀","█ ":"▀"," █":" ","  ":" "},h="";for(r=0;r<a;r+=2){for(n=Math.floor((r-u)/1),o=Math.floor((r+1-u)/1),e=0;e<a;e+=1)i="█",u<=e&&e<c&&u<=r&&r<c&&f.isDark(n,Math.floor((e-u)/1))&&(i=" "),u<=e&&e<c&&u<=r+1&&r+1<c&&f.isDark(o,Math.floor((e-u)/1))?i+=" ":i+="█",h+=t<1&&r+1>=c?l[i]:g[i];h+="\n"}return a%2&&t>0?h.substring(0,h.length-a-1)+Array(a+1).join("▀"):h.substring(0,h.length-1)}(r);t-=1,r=void 0===r?2*t:r;var e,n,o,i,a=f.getModuleCount()*t+2*r,u=r,c=a-r,g=Array(t+1).join("██"),l=Array(t+1).join("  "),h="",s="";for(e=0;e<a;e+=1){for(o=Math.floor((e-u)/t),s="",n=0;n<a;n+=1)i=1,u<=n&&n<c&&u<=e&&e<c&&f.isDark(o,Math.floor((n-u)/t))&&(i=0),s+=i?g:l;for(o=0;o<t;o+=1)h+=s+"\n"}return h.substring(0,h.length-1)},f.renderTo2dContext=function(t,r){r=r||2;for(var e=f.getModuleCount(),n=0;n<e;n++)for(var o=0;o<e;o++)t.fillStyle=f.isDark(n,o)?"black":"white",t.fillRect(o*r,n*r,r,r)},f};t.stringToBytes=(t.stringToBytesFuncs={default:function(t){for(var r=[],e=0;e<t.length;e+=1){var n=t.charCodeAt(e);r.push(255&n)}return r}}).default,t.createStringToBytes=function(t,r){var e=function(){for(var e=S(t),n=function(){var t=e.read();if(-1==t)throw"eof";return t},o=0,i={};;){var a=e.read();if(-1==a)break;var u=n(),f=n()<<8|n();i[String.fromCharCode(a<<8|u)]=f,o+=1}if(o!=r)throw o+" != "+r;return i}(),n="?".charCodeAt(0);return function(t){for(var r=[],o=0;o<t.length;o+=1){var i=t.charCodeAt(o);if(i<128)r.push(i);else{var a=e[t.charAt(o)];"number"==typeof a?(255&a)==a?r.push(a):(r.push(a>>>8),r.push(255&a)):r.push(n)}}return r}};var r,e,n,o,i,a=1,u=2,f=4,c=8,g={L:1,M:0,Q:3,H:2},l=0,h=1,s=2,v=3,d=4,w=5,p=6,y=7,B=(r=[[],[6,18],[6,22],[6,26],[6,30],[6,34],[6,22,38],[6,24,42],[6,26,46],[6,28,50],[6,30,54],[6,32,58],[6,34,62],[6,26,46,66],[6,26,48,70],[6,26,50,74],[6,30,54,78],[6,30,56,82],[6,30,58,86],[6,34,62,90],[6,28,50,72,94],[6,26,50,74,98],[6,30,54,78,102],[6,28,54,80,106],[6,32,58,84,110],[6,30,58,86,114],[6,34,62,90,118],[6,26,50,74,98,122],[6,30,54,78,102,126],[6,26,52,78,104,130],[6,30,56,82,108,134],[6,34,60,86,112,138],[6,30,58,86,114,142],[6,34,62,90,118,146],[6,30,54,78,102,126,150],[6,24,50,76,102,128,154],[6,28,54,80,106,132,158],[6,32,58,84,110,136,162],[6,26,54,82,110,138,166],[6,30,58,86,114,142,170]],e=1335,n=7973,i=function(t){for(var r=0;0!=t;)r+=1,t>>>=1;return r},(o={}).getBCHTypeInfo=function(t){for(var r=t<<10;i(r)-i(e)>=0;)r^=e<<i(r)-i(e);return 21522^(t<<10|r)},o.getBCHTypeNumber=function(t){for(var r=t<<12;i(r)-i(n)>=0;)r^=n<<i(r)-i(n);return t<<12|r},o.getPatternPosition=function(t){return r[t-1]},o.getMaskFunction=function(t){switch(t){case l:return function(t,r){return(t+r)%2==0};case h:return function(t,r){return t%2==0};case s:return function(t,r){return r%3==0};case v:return function(t,r){return(t+r)%3==0};case d:return function(t,r){return(Math.floor(t/2)+Math.floor(r/3))%2==0};case w:return function(t,r){return t*r%2+t*r%3==0};case p:return function(t,r){return(t*r%2+t*r%3)%2==0};case y:return function(t,r){return(t*r%3+(t+r)%2)%2==0};default:throw"bad maskPattern:"+t}},o.getErrorCorrectPolynomial=function(t){for(var r=k([1],0),e=0;e<t;e+=1)r=r.multiply(k([1,C.gexp(e)],0));return r},o.getLengthInBits=function(t,r){if(1<=r&&r<10)switch(t){case a:return 10;case u:return 9;case f:case c:return 8;default:throw"mode:"+t}else if(r<27)switch(t){case a:return 12;case u:return 11;case f:return 16;case c:return 10;default:throw"mode:"+t}else{if(!(r<41))throw"type:"+r;switch(t){case a:return 14;case u:return 13;case f:return 16;case c:return 12;default:throw"mode:"+t}}},o.getLostPoint=function(t){for(var r=t.getModuleCount(),e=0,n=0;n<r;n+=1)for(var o=0;o<r;o+=1){for(var i=0,a=t.isDark(n,o),u=-1;u<=1;u+=1)if(!(n+u<0||r<=n+u))for(var f=-1;f<=1;f+=1)o+f<0||r<=o+f||0==u&&0==f||a==t.isDark(n+u,o+f)&&(i+=1);i>5&&(e+=3+i-5)}for(n=0;n<r-1;n+=1)for(o=0;o<r-1;o+=1){var c=0;t.isDark(n,o)&&(c+=1),t.isDark(n+1,o)&&(c+=1),t.isDark(n,o+1)&&(c+=1),t.isDark(n+1,o+1)&&(c+=1),0!=c&&4!=c||(e+=3)}for(n=0;n<r;n+=1)for(o=0;o<r-6;o+=1)t.isDark(n,o)&&!t.isDark(n,o+1)&&t.isDark(n,o+2)&&t.isDark(n,o+3)&&t.isDark(n,o+4)&&!t.isDark(n,o+5)&&t.isDark(n,o+6)&&(e+=40);for(o=0;o<r;o+=1)for(n=0;n<r-6;n+=1)t.isDark(n,o)&&!t.isDark(n+1,o)&&t.isDark(n+2,o)&&t.isDark(n+3,o)&&t.isDark(n+4,o)&&!t.isDark(n+5,o)&&t.isDark(n+6,o)&&(e+=40);var g=0;for(o=0;o<r;o+=1)for(n=0;n<r;n+=1)t.isDark(n,o)&&(g+=1);return e+=Math.abs(100*g/r/r-50)/5*10},o),C=function(){for(var t=new Array(256),r=new Array(256),e=0;e<8;e+=1)t[e]=1<<e;for(e=8;e<256;e+=1)t[e]=t[e-4]^t[e-5]^t[e-6]^t[e-8];for(e=0;e<255;e+=1)r[t[e]]=e;var n={glog:function(t){if(t<1)throw"glog("+t+")";return r[t]},gexp:function(r){for(;r<0;)r+=255;for(;r>=256;)r-=255;return t[r]}};return n}();function k(t,r){if(void 0===t.length)throw t.length+"/"+r;var e=function(){for(var e=0;e<t.length&&0==t[e];)e+=1;for(var n=new Array(t.length-e+r),o=0;o<t.length-e;o+=1)n[o]=t[o+e];return n}(),n={getAt:function(t){return e[t]},getLength:function(){return e.length},multiply:function(t){for(var r=new Array(n.getLength()+t.getLength()-1),e=0;e<n.getLength();e+=1)for(var o=0;o<t.getLength();o+=1)r[e+o]^=C.gexp(C.glog(n.getAt(e))+C.glog(t.getAt(o)));return k(r,0)},mod:function(t){if(n.getLength()-t.getLength()<0)return n;for(var r=C.glog(n.getAt(0))-C.glog(t.getAt(0)),e=new Array(n.getLength()),o=0;o<n.getLength();o+=1)e[o]=n.getAt(o);for(o=0;o<t.getLength();o+=1)e[o]^=C.gexp(C.glog(t.getAt(o))+r);return k(e,0).mod(t)}};return n}var A=function(){var t=[[1,26,19],[1,26,16],[1,26,13],[1,26,9],[1,44,34],[1,44,28],[1,44,22],[1,44,16],[1,70,55],[1,70,44],[2,35,17],[2,35,13],[1,100,80],[2,50,32],[2,50,24],[4,25,9],[1,134,108],[2,67,43],[2,33,15,2,34,16],[2,33,11,2,34,12],[2,86,68],[4,43,27],[4,43,19],[4,43,15],[2,98,78],[4,49,31],[2,32,14,4,33,15],[4,39,13,1,40,14],[2,121,97],[2,60,38,2,61,39],[4,40,18,2,41,19],[4,40,14,2,41,15],[2,146,116],[3,58,36,2,59,37],[4,36,16,4,37,17],[4,36,12,4,37,13],[2,86,68,2,87,69],[4,69,43,1,70,44],[6,43,19,2,44,20],[6,43,15,2,44,16],[4,101,81],[1,80,50,4,81,51],[4,50,22,4,51,23],[3,36,12,8,37,13],[2,116,92,2,117,93],[6,58,36,2,59,37],[4,46,20,6,47,21],[7,42,14,4,43,15],[4,133,107],[8,59,37,1,60,38],[8,44,20,4,45,21],[12,33,11,4,34,12],[3,145,115,1,146,116],[4,64,40,5,65,41],[11,36,16,5,37,17],[11,36,12,5,37,13],[5,109,87,1,110,88],[5,65,41,5,66,42],[5,54,24,7,55,25],[11,36,12,7,37,13],[5,122,98,1,123,99],[7,73,45,3,74,46],[15,43,19,2,44,20],[3,45,15,13,46,16],[1,135,107,5,136,108],[10,74,46,1,75,47],[1,50,22,15,51,23],[2,42,14,17,43,15],[5,150,120,1,151,121],[9,69,43,4,70,44],[17,50,22,1,51,23],[2,42,14,19,43,15],[3,141,113,4,142,114],[3,70,44,11,71,45],[17,47,21,4,48,22],[9,39,13,16,40,14],[3,135,107,5,136,108],[3,67,41,13,68,42],[15,54,24,5,55,25],[15,43,15,10,44,16],[4,144,116,4,145,117],[17,68,42],[17,50,22,6,51,23],[19,46,16,6,47,17],[2,139,111,7,140,112],[17,74,46],[7,54,24,16,55,25],[34,37,13],[4,151,121,5,152,122],[4,75,47,14,76,48],[11,54,24,14,55,25],[16,45,15,14,46,16],[6,147,117,4,148,118],[6,73,45,14,74,46],[11,54,24,16,55,25],[30,46,16,2,47,17],[8,132,106,4,133,107],[8,75,47,13,76,48],[7,54,24,22,55,25],[22,45,15,13,46,16],[10,142,114,2,143,115],[19,74,46,4,75,47],[28,50,22,6,51,23],[33,46,16,4,47,17],[8,152,122,4,153,123],[22,73,45,3,74,46],[8,53,23,26,54,24],[12,45,15,28,46,16],[3,147,117,10,148,118],[3,73,45,23,74,46],[4,54,24,31,55,25],[11,45,15,31,46,16],[7,146,116,7,147,117],[21,73,45,7,74,46],[1,53,23,37,54,24],[19,45,15,26,46,16],[5,145,115,10,146,116],[19,75,47,10,76,48],[15,54,24,25,55,25],[23,45,15,25,46,16],[13,145,115,3,146,116],[2,74,46,29,75,47],[42,54,24,1,55,25],[23,45,15,28,46,16],[17,145,115],[10,74,46,23,75,47],[10,54,24,35,55,25],[19,45,15,35,46,16],[17,145,115,1,146,116],[14,74,46,21,75,47],[29,54,24,19,55,25],[11,45,15,46,46,16],[13,145,115,6,146,116],[14,74,46,23,75,47],[44,54,24,7,55,25],[59,46,16,1,47,17],[12,151,121,7,152,122],[12,75,47,26,76,48],[39,54,24,14,55,25],[22,45,15,41,46,16],[6,151,121,14,152,122],[6,75,47,34,76,48],[46,54,24,10,55,25],[2,45,15,64,46,16],[17,152,122,4,153,123],[29,74,46,14,75,47],[49,54,24,10,55,25],[24,45,15,46,46,16],[4,152,122,18,153,123],[13,74,46,32,75,47],[48,54,24,14,55,25],[42,45,15,32,46,16],[20,147,117,4,148,118],[40,75,47,7,76,48],[43,54,24,22,55,25],[10,45,15,67,46,16],[19,148,118,6,149,119],[18,75,47,31,76,48],[34,54,24,34,55,25],[20,45,15,61,46,16]],r=function(t,r){var e={};return e.totalCount=t,e.dataCount=r,e},e={};return e.getRSBlocks=function(e,n){var o=function(r,e){switch(e){case g.L:return t[4*(r-1)+0];case g.M:return t[4*(r-1)+1];case g.Q:return t[4*(r-1)+2];case g.H:return t[4*(r-1)+3];default:return}}(e,n);if(void 0===o)throw"bad rs block @ typeNumber:"+e+"/errorCorrectionLevel:"+n;for(var i=o.length/3,a=[],u=0;u<i;u+=1)for(var f=o[3*u+0],c=o[3*u+1],l=o[3*u+2],h=0;h<f;h+=1)a.push(r(c,l));return a},e}(),b=function(){var t=[],r=0,e={getBuffer:function(){return t},getAt:function(r){var e=Math.floor(r/8);return 1==(t[e]>>>7-r%8&1)},put:function(t,r){for(var n=0;n<r;n+=1)e.putBit(1==(t>>>r-n-1&1))},getLengthInBits:function(){return r},putBit:function(e){var n=Math.floor(r/8);t.length<=n&&t.push(0),e&&(t[n]|=128>>>r%8),r+=1}};return e},M=function(t){var r=a,e=t,n={getMode:function(){return r},getLength:function(t){return e.length},write:function(t){for(var r=e,n=0;n+2<r.length;)t.put(o(r.substring(n,n+3)),10),n+=3;n<r.length&&(r.length-n==1?t.put(o(r.substring(n,n+1)),4):r.length-n==2&&t.put(o(r.substring(n,n+2)),7))}},o=function(t){for(var r=0,e=0;e<t.length;e+=1)r=10*r+i(t.charAt(e));return r},i=function(t){if("0"<=t&&t<="9")return t.charCodeAt(0)-"0".charCodeAt(0);throw"illegal char :"+t};return n},x=function(t){var r=u,e=t,n={getMode:function(){return r},getLength:function(t){return e.length},write:function(t){for(var r=e,n=0;n+1<r.length;)t.put(45*o(r.charAt(n))+o(r.charAt(n+1)),11),n+=2;n<r.length&&t.put(o(r.charAt(n)),6)}},o=function(t){if("0"<=t&&t<="9")return t.charCodeAt(0)-"0".charCodeAt(0);if("A"<=t&&t<="Z")return t.charCodeAt(0)-"A".charCodeAt(0)+10;switch(t){case" ":return 36;case"$":return 37;case"%":return 38;case"*":return 39;case"+":return 40;case"-":return 41;case".":return 42;case"/":return 43;case":":return 44;default:throw"illegal char :"+t}};return n},m=function(r){var e=f,n=t.stringToBytes(r),o={getMode:function(){return e},getLength:function(t){return n.length},write:function(t){for(var r=0;r<n.length;r+=1)t.put(n[r],8)}};return o},L=function(r){var e=c,n=t.stringToBytesFuncs.SJIS;if(!n)throw"sjis not supported.";!function(){var t=n("友");if(2!=t.length||38726!=(t[0]<<8|t[1]))throw"sjis not supported."}();var o=n(r),i={getMode:function(){return e},getLength:function(t){return~~(o.length/2)},write:function(t){for(var r=o,e=0;e+1<r.length;){var n=(255&r[e])<<8|255&r[e+1];if(33088<=n&&n<=40956)n-=33088;else{if(!(57408<=n&&n<=60351))throw"illegal char at "+(e+1)+"/"+n;n-=49472}n=192*(n>>>8&255)+(255&n),t.put(n,13),e+=2}if(e<r.length)throw"illegal char at "+(e+1)}};return i},D=function(){var t=[],r={writeByte:function(r){t.push(255&r)},writeShort:function(t){r.writeByte(t),r.writeByte(t>>>8)},writeBytes:function(t,e,n){e=e||0,n=n||t.length;for(var o=0;o<n;o+=1)r.writeByte(t[o+e])},writeString:function(t){for(var e=0;e<t.length;e+=1)r.writeByte(t.charCodeAt(e))},toByteArray:function(){return t},toString:function(){var r="";r+="[";for(var e=0;e<t.length;e+=1)e>0&&(r+=","),r+=t[e];return r+="]"}};return r},S=function(t){var r=t,e=0,n=0,o=0,i={read:function(){for(;o<8;){if(e>=r.length){if(0==o)return-1;throw"unexpected end of file./"+o}var t=r.charAt(e);if(e+=1,"="==t)return o=0,-1;t.match(/^\s$/)||(n=n<<6|a(t.charCodeAt(0)),o+=6)}var i=n>>>o-8&255;return o-=8,i}},a=function(t){if(65<=t&&t<=90)return t-65;if(97<=t&&t<=122)return t-97+26;if(48<=t&&t<=57)return t-48+52;if(43==t)return 62;if(47==t)return 63;throw"c:"+t};return i},I=function(t,r,e){for(var n=function(t,r){var e=t,n=r,o=new Array(t*r),i={setPixel:function(t,r,n){o[r*e+t]=n},write:function(t){t.writeString("GIF87a"),t.writeShort(e),t.writeShort(n),t.writeByte(128),t.writeByte(0),t.writeByte(0),t.writeByte(0),t.writeByte(0),t.writeByte(0),t.writeByte(255),t.writeByte(255),t.writeByte(255),t.writeString(","),t.writeShort(0),t.writeShort(0),t.writeShort(e),t.writeShort(n),t.writeByte(0);var r=a(2);t.writeByte(2);for(var o=0;r.length-o>255;)t.writeByte(255),t.writeBytes(r,o,255),o+=255;t.writeByte(r.length-o),t.writeBytes(r,o,r.length-o),t.writeByte(0),t.writeString(";")}},a=function(t){for(var r=1<<t,e=1+(1<<t),n=t+1,i=u(),a=0;a<r;a+=1)i.add(String.fromCharCode(a));i.add(String.fromCharCode(r)),i.add(String.fromCharCode(e));var f,c,g,l=D(),h=(f=l,c=0,g=0,{write:function(t,r){if(t>>>r!=0)throw"length over";for(;c+r>=8;)f.writeByte(255&(t<<c|g)),r-=8-c,t>>>=8-c,g=0,c=0;g|=t<<c,c+=r},flush:function(){c>0&&f.writeByte(g)}});h.write(r,n);var s=0,v=String.fromCharCode(o[s]);for(s+=1;s<o.length;){var d=String.fromCharCode(o[s]);s+=1,i.contains(v+d)?v+=d:(h.write(i.indexOf(v),n),i.size()<4095&&(i.size()==1<<n&&(n+=1),i.add(v+d)),v=d)}return h.write(i.indexOf(v),n),h.write(e,n),h.flush(),l.toByteArray()},u=function(){var t={},r=0,e={add:function(n){if(e.contains(n))throw"dup key:"+n;t[n]=r,r+=1},size:function(){return r},indexOf:function(r){return t[r]},contains:function(r){return void 0!==t[r]}};return e};return i}(t,r),o=0;o<r;o+=1)for(var i=0;i<t;i+=1)n.setPixel(i,o,e(i,o));var a=D();n.write(a);for(var u=function(){var t=0,r=0,e=0,n="",o={},i=function(t){n+=String.fromCharCode(a(63&t))},a=function(t){if(t<0);else{if(t<26)return 65+t;if(t<52)return t-26+97;if(t<62)return t-52+48;if(62==t)return 43;if(63==t)return 47}throw"n:"+t};return o.writeByte=function(n){for(t=t<<8|255&n,r+=8,e+=1;r>=6;)i(t>>>r-6),r-=6},o.flush=function(){if(r>0&&(i(t<<6-r),t=0,r=0),e%3!=0)for(var o=3-e%3,a=0;a<o;a+=1)n+="="},o.toString=function(){return n},o}(),f=a.toByteArray(),c=0;c<f.length;c+=1)u.writeByte(f[c]);return u.flush(),"data:image/gif;base64,"+u};return t}();qrcode.stringToBytesFuncs["UTF-8"]=function(t){return function(t){for(var r=[],e=0;e<t.length;e++){var n=t.charCodeAt(e);n<128?r.push(n):n<2048?r.push(192|n>>6,128|63&n):n<55296||n>=57344?r.push(224|n>>12,128|n>>6&63,128|63&n):(e++,n=65536+((1023&n)<<10|1023&t.charCodeAt(e)),r.push(240|n>>18,128|n>>12&63,128|n>>6&63,128|63&n))}return r}(t)},function(t){"function"==typeof define&&define.amd?define([],t):"object"==typeof exports&&(module.exports=t())}(function(){return qrcode});
@@ -541,7 +544,7 @@ function esc(s){
   });
 }
 /* ================= DONNÉES ================= */
-const APP_VERSION="v26"; // garder aligné avec CACHE_NAME de sw.js (testé)
+const APP_VERSION="v27"; // garder aligné avec CACHE_NAME de sw.js (testé)
 const NOTES = {
   do4 :{n:"do", clef:"sol", p:-2, midi:60, mn:"Le do du milieu est transpercé par sa petite ligne, rien qu'à lui."},
   re4 :{n:"ré", clef:"sol", p:-1, midi:62, mn:"Collé juste sous la portée."},
@@ -669,6 +672,7 @@ const MUSIC_MIRRORS=[
 ];
 const MAX_PIECE_ATTACHMENT_BYTES=500*1024;
 const MAX_TOTAL_ATTACHMENT_BYTES=800*1024;
+const MAX_IMPORT_TEXT_BYTES=4*1024*1024;
 const SAFE_ATTACHMENT_TYPES=["application/pdf","image/png","image/jpeg","image/gif","image/webp","image/bmp","image/heic","image/heif"];
 /* ===== Altérations & clavier (pures, sans DOM — testées) ===== */
 // Noms français par classe de hauteur. Touches noires = deux orthographes (enharmonie).
@@ -778,6 +782,18 @@ function todayStr(){return dateKey(new Date());}
 function parseDayKey(k){const p=String(k).split("-").map(Number);return new Date(p[0],p[1]-1,p[2]);}
 function addDays(d,n){const x=new Date(d.getFullYear(),d.getMonth(),d.getDate());x.setDate(x.getDate()+n);return x;}
 let DB=null;
+const DANGEROUS_MAP_KEYS=["__proto__","prototype","constructor"];
+function safeMap(){ return Object.create(null); }
+function hasOwn(obj,key){ return !!obj&&Object.prototype.hasOwnProperty.call(obj,key); }
+function isRecord(value){ return !!value&&typeof value==="object"&&!Array.isArray(value); }
+function isSafeMapKey(value){
+  const key=String(value==null?"":value);
+  return !!key&&DANGEROUS_MAP_KEYS.indexOf(key.toLowerCase())<0;
+}
+function isSafeId(value){
+  const key=String(value==null?"":value);
+  return isSafeMapKey(key)&&/^[a-zA-Z0-9_-]{1,48}$/.test(key);
+}
 function freshStar(){ return {level:0,started:false,due:0,firstAt:0}; }
 function freshPalierState(){
   const o={bestRafale:0, star:freshStar()};
@@ -829,11 +845,11 @@ const BONUS_EGG_DEFS=[
   {id:"etoile-muette",xp:1,title:"Étoile muette"}
 ];
 function normalizeDailyProgress(value){
-  const out={};
+  const out=safeMap();
   if(!value||typeof value!=="object"||Array.isArray(value)) return out;
   Object.keys(value).filter(function(k){return /^\d{4}-\d{2}-\d{2}$/.test(k);}).slice(-400).forEach(function(k){
     const src=value[k]; if(!src||typeof src!=="object"||Array.isArray(src)) return;
-    const day={}; DAILY_BLOCK_IDS.forEach(function(id){
+    const day=safeMap(); DAILY_BLOCK_IDS.forEach(function(id){
       if(src[id]===true) day[id]=true;
       else if(typeof src[id]==="string"&&src[id].length<=80) day[id]=cleanText(src[id],80,"");
     });
@@ -841,9 +857,28 @@ function normalizeDailyProgress(value){
   });
   return out;
 }
+function validationDraftKey(pid,mode){
+  return String(mode||"")+":"+String(pid||"");
+}
+function normalizeValidationDrafts(value){
+  const out=safeMap();
+  if(!isRecord(value)) return out;
+  Object.keys(value).slice(0,90).forEach(function(key){
+    const parts=key.split(":"), td=parts.length===2?tierDef(parts[0]):null;
+    if(!td||td.future||!PALIERS.find(function(p){return p.id===parts[1];})) return;
+    const rows=Array.isArray(value[key])?value[key]:[];
+    const clean=rows.map(function(row){
+      if(!isRecord(row)) return null;
+      const ids=uniq((Array.isArray(row.ids)?row.ids:[]).filter(function(id){return !!NOTES[id];})).slice(0,8);
+      return ids.length?{ok:row.ok===true||row.ok===1,ids:ids}:null;
+    }).filter(Boolean).slice(-9);
+    if(clean.length) out[key]=clean;
+  });
+  return out;
+}
 function normalizeEasterEggs(value){
   value=(value&&typeof value==="object"&&!Array.isArray(value))?value:{};
-  const allowed=BONUS_EGG_DEFS.map(function(x){return x.id;}), byId={};
+  const allowed=BONUS_EGG_DEFS.map(function(x){return x.id;}), byId=safeMap();
   if(value.byId&&typeof value.byId==="object"&&!Array.isArray(value.byId)) allowed.forEach(function(id){
     const n=clampInt(value.byId[id],0,9999,0); if(n) byId[id]=n;
   });
@@ -852,7 +887,8 @@ function normalizeEasterEggs(value){
 }
 function cleanId(v,prefix){
   v=String(v==null?"":v).replace(/[^a-zA-Z0-9_-]/g,"").slice(0,48);
-  return v || (prefix+Date.now()+Math.floor(Math.random()*1000));
+  if(!isSafeMapKey(v)) v="";
+  return v || ((prefix||"id")+Date.now()+Math.floor(Math.random()*1000));
 }
 function normalizeQuestion(q){
   if(!q||typeof q!=="object") return null;
@@ -863,17 +899,27 @@ function normalizeQuestion(q){
   if(!text||choix.length<2||rep<0) return null;
   return {q:text,choix:choix,rep:rep};
 }
+function decodedBase64Bytes(dataUrl){
+  const comma=String(dataUrl||"").indexOf(",");
+  if(comma<0) return -1;
+  const encoded=String(dataUrl).slice(comma+1).replace(/\s+/g,"");
+  if(!encoded||encoded.length%4===1||!/^[A-Za-z0-9+/]*={0,2}$/.test(encoded)) return -1;
+  const padding=encoded.endsWith("==")?2:(encoded.endsWith("=")?1:0);
+  return Math.floor(encoded.length*3/4)-padding;
+}
 function normalizeAttachment(a){
   if(!a||typeof a!=="object") return null;
   const name=cleanText(a.name,120,"partition");
-  const size=clampInt(a.size,0,MAX_PIECE_ATTACHMENT_BYTES,0);
   const dataUrl=String(a.dataUrl||"");
-  if(!size || size>MAX_PIECE_ATTACHMENT_BYTES) return null;
   const match=dataUrl.match(/^data:([^;,]+);base64,/i);
   const type=match?String(match[1]).toLowerCase():"";
   if(SAFE_ATTACHMENT_TYPES.indexOf(type)<0) return null;
   if(a.type && SAFE_ATTACHMENT_TYPES.indexOf(String(a.type).toLowerCase())<0) return null;
   if(dataUrl.length>MAX_PIECE_ATTACHMENT_BYTES*1.45) return null;
+  const size=decodedBase64Bytes(dataUrl);
+  if(size<=0||size>MAX_PIECE_ATTACHMENT_BYTES) return null;
+  const declared=Number(a.size);
+  if(Number.isFinite(declared)&&declared>0&&Math.round(declared)!==size) return null;
   return {name:name,type:type,size:size,dataUrl:dataUrl};
 }
 function validPalierId(id,def){
@@ -961,7 +1007,7 @@ function normalizeDay(d){
   };
 }
 function normalizeConfusions(value){
-  const out={};
+  const out=safeMap();
   if(!value||typeof value!=="object"||Array.isArray(value)) return out;
   Object.keys(value).slice(0,24).forEach(function(k){
     const key=cleanText(k,32,"");
@@ -1009,7 +1055,7 @@ function normalizeRepairItem(item){
 }
 function normalizeRepairQueue(value){
   if(!Array.isArray(value)) return [];
-  const seen={};
+  const seen=safeMap();
   return value.map(normalizeRepairItem).filter(function(item){
     if(!item||seen[item.sourceId]) return false;
     seen[item.sourceId]=1; return true;
@@ -1035,6 +1081,51 @@ function normalizeSegmentState(s){
     flagged:!!s.flagged,    // « à retravailler » — décision du joueur, prioritaire
     feel:clampInt(s.feel,0,3,0) // difficulté ressentie : 1 facile · 2 juste · 3 difficile
   };
+}
+const MAX_SERIES_PER_TIER=80;
+function normalizeSeriesRecord(value){
+  if(!isRecord(value)) return null;
+  const out={
+    ts:clampInt(value.ts,0,Number.MAX_SAFE_INTEGER,0),
+    e:clampInt(value.e,0,10,0)
+  };
+  if(Array.isArray(value.ids)) out.ids=uniq(value.ids.filter(function(id){return !!NOTES[id];})).slice(0,32);
+  if(isRecord(value.cold)&&NOTES[value.cold.id]) out.cold={id:value.cold.id,ok:value.cold.ok===true||value.cold.ok===1};
+  if(value.daily===true) out.daily=true;
+  return out;
+}
+function normalizeTierProgress(value){
+  value=isRecord(value)?value:{};
+  const series=(Array.isArray(value.series)?value.series:[]).map(normalizeSeriesRecord).filter(Boolean).slice(-MAX_SERIES_PER_TIER);
+  return {series:series,ok:value.ok===true||value.ok===1};
+}
+function normalizeStar(value){
+  value=isRecord(value)?value:{};
+  const level=clampInt(value.level,0,5,0);
+  return {
+    level:level,
+    started:value.started===true||value.started===1||level>0,
+    due:level>=5?0:clampInt(value.due,0,Number.MAX_SAFE_INTEGER,0),
+    firstAt:clampInt(value.firstAt,0,Number.MAX_SAFE_INTEGER,0)
+  };
+}
+function normalizeSeen(value){
+  const out=safeMap();
+  if(!isRecord(value)) return out;
+  PALIERS.forEach(function(p){ if(value[p.id]===true||value[p.id]===1) out[p.id]=true; });
+  return out;
+}
+function normalizeKbdStats(value){
+  value=isRecord(value)?value:{};
+  const total=clampInt(value.total,0,999999,0), out={total:total,ok:Math.min(total,clampInt(value.ok,0,999999,0)),byPc:safeMap()};
+  const source=isRecord(value.byPc)?value.byPc:{};
+  for(let pc=0;pc<12;pc++){
+    if(!hasOwn(source,String(pc))) continue;
+    const stat=isRecord(source[pc])?source[pc]:{};
+    const v=clampInt(stat.v,0,999999,0), e=Math.min(v,clampInt(stat.e,0,999999,0));
+    if(v||e) out.byPc[pc]={v:v,e:e};
+  }
+  return out;
 }
 /* Ambition posée par le joueur sur une pièce. */
 function normalizeGoal(g){
@@ -1081,7 +1172,7 @@ function stateScore(o){
       pieceRuns+=clampInt((o.pieceProgress[pid][sid]||{}).attempts,0,999,0);
     });
   });
-  return (o.xp||0)+active*100+validations*50+series*10+pieceRuns*8+(o.pieces&&o.pieces.length?o.pieces.length:0);
+  return clampInt(o.xp,0,999999999,0)+active*100+validations*50+series*10+pieceRuns*8+(o.pieces&&o.pieces.length?o.pieces.length:0);
 }
 function shouldAdopt(candidate,current){
   if(!candidate) return false;
@@ -1097,11 +1188,11 @@ function shouldAdopt(candidate,current){
 }
 function backupToDb(o){
   if(!o||typeof o!=="object"||!o.progress) return o;
-  const db=Object.assign({},o.progress||{},o.scores||{},o.settings||{});
+  const db=Object.assign(safeMap(),isRecord(o.progress)?o.progress:{},isRecord(o.scores)?o.scores:{},isRecord(o.settings)?o.settings:{});
   if(o.history && Array.isArray(o.history.events)) db.events=o.history.events;
   db._sezam={
     app:"SEZAM",
-    schema:10,
+    schema:11,
     userId:cleanId(o.userId,"user"),
     createdAt:clampInt(o.createdAt||o.timestamp,0,Number.MAX_SAFE_INTEGER,Date.now()),
     updatedAt:clampInt(o.timestamp,0,Number.MAX_SAFE_INTEGER,Date.now()),
@@ -1113,7 +1204,7 @@ function backupToDb(o){
 function ensureMeta(db){
   if(!db._sezam||typeof db._sezam!=="object") db._sezam={};
   db._sezam.app="SEZAM";
-  db._sezam.schema=10;
+  db._sezam.schema=11;
   if(!db._sezam.userId) db._sezam.userId=makeLocalId("user");
   db._sezam.userId=cleanId(db._sezam.userId,"user");
   const ts=stateTimestamp(db);
@@ -1125,13 +1216,15 @@ function ensureMeta(db){
 }
 function ensureStructure(db){
   db=backupToDb(db);
-  if(!db||typeof db!=="object"||Array.isArray(db)) db={};
+  if(!isRecord(db)) db=safeMap();
+  else db=Object.assign(safeMap(),db);
+  DANGEROUS_MAP_KEYS.forEach(function(key){ if(hasOwn(db,key)) delete db[key]; });
   const previousVersion=clampInt(db.v,0,99,0);
   ensureMeta(db);
-  if(db.sound===undefined) db.sound=true;
-  if(db.soundLong===undefined) db.soundLong=true;
-  if(db.haptic===undefined) db.haptic=true;
-  if(!db.seen) db.seen={};
+  db.sound=typeof db.sound==="boolean"?db.sound:true;
+  db.soundLong=typeof db.soundLong==="boolean"?db.soundLong:true;
+  db.haptic=typeof db.haptic==="boolean"?db.haptic:true;
+  db.seen=normalizeSeen(db.seen);
   if(!Array.isArray(db.pieces)) db.pieces=[];
   db.pieces=db.pieces.map(normalizePiece).filter(Boolean).slice(0,80); // partitions ajoutées par le joueur, normalisées après import douteux
   let attachmentBytes=0;
@@ -1140,90 +1233,95 @@ function ensureStructure(db){
     if(attachmentBytes+piece.attachment.size>MAX_TOTAL_ATTACHMENT_BYTES) delete piece.attachment;
     else attachmentBytes+=piece.attachment.size;
   });
-  if(!db.pieceProgress||typeof db.pieceProgress!=="object") db.pieceProgress={};
-  Object.keys(db.pieceProgress).forEach(function(pid){
-    const segs=db.pieceProgress[pid];
-    if(!segs||typeof segs!=="object"){ delete db.pieceProgress[pid]; return; }
-    Object.keys(segs).forEach(function(sid){ segs[sid]=normalizeSegmentState(segs[sid]); });
+  const pieceProgress=safeMap(), rawPieceProgress=isRecord(db.pieceProgress)?db.pieceProgress:{};
+  Object.keys(rawPieceProgress).filter(isSafeId).slice(0,160).forEach(function(pid){
+    const rawSegments=isRecord(rawPieceProgress[pid])?rawPieceProgress[pid]:null;
+    if(!rawSegments) return;
+    const segments=safeMap();
+    Object.keys(rawSegments).filter(isSafeId).slice(0,80).forEach(function(sid){ segments[sid]=normalizeSegmentState(rawSegments[sid]); });
+    if(Object.keys(segments).length) pieceProgress[pid]=segments;
   });
+  db.pieceProgress=pieceProgress;
   // Œuvre en cours + ambitions par pièce (le joueur pilote son projet musical)
-  db.activePiece=db.activePiece?cleanId(db.activePiece,"p"):"";
-  if(!db.pieceGoals||typeof db.pieceGoals!=="object") db.pieceGoals={};
-  Object.keys(db.pieceGoals).forEach(function(pid){
-    const g=normalizeGoal(db.pieceGoals[pid]);
-    if(g) db.pieceGoals[pid]=g; else delete db.pieceGoals[pid];
+  db.activePiece=isSafeId(db.activePiece)?String(db.activePiece):"";
+  const pieceGoals=safeMap(), rawGoals=isRecord(db.pieceGoals)?db.pieceGoals:{};
+  Object.keys(rawGoals).filter(isSafeId).slice(0,160).forEach(function(pid){
+    const g=normalizeGoal(rawGoals[pid]); if(g) pieceGoals[pid]=g;
   });
+  db.pieceGoals=pieceGoals;
   if(!db.sel) db.sel="P1";
-  if(!db.xp) db.xp=0;
-  if(!db.noteStats||typeof db.noteStats!=="object"||Array.isArray(db.noteStats)) db.noteStats={};
-  Object.keys(db.noteStats).forEach(function(id){
-    if(!NOTES[id]) delete db.noteStats[id]; else db.noteStats[id]=normalizeNoteStat(db.noteStats[id]);
-  });
+  db.xp=clampInt(db.xp,0,999999999,0);
+  const noteStats=safeMap(), rawNoteStats=isRecord(db.noteStats)?db.noteStats:{};
+  Object.keys(rawNoteStats).forEach(function(id){ if(NOTES[id]) noteStats[id]=normalizeNoteStat(rawNoteStats[id]); });
+  db.noteStats=noteStats;
   db.questionClock=clampInt(db.questionClock,0,999999998,0);
   db.repairQueue=normalizeRepairQueue(db.repairQueue);
-  if(!db.days) db.days={};
-  Object.keys(db.days).forEach(function(k){
-    if(!/^\d{4}-\d{2}-\d{2}$/.test(k)) delete db.days[k];
-    else db.days[k]=normalizeDay(db.days[k]);
-  });
+  const days=safeMap(), rawDays=isRecord(db.days)?db.days:{};
+  Object.keys(rawDays).filter(function(k){return /^\d{4}-\d{2}-\d{2}$/.test(k);}).slice(-4000).forEach(function(k){ days[k]=normalizeDay(rawDays[k]); });
+  db.days=days;
   db.events=Array.isArray(db.events)?db.events.slice(-500):[]; // journal d'événements local, toujours borné et normalisé
-  if(!db.kbdStats) db.kbdStats={total:0,ok:0,byPc:{}};
-  db.kbdStats.total=clampInt(db.kbdStats.total,0,999999,0);
-  db.kbdStats.ok=clampInt(db.kbdStats.ok,0,999999,0);
-  if(!db.kbdStats.byPc||typeof db.kbdStats.byPc!=="object") db.kbdStats.byPc={};
+  db.kbdStats=normalizeKbdStats(db.kbdStats);
   db.profile=normalizeProfile(db.profile);
   db.dailyProgress=normalizeDailyProgress(db.dailyProgress);
+  db.validationDrafts=normalizeValidationDrafts(db.validationDrafts);
   db.easterEggs=normalizeEasterEggs(db.easterEggs);
   if(!THEME_MODES.find(function(x){return x.id===db.themeMode;})) db.themeMode="classique";
   if(previousVersion<7 && db.themeMode==="partition") db.themeMode="classique";
-  if(!db.paliers) db.paliers={};
+  let rawPaliers=isRecord(db.paliers)?db.paliers:{};
+  rawPaliers=Object.assign(safeMap(),rawPaliers);
   // anciens noms de paliers : P8 (boss deux clés v3) devient B5
-  if(db.paliers.P8 && !db.paliers.B5 && db.v && db.v<4){ db.paliers.B5=db.paliers.P8; delete db.paliers.P8; }
+  if(rawPaliers.P8 && !rawPaliers.B5 && previousVersion>0 && previousVersion<4){ rawPaliers.B5=rawPaliers.P8; delete rawPaliers.P8; }
+  const paliers=safeMap();
   PALIERS.forEach(function(p){
-    const old=db.paliers[p.id];
-    if(!old){ db.paliers[p.id]=freshPalierState(); return; }
-    let base=old;
-    if(old.series!==undefined && old.bronze===undefined){ // v1
+    const old=isRecord(rawPaliers[p.id])?rawPaliers[p.id]:null;
+    let base=old||{};
+    if(old&&old.series!==undefined && old.bronze===undefined){ // v1
       base=freshPalierState();
       base.zen.series=old.series||[]; base.zen.ok=!!old.validated;
       base.bestRafale=old.bestRafale||0;
-    } else if(old.bronze!==undefined && old.debutant===undefined && old.zen===undefined){ // v2
+    } else if(old&&old.bronze!==undefined && old.debutant===undefined && old.zen===undefined){ // v2
       base=freshPalierState();
       base.zen=old.bronze||{series:[],ok:false};
       base.bronze=old.argent||{series:[],ok:false};
       base.argent=old.or||{series:[],ok:false};
       base.bestRafale=old.bestRafale||0;
-    } else if(old.debutant!==undefined){ // v3
+    } else if(old&&old.debutant!==undefined){ // v3
       base=freshPalierState();
       base.zen=old.debutant; base.bronze=old.bronze||base.bronze;
       base.argent=old.argent||base.argent; base.or=old.or||base.or;
       base.rhodium=old.rhodium||base.rhodium;
       base.bestRafale=old.bestRafale||0;
-    } else {
-      TIER_IDS.forEach(function(t){ if(!base[t]) base[t]={series:[],ok:false}; });
-      if(base.bestRafale===undefined) base.bestRafale=0;
     }
-    db.paliers[p.id]=base;
+    const normalized=freshPalierState();
+    normalized.bestRafale=clampInt(base.bestRafale,0,999999,0);
+    normalized.star=normalizeStar(base.star);
+    TIER_IDS.forEach(function(t){ normalized[t]=normalizeTierProgress(base[t]); });
+    paliers[p.id]=normalized;
   });
-  PALIERS.forEach(function(p){ const st=db.paliers[p.id]; if(st && !st.star) st.star=freshStar(); }); // étoiles
+  db.paliers=paliers;
   const modeMap={hors:"libre",debutant:"zen",bronze:"bronze",argent:"argent",or:"or",rhodium:"rhodium"};
   if(db.v && db.v<4 && modeMap[db.mode]) db.mode=modeMap[db.mode];
   if(!db.mode||(db.mode!=="libre"&&TIER_IDS.indexOf(db.mode)<0)) db.mode="zen";
   if(db.mode!=="libre" && tierDef(db.mode) && tierDef(db.mode).future) db.mode="zen";
   if(!PALIERS.find(function(p){return p.id===db.sel;})) db.sel="P1";
-  db.v=9;
+  db.v=10;
   return db;
 }
 const LS_KEY="solfegeProto1", LS_MIRROR="solfegeProto1_mirror", LS_PREIMPORT="solfegeProto1_preimport", LS_CHECKPOINT="solfegeProto1_checkpoint";
 let saveFailed=false;
 function readKey(k){ try{ const s=localStorage.getItem(k); return s?JSON.parse(s):null; }catch(e){ return null; } }
+function recognizableStoredState(value){ return isRecord(value)&&isRecord(value.paliers); }
 function bestLocalState(){
-  return [readKey(LS_KEY),readKey(LS_MIRROR),readKey(LS_CHECKPOINT)].reduce(function(best,cur){
-    return shouldAdopt(cur,best)?cur:best;
-  },null);
+  const primary=readKey(LS_KEY);
+  if(recognizableStoredState(primary)) return primary;
+  const mirror=readKey(LS_MIRROR);
+  if(recognizableStoredState(mirror)) return mirror;
+  const checkpoint=readKey(LS_CHECKPOINT);
+  return recognizableStoredState(checkpoint)?checkpoint:null;
 }
 /* ---- Niveau 2 IndexedDB : copie persistante offline quand localStorage est purgé (iOS/ménage navigateur) ---- */
 const IDB_NAME="soladoBackup", IDB_STORE="kv";
+let idbReady=false, idbQueuedSave=null, hadRecognizableLocal=false;
 function idbOpen(cb){
   try{
     if(typeof indexedDB==="undefined"){ cb(null); return; }
@@ -1234,6 +1332,7 @@ function idbOpen(cb){
   }catch(e){ cb(null); }
 }
 function idbSave(str){
+  if(!idbReady){idbQueuedSave=str;return;}
   idbOpen(function(db){
     if(!db) return;
     try{ db.transaction(IDB_STORE,"readwrite").objectStore(IDB_STORE).put(str,"save"); }catch(e){}
@@ -1249,22 +1348,25 @@ function idbLoad(cb){
     }catch(e){ cb(null); }
   });
 }
-// Si IndexedDB contient une progression meilleure ou plus récente, on restaure sans écraser les anciens filets.
-function idbRescue(){
+// IndexedDB est lu avant sa première écriture. Une copie locale valide reste
+// prioritaire : une suppression volontaire ne doit jamais être « réparée ».
+function idbRescue(done){
   idbLoad(function(str){
-    if(!str) return;
-    let obj=null; try{ obj=JSON.parse(str); }catch(e){ return; }
-    obj=backupToDb(obj);
-    if(!obj||typeof obj!=="object"||!obj.paliers) return;
-    const cand=ensureStructure(obj);
-    if(!shouldAdopt(cand,DB)) return;
-    DB=cand; applyTheme(); save({touch:false,cloud:false}); renderHome();
-    logEvent("idb_rescue",{xp:DB.xp});
-    $("cardBox").innerHTML='<h3>Sauvegarde de secours</h3><h2>Progression retrouvée</h2>'+
-      '<p>SEZAM a restauré la meilleure copie locale disponible depuis le stockage persistant ('+(DB.xp||0)+' XP).</p>'+
-      '<p class="src">Pense aussi à exporter de temps en temps : Stats & sauvegarde → Copier ou Télécharger.</p>'+
-      '<button onclick="document.getElementById(\'overlay\').classList.remove(\'on\')">Continuer</button>';
-    $("overlay").classList.add("on");
+    let restored=false, obj=null;
+    if(!hadRecognizableLocal&&str){
+      try{obj=JSON.parse(str);}catch(e){obj=null;}
+      obj=backupToDb(obj);
+      if(recognizableStoredState(obj)){DB=ensureStructure(obj);restored=true;logEvent("idb_rescue",{xp:DB.xp});}
+    }
+    idbReady=true; idbQueuedSave=null; applyTheme(); save({touch:false,cloud:false});
+    if(done) done(restored);
+    if(restored){
+      $("cardBox").innerHTML='<h3>Sauvegarde de secours</h3><h2>Progression retrouvée</h2>'+
+        '<p>SEZAM a restauré la copie persistante de cet appareil ('+(DB.xp||0)+' XP).</p>'+
+        '<p class="src">Pense aussi à exporter de temps en temps : Stats & sauvegarde → Copier ou Télécharger.</p>'+
+        '<button onclick="document.getElementById(\'overlay\').classList.remove(\'on\')">Continuer</button>';
+      $("overlay").classList.add("on");
+    }
   });
 }
 function logEvent(type,data){
@@ -1285,6 +1387,7 @@ function saveBanner(show){
 function load(){
   if(navigator.storage && navigator.storage.persist){ try{ navigator.storage.persist(); }catch(e){} }
   const raw=bestLocalState(); // niveau 1 : localStorage instantané + miroirs anti-corruption
+  hadRecognizableLocal=recognizableStoredState(raw);
   DB=ensureStructure(raw||{});
   const dk=activeDayKeys();
   if(dk.length){
@@ -1306,13 +1409,7 @@ function save(opts){
   let ok=false;
   try{ localStorage.setItem(LS_KEY,str); ok=true; }catch(e){}
   try{ localStorage.setItem(LS_MIRROR,str); }catch(e){} // écriture redondante
-  try{
-    const prev=readKey(LS_CHECKPOINT);
-    const ps=stateScore(prev), ns=stateScore(DB);
-    // On n'écrase le checkpoint que si l'état n'est PAS strictement moins bon (jamais un vide par-dessus une progression).
-    if(!prev || ns>=ps)
-      localStorage.setItem(LS_CHECKPOINT,str);
-  }catch(e){} // troisième filet : dernier meilleur état connu
+  try{ localStorage.setItem(LS_CHECKPOINT,str); }catch(e){} // troisième copie du même état validé, y compris après suppression volontaire
   idbSave(str); // niveau 2 : IndexedDB (asynchrone, sans blocage)
   saveFailed=!ok; saveBanner(!ok);
   if(ok && opts.cloud!==false) queueCloudSync();
@@ -1377,10 +1474,13 @@ function palierPlayable(pid,tid){
   return DB.paliers[PALIERS[i-1].id][tid].ok;
 }
 function playableInMode(pid,mode){
-  return mode==="libre" ? palierPlayable(pid,"zen") : palierPlayable(pid,mode);
+  // Libre est un espace d'exploration : il ne valide aucun niveau et ne doit
+  // donc pas hériter des verrous de la progression Zen.
+  return mode==="libre" ? !!PALIERS.find(function(p){return p.id===pid;}) : palierPlayable(pid,mode);
 }
 // Brume : visibles = paliers découverts (jouables en Zen) + UNE série mystère
 function visiblePaliers(){
+  if(DB.mode==="libre") return PALIERS.map(function(p){return {p:p,mystery:false};});
   const out=[]; let mysteryShown=false;
   for(let i=0;i<PALIERS.length;i++){
     const p=PALIERS[i];
@@ -1388,6 +1488,22 @@ function visiblePaliers(){
     else { out.push({p:p,mystery:true}); mysteryShown=true; break; }
   }
   return out;
+}
+
+const PROFILE_START_PALIERS={annee1:"P3",annee2:"P6",fin_c1:"B1"};
+function profileStartPalier(level){ return PROFILE_START_PALIERS[level]||null; }
+function applyProfileStartPlacement(level){
+  const pid=profileStartPalier(level);
+  if(!pid) return null;
+  DB.mode="libre";
+  DB.sel=pid;
+  if(!DB.seen) DB.seen={};
+  DB.seen[pid]=true;
+  return pid;
+}
+function profileStartText(level,pid){
+  const label=labelFrom(PROFILE_LEVELS,level);
+  return "Point de départ "+label+" : exploration Libre placée sur "+pid+". Aucun acquis n’est validé automatiquement.";
 }
 function seriesCover(window,requiredIds){
   if(!requiredIds||!requiredIds.length) return true;
@@ -1669,9 +1785,24 @@ function chunkXs(n){
   const xs=[]; for(let i=0;i<n;i++) xs.push(x0+i*step);
   return xs;
 }
+function staffPositionLabel(p){
+  const labels={
+    "-3":"sous la portée, dans le deuxième espace supplémentaire","-2":"sur la petite ligne sous la portée","-1":"juste sous la portée",
+    "0":"sur la première ligne","1":"dans le premier interligne","2":"sur la deuxième ligne","3":"dans le deuxième interligne",
+    "4":"sur la troisième ligne","5":"dans le troisième interligne","6":"sur la quatrième ligne","7":"dans le quatrième interligne",
+    "8":"sur la cinquième ligne","9":"juste au-dessus de la portée","10":"sur la petite ligne au-dessus de la portée","11":"au-dessus de la petite ligne supplémentaire"
+  };
+  return labels[String(clampInt(p,-3,11,0))]||"sur la portée";
+}
+function staffAriaLabel(clef,notes){
+  const name="Portée en clé de "+(clef==="sol"?"sol":"fa"), list=notes||[];
+  if(!list.length) return name+".";
+  if(list.length===1) return name+". Une note à identifier "+staffPositionLabel(list[0].p)+".";
+  return name+". "+list.length+" notes à identifier, de gauche à droite : "+list.map(function(n){return staffPositionLabel(n.p);}).join(", ")+".";
+}
 function staffSVG(clef,notes,caretX){ // notes=[{p,color,x,acc,big,mark}]
   const W=STAFF.W, H=STAFF.H;
-  let s='<svg id="staffsvg" viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block">';
+  let s='<svg id="staffsvg" role="img" aria-label="'+esc(staffAriaLabel(clef,notes))+'" viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block">';
   for(let i=0;i<5;i++){const y=STAFF.top+i*2*STAFF.half;
     s+='<line x1="14" y1="'+y+'" x2="'+(W-14)+'" y2="'+y+'" stroke="#4a4337" stroke-width="1.6"/>';}
   s+=clefSVG(clef,STAFF.top,STAFF.half,{x:clef==="sol"?20:18});
@@ -1691,7 +1822,7 @@ function staffSVG(clef,notes,caretX){ // notes=[{p,color,x,acc,big,mark}]
 }
 function bonusStaffSVG(kind,solved){
   const W=STAFF.W,H=STAFF.H, color="#3d4250";
-  let s='<svg id="bonusStaffSvg" viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block">';
+  let s='<svg id="bonusStaffSvg" role="img" aria-label="Atelier bonus sur une portée en clé de fa" viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block">';
   for(let i=0;i<5;i++){
     const y=STAFF.top+i*2*STAFF.half, gold=kind==="ligne-or"&&i===2&&!solved;
     if(gold){
@@ -1718,6 +1849,20 @@ const $=function(id){return document.getElementById(id);};
 function show(id){document.querySelectorAll(".screen").forEach(function(s){s.classList.remove("active");});$(id).classList.add("active");
   try{ window.scrollTo(0,0); }catch(e){} // chaque écran démarre en haut (fiches longues sur mobile)
   if(id==="scrRes"){ renderResCode(); renderResPiece(); } // code de secours + bilan partition à chaque résultat
+}
+let overlayReturnFocus=null;
+if(typeof MutationObserver!=="undefined"){
+  const overlayObserver=new MutationObserver(function(){
+    const open=$("overlay").classList.contains("on");
+    if(open){
+      if(document.activeElement&&document.activeElement!==document.body) overlayReturnFocus=document.activeElement;
+      try{$("cardBox").focus();}catch(e){}
+    } else if(overlayReturnFocus){
+      try{if(document.documentElement.contains(overlayReturnFocus)) overlayReturnFocus.focus();}catch(e){}
+      overlayReturnFocus=null;
+    }
+  });
+  overlayObserver.observe($("overlay"),{attributes:true,attributeFilter:["class"]});
 }
 function soundLabel(){ return !DB.sound?"muet":(DB.soundLong?"♪ chant":"♪ court"); }
 function header(){ $("hXp").textContent=DB.xp; $("hStreak").textContent=streak(); $("btnSound").textContent=soundLabel(); }
@@ -1821,6 +1966,7 @@ function openMusicProfile(){
     const domains=[];
     $("profDomains").querySelectorAll('input[name="profDomain"]:checked').forEach(function(el){domains.push(el.value);});
     if(!domains.length){$("profMsg").textContent="Choisis au moins un domaine à travailler.";return;}
+    const previousLevel=p.niveauDepart;
     DB.profile=normalizeProfile(Object.assign({},DB.profile||{}, {
       displayName:$("profName").value,
       instrument:$("profInstrument").value,
@@ -1833,6 +1979,12 @@ function openMusicProfile(){
       aspiration:$("profAspiration").value,
       domains:domains
     }));
+    // Un niveau déclaré sert seulement de point d'entrée exploratoire : aucun
+    // palier n'est validé sans preuve. On ne replace le joueur que lorsqu'il
+    // vient réellement de changer ce réglage.
+    const startPid=profileStartPalier(DB.profile.niveauDepart);
+    if(startPid&&(DB.profile.niveauDepart!==previousLevel||!DB.seen||!DB.seen[startPid]))
+      applyProfileStartPlacement(DB.profile.niveauDepart);
     ensureStructure(DB); save(); $("overlay").classList.remove("on"); renderHome();
   };
 }
@@ -1896,7 +2048,7 @@ function loadWatchFeed(){
 }
 
 function uniq(arr){
-  const seen={}, out=[];
+  const seen=safeMap(), out=[];
   (arr||[]).forEach(function(x){ if(x && !seen[x]){ seen[x]=1; out.push(x); } });
   return out;
 }
@@ -2009,7 +2161,7 @@ function dailyPlan(decision){
   ];
   const minutes=splitPlanMinutes(total,specs.map(function(x){return x.weight;}));
   const done=(DB.dailyProgress&&DB.dailyProgress[todayStr()])||{};
-  const signature="v26:"+decision.palier.id+":"+(piece?piece.id:"aucune")+":"+total;
+  const signature="v27:"+decision.palier.id+":"+(piece?piece.id:"aucune")+":"+total;
   const sessionDone=done.session===true||done.session===signature;
   return {
     total:total,
@@ -2037,12 +2189,24 @@ function renderDailyPlan(plan){
     return '<div class="dailyBlock"><span class="mins">'+b.minutes+' min</span><span><b>'+esc(b.title)+'</b><small>'+esc(b.note)+'</small></span><span class="dailyAuto'+(b.done?' done':'')+'">'+(b.done?'Fait ✓':'Inclus')+'</span></div>';
   }).join("");
 }
+function coachPalier(mode){
+  const current=PALIERS.find(function(x){return x.id===DB.sel;})||PALIERS[0];
+  if(mode==="libre") return current;
+  const state=DB.paliers[current.id]&&DB.paliers[current.id][mode];
+  if(playableInMode(current.id,mode)&&state&&!state.ok) return current;
+  const start=Math.max(0,PALIERS.indexOf(current)+1);
+  for(let offset=0;offset<PALIERS.length;offset++){
+    const p=PALIERS[(start+offset)%PALIERS.length], st=DB.paliers[p.id]&&DB.paliers[p.id][mode];
+    if(playableInMode(p.id,mode)&&st&&!st.ok) return p;
+  }
+  return current;
+}
 function coachDecision(force){
-  const p=PALIERS.find(function(x){return x.id===DB.sel;})||PALIERS[0];
   const repair=repairPool();
   const prec=globalPrecision();
-  const mode=(DB.mode==="libre"||!tierUnlocked(DB.mode))?"zen":DB.mode;
-  const tier=tierDef(mode)||tierDef("zen");
+  const mode=DB.mode==="libre"?"libre":(tierUnlocked(DB.mode)?DB.mode:"zen");
+  const p=coachPalier(mode);
+  const tier=mode==="libre"?tierDef("zen"):(tierDef(mode)||tierDef("zen"));
   if(force==="repair" && repair.length)
     return {kind:"repair",label:"Réparation",n:Math.min(10,Math.max(5,repair.length)),palier:p,pool:repair,mode:"libre",groupN:1,reason:"Notes fragiles servies en premier."};
   if(force==="flash")
@@ -2072,15 +2236,15 @@ function renderCockpit(decision,plan){
   $("coachLine").textContent=decision.reason+" "+plan.cadence+".";
 }
 function renderPlayerState(decision){
-  const p=decision.palier, mode=decision.mode==="libre"?"zen":decision.mode;
+  const p=decision.palier, mode=decision.mode;
   const frag=fragileNoteIds(3), due=dueCount(), prec=globalPrecision();
-  const prog=(mode&&DB.paliers[p.id]&&DB.paliers[p.id][mode])?valProgress(p.id,mode):"Exploration libre";
+  const prog=mode==="libre"?"Exploration libre":((mode&&DB.paliers[p.id]&&DB.paliers[p.id][mode])?valProgress(p.id,mode):"Progression en construction");
   const piece=ensureActivePiece();
   let pieceTile="";
   if(piece){
     const amb=ambitionProgress(piece), next=nextSegmentForPiece(piece), counts=pieceStateCounts(piece);
     const won=counts.valide+counts.maitrise;
-    pieceTile='<div class="stateTile wide" id="tilePiece" style="cursor:pointer">'+
+    pieceTile='<div class="stateTile wide" id="tilePiece" role="button" tabindex="0" aria-label="Ouvrir l’œuvre en cours : '+esc(piece.titre)+'" style="cursor:pointer">'+
       '<h3>Ton œuvre en cours</h3><b>'+esc(piece.titre)+'</b>'+
       '<span>'+won+'/'+counts.total+' passages conquis'+(next?' · prochain : '+esc(next.title):'')+
       (amb?'<br>Ambition : '+esc(amb.def.label)+(amb.done?' ★ atteinte':' · '+amb.pct+' %'):'')+'</span></div>';
@@ -2090,7 +2254,10 @@ function renderPlayerState(decision){
     '<div class="stateTile"><h3>Mémoire</h3><b>'+due+' à revoir</b><span>'+(prec===null?'Précision en construction':prec+'% précision globale')+'</span></div>'+
     pieceTile+
     '<div class="stateTile wide"><h3>Notes fragiles</h3><b>'+(frag.length?frag.map(function(id){return NOTES[id].n.toUpperCase();}).join(" · "):"Zone stable")+'</b><span>'+(frag.length?"Le coach les remet dans le jeu.":"Le prochain jeu ouvre la voie.")+'</span></div>';
-  if(piece&&$("tilePiece")) $("tilePiece").onclick=function(){ renderPieceDetail(piece.id); };
+  if(piece&&$("tilePiece")){
+    $("tilePiece").onclick=function(){ renderPieceDetail(piece.id); };
+    $("tilePiece").onkeydown=function(ev){if(ev.key==="Enter"||ev.key===" "){ev.preventDefault();renderPieceDetail(piece.id);}};
+  }
 }
 
 function renderHome(){
@@ -2107,8 +2274,10 @@ function renderHome(){
   renderCockpit(decision,plan);
   renderDailyPlan(plan);
   renderPlayerState(decision);
+  const startPid=profileStartPalier(plan.profile.niveauDepart);
   $("missionTxt").innerHTML = DB.mode==="libre"
-    ? "Mode Libre : écoute, chante, explore chaque note avec le piano · plan de "+plan.total+" minutes."
+    ? (startPid&&DB.sel===startPid?esc(profileStartText(plan.profile.niveauDepart,startPid)):
+      "Mode Libre : écoute, chante, explore chaque note avec le piano · plan de "+plan.total+" minutes.")
     : nbToday===0 ? "Mission du jour : "+esc(plan.path)+" · "+plan.total+" minutes · "+plan.profile.daysPerWeek+" jours par semaine. Précision d'abord."
     : nbToday<3 ? "Encore "+(3-nbToday)+" série"+(3-nbToday>1?"s":"")+" pour le badge du jour."
     : "Badge du jour gagné. Pousse le niveau, ou souffle en Libre.";
@@ -2202,8 +2371,13 @@ function renderHome(){
 }
 
 /* ---- moteur ---- */
-let EX=null, rafTimer=null, qInt=null, qTo=null, dailyTimer=null;
-function clearQTimers(){ if(qInt!==null){clearInterval(qInt);qInt=null;} if(qTo!==null){clearTimeout(qTo);qTo=null;} }
+let EX=null, rafTimer=null, qInt=null, qTo=null, advanceTimer=null, dailyTimer=null;
+function clearQTimers(){
+  if(qInt!==null){clearInterval(qInt);qInt=null;}
+  if(qTo!==null){clearTimeout(qTo);qTo=null;}
+  if(advanceTimer!==null){clearTimeout(advanceTimer);advanceTimer=null;}
+  if(EX) EX.questionDeadlineAt=0;
+}
 function clearDailyTimer(){ if(dailyTimer!==null){clearInterval(dailyTimer);dailyTimer=null;} }
 /* ===== SRS — répétition espacée (Leitner 5 boîtes) ===== */
 // Une répétition immédiate répare, mais seule une échéance réelle augmente la stabilité.
@@ -2392,6 +2566,64 @@ function newNotesOf(pid){
   const neuves=cur.filter(function(id){return prev.indexOf(id)<0;});
   return neuves.length?neuves:cur;
 }
+function dailyDraftRecords(pid,mode){
+  const rows=DB.validationDrafts&&DB.validationDrafts[validationDraftKey(pid,mode)];
+  return (Array.isArray(rows)?rows:[]).map(function(row){return {ok:!!row.ok,ids:(row.ids||[]).slice()};});
+}
+function storeDailyDraft(pid,mode,rows){
+  if(!DB.validationDrafts) DB.validationDrafts=safeMap();
+  const key=validationDraftKey(pid,mode), clean=(rows||[]).slice(-9).map(function(row){return {ok:!!row.ok,ids:uniq(row.ids||[])};});
+  if(clean.length) DB.validationDrafts[key]=clean; else delete DB.validationDrafts[key];
+}
+function nextCampaignTarget(pid,mode){
+  const pi=PALIERS.findIndex(function(p){return p.id===pid;});
+  if(pi>=0&&pi<PALIERS.length-1) return {palier:PALIERS[pi+1],mode:mode};
+  const active=TIERS.filter(function(t){return !t.future;}), mi=active.findIndex(function(t){return t.id===mode;});
+  if(mi>=0&&mi<active.length-1) return {palier:PALIERS[0],mode:active[mi+1].id};
+  return null;
+}
+function configureDailyCampaignTarget(target){
+  if(!EX||!EX.daily||!target||!target.palier) return false;
+  const td=tierDef(target.mode); if(!td||td.future) return false;
+  EX.palier=target.palier; EX.mode=target.mode; EX.pool=target.palier.notes.slice();
+  EX.groupN=td.n||1; EX.msNote=td.ms; EX.limit=td.ms?td.ms*EX.groupN:null; EX.last=null;
+  EX.coverageIds=[]; EX.coverageQueue=validationMissingIds(target.palier.id,target.mode,target.palier.notes);
+  EX.daily.targetPool=target.palier.notes.slice();
+  EX.dailyValidationBuffer=dailyDraftRecords(target.palier.id,target.mode);
+  DB.sel=target.palier.id; DB.mode=target.mode; DB.seen[target.palier.id]=true;
+  return true;
+}
+function advanceDailyCampaignTarget(pid,mode){
+  const next=nextCampaignTarget(pid,mode);
+  if(!next){ if(EX&&EX.daily) EX.daily.campaignComplete=true; return false; }
+  return configureDailyCampaignTarget(next);
+}
+function recordDailyTargetEvidence(questionRecord){
+  if(!EX||!EX.daily||EX.mode==="libre"||!questionRecord||questionRecord.phase!=="cible"||questionRecord.role!=="baseline") return null;
+  if(!Array.isArray(EX.dailyValidationBuffer)) EX.dailyValidationBuffer=dailyDraftRecords(EX.palier.id,EX.mode);
+  EX.dailyValidationBuffer.push({ok:!!questionRecord.ok,ids:(questionRecord.ids||[]).slice()});
+  const pid=EX.palier.id, mode=EX.mode;
+  if(EX.dailyValidationBuffer.length<10){ storeDailyDraft(pid,mode,EX.dailyValidationBuffer); return null; }
+  const chunk=EX.dailyValidationBuffer.splice(0,10).map(function(row){return {phase:"cible",role:"baseline",ok:row.ok,ids:row.ids};});
+  const proof=validationRecordFromQuestions(chunk,10,null,true), progress=DB.paliers[pid][mode], td=tierDef(mode);
+  if(!proof){ storeDailyDraft(pid,mode,EX.dailyValidationBuffer); return null; }
+  progress.series.push(proof); if(proof.e<=1) DB.xp+=10;
+  if(!EX.daily.proofs) EX.daily.proofs=[];
+  EX.daily.proofs.push({pid:pid,mode:mode,e:proof.e});
+  logEvent("daily_validation_proof",{palier:pid,mode:mode,errors:proof.e});
+  let promoted=false, tierWon=false;
+  if(!progress.ok&&checkValidation(progress.series,PALIERS.find(function(p){return p.id===pid;}).notes)){
+    progress.ok=true; promoted=true; DB.xp+=td.xp;
+    if(mode==="rhodium") startStarSchedule(pid);
+    if(tierComplete(mode)){tierWon=true;DB.xp+=100;}
+    if(!EX.daily.promotions) EX.daily.promotions=[];
+    EX.daily.promotions.push({pid:pid,mode:mode,tierWon:tierWon});
+    logEvent("daily_palier_validated",{palier:pid,mode:mode,tier:tierWon});
+  }
+  storeDailyDraft(pid,mode,promoted?[]:EX.dailyValidationBuffer);
+  if(promoted) advanceDailyCampaignTarget(pid,mode);
+  return {proof:proof,promoted:promoted,tierWon:tierWon};
+}
 function buildDailySession(decision,now){
   now=Number.isFinite(Number(now))?Number(now):Date.now();
   const profile=normalizeProfile(DB.profile), totalMs=profile.dailyMinutes*60000;
@@ -2407,9 +2639,9 @@ function buildDailySession(decision,now){
     const duration=i===ids.length-1?now+totalMs-cursor:Math.round(totalMs*weights[i]);
     const block={id:id,startAt:cursor,endAt:cursor+duration}; cursor=block.endAt; return block;
   });
-  return {startAt:now,endAt:now+totalMs,totalMs:totalMs,totalMinutes:profile.dailyMinutes,blocks:blocks,
+  return {startAt:now,endAt:now+totalMs,totalMs:totalMs,totalMinutes:profile.dailyMinutes,blocks:blocks,pausedAt:0,pausedMs:0,
     targetPool:targetPool,dueSnapshot:dueSnapshot,repairSnapshot:repairSnapshot,
-    coldPool:uniq(dueSnapshot.concat(targetPool)),transferScript:transferScript.slice(),transferIdx:0,transferReads:0,bonusIndex:0,bonusFound:0,
+    coldPool:uniq(dueSnapshot.concat(targetPool)),transferScript:transferScript.slice(),transferIdx:0,transferReads:0,bonusIndex:0,bonusFound:0,proofs:[],promotions:[],campaignComplete:false,
     pieceId:piece?piece.id:"",segmentId:seg?seg.id:"",segmentTitle:seg?seg.title:"",decisionKind:decision.kind,
     focusDomain:focusDomain,transferMission:dailyMission(focusDomain,piece),missionDone:false};
 }
@@ -2430,8 +2662,44 @@ function dailyPhasePool(daily,phaseId){
   }
   return daily.targetPool.slice();
 }
+function dailyActiveElapsed(daily,now){
+  if(!daily) return 0;
+  now=Number.isFinite(Number(now))?Number(now):Date.now();
+  const openPause=daily.pausedAt?Math.max(0,now-daily.pausedAt):0;
+  return Math.max(0,now-daily.startAt-(daily.pausedMs||0)-openPause);
+}
+function pauseDailySession(now){
+  if(!EX||EX.done||!EX.daily||EX.daily.pausedAt) return false;
+  now=Number.isFinite(Number(now))?Number(now):Date.now();
+  EX.daily.pausedAt=now;
+  EX.pausedQuestionRemaining=EX.questionDeadlineAt?Math.max(0,EX.questionDeadlineAt-now):null;
+  EX.pausedResumeNext=advanceTimer!==null||(qTo!==null&&!EX.questionDeadlineAt&&EX.waiting);
+  clearQTimers(); clearDailyTimer();
+  return true;
+}
+function resumeDailySession(now){
+  if(!EX||EX.done||!EX.daily||!EX.daily.pausedAt) return false;
+  now=Number.isFinite(Number(now))?Number(now):Date.now();
+  const pausedAt=EX.daily.pausedAt, delta=Math.max(0,now-pausedAt);
+  EX.daily.pausedAt=0; EX.daily.pausedMs=(EX.daily.pausedMs||0)+delta; EX.daily.endAt+=delta;
+  EX.daily.blocks.forEach(function(b){
+    if(b.startAt>=pausedAt){b.startAt+=delta;b.endAt+=delta;}
+    else if(b.endAt>pausedAt)b.endAt+=delta;
+  });
+  EX.t0+=delta;
+  const session=EX, qid=EX.qid, rem=EX.pausedQuestionRemaining, resumeNext=EX.pausedResumeNext;
+  EX.pausedQuestionRemaining=null; EX.pausedResumeNext=false;
+  if(rem!==null&&rem!==undefined&&!EX.waiting){
+    EX.questionDeadlineAt=now+rem;
+    qTo=setTimeout(function(){if(EX===session&&!EX.done&&EX.qid===qid)timeUp(qid);},rem);
+  } else if(resumeNext){
+    advanceTimer=setTimeout(function(){if(EX===session&&!EX.done&&EX.qid===qid){advanceTimer=null;nextQuestion();}},60);
+  }
+  startDailyClock(); return true;
+}
 function updateDailyClock(){
   if(!EX||EX.done||!EX.daily){clearDailyTimer();return;}
+  if(EX.daily.pausedAt){clearDailyTimer();return;}
   const now=Date.now(), left=Math.max(0,EX.daily.endAt-now), phase=dailyPhaseAt(EX.daily,now);
   $("timerfill").style.width=Math.max(0,left/EX.daily.totalMs*100)+"%";
   const sec=Math.ceil(left/1000), mm=Math.floor(sec/60), ss=String(sec%60).padStart(2,"0");
@@ -2440,18 +2708,24 @@ function updateDailyClock(){
   const phaseName=EX.currentTask&&EX.currentTask.role==="bonus"?"Atelier bonus":dailyPhaseLabel(phase?phase.id:"transfert");
   $("exMode").textContent="Séance · "+phaseName+" · "+mm+":"+ss+" restantes"+tempo;
   if(left<=0){ EX.stopRequested=true; $("btnQuit").textContent="Terminer maintenant"; }
+  else if(EX.currentTask&&EX.currentTask.role==="bonus") $("btnQuit").textContent="Terminer et voir le bilan";
+  else $("btnQuit").textContent="Arrêter et voir le bilan";
 }
 function startDailyClock(){
   clearDailyTimer(); updateDailyClock(); dailyTimer=setInterval(updateDailyClock,500);
 }
 function startDailySession(){
   if(EX&&!EX.done&&EX.daily) return;
-  const d=coachDecision();
+  let d=coachDecision();
+  if(d.kind==="repair"&&DB.mode!=="libre"){
+    const target=coachDecision("session");
+    target.reason=d.reason+" La réparation reste incluse dans son créneau."; d=target;
+  }
   if(d.palier&&d.palier.id){DB.sel=d.palier.id;DB.seen[d.palier.id]=true;}
   if(d.mode&&d.mode!=="libre") DB.mode=d.mode;
   const daily=buildDailySession(d,Date.now());
   save();
-  beginSerie({sessionMode:"daily",label:"Séance du jour",palier:d.palier,pool:d.targetPool,mode:d.mode,groupN:d.groupN,
+  beginSerie({sessionMode:"daily",label:"Séance du jour",palier:d.palier,pool:d.pool,mode:d.mode,groupN:d.groupN,
     openEnded:true,daily:daily,cold:true});
 }
 function startCoachPlay(force){
@@ -2472,6 +2746,7 @@ function startSerie(){
 }
 function beginSerie(opts){
   opts=opts||{};
+  clearQTimers();
   const p=opts.palier||PALIERS.find(function(x){return x.id===DB.sel;})||PALIERS[0];
   const mode=opts.mode||DB.mode;
   const td=mode==="libre"?null:tierDef(mode);
@@ -2488,7 +2763,8 @@ function beginSerie(opts){
       qtype:"lect",seq:[],k:0,writePos:4,segment:opts.segment||null,
       script:(opts.script&&opts.script.length)?opts.script.slice():null,scriptIdx:0,seenIds:[],testedIds:[],coverageIds:[],coverageQueue:coverage,
       openEnded:openEnded,daily:opts.daily||null,stopRequested:false,currentTask:null,questionRecords:[],phaseStats:{rappel:{n:0,ok:0},cible:{n:0,ok:0},reparation:{n:0,ok:0},transfert:{n:0,ok:0}},
-      coldPending:coldEligible&&!!coldId,coldId:coldId,coldResult:null};
+      coldPending:coldEligible&&!!coldId,coldId:coldId,coldResult:null,questionDeadlineAt:0,pausedQuestionRemaining:null,pausedResumeNext:false,
+      dailyValidationBuffer:opts.daily&&mode!=="libre"?dailyDraftRecords(p.id,mode):[]};
   logEvent("serie_start",{palier:p.id,mode:mode,groupe:groupN,type:EX.sessionMode,n:total,segment:EX.segment?EX.segment.segmentId:null,piece:EX.segment?EX.segment.pieceId:null});
   const label=opts.label || (EX.sessionMode==="flash"?"Flash":EX.sessionMode==="repair"?"Réparation":"Session");
   $("exMode").textContent=label+" · "+(EX.segment?EX.segment.segmentTitle:p.t)+(groupN>1?" · groupes de "+groupN:"");
@@ -2556,7 +2832,7 @@ function startRafale(){
   show("scrEx");
   rafTimer=setInterval(function(){
     const left=EX.end-Date.now();
-    $("timerfill").style.width=Math.max(0,left/(RAFALE_S*10))+"%";
+    $("timerfill").style.width=Math.max(0,left/(RAFALE_S*1000)*100)+"%";
     if(left<=0) finishRafale();
   },100);
   nextQuestion();
@@ -2661,7 +2937,18 @@ function questionTask(){
     return ordinary.length?{role:"baseline",phase:"cible",pool:ordinary}:spacingTask("reparation");
   }
   phase=phase||EX.daily.blocks[EX.daily.blocks.length-1];
-  const pool=ordinaryQuestionPool(dailyPhasePool(EX.daily,phase.id),[],true);
+  let pool=ordinaryQuestionPool(dailyPhasePool(EX.daily,phase.id),[],true);
+  if(!pool.length){
+    // Si toutes les notes du petit vocabulaire attendent une réparation déjà due,
+    // on continue à les lire sans faire avancer le SRS. La séance ne se transforme
+    // jamais en attente passive ; la vraie réparation reste servie dans son créneau.
+    const next=(DB.questionClock||0)+1;
+    pool=uniq(dailyPhasePool(EX.daily,phase.id).filter(function(id){
+      return NOTES[id]&&(DB.repairQueue||[]).some(function(item){
+        return item&&item.dueQuestion<=next&&(item.sourceId===id||item.probeId===id||item.confusedId===id);
+      });
+    }));
+  }
   if(phase.id==="transfert"){
     if(EX.daily.focusDomain!=="lecture"&&EX.daily.focusDomain!=="integration"&&!EX.daily.missionDone)
       return {role:"transfer",phase:"transfert",qtype:"mission",mission:EX.daily.transferMission};
@@ -2676,7 +2963,8 @@ function questionTask(){
 function nextQuestion(){
   if(EX.done) return;
   clearQTimers();
-  if(EX.daily&&(EX.stopRequested||Date.now()>=EX.daily.endAt)&&EX.i>0) return finishSerie();
+  if(EX.daily&&(EX.stopRequested||Date.now()>=EX.daily.endAt)) return finishSerie();
+  if(EX.review==="star"&&(DB.repairQueue||[]).length&&EX.i>0) return finishSerie();
   if(EX.kind==="serie" && !EX.openEnded && EX.i>=EX.n) return finishSerie();
   const task=questionTask(); EX.currentTask=task; EX.currentQuestionTested=[];
   const ecritOk=(EX.mode==="libre"||EX.mode==="zen") && EX.kind==="serie" && !EX.script && task.role==="baseline" && task.phase!=="transfert";
@@ -2733,6 +3021,7 @@ function nextQuestion(){
     updateDailyClock();
     if(EX.limit&&task.phase==="cible"&&task.role==="baseline"&&EX.qtype!=="mission"){
       const qid=EX.qid, lim=EX.limit;
+      EX.questionDeadlineAt=Date.now()+lim;
       qTo=setTimeout(function(){ timeUp(qid); },lim);
     }
   }
@@ -2743,6 +3032,7 @@ function nextQuestion(){
       const left=lim-(Date.now()-EX.t0);
       $("timerfill").style.width=Math.max(0,left/lim*100)+"%";
     },80);
+    EX.questionDeadlineAt=Date.now()+lim;
     qTo=setTimeout(function(){ timeUp(qid); }, lim);
   }
 }
@@ -2871,7 +3161,9 @@ function completeQuestionMeta(correct,failId,response){
   if(task.role==="transfer") phase="transfert";
   if(!EX.phaseStats[phase]) EX.phaseStats[phase]={n:0,ok:0};
   EX.phaseStats[phase].n++; if(correct) EX.phaseStats[phase].ok++;
-  EX.questionRecords.push({phase:phase,role:task.role,ok:!!correct,ids:(EX.currentQuestionTested||[]).slice()});
+  const questionRecord={phase:phase,role:task.role,ok:!!correct,ids:(EX.currentQuestionTested||[]).slice()};
+  EX.questionRecords.push(questionRecord);
+  recordDailyTargetEvidence(questionRecord);
 }
 function hearHtml(id){ return '<br><button class="hearbtn" onclick="tone(NOTES[\''+id+'\'].midi)">♪ réécouter — chante-la</button>'; }
 function correctionHtml(failId,msg,response){
@@ -2893,7 +3185,10 @@ function correctionHtml(failId,msg,response){
 }
 function noteSessionIds(){
   if(!EX||!EX.seenIds) return;
-  (EX.seq||[]).forEach(function(id){ if(EX.seenIds.indexOf(id)<0) EX.seenIds.push(id); });
+  // Le bilan partition ne doit créditer que les notes auxquelles le joueur a
+  // effectivement répondu (ou qui ont réellement expiré), jamais la fin non
+  // lue d'un groupe interrompu par une erreur.
+  (EX.currentQuestionTested||[]).forEach(function(id){ if(EX.seenIds.indexOf(id)<0) EX.seenIds.push(id); });
 }
 function afterGood(){
   noteSessionIds();
@@ -2907,7 +3202,8 @@ function afterGood(){
     (EX.mode==="libre"&&DB.soundLong?'<br>Chante pendant que ça sonne.':'');
   EX.waiting=true;
   const adv=(EX.mode==="libre"&&DB.soundLong)?1300:(EX.seq.length>1?700:380);
-  setTimeout(function(){ if(EX&&!EX.done){ nextQuestion(); } }, adv);
+  const session=EX, qid=EX.qid;
+  advanceTimer=setTimeout(function(){ if(EX===session&&!EX.done&&EX.qid===qid){ advanceTimer=null; nextQuestion(); } }, adv);
   renderDots(); save();
 }
 function afterWrong(failId,msg,response){
@@ -2928,7 +3224,8 @@ function afterWrong(failId,msg,response){
     $("btnNext").style.display="block";
   } else {
     EX.waiting=true;
-    setTimeout(function(){ if(EX&&!EX.done){ nextQuestion(); } }, 900);
+    const session=EX, qid=EX.qid;
+    advanceTimer=setTimeout(function(){ if(EX===session&&!EX.done&&EX.qid===qid){ advanceTimer=null; nextQuestion(); } }, 900);
   }
   renderDots(); save();
 }
@@ -3099,8 +3396,19 @@ function completeDailyProgress(){
   if(!EX||!EX.daily) return;
   if(!DB.dailyProgress) DB.dailyProgress={};
   const key=todayStr(); if(!DB.dailyProgress[key]) DB.dailyProgress[key]={};
-  const plan=dailyPlan(coachDecision());
-  DB.dailyProgress[key].session=plan.signature;
+  DB.dailyProgress[key].session=true;
+}
+function dailyScoredCount(){
+  if(!EX||!Array.isArray(EX.questionRecords)) return 0;
+  return EX.questionRecords.filter(function(q){return q&&Array.isArray(q.ids)&&q.ids.length>0;}).length;
+}
+function dailySessionQualified(){ return dailyScoredCount()>=10; }
+function dailyPromotionsHtml(){
+  const rows=EX&&EX.daily&&Array.isArray(EX.daily.promotions)?EX.daily.promotions:[];
+  if(!rows.length) return "";
+  return '<br><b>'+rows.length+' palier'+(rows.length>1?'s':'')+' conquis pendant la séance :</b> '+rows.map(function(row){
+    return esc(row.pid+' · '+modeLabel(row.mode))+(row.tierWon?' ★ grade terminé':'');
+  }).join(' · ')+'.';
 }
 function validationRecordFromQuestions(records,minQuestions,cold,daily){
   const target=(records||[]).filter(function(q){
@@ -3117,12 +3425,12 @@ function finishSerie(){
   if(EX.review==="star"){ markDay("revision",EX.ok); return finishStarReview(errs); }
   if(EX.review==="due"){ markDay("revision",EX.ok); return finishDueReview(errs); }
   const isRepair=EX.sessionMode==="repair", isFlash=EX.sessionMode==="flash", isSession=EX.sessionMode==="session"||isDaily, isPiece=EX.sessionMode==="piece";
-  markDay(isRepair?"revision":"serie",EX.ok);
+  if(!isDaily||answered>0) markDay(isRepair?"revision":"serie",EX.ok);
   let newlyPalier=false, newlyTier=null;
-  if(isSession && EX.mode!=="libre"){
+  if(isSession && !isDaily && EX.mode!=="libre"){
     const td=tierDef(EX.mode), m=DB.paliers[p.id][EX.mode];
-    const minQuestions=isDaily?10:Math.min(8,EX.n||8);
-    const record=validationRecordFromQuestions(EX.questionRecords,minQuestions,EX.coldResult||null,isDaily);
+    const minQuestions=Math.min(8,EX.n||8);
+    const record=validationRecordFromQuestions(EX.questionRecords,minQuestions,EX.coldResult||null,false);
     if(record){m.series.push(record);if(record.e<=1)DB.xp+=10;}
     if(record&&!m.ok && checkValidation(m.series,p.notes)){
       m.ok=true; DB.xp+=td.xp; newlyPalier=true;
@@ -3141,17 +3449,21 @@ function finishSerie(){
       DB.xp+=after==="maitrise"?25:15;
     }
   }
-  if(isDaily){completeDailyProgress();logEvent("daily_session_end",{minutes:EX.daily.totalMinutes,elapsed:Date.now()-EX.daily.startAt,ok:EX.ok,answered:answered,repairs:(EX.phaseStats.reparation||{}).n||0});}
+  const dailyQualified=isDaily&&dailySessionQualified(), activeElapsed=isDaily?dailyActiveElapsed(EX.daily,Date.now()):0;
+  if(isDaily){
+    if(dailyQualified) completeDailyProgress();
+    logEvent("daily_session_end",{minutes:EX.daily.totalMinutes,elapsed:activeElapsed,complete:dailyQualified,scored:dailyScoredCount(),ok:EX.ok,answered:answered,repairs:(EX.phaseStats.reparation||{}).n||0,proofs:(EX.daily.proofs||[]).length,promotions:(EX.daily.promotions||[]).length});
+  }
   const errsForLog=isDaily&&answered?Math.round(errs/answered*10):errs;
   logEvent("serie_end",{palier:p.id,mode:EX.mode,type:EX.sessionMode,ok:EX.ok,errs:errsForLog,avgMs:avgMs(),valide:newlyPalier,segment:EX.segment?EX.segment.segmentId:null,piece:EX.segment?EX.segment.pieceId:null});
   save(); header(); syncPush();
-  const scoreN=Math.max(1,isDaily?answered:EX.n), prec=Math.round(EX.ok/scoreN*100), label=isDaily?"Séance du jour":(isRepair?"Réparation":(isFlash?"Flash":(isPiece?"Partition":modeLabel(EX.mode==="rafale"?"zen":EX.mode))));
+  const scoreN=Math.max(1,isDaily?answered:EX.n), prec=Math.round(EX.ok/scoreN*100), label=isDaily?(dailyQualified?"Séance du jour":"Séance partielle"):(isRepair?"Réparation":(isFlash?"Flash":(isPiece?"Partition":modeLabel(EX.mode==="rafale"?"zen":EX.mode))));
   $("resScore").innerHTML=EX.ok+"<small>/"+(isDaily?answered:EX.n)+"</small>";
   $("resSub").textContent=isDaily
-    ? "Séance du jour · "+Math.max(1,Math.round((Date.now()-EX.daily.startAt)/60000))+" min · précision "+prec+" %"
+    ? label+" · "+Math.max(1,Math.round(activeElapsed/60000))+" min actives · précision "+prec+" %"
     : "Précision "+prec+"% · "+(avgMs()/1000).toFixed(1)+" s par question · "+label;
   $("resSolado").textContent=isDaily
-    ? (EX.coldResult&&EX.coldResult.ok?"Rappel à froid réussi. La séance a ciblé, réparé puis transféré sans lancer de nouvelle question après l’échéance.":"Le test à froid a révélé le point utile. Les confusions restent programmées, pas oubliées.")
+    ? (!dailyQualified?"Cette pratique est conservée, mais la séance n’est pas marquée terminée : il faut au moins 10 vraies questions musicales.":(EX.coldResult&&EX.coldResult.ok?"Rappel à froid réussi. La séance a ciblé, réparé puis transféré sans lancer de nouvelle question après l’échéance.":"Le test à froid a révélé le point utile. Les confusions restent programmées, pas oubliées."))
     : (isRepair
     ? (errs?"Réparation active. Les notes fragiles reviennent avec un meilleur espacement.":"Réparation nette. La mémoire gagne en stabilité.")
     : (isFlash ? (errs?"Flash utile. Le coach garde ces notes au chaud pour la suite.":"Flash propre. Le réflexe répond vite.") : (isPiece ? (errs?"Segment utile. Les notes du passage deviennent un exercice ciblé avant le piano.":"Segment propre. Le passage est prêt pour un vrai essai au clavier.") : jarvisMsg(EX.ok,EX.n))));
@@ -3163,6 +3475,7 @@ function finishSerie(){
   if(isDaily){
     const ps=EX.phaseStats;
     $("resVal").innerHTML="Rappel <b>"+(ps.rappel.n||0)+"</b> · Cible <b>"+(ps.cible.n||0)+"</b> · Réparation <b>"+(ps.reparation.n||0)+"</b> · Transfert <b>"+(ps.transfert.n||0)+"</b>"+
+      "<br>Preuves de progression gagnées : <b>"+((EX.daily.proofs||[]).length)+"</b>"+dailyPromotionsHtml()+
       ((DB.repairQueue||[]).length?"<br>"+(DB.repairQueue||[]).length+" confusion"+((DB.repairQueue||[]).length>1?"s":"")+" gardée"+((DB.repairQueue||[]).length>1?"s":"")+" pour le prochain rappel à froid.":"<br>Toutes les réparations prévues sont refermées.")+
       ((EX.daily.bonusFound||0)?"<br>Secret"+((EX.daily.bonusFound||0)>1?"s":"")+" repéré"+((EX.daily.bonusFound||0)>1?"s":"")+" : <b>"+EX.daily.bonusFound+"</b>.":"");
     $("btnAgain").style.display="none";
@@ -3186,10 +3499,11 @@ function finishSerie(){
       : "Validation "+tierDef(EX.mode).label+" : <b>"+valProgress(p.id,EX.mode)+"</b>";
   }
   show("scrRes");
-  if(newlyTier){ sfxWin(); const t=newlyTier; setTimeout(function(){showTierCard(t);},600); }
+  const resultSession=EX;
+  if(newlyTier){ sfxWin(); const t=newlyTier; setTimeout(function(){if(EX===resultSession&&$("scrRes").classList.contains("active"))showTierCard(t);},600); }
   else if(newlyPalier){
     sfxWin();
-    if(EX.mode==="zen" && CARDS[p.id]) setTimeout(function(){showCard(p.id);},600);
+    if(EX.mode==="zen" && CARDS[p.id]) setTimeout(function(){if(EX===resultSession&&$("scrRes").classList.contains("active"))showCard(p.id);},600);
   }
   else if(segPromotion==="maitrise") sfxWin(); // un passage maîtrisé sonne comme une victoire
 }
@@ -3224,23 +3538,51 @@ function finishDueReview(errs){
   $("resVal").innerHTML = left ? "Encore <b>"+left+"</b> note"+(left>1?"s":"")+" à revoir aujourd'hui." : "<b>Révisions du jour terminées.</b>";
   show("scrRes");
 }
+function representativeNoteSample(ids,limit){
+  const source=uniq((ids||[]).filter(function(id){return NOTES[id];}));
+  limit=Math.max(1,clampInt(limit,1,source.length||1,10));
+  if(source.length<=limit) return source;
+  if(limit===1) return [source[0]];
+  const out=[];
+  for(let i=0;i<limit;i++){
+    const idx=Math.round(i*(source.length-1)/(limit-1));
+    if(out.indexOf(source[idx])<0) out.push(source[idx]);
+  }
+  return out;
+}
+function starReviewSample(p){ return representativeNoteSample(p&&p.notes,10); }
+function starReviewCoverage(sample,records){
+  const covered=uniq([].concat.apply([], (records||[]).map(function(q){return q&&q.ids||[];})));
+  return (sample||[]).length>0&&(sample||[]).every(function(id){return covered.indexOf(id)>=0;});
+}
+function starReviewRepairsClear(sample){
+  const ids=sample||[];
+  return !(DB.repairQueue||[]).some(function(item){
+    return item&&[item.sourceId,item.probeId,item.confusedId].some(function(id){return ids.indexOf(id)>=0;});
+  });
+}
 function startStarReview(pid){
   const p=PALIERS.find(function(x){return x.id===pid;});
-  const pending=repairBlockedIds();
-  if(p&&p.notes.some(function(id){return pending.indexOf(id)>=0;})){
+  if(!p) return;
+  const sample=starReviewSample(p);
+  if(!starReviewRepairsClear(sample)){
     logEvent("star_review_deferred",{palier:pid,reason:"repair_pending"});
     startRepair(); return;
   }
   EX={kind:"serie",mode:"libre",review:"star",starPid:pid,n:10,groupN:1,msNote:null,limit:null,
-      palier:p,i:0,ok:0,errs:[],times:[],hist:[],last:null,waiting:false,done:false,qid:0,
-      qtype:"lect",seq:[],k:0,writePos:4};
+      palier:p,pool:sample,starSample:sample,coverageQueue:sample.slice(),coverageIds:[],testedIds:[],seenIds:[],
+      i:0,ok:0,errs:[],times:[],hist:[],last:null,waiting:false,done:false,qid:0,
+      qtype:"lect",seq:[],k:0,writePos:4,questionRecords:[],phaseStats:{}};
   logEvent("star_review_start",{palier:pid,level:DB.paliers[pid].star.level});
   $("exMode").textContent="★ Révision d'étoile · "+p.t;
   $("timerbar").classList.remove("on");
   show("scrEx"); nextQuestion();
 }
 function finishStarReview(errs){
-  const pid=EX.starPid, s=DB.paliers[pid].star, clean=errs<=1;
+  const pid=EX.starPid, s=DB.paliers[pid].star;
+  const coverageOk=starReviewCoverage(EX.starSample,EX.questionRecords);
+  const repairsClear=starReviewRepairsClear(EX.starSample);
+  const clean=errs<=1&&coverageOk&&repairsClear;
   let advanced=false;
   if(clean && s.level<5){
     s.level++; advanced=true; DB.xp+=40+s.level*10;
@@ -3248,13 +3590,15 @@ function finishStarReview(errs){
   } else if(!clean){
     s.due = Date.now()+3*864e5; // braise : on repropose sous quelques jours, aucune étoile perdue
   }
-  logEvent("star_review_end",{palier:pid,ok:EX.ok,errs:errs,level:s.level,advanced:advanced});
+  logEvent("star_review_end",{palier:pid,ok:EX.ok,errs:errs,coverage:coverageOk,repairsClear:repairsClear,level:s.level,advanced:advanced});
   save(); header(); syncPush();
-  $("resScore").innerHTML=EX.ok+"<small>/10</small>";
+  $("resScore").innerHTML=EX.ok+"<small>/"+EX.hist.length+"</small>";
   $("resSub").textContent="Révision d'étoile · "+EX.palier.t;
   $("resSolado").textContent= advanced
     ? "Stabilité confirmée. Cet acquis tient dans le temps — c'est exactement ce que mesure une étoile."
-    : (clean ? "Déjà au maximum : 5 étoiles, acquis définitif." : "Encore un passage utile. Les étoiles restent acquises — la révision revient bientôt.");
+    : (clean ? "Déjà au maximum : 5 étoiles, acquis définitif." : (!coverageOk
+      ? "Échantillon incomplet : l’étoile attend que toutes les notes prévues aient été réellement testées."
+      : (!repairsClear?"Une confusion reste à réparer avant de confirmer la stabilité.":"Encore un passage utile. Les étoiles restent acquises — la révision revient bientôt.")));
   const eb=$("resErrs");
   if(errs){ eb.style.display="block";
     eb.innerHTML=EX.errs.map(function(id){const nt=NOTES[id];
@@ -3262,7 +3606,8 @@ function finishStarReview(errs){
   } else eb.style.display="none";
   $("resVal").innerHTML = advanced
     ? '<b>'+starLabel(s.level)+' obtenue sur '+EX.palier.t+' !</b>'
-    : "Étoiles actuelles : "+(s.level?starLabel(s.level):"départ prêt");
+    : "Étoiles actuelles : "+(s.level?starLabel(s.level):"départ prêt")+
+      (!coverageOk?" · couverture à compléter":(!repairsClear?" · réparation prioritaire":""));
   show("scrRes");
   if(advanced) sfxWin();
 }
@@ -3309,7 +3654,10 @@ function showTierCard(tid){
 
 /* ---- stats + sauvegarde ---- */
 function stashPreimport(){
-  try{ localStorage.setItem(LS_PREIMPORT, JSON.stringify(DB)); }catch(e){} // filet avant écrasement
+  try{
+    localStorage.setItem(LS_PREIMPORT, JSON.stringify(DB));
+    return !!localStorage.getItem(LS_PREIMPORT);
+  }catch(e){ return false; } // filet avant écrasement
 }
 function recoveryCodeInfo(txt){
   const raw=String(txt||"").trim().toUpperCase().replace(/\s+/g,"");
@@ -3373,20 +3721,42 @@ function applyStartupRecovery(){
     $("overlay").classList.add("on");
   },200);
 }
+function utf8ByteLength(value,stopAfter){
+  const s=String(value==null?"":value); let bytes=0;
+  for(let i=0;i<s.length;i++){
+    const code=s.charCodeAt(i);
+    if(code<0x80) bytes+=1;
+    else if(code<0x800) bytes+=2;
+    else if(code>=0xD800&&code<=0xDBFF&&i+1<s.length&&s.charCodeAt(i+1)>=0xDC00&&s.charCodeAt(i+1)<=0xDFFF){ bytes+=4; i++; }
+    else bytes+=3;
+    if(stopAfter&&bytes>stopAfter) return bytes;
+  }
+  return bytes;
+}
 function importSave(txt){
-  txt=(txt||"").trim();
+  txt=String(txt==null?"":txt);
+  if(txt.length>MAX_IMPORT_TEXT_BYTES||utf8ByteLength(txt,MAX_IMPORT_TEXT_BYTES)>MAX_IMPORT_TEXT_BYTES)
+    return "Sauvegarde trop volumineuse : limite 4 Mo. Rien n'a été modifié.";
+  txt=txt.trim();
   if(!txt) return "Rien à charger.";
   const recovered=applyRecoveryCode(txt);
   if(recovered) return recovered+" Ancien état conservé — « Annuler l'import » pour revenir.";
   let obj;
   try{ obj=JSON.parse(txt); }
   catch(e){ return "Code invalide : ni JSON de sauvegarde, ni code palier (ex. P4, P4+, B2). Rien n'a été modifié."; }
-  if(!obj||typeof obj!=="object"||!obj.paliers||typeof obj.paliers!=="object")
+  if(!isRecord(obj)||!isRecord(obj.paliers))
     return "JSON invalide (pas de progression reconnaissable). Rien n'a été modifié.";
-  stashPreimport();
-  DB=ensureStructure(obj);
-  applyTheme();
-  save();
+  let candidate;
+  try{ candidate=ensureStructure(obj); }
+  catch(e){ return "JSON invalide : structure de progression illisible. Rien n'a été modifié."; }
+  if(!recognizableStoredState(candidate)) return "JSON invalide : progression incomplète. Rien n'a été modifié.";
+  if(!stashPreimport()) return "Import impossible : l'état actuel n'a pas pu être mis à l'abri. Rien n'a été modifié.";
+  const previous=DB;
+  DB=candidate; applyTheme();
+  if(!save()){
+    DB=previous; applyTheme(); save({cloud:false});
+    return "Import annulé : stockage insuffisant ou indisponible. L'état précédent est conservé.";
+  }
   return "Sauvegarde chargée. XP : "+DB.xp+". Ancien état conservé — « Annuler l'import » pour revenir.";
 }
 function undoImport(){
@@ -3612,9 +3982,10 @@ function pieceStateCounts(piece){
 }
 /* ---- Ambitions : le joueur nomme sa réussite ---- */
 function goalDef(id){ return PIECE_AMBITIONS.find(function(g){return g.id===id;})||null; }
-function pieceGoal(pid){ return (DB.pieceGoals&&DB.pieceGoals[pid])?DB.pieceGoals[pid]:null; }
+function pieceGoal(pid){ return (DB.pieceGoals&&isSafeId(pid)&&hasOwn(DB.pieceGoals,pid))?DB.pieceGoals[pid]:null; }
 function setPieceGoal(pid,goalId,segmentId){
-  if(!DB.pieceGoals) DB.pieceGoals={};
+  if(!isSafeId(pid)) return null;
+  if(!DB.pieceGoals||Object.getPrototypeOf(DB.pieceGoals)!==null) DB.pieceGoals=safeMap();
   if(!goalId){ delete DB.pieceGoals[pid]; save(); return null; }
   const g={id:goalId,setAt:Date.now()};
   if(goalId==="passage"&&segmentId) g.segmentId=segmentId;
@@ -3641,10 +4012,12 @@ function ambitionProgress(piece){
       txt="« "+r.seg.title+" » · "+(done?"maîtrisé":(st.attempts?("meilleur "+(st.best||0)+" %"):"pas encore joué")); }
   } else if(g.id==="fluide"){
     const f=states.filter(function(r){return r.state==="fragile";}).length;
-    const w=states.filter(function(r){return r.state!=="adecouvrir";}).length;
-    done=f===0&&w===segs.length&&segs.length>0;
-    pct=segs.length?Math.max(0,(w-f))/segs.length:0;
-    txt=f?(f+" passage"+(f>1?"s":"")+" fragile"+(f>1?"s":"")+" à réparer"):(done?"plus aucun blocage":"ouvre les passages restants");
+    const tried=states.filter(function(r){return segmentProgress(piece.id,r.seg.id).attempts>0;}).length;
+    const untried=Math.max(0,segs.length-tried);
+    done=f===0&&tried===segs.length&&segs.length>0;
+    pct=segs.length?Math.max(0,(tried-f))/segs.length:0;
+    txt=f?(f+" passage"+(f>1?"s":"")+" fragile"+(f>1?"s":"")+" à réparer"):(done?"plus aucun blocage":
+      (untried+" passage"+(untried>1?"s":"")+" à jouer réellement"));
   } else if(g.id==="cours"){
     const t=states.filter(function(r){const st=segmentProgress(piece.id,r.seg.id);return st.attempts>0||st.seen;}).length;
     done=t===segs.length&&segs.length>0; pct=segs.length?t/segs.length:0;
@@ -3824,8 +4197,9 @@ function segmentGroupN(seg){
   return Math.max(1,Math.min(td.n||1,maxBySegment));
 }
 function segmentProgress(pid,sid){
-  if(!DB.pieceProgress) DB.pieceProgress={};
-  if(!DB.pieceProgress[pid]) DB.pieceProgress[pid]={};
+  if(!isSafeId(pid)||!isSafeId(sid)) return normalizeSegmentState({});
+  if(!DB.pieceProgress||Object.getPrototypeOf(DB.pieceProgress)!==null) DB.pieceProgress=safeMap();
+  if(!hasOwn(DB.pieceProgress,pid)) DB.pieceProgress[pid]=safeMap();
   DB.pieceProgress[pid][sid]=normalizeSegmentState(DB.pieceProgress[pid][sid]);
   return DB.pieceProgress[pid][sid];
 }
@@ -4025,7 +4399,7 @@ function startPieceSegment(pid,sid){
   if(!piece) return;
   const seg=pieceSegments(piece).find(function(s){return s.id===sid;});
   if(!seg) return;
-  if(seg.focus==="premier_regard"){ startPremierRegard(pid); return; }
+  if(seg.focus==="premier_regard"){ startPremierRegard(pid,sid); return; }
   const palier=PALIERS.find(function(p){return p.id===seg.level;})||PALIERS[0];
   const mode=(DB.mode==="libre"||!tierUnlocked(DB.mode))?"zen":DB.mode;
   const stateBefore=segmentStateId(piece.id,sid);
@@ -4223,7 +4597,7 @@ function renderPieceDetail(pid){
   show("scrPiece");
 }
 let PR=null;
-function startPremierRegard(pid){
+function startPremierRegard(pid,segmentId){
   const p=allPieces().find(function(x){return x.id===pid;});
   if(!p) return;
   if(!p.q || !p.q.length){ // partition perso : auto-vérification (l'app ne connaît pas son contenu)
@@ -4231,12 +4605,16 @@ function startPremierRegard(pid){
       '<p>Ouvre ta partition et repère, dans l\'ordre : la <b>clé</b>, l\'<b>armure</b> (dièses/bémols), le <b>chiffrage de mesure</b>, le <b>tempo</b>, le <b>caractère</b>. C\'est le réflexe n°1 du lecteur.</p>'+
       '<p class="src">'+esc(p.info||'Partition perso.')+'</p>'+
       (p.attachment?'<button id="prOpenAttachment">Ouvrir la pièce jointe</button>':'')+
-      '<button onclick="document.getElementById(\'overlay\').classList.remove(\'on\')">C\'est fait</button>';
+      '<button id="prSelfDone">C\'est fait</button>';
     $("overlay").classList.add("on");
     if(p.attachment && $("prOpenAttachment")) $("prOpenAttachment").onclick=function(){ openPieceAttachment(p.id); };
+    $("prSelfDone").onclick=function(){
+      if(segmentId) markSegmentSeen(p.id,segmentId);
+      $("overlay").classList.remove("on");
+    };
     return;
   }
-  PR={piece:p,i:0,ok:0};
+  PR={piece:p,i:0,ok:0,segmentId:segmentId||""};
   logEvent("premier_regard_start",{piece:pid});
   renderPRQuestion();
   $("overlay").classList.add("on");
@@ -4260,6 +4638,7 @@ function prAnswer(idx){
   $("prNext").onclick=function(){ PR.i++; if(PR.i<PR.piece.q.length) renderPRQuestion(); else finishPR(); };
 }
 function finishPR(){
+  if(PR.segmentId) markSegmentSeen(PR.piece.id,PR.segmentId);
   logEvent("premier_regard_end",{piece:PR.piece.id,ok:PR.ok,total:PR.piece.q.length});
   $("cardBox").innerHTML='<h3>Premier regard — '+esc(PR.piece.titre)+'</h3><h2>'+PR.ok+'/'+PR.piece.q.length+'</h2>'+
     '<p class="src">'+esc(PR.piece.info||'')+'</p>'+
@@ -4312,7 +4691,8 @@ function addSegment(){
 
 /* ================= CLAVIER — module d'entraînement (libre) ================= */
 // Isolé : état KX dédié, écran scrKbd dédié. Ne touche NI EX, NI la validation des paliers (sauvegardes protégées).
-let KX=null;
+let KX=null, kbdAdvanceTimer=null;
+function clearKbdTimer(){ if(kbdAdvanceTimer!==null){clearTimeout(kbdAdvanceTimer);kbdAdvanceTimer=null;} }
 function renderKbd(target,interactive,marks){
   marks=marks||{};
   const r=kbdRangeFor(KX.clef), keys=buildKeyboard(r[0],r[1]);
@@ -4385,6 +4765,7 @@ function startClavier(){
   draw(); $("overlay").classList.add("on");
 }
 function beginClavier(cfg){
+  clearKbdTimer();
   KX={clef:cfg.clef,dir:cfg.dir,acc:!!cfg.acc,n:10,i:0,ok:0,errs:[],hist:[],cur:null,prev:null,done:false,waiting:false,cfg:cfg,t0:0};
   logEvent("clavier_start",{clef:KX.clef,dir:KX.dir,acc:KX.acc});
   $("kHead").textContent=(KX.dir==="read"?"Lis et joue":"Trouve le nom")+" · clé de "+(KX.clef==="sol"?"sol":"fa")+(KX.acc?" · ♯♭":"");
@@ -4423,7 +4804,8 @@ function finishKbdAnswer(correct,marks,msg){
   if(KX.dir==="name") $("kNames").style.display="none";
   logEvent("clavier_answer",{dir:KX.dir,midi:KX.cur.midi,acc:!!KX.cur.acc,correct:correct,ms:Date.now()-KX.t0});
   kbdDots(); save();
-  setTimeout(function(){ if(KX&&!KX.done) nextKbd(); }, correct?750:1300);
+  const session=KX, step=KX.i;
+  kbdAdvanceTimer=setTimeout(function(){ if(KX===session&&!KX.done&&KX.i===step){kbdAdvanceTimer=null;nextKbd();} }, correct?750:1300);
 }
 function kbdTap(midi){
   if(!KX||KX.waiting||KX.done||KX.dir!=="read") return;
@@ -4438,6 +4820,7 @@ function kbdName(opt){
     :('<span class="big">✕ C\'était '+kbdLabelOf(KX.cur)+'</span>'));
 }
 function finishClavier(){
+  clearKbdTimer();
   KX.done=true;
   markDay("clavier",KX.ok);
   logEvent("clavier_end",{dir:KX.dir,clef:KX.clef,acc:KX.acc,ok:KX.ok,errs:KX.errs.length});
@@ -4455,7 +4838,7 @@ function finishClavier(){
 
 /* ================= SYNCHRO ENTRE APPAREILS (Gist GitHub) ================= */
 /* Niveau 3 : backup cloud optionnel dans un Gist GitHub.
-   Contrat v13 : un token utilisateur, un gist, un fichier JSON, last-write-wins par timestamp global.
+   Contrat : un token utilisateur, un gist, un fichier JSON ; les divergences concurrentes sont bloquées au lieu d'écraser un appareil.
    Le token reste uniquement en mémoire de session : jamais dans localStorage, DB, exports ou QR. */
 const LS_SYNC="sezam_sync", LS_SYNC_LEGACY="solado_sync",
   GIST_FILE="sezam-progress.json", GIST_FILE_LEGACY="solado-save.json", GIST_DESC="SEZAM progression (auto)";
@@ -4495,12 +4878,24 @@ function syncDecision(localState,remoteState){
     const ls=stateScore(localState), rs=stateScore(remoteState);
     if(ls===0 && rs>0) return "pull";
     if(rs===0 && ls>0) return "push";
+    const lt=stateTimestamp(localState), rt=stateTimestamp(remoteState);
+    if(rt>lt&&rs<ls) return "conflict";
+    if(lt>rt&&ls<rs) return "conflict";
   }
   const lt=typeof localState==="number"?localState:stateTimestamp(localState);
   const rt=typeof remoteState==="number"?remoteState:stateTimestamp(remoteState);
   if((rt||0)>(lt||0)) return "pull";
   if((lt||0)>(rt||0)) return "push";
   return "none";
+}
+function syncTransferDecision(localState,remoteState){
+  const base=clampInt(syncCfg().lastRemoteTs,0,Number.MAX_SAFE_INTEGER,0);
+  const lt=stateTimestamp(localState), rt=stateTimestamp(remoteState);
+  if(base&&lt>base&&rt>base&&lt!==rt) return "conflict";
+  return syncDecision(localState,remoteState);
+}
+function syncConflictStatus(){
+  syncStatus("Conflit détecté : deux appareils ont progressé depuis la dernière synchro. Rien n’a été remplacé. Exporte les deux sauvegardes avant de choisir l’appareil principal.");
 }
 function syncStatus(msg){ const el=document.getElementById("syncMsg"); if(el) el.textContent=msg||""; }
 function queueCloudSync(delay){
@@ -4550,7 +4945,7 @@ function cloudDocument(){
     progress:{
       v:DB.v, mode:DB.mode, sel:DB.sel, seen:DB.seen, paliers:DB.paliers,
       days:DB.days, dailyProgress:DB.dailyProgress||{}, pieces:cloudPieces(), pieceProgress:DB.pieceProgress||{},
-      activePiece:DB.activePiece||"", pieceGoals:DB.pieceGoals||{}, questionClock:DB.questionClock||0, repairQueue:DB.repairQueue||[], easterEggs:DB.easterEggs||{}
+      activePiece:DB.activePiece||"", pieceGoals:DB.pieceGoals||{}, questionClock:DB.questionClock||0, repairQueue:DB.repairQueue||[], validationDrafts:DB.validationDrafts||{}, easterEggs:DB.easterEggs||{}
     },
     scores:{ xp:DB.xp||0, noteStats:DB.noteStats||{}, kbdStats:DB.kbdStats||{} },
     settings:{ sound:DB.sound, soundLong:DB.soundLong, haptic:DB.haptic, profile:DB.profile||{}, themeMode:DB.themeMode||"classique" },
@@ -4572,7 +4967,13 @@ function syncEnsure(cb){
     });
   });
 }
+let syncPendingRemote=null;
 function syncAdopt(remote){
+  if((EX&&!EX.done)||(KX&&!KX.done)){
+    syncPendingRemote=remote;
+    syncStatus("Progression distante trouvée : elle attend la fin de la séance pour éviter toute perte.");
+    return false;
+  }
   stashPreimport();
   const before=DB.xp||0;
   DB=ensureStructure(remote);
@@ -4586,6 +4987,16 @@ function syncAdopt(remote){
     '<p class="src">Pas d\'accord ? Stats & sauvegarde → Annuler l\'import.</p>'+
     '<button onclick="document.getElementById(\'overlay\').classList.remove(\'on\')">Continuer</button>';
   $("overlay").classList.add("on");
+  return true;
+}
+function flushPendingSync(){
+  if(!syncPendingRemote||(EX&&!EX.done)||(KX&&!KX.done)) return false;
+  const remote=syncPendingRemote; syncPendingRemote=null;
+  const decision=syncTransferDecision(DB,remote);
+  if(decision==="pull") return syncAdopt(remote);
+  if(decision==="push"){syncPush(true);return true;}
+  if(decision==="conflict"){syncConflictStatus();return false;}
+  return true;
 }
 function syncPush(force){
   if(!syncEnabled()) return;
@@ -4596,7 +5007,9 @@ function syncPush(force){
     if(!g){syncBusy=false;syncStatus("Synchro reportée : impossible de vérifier la sauvegarde distante.");return;}
     const remote=parseRemote(g);
     if(g&&remoteFile(g)&&!remote){syncBusy=false;syncStatus("Sauvegarde distante illisible : aucun envoi effectué. Exporte tes données puis vérifie le Gist GitHub.");return;}
-    if(remote && syncDecision(DB,remote)==="pull"){ syncBusy=false; syncAdopt(remote); return; }
+    const decision=remote?syncTransferDecision(DB,remote):"push";
+    if(decision==="conflict"){syncBusy=false;syncConflictStatus();return;}
+    if(remote && decision==="pull"){ syncBusy=false; syncAdopt(remote); return; }
     const files={}; files[GIST_FILE]={content:cloudSaveContent()};
     gistApi("PATCH","/gists/"+syncCfg().gistId,{files:files},function(res){
       syncBusy=false;
@@ -4615,9 +5028,10 @@ function syncPull(){
       if(g&&remoteFile(g)){syncStatus("Sauvegarde distante illisible : SEZAM ne l’écrase pas. Exporte tes données puis vérifie le Gist GitHub.");return;}
       syncPush(true); return;
     }
-    const dec=syncDecision(DB,remote);
+    const dec=syncTransferDecision(DB,remote);
     if(dec==="pull") syncAdopt(remote);
     else if(dec==="push") syncPush(true);
+    else if(dec==="conflict") syncConflictStatus();
     else { syncSet({lastSync:Date.now(),lastRemoteTs:stateTimestamp(DB)}); syncStatus("À jour ✓"); }
   });
 }
@@ -4672,7 +5086,7 @@ function compactSave(){
   const out={v:DB.v,xp:DB.xp,sound:DB.sound,soundLong:DB.soundLong,haptic:DB.haptic,mode:DB.mode,sel:DB.sel,themeMode:DB.themeMode||"classique",
              _sezam:DB._sezam,days:DB.days,dailyProgress:DB.dailyProgress||{},seen:DB.seen,noteStats:{},paliers:{},pieces:DB.pieces||[],pieceProgress:DB.pieceProgress||{},
              activePiece:DB.activePiece||"",pieceGoals:DB.pieceGoals||{},profile:DB.profile,kbdStats:DB.kbdStats,
-             questionClock:DB.questionClock||0,repairQueue:DB.repairQueue||[],easterEggs:DB.easterEggs||{}};
+             questionClock:DB.questionClock||0,repairQueue:DB.repairQueue||[],validationDrafts:DB.validationDrafts||{},easterEggs:DB.easterEggs||{}};
   Object.keys(DB.noteStats||{}).forEach(function(k){ const s=DB.noteStats[k]; if(s&&(s.v||s.e||s.box||s.due)) out.noteStats[k]=s; });
   Object.keys(DB.paliers||{}).forEach(function(pid){
     const st=DB.paliers[pid], o={};
@@ -4710,7 +5124,7 @@ $("btnProfileQuick").onclick=openMusicProfile;
 $("btnSerie").onclick=startSerie;
 $("btnRafale").onclick=startRafale;
 $("btnClavier").onclick=startClavier;
-$("kQuit").onclick=function(){ if(KX&&!KX.done)logEvent("clavier_quit",{i:KX.i}); KX=null; renderHome(); show("scrHome"); };
+$("kQuit").onclick=function(){ clearKbdTimer(); if(KX&&!KX.done)logEvent("clavier_quit",{i:KX.i}); KX=null; renderHome(); show("scrHome"); flushPendingSync(); };
 $("btnStats").onclick=renderStats;
 $("btnThemeQuick").onclick=renderStats;
 $("btnStatsBack").onclick=function(){renderHome();show("scrHome");};
@@ -4729,15 +5143,20 @@ $("btnNext").onclick=function(){
   }
 };
 $("btnQuit").onclick=function(){
-  if(EX&&EX.daily&&!EX.done&&(EX.stopRequested||Date.now()>=EX.daily.endAt)){
-    logEvent("daily_session_finish",{palier:EX.palier?EX.palier.id:null,mode:EX.mode,i:EX.i});
-    finishSerie(); return;
+  if(EX&&EX.daily&&!EX.done){
+    const bonus=EX.currentTask&&EX.currentTask.role==="bonus", expired=EX.stopRequested||Date.now()>=EX.daily.endAt;
+    if(!bonus&&!expired&&typeof window.confirm==="function"&&!window.confirm("Arrêter maintenant et voir le bilan ? La pratique déjà faite sera conservée ; la séance ne sera marquée terminée qu’après 10 questions musicales.")) return;
+    if(EX.hist.length||EX.questionRecords.length||bonus||expired){
+      logEvent("daily_session_finish",{palier:EX.palier?EX.palier.id:null,mode:EX.mode,i:EX.i,early:!expired});
+      finishSerie(); return;
+    }
   }
   if(EX&&!EX.done) logEvent(EX.daily?"daily_session_abort":"abandon",{palier:EX.palier?EX.palier.id:null,mode:EX.mode,i:EX.i});
-  if(rafTimer)clearInterval(rafTimer); clearQTimers(); clearDailyTimer(); if(EX)EX.done=true; save(); renderHome(); show("scrHome");
+  if(rafTimer)clearInterval(rafTimer); clearQTimers(); clearDailyTimer(); if(EX)EX.done=true; save(); renderHome(); show("scrHome"); flushPendingSync();
 };
 $("btnAgain").onclick=function(){
-  if(EX.daily){renderHome();show("scrHome");return;}
+  if(syncPendingRemote){renderHome();show("scrHome");flushPendingSync();return;}
+  if(EX.daily){renderHome();show("scrHome");flushPendingSync();return;}
   if(EX.review==="due"){ if(unlockedNoteIds().filter(isDue).length){ startRevision(); } else { renderHome(); show("scrHome"); } return; }
   if(EX.review==="star"){ renderHome(); show("scrHome"); return; }
   if(EX.kind==="rafale") startRafale();
@@ -4751,19 +5170,23 @@ $("btnAgain").onclick=function(){
   else if(EX.sessionMode==="flash") startCoachPlay();
   else startSerie();
 };
-$("btnHome").onclick=function(){ renderHome(); show("scrHome"); };
+$("btnHome").onclick=function(){ renderHome(); show("scrHome"); flushPendingSync(); };
 $("btnSound").onclick=function(){
   if(DB.sound&&DB.soundLong){DB.soundLong=false;}
   else if(DB.sound){DB.sound=false;}
   else {DB.sound=true;DB.soundLong=true;}
   save(); header(); syncPush();
 };
-$("btnCopy").onclick=function(){
+$("btnCopy").onclick=async function(){
   const t=$("expArea");
-  t.select(); t.setSelectionRange(0,999999);
   let ok=false;
-  try{ ok=document.execCommand("copy"); }catch(e){}
-  if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(t.value); ok=true; }
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    try{ await navigator.clipboard.writeText(t.value); ok=true; }catch(e){}
+  }
+  if(!ok){
+    t.select(); t.setSelectionRange(0,999999);
+    try{ ok=!!document.execCommand("copy"); }catch(e){}
+  }
   $("saveMsg").textContent= ok?"Sauvegarde copiée. Colle-la dans une note pour la garder.":"Sélectionne le texte et copie-le manuellement.";
 };
 $("btnImport").onclick=function(){
@@ -4777,6 +5200,7 @@ $("btnUndoImport").onclick=function(){
 $("btnImportFile").onclick=function(){ $("fileInput").click(); };
 $("fileInput").onchange=function(e){
   const f=e.target.files&&e.target.files[0]; if(!f) return;
+  if(f.size>MAX_IMPORT_TEXT_BYTES){ $("saveMsg").textContent="Fichier trop volumineux : limite 4 Mo."; e.target.value=""; return; }
   const r=new FileReader();
   r.onload=function(){ const msg=importSave(String(r.result)); renderStats(); $("saveMsg").textContent=msg; header(); e.target.value=""; };
   r.onerror=function(){ $("saveMsg").textContent="Lecture du fichier impossible."; };
@@ -4831,14 +5255,20 @@ $("btnDownload").onclick=function(){
   }catch(e){ $("saveMsg").textContent="Téléchargement impossible sur cet appareil — utilise « Copier »."; }
 };
 
-load(); renderHome(); loadWatchFeed(); applyStartupRecovery(); idbRescue(); syncPull();
+load();
+idbRescue(function(){
+  renderHome(); loadWatchFeed(); applyStartupRecovery(); syncPull();
+});
 // Filet ultime : une erreur JS inattendue ne doit jamais coûter la progression.
 window.addEventListener("error",function(){ try{ save({touch:false,cloud:false}); }catch(e){} });
 window.addEventListener("unhandledrejection",function(){ try{ save({touch:false,cloud:false}); }catch(e){} });
 // Sauvegarde de dernière chance quand l'app passe en arrière-plan ou se ferme (mobile surtout).
 function persistOnExit(){try{save({touch:false,cloud:false});}catch(e){}}
 window.addEventListener("pagehide",persistOnExit);
-document.addEventListener("visibilitychange",function(){if(document.visibilityState==="hidden")persistOnExit();});
+document.addEventListener("visibilitychange",function(){
+  if(document.visibilityState==="hidden"){ pauseDailySession(); persistOnExit(); }
+  else resumeDailySession();
+});
 window.addEventListener("online",function(){ try{ $("syncState").textContent=syncStateText(); syncOnline(); }catch(e){} });
 window.addEventListener("offline",function(){ try{ $("syncState").textContent=syncStateText(); syncStatus("Hors ligne : toutes les sauvegardes locales restent actives."); }catch(e){} });
 if("serviceWorker" in navigator){ window.addEventListener("load",function(){ navigator.serviceWorker.register("sw.js").catch(function(){}); }); }
