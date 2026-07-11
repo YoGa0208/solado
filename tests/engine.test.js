@@ -72,16 +72,16 @@ function loadEngine() {
     "palierPlayable", "valProgress", "PALIERS", "TIERS", "TIER_IDS", "NOTES",
     "buildKeyboard", "pcOf", "isWhite", "pickKbdTarget", "nameOptions", "withAcc",
     "baseNoteObj", "kbdRangeFor", "freshPalierState", "SRS_DAYS", "normalizePiece", "normalizeAttachment", "normalizeSegment", "MAX_PIECE_ATTACHMENT_BYTES", "MAX_TOTAL_ATTACHMENT_BYTES", "SAFE_ATTACHMENT_TYPES", "pieceFileType",
-    "normalizeQuestion", "normalizeDay", "normalizeSegmentState", "normalizeNoteStat", "normalizeConfusions", "normalizeRepairItem", "normalizeRepairQueue", "markDay", "activeDayKeys", "streak", "todayStr",
-    "longestStreak", "weekStats", "practiceTotals", "trophyDefs", "trophiesEarned",
+    "normalizeQuestion", "normalizeDay", "normalizeSegmentState", "normalizeNoteStat", "normalizeConfusions", "normalizeRepairItem", "normalizeRepairQueue", "normalizeEasterEggs", "markDay", "activeDayKeys", "streak", "todayStr",
+    "longestStreak", "weekStats", "practiceTotals", "trophyDefs", "shownTrophyDefs", "trophiesEarned", "BONUS_EGG_DEFS", "awardEasterEgg",
     "writtenLabelOf", "kbdLabelOf", "recoveryCodeInfo", "applyRecoveryCode",
     "trainingFocusText", "stateTimestamp", "stateScore", "shouldAdopt", "backupToDb", "THEME_MODES", "themeModeLabel", "watchHomeItems",
     "PROFILE_INSTRUMENTS", "PROFILE_PATHS", "PROFILE_LEVELS", "PRACTICE_DOMAINS", "normalizeProfile", "normalizeDailyProgress",
     "coachDecision", "repairPool", "fragileNoteIds", "globalPrecision", "sessionCountToday",
     "dailyPlan", "splitPlanMinutes", "targetCadence", "dailyMission", "dailyFocusDomain", "DAILY_BLOCK_IDS", "runDailyBlock",
-    "buildDailySession", "dailyPhaseAt", "dailyPhasePool", "dailyPhaseLabel", "startDailySession",
+    "buildDailySession", "dailyPhaseAt", "dailyPhasePool", "dailyPhaseLabel", "dailyTransferReadyForBonus", "dailyBonusTask", "startDailySession",
     "pendingRepairIds", "responseKey", "confusedNoteId", "recordConfusion", "scheduleRepair", "dueRepairForSession", "repairBlockedIds", "ordinaryQuestionPool", "nearTransferId", "advanceRepair",
-    "validationRecordFromQuestions", "questionTask", "completeMission", "startRevision", "timeUp", "updateDailyClock", "clearQTimers", "clearDailyTimer",
+    "validationRecordFromQuestions", "questionTask", "completeMission", "solveBonusEgg", "startRevision", "timeUp", "updateDailyClock", "clearQTimers", "clearDailyTimer",
     "recentErrorsCount", "longPauseSignal", "timeSinceLastSession", "lastPracticeAt", "LONG_BREAK_MS",
     "pieceSegments", "segmentNotePool", "segmentQuestionCount", "segmentGroupN", "segmentProgress", "segmentProgressLabel",
     "segmentMastery", "recordSegmentResult", "SEGMENT_MASTERY_GAP_MS", "nextSegmentForPiece", "PIECE_SEGMENT_HANDS", "PIECE_SEGMENT_FOCUSES",
@@ -91,7 +91,7 @@ function loadEngine() {
     "noteOccurrencesInPiece", "measureSegment", "pieceMapSVG", "mapLegendHtml", "markSegmentSeen", "toggleSegmentFlag",
     "setSegmentFeel", "feelLabel", "beginSerie", "answer", "answerPos", "startPieceSegment", "renderResPiece", "nextQuestion",
     "beginClavier", "nextKbd", "kbdTap", "renderKbd",
-    "STAFF", "staffSVG", "clefSVG", "noteGlyph", "yOf", "previewNoteHtml",
+    "STAFF", "staffSVG", "bonusStaffSVG", "clefSVG", "noteGlyph", "yOf", "previewNoteHtml",
     "currentRecoveryCode", "mirrorIntro", "tone", "save", "readKey",
     "syncDecision", "syncCfg", "syncSet", "syncClear", "syncEnabled", "syncPush", "syncPull", "parseRemote", "sessionTokenGet",
     "cloudDocument", "cloudSaveContent", "cloudPieces", "looksLikeToken", "persistOnExit", "APP_VERSION"
@@ -518,17 +518,20 @@ eq((E.noteGlyph(200, 2, "#000", null, 2).match(/<ellipse/g) || []).length, 2, "b
 eq((E.noteGlyph(200, 2, "#000", null, 1).match(/<ellipse/g) || []).length, 1, "big=1 (exercice) : tête seule, pas de halo");
 const yP10 = E.yOf(10);
 const svgMark = E.staffSVG("fa", [{ p: 10, color: "#000", x: 200, big: 1, mark: "bad" }]);
-ok(svgMark.indexOf('class="clef clef-fa"') >= 0 && svgMark.indexOf("\u{1D122}") >= 0,
-  "clé de fa rendue avec le glyphe musical standard 𝄢");
+ok(svgMark.indexOf('class="clef clef-fa"') >= 0 && svgMark.indexOf('class="clef-fa-curve"') >= 0,
+  "clé de fa rendue par un tracé vectoriel stable entre navigateurs");
 ok(svgMark.indexOf('data-ref-p="6" data-ref-y="' + E.yOf(6) + '"') >= 0,
   "clé de fa : point d'ancrage calé sur la ligne du fa (p=6)");
-ok(svgMark.indexOf('dominant-baseline="central"') >= 0 && svgMark.indexOf('data-upper-y="' + E.yOf(7) + '"') >= 0 &&
-   svgMark.indexOf('data-lower-y="' + E.yOf(5) + '"') >= 0,
-  "clé de fa : glyphe centré sur la ligne du fa, avec repères d'interlignes de l'armature");
-ok(svgMark.indexOf("Apple Symbols") >= 0 && svgMark.indexOf("Bravura") >= 0,
-  "clé de fa : pile de polices musicales explicite");
-ok(svgMark.indexOf('font-family=""') < 0 && /font-family="'Apple Symbols','Noto Music'/.test(svgMark),
-  "clé de fa : attribut font-family SVG syntaxiquement valide");
+ok(svgMark.indexOf('data-upper-y="' + E.yOf(7) + '"') >= 0 && svgMark.indexOf('data-lower-y="' + E.yOf(5) + '"') >= 0 &&
+   svgMark.indexOf('data-dot-p="7"') >= 0 && svgMark.indexOf('data-dot-p="5"') >= 0,
+  "clé de fa : les deux points encadrent exactement la quatrième ligne");
+ok(svgMark.indexOf('<text class="clef clef-fa"') < 0 && svgMark.indexOf('dominant-baseline') < 0,
+  "clé de fa indépendante des métriques de police qui provoquaient le décalage Firefox");
+const bonusClefWrong=E.bonusStaffSVG("clef-fa",false), bonusClefFixed=E.bonusStaffSVG("clef-fa",true);
+ok(bonusClefWrong.indexOf('data-shift="-18"')>=0&&bonusClefWrong.indexOf('id="bonusTarget"')>=0,
+  "egg du copiste : une clé volontairement déplacée reste interactive seulement dans l'atelier bonus");
+ok(bonusClefFixed.indexOf('data-shift="0"')>=0&&bonusClefFixed.indexOf('id="bonusTarget"')<0,
+  "egg du copiste : la clé se replace sur la bonne ligne après découverte");
 ok(svgMark.indexOf('y="' + (yP10 + 34) + '"') >= 0, "marque ✕ d'une note haute basculée SOUS la note (plus de coupure en haut)");
 ok(E.staffSVG("sol", [{ p: 0, color: "#000", x: 200, big: 1, mark: "good" }]).indexOf("✓") >= 0, "marque ✓ présente (canal lisible sans couleur)");
 ok(E.previewNoteHtml("sol4", true).indexOf("hearbtn") >= 0, "préparation : chaque note propose un bouton d'écoute");
@@ -579,7 +582,7 @@ ok(/continuité/.test(E.mirrorIntro()), "streak ≥ 10 jours → intro continuit
 group("Service worker & fichiers — garde-fous de livraison");
 const swSrc = fs.readFileSync(path.join(__dirname, "..", "sw.js"), "utf8");
 const mv = swSrc.match(/sezam-solado-v(\d+)/);
-ok(mv && Number(mv[1]) >= 25, "CACHE_NAME dédié à l'app et incrémenté (≥ sezam-solado-v25)");
+ok(mv && Number(mv[1]) >= 26, "CACHE_NAME dédié à l'app et incrémenté (≥ sezam-solado-v26)");
 ok(/navigate/.test(swSrc), "documents servis réseau d'abord (plus de vieille version à vie)");
 ok(/new URL\(req\.url\)\.origin !== self\.location\.origin/.test(swSrc), "le SW compare réellement les origines et n'intercepte pas l'API GitHub");
 ok(/key\.startsWith\(CACHE_PREFIX\) && key !== CACHE_NAME/.test(swSrc), "le SW ne supprime que les anciens caches SEZAM, jamais ceux d'une autre app");
@@ -651,7 +654,7 @@ eq(E.getDB().profile.parcours, "libre", "ancien joueur : parcours libre par déf
 eq(E.getDB().profile.dailyMinutes, 20, "durée de séance par défaut : 20 minutes");
 eq(E.getDB().profile.daysPerWeek, 5, "cadence par défaut : 5 jours par semaine");
 eq(E.getDB().profile.domains, E.PRACTICE_DOMAINS.map(d => d.id), "les six domaines sont proposés par défaut");
-eq(E.getDB()._sezam.schema, 9, "schéma local v9 pour la séance et les réparations actives");
+eq(E.getDB()._sezam.schema, 10, "schéma local v10 pour les bonus secrets persistants");
 const sanitizedProfile = E.normalizeProfile({
   displayName: "  <Youcef>   Test  ", instrument: "inconnu", parcours: "rattrapage_a2",
   niveauDepart: "annee2", targetDate: "2026-02-30", dailyMinutes: 999, daysPerWeek: 0,
@@ -732,6 +735,32 @@ eq(E.getEl("btnQuit").textContent,"Terminer maintenant","à l'échéance, le bou
 E.getEl("btnQuit").onclick();
 ok(E.getEX().done===true&&E.getDB().dailyProgress[E.todayStr()].session,"le clic d'échéance termine et enregistre réellement le bilan quotidien");
 E.clearQTimers(); E.clearDailyTimer();
+freshDB();
+const bonusStart=Date.now(), bonusDaily=E.buildDailySession(E.coachDecision(),bonusStart);
+bonusDaily.blocks.slice(0,3).forEach(b => { b.endAt=bonusStart-1; });
+bonusDaily.blocks[3].endAt=bonusStart+60000; bonusDaily.endAt=bonusStart+60000;
+bonusDaily.focusDomain="lecture"; bonusDaily.transferScript=[]; bonusDaily.transferReads=3;
+ok(E.dailyTransferReadyForBonus(bonusDaily)===true,"après le transfert prévu, le temps restant bascule vers l'atelier bonus");
+E.beginSerie({sessionMode:"daily",palier:E.PALIERS[0],pool:E.PALIERS[0].notes,mode:"zen",groupN:1,openEnded:true,daily:bonusDaily,cold:false});
+eq(E.getEX().qtype,"bonus","la fin de séance propose immédiatement une activité bonus au lieu d'un temps mort");
+ok(/Atelier bonus/.test(E.getEl("exMode").textContent),"le chronomètre nomme clairement le temps bonus au lieu de laisser croire que la séance attend");
+eq(E.getEX().currentTask.bonusKind,"clef-fa","le premier mystère permet de remettre la clé de fa");
+const bonusI=E.getEX().i, bonusHist=E.getEX().hist.length, bonusXp=E.getDB().xp;
+E.solveBonusEgg();
+eq(E.getDB().xp,bonusXp+3,"remettre spontanément la clé de fa rapporte le petit bonus prévu");
+ok(E.getEX().currentTask.bonusSolved===true&&E.getEX().daily.bonusFound===1,"la découverte est visible dans le bilan de séance");
+eq([E.getEX().i,E.getEX().hist.length],[bonusI,bonusHist],"un egg ne compte jamais comme réponse ni comme preuve pédagogique");
+ok(E.awardEasterEgg("clef-fa").awarded===false&&E.getDB().xp===bonusXp+3,"un même egg ne peut être récolté qu'une fois par jour");
+ok(E.compactSave().indexOf('"easterEggs"')>=0&&E.cloudDocument().progress.easterEggs.total===1,
+  "les secrets gagnés suivent les sauvegardes locale, QR et cloud");
+E.nextQuestion();
+eq(E.getEX().currentTask.bonusKind,"ligne-or","les mystères tournent pour investir le temps restant sans répétition vide");
+E.clearQTimers(); E.clearDailyTimer(); E.haltEX();
+freshDB();
+E.getDB().easterEggs=E.normalizeEasterEggs({byId:{"clef-fa":2},total:2});
+ok(E.shownTrophyDefs().every(t => t.id!=="copiste"),"le trophée secret reste invisible avant d'être mérité");
+E.getDB().easterEggs=E.normalizeEasterEggs({byId:{"clef-fa":3},total:3});
+ok(E.shownTrophyDefs().some(t => t.id==="copiste"&&t.on),"trois clés remises révèlent le trophée secret Œil du copiste");
 ok(idx.indexOf('data-plan-action') < 0 && idx.indexOf('$("btnPlayNow").onclick=startDailySession') >= 0,
   "un seul bouton principal lance toute la séance chronométrée");
 
