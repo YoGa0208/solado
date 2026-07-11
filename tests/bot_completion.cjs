@@ -141,12 +141,16 @@ const wall = (Date.now() - t0) / 1000;
 /* ---- BILAN ---- */
 const db = E.getDB();
 const trophies = E.trophyDefs().filter(t => t.on).map(t => t.id);
-const counts = E.PIECES_BUILTIN.filter(p => E.pieceMelody(p)).map(p => E.pieceStateCounts(p));
+const playablePieces = E.PIECES_BUILTIN.filter(p => E.pieceMelody(p));
+const counts = playablePieces.map(p => E.pieceStateCounts(p));
+const passageTotal = counts.reduce((n, c) => n + c.total, 0);
 const allMaster = counts.every(c => c.maitrise === c.total);
 console.log("\n──────── PARTIE TERMINÉE ────────");
 console.log("Validations paliers : " + Object.keys(db.paliers).reduce((n, pid) =>
   n + E.TIER_IDS.filter(t => db.paliers[pid][t] && db.paliers[pid][t].ok).length, 0) + " / 90");
-console.log("Bibliothèque : " + (allMaster ? "8 pièces / 34 passages tous Maîtrisés" : "INCOMPLET"));
+console.log("Bibliothèque : " + (allMaster
+  ? playablePieces.length + " pièces / " + passageTotal + " passages tous Maîtrisés"
+  : "INCOMPLÈTE (" + playablePieces.length + " pièces / " + passageTotal + " passages)"));
 console.log("Séries jouées : " + stats.series + " (dont partitions : " + pieceTotals.series + ")");
 console.log("Questions : " + stats.questions + " · Réponses données : " + stats.answers + " · Erreurs : " + stats.wrong);
 console.log("XP finale : " + db.xp + " · Trophées : " + trophies.length + " (" + trophies.join(", ") + ")");

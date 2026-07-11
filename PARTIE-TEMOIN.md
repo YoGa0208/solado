@@ -1,64 +1,89 @@
-# SEZAM — partie témoin complète (du premier JOUER au 100 %)
+# SEZAM — partie témoin complète
 
-J'ai joué la partie entière sur le vrai moteur (profil vierge, bot branché sur les fonctions réelles du jeu — `tests/bot_completion.cjs`, rejouable). Aucune triche d'état : chaque question a été répondue, chaque série validée par la vraie règle des « 3 séries propres ».
+Ce rapport mesure une partie parfaite sur le vrai moteur de SEZAM. Le bot répond juste à chaque question, suit les 15 paliers dans les 6 grades, puis porte tous les passages jouables à Maîtrisé.
 
-## Ce qu'il faut jouer pour « finir »
+La fiche destinée aux joueurs et aux accompagnants est [FICHE-COMPLETE-JEU.md](FICHE-COMPLETE-JEU.md).
 
-| Contenu | Volume |
-|---|---|
-| Validations de paliers | 90 (15 paliers × 6 niveaux Zen→Rhodium) |
-| Séries de paliers | 270 minimum (3 propres par validation) |
-| Passages de partition | 34, tous portés à **Maîtrisé** (8 pièces) |
+## Ce que le bot termine
+
+| Contenu | Volume exact |
+|---|---:|
+| Grades | 6, de Zen à Rhodium |
+| Paliers par grade | 15 : 5 Sol, 5 Fa, 5 Deux clés |
+| Validations | 90 |
+| Séries de paliers | 270 minimum |
+| Pièces jouables | 8 |
+| Passages de partition | 30, tous Maîtrisés |
 | Lectures de partition | 60 minimum |
-| Questions posées | 3 208 |
-| Notes lues (réponses) | **10 386** |
-| Récolte | 13 108 XP · code B5+ · 8 ambitions ★ · 5 trophées immédiats |
+| Séries totales | **330** |
+| Questions posées | **3 208** |
+| Réponses-note | **9 711** |
+| Récolte parfaite | 13 108 XP · code B5+ · 8 ambitions · 5 trophées immédiats |
 
-Les étoiles (75) restent volontairement hors d'atteinte rapide : revalidations à J+7, +30, +90, +180, +365. Le 100 % absolu est calendaire : **≥ 612 jours**, quel que soit le talent. C'est l'axe rétention, pas l'axe complétion.
+Le nombre de pièces et de passages affiché par le bot est calculé depuis la bibliothèque. Il n'est plus écrit en dur dans le test.
 
-## Mon temps
+## Temps mécanique
 
-- **Moteur pur : 2,8 secondes** (10 386 réponses justes, zéro erreur).
-- Au **plancher mécanique** de l'app réelle (délais de feedback incompressibles, réponses instantanées, mesuré en navigateur : série Zen 4,5 s, Bronze 8,0 s, passage 2,6 s) : **≈ 45–55 minutes**. C'est la borne physique absolue du jeu.
+Le moteur termine le calcul en quelques secondes. Dans l'application réelle, les délais de bonne réponse et les transitions représentent exactement **2 356,48 secondes**, soit **39,27 minutes**, dans ce scénario parfait.
 
-## Conversion humaine (modèle transparent)
+Ce nombre est une borne mécanique, pas une promesse humaine :
 
-`temps par série = réponses × réflexion + délais d'avance + 8 s de résultat/relance`, réflexion bornée par le chrono du niveau, multipliée par un facteur d'essais (la règle « 3 séries propres consécutives » fait rejouer ; les réparations s'intercalent).
+- les réponses sont instantanées ;
+- il n'y a aucune erreur ;
+- le temps de lecture, d'hésitation, de correction et de navigation humaine n'est pas reproduit ;
+- le bot simule le retour après le délai de consolidation des passages.
 
-| Niveau | Réflexion/note | Série | Facteur essais | Temps |
-|---|---|---|---|---|
-| Zen | 2,5 s | ~37 s | ×1,3 | ~36 min |
-| Bronze (5 s/note) | 2,2 s | ~59 s | ×1,5 | ~1 h 07 |
-| Argent (4 s) | 1,8 s | ~69 s | ×1,7 | ~1 h 28 |
-| Vermeil (3 s) | 1,5 s | ~75 s | ×2,0 | ~1 h 52 |
-| Or (2 s) | 1,2 s | ~75 s | ×2,5 | ~2 h 21 |
-| Rhodium (1 s) | 0,85 s | ~66 s | ×3,2 | ~2 h 38 |
-| Bibliothèque (90 lectures + bilans) | 2,5 s | ~59 s | — | ~1 h 30 |
-| Accueil, cartes, veille, réglages | | | | ~1 h |
+## Détail de la campagne
 
-**Total apprenant réaliste : ≈ 12 h 30 (± 2 h) → à 30 min/jour : ≈ 25 jours de jeu, soit 4 à 6 semaines réelles.**
-Lecteur déjà aguerri : ≈ 6 h → 12 jours. Moi : 2,8 s.
+Chaque grade exige 45 séries parfaites : trois preuves pour chacun des 15 paliers.
 
-Autre lecture : 1 seconde de bot ≈ 9 jours de pratique humaine assidue.
+| Grade | Séries | Questions | Réponses-note |
+|---|---:|---:|---:|
+| Zen | 45 | 450 | 450 |
+| Bronze | 45 | 450 | 855 |
+| Argent | 45 | 450 | 1 260 |
+| Vermeil | 45 | 450 | 1 665 |
+| Or | 45 | 450 | 2 070 |
+| Rhodium | 45 | 450 | 2 475 |
+| **Total campagne** | **270** | **2 700** | **8 775** |
 
-## Les ressorts, vécus depuis l'intérieur d'une session de 30 min
+La première question à froid de chaque série porte sur une note seule. Les neuf autres utilisent la taille de groupe du grade ; cela explique pourquoi le nombre de réponses augmente alors que chaque grade garde 450 écrans-question.
 
-**Semaine 1 (Zen).** Densité de récompense excellente : validation de P1 en 6–10 min, carte-cadeau culturelle, badge du jour (3 séries), premier passage de partition qui verdit sur la carte (+15 XP), ambition posée. Un événement gratifiant toutes les 40–90 secondes. Le bilan « Dans ta partition » donne du **sens** à chaque série — c'est le ressort le plus fort du jeu : on ne gagne pas des points, on gagne de la musique.
+## Détail de la bibliothèque
 
-**Semaines 2–4 (Bronze→Vermeil).** Tension courte bien construite (« 1/3 → 2/3 → validé »), une validation toutes les 10–15 min, promotions de passages intercalées. **Fragilité identifiée : le grind.** Finir = rejouer 6 fois les mêmes 15 paliers ; le chrono change le geste (lecture → réflexe) mais pas le contenu. La bibliothèque est l'antidote naturel — elle doit rester au premier plan.
+La bibliothèque jouable contient 8 pièces, 30 passages et 71 mesures encodées. Les passages courts et la pièce complète se recouvrent volontairement.
 
-**Fin de partie (Or/Rhodium).** Le chrono fait échouer : des sessions à zéro validation deviennent possibles. Filets existants : Réparation (victoire latérale garantie), partitions, rafale. **Fragilité identifiée : disette de récompense pour qui échoue au chrono.**
+Pour devenir Maîtrisé, chaque passage demande deux réussites propres séparées d'au moins 20 heures. Le minimum parfait représente :
 
-**Marathon.** Aucune barrière calendaire avant les étoiles : un expert peut « finir » en un week-end. Assumé (liberté du joueur) ; la mission du jour, les streaks et les étoiles portent la longévité.
+- 60 lectures ;
+- 508 écrans-question ;
+- 936 réponses-note.
 
-## Réparé immédiatement (trouvé en jouant)
+Le calendrier minimal de la campagne avec bibliothèque est donc d'au moins 20 heures, même pour un lecteur parfait. Dans une pratique normale répartie sur plusieurs jours, ce délai est absorbé naturellement.
 
-Maîtriser une pièce — l'accomplissement central du jeu — ne donnait **aucun trophée**. Ajouté et testé : **« Première œuvre »** (1 pièce entièrement maîtrisée) et **« Bibliothèque »** (les 8). Suite : 289 tests, 0 échec.
+## Conversion humaine
 
-## Recommandations (non implémentées, par priorité)
+Les estimations combinent le volume réel de réponses, les délais de l'interface, une durée de réflexion par note et un facteur de reprises croissant avec la vitesse.
 
-- **P2 — meilleur temps personnel par palier** aux niveaux chronométrés : une micro-victoire à chaque série, même sans validation (répond à la disette Or/Rhodium).
-- **P2 — une pièce surprise débloquée à chaque niveau complété** : du contenu neuf contre le grind (le domaine public est infini).
-- **P3 — mission du jour alternée** (un jour paliers, un jour partition) ; célébration visuelle à la promotion Maîtrisé (la fanfare sonore existe déjà).
+| Route | Profil | Temps actif | 10 min/j | 20 min/j | 30 min/j |
+|---|---|---:|---:|---:|---:|
+| Sessions de 10 questions | Intermédiaire | 10 à 14 h | 60 à 84 j | 30 à 42 j | 20 à 28 j |
+| Sessions de 10 questions | Débutant | 22 à 30 h | 132 à 180 j | 66 à 90 j | 44 à 60 j |
+| Séance quotidienne complète | Intermédiaire | 15 à 20 h | 90 à 120 j | 45 à 60 j | 30 à 40 j |
+| Séance quotidienne complète | Débutant | 35 à 45 h | 210 à 270 j | 105 à 135 j | 70 à 90 j |
 
-Les hypothèses de réflexion/erreur sont des estimations honnêtes ; les vrais chiffres viendront des ~20 joueurs (le journal local `events` les capture déjà : série par série, erreurs, abandons, retours).
+La séance quotidienne complète consacre 40 % du temps au rappel à froid, à la réparation et au transfert. Elle est donc plus longue pour finir la campagne, mais plus riche pour retenir et utiliser les acquis.
+
+## Prestige calendaire
+
+Les 15 paliers possèdent chacun cinq étoiles, soit 75 révisions. Les échéances sont cumulatives :
+
+`7 + 30 + 90 + 180 + 365 = 672 jours`
+
+Le prestige absolu est donc atteignable au plus tôt **672 jours après le dernier Rhodium** : étoile 1 à J+7, étoile 2 à J+37, étoile 3 à J+127, étoile 4 à J+307 et étoile 5 à J+672.
+
+## Lecture produit
+
+Le début du jeu récompense souvent : nouveaux repères, validations, cartes culturelles et premiers passages de pièces. Le milieu répète les mêmes 15 paliers avec des contraintes de groupe et de vitesse plus fortes. La bibliothèque et les missions de transfert donnent du sens à cette répétition.
+
+La séance quotidienne corrigée transforme chaque tranche persistante de 10 questions Cible en preuve de validation et avance automatiquement au palier suivant. Sans cette règle, une séance longue compterait comme une seule preuve et le bouton principal pourrait continuer à rejouer un palier déjà validé.

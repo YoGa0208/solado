@@ -23,14 +23,16 @@ Sur l'accueil, la tuile **« Ton œuvre en cours »** t'ouvre ta pièce :
 - **Facile / Juste bien / Difficile** : ton ressenti ajuste l'ordre des prochains passages.
 - **Bibliothèque** : huit pièces du domaine public t'attendent, du tout premier niveau (Au clair de la lune, trois notes) à la clé de fa (Ode à la joie main gauche). Tu peux aussi ajouter tes propres partitions.
 
-## Comment la v26 te fait progresser
+## Comment la v27 te fait progresser
 
 - La première question est un **rappel à froid**, sans indice : elle mesure ce qui est vraiment resté.
 - Après une erreur, lis la correction. En série, la note revient après deux autres questions ; dans la séance quotidienne, elle attend au moins ces deux questions puis son créneau Réparation. Un contraste proche vérifie ensuite que tu ne devines pas.
 - Une réussite répétée immédiatement consolide, mais ne devient pas artificiellement un souvenir « ancré ».
 - Un passage est **Maîtrisé** seulement après deux réussites propres séparées dans le temps.
 - Une conquête déjà gagnée reste dans tes trophées, même si un nouvel essai révèle qu'un passage doit être retravaillé.
-- Le chronomètre global laisse finir l'élément en cours, puis arrête la séance. Dans les niveaux Bronze à Rhodium, le tempo propre au niveau reste toutefois vérifié pendant la phase cible.
+- Chaque tranche de 10 questions Cible compte comme une vraie preuve. Une tranche commencée n'est jamais perdue, et SEZAM passe tout seul au palier puis au grade suivant.
+- Le chronomètre global se met en pause si l'application passe en arrière-plan. Il laisse finir l'élément en cours, puis arrête la séance. Dans les niveaux Bronze à Rhodium, le tempo propre au niveau reste toutefois vérifié pendant la phase cible.
+- Tu peux arrêter plus tôt et voir ton bilan. En dessous de 10 questions musicales, le travail est conservé comme pratique partielle sans prétendre que toute la séance est terminée.
 
 ## Le temps bonus et les secrets
 
