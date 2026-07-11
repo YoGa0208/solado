@@ -323,9 +323,14 @@
   .profileGrid select,.profileGrid input{width:100%;margin-top:4px;background:var(--paper);border:1px solid rgba(15,76,92,.18);color:var(--petrole);border-radius:8px;padding:9px;font-size:13.5px;font-family:inherit;user-select:text;-webkit-user-select:text}
   .profileDomains{border:1px solid rgba(15,76,92,.14);border-radius:12px;padding:9px;margin:10px 0 0}
   .profileDomains legend{font-size:11.5px;color:var(--dim);letter-spacing:.4px;text-transform:uppercase;padding:0 5px}
-  .profileDomainGrid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+  .profileDomainGrid{display:grid;grid-template-columns:1fr;gap:7px}
   .profileDomainGrid label{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--petrole)}
   .profileDomainGrid input{width:auto;margin:0;accent-color:var(--petrole)}
+  .curriculumScope{margin:10px 0;border:1px solid rgba(184,137,58,.34);border-radius:16px 7px 16px 7px;background:rgba(255,253,247,.72);padding:9px 10px;color:var(--petrole)}
+  .curriculumScope summary{cursor:pointer;font-size:13px;font-weight:800;color:var(--or-deep)}
+  .curriculumScope ol{margin:9px 0 7px;padding-left:20px}
+  .curriculumScope li{font-size:12.5px;line-height:1.4;margin:5px 0}
+  .curriculumScope p{font-size:11.5px;line-height:1.4;color:var(--dim);margin:7px 0 0}
   .prepNotes{display:grid;grid-template-columns:1fr;gap:10px;margin:10px 0}
   .prepNote{display:block;background:rgba(255,253,247,.78);border:1px solid rgba(15,76,92,.16);border-radius:22px 8px 20px 8px;padding:10px}
   .prepStaff{width:100%;background:var(--creme);border:1px solid #d5d0c0;border-radius:22px 8px 20px 8px;padding:6px 0;margin-bottom:9px}
@@ -404,7 +409,7 @@
       <div class="cockpitMeta" id="cockpitMeta"></div>
       <button class="playbtn" id="btnPlayNow">JOUER</button>
       <div class="coachLine" id="coachLine"></div>
-      <button class="profileQuick" id="btnProfileQuick">Personnaliser ma séance</button>
+      <button class="profileQuick" id="btnProfileQuick">Mon parcours · lecture musicale</button>
     </section>
     <div class="dailyPlan" id="dailyPlan"></div>
     <div class="playerState" id="playerState"></div>
@@ -564,7 +569,7 @@ function esc(s){
   });
 }
 /* ================= DONNÉES ================= */
-const APP_VERSION="v28"; // garder aligné avec CACHE_NAME de sw.js (testé)
+const APP_VERSION="v29"; // garder aligné avec CACHE_NAME de sw.js (testé)
 const NOTES = {
   do4 :{n:"do", clef:"sol", p:-2, midi:60, mn:"Le do du milieu est transpercé par sa petite ligne, rien qu'à lui."},
   re4 :{n:"ré", clef:"sol", p:-1, midi:62, mn:"Collé juste sous la portée."},
@@ -606,7 +611,7 @@ const PALIERS = [
   {id:"B2", t:"Boss · les deux do",    sub:"deux clés, zone 2",      notes:U(["sol4","la4","si4","do5","re5"],["fa3","sol3","la3","si3","do4f"])},
   {id:"B3", t:"Boss · grand écart",    sub:"deux clés, zone 3",      notes:U(["sol4","la4","si4","do5","re5","mi5","fa5"],["re3","mi3","fa3","sol3","la3","si3","do4f"])},
   {id:"B4", t:"Boss · presque tout",   sub:"deux clés, zone 4",      notes:U(["mi4","fa4","sol4","la4","si4","do5","re5","mi5","fa5"],["si2","do3","re3","mi3","fa3","sol3","la3","si3","do4f"])},
-  {id:"B5", t:"Examen · Les Deux Clés",sub:"tout l'ambitus",         notes:U(["do4","re4","mi4","fa4","sol4","la4","si4","do5","re5","mi5","fa5"],["fa2","sol2","la2","si2","do3","re3","mi3","fa3","sol3","la3","si3","do4f"])}
+  {id:"B5", t:"Bilan de lecture · Les Deux Clés",sub:"tout l'ambitus",notes:U(["do4","re4","mi4","fa4","sol4","la4","si4","do5","re5","mi5","fa5"],["fa2","sol2","la2","si2","do3","re3","mi3","fa3","sol3","la3","si3","do4f"])}
 ];
 const CARDS = {
   P1:{t:"La clé de sol est une lettre",x:"La clé de sol est un G (sol en notation anglo-saxonne) devenu décoratif au fil des siècles de copie. Sa boucle s'enroule autour de la ligne du sol : la clé ne décore pas, elle désigne.",s:"À vérifier : Grove Music, art. « Clef »."},
@@ -651,25 +656,38 @@ const PROFILE_INSTRUMENTS=[
   {id:"autre",label:"Autre instrument"}
 ];
 const PROFILE_PATHS=[
-  {id:"decouverte_c1",label:"Découverte du Cycle 1"},
-  {id:"rattrapage_a2",label:"Rattrapage — année 2"},
-  {id:"preparation_c2",label:"Préparation au Cycle 2"},
-  {id:"libre",label:"Parcours libre"}
+  {id:"decouverte_c1",label:"Découvrir les notes"},
+  {id:"rattrapage_a2",label:"Reprendre en clé de fa"},
+  {id:"preparation_c2",label:"Consolider les deux clés"},
+  {id:"libre",label:"Explorer librement"}
 ];
 const PROFILE_LEVELS=[
   {id:"debutant",label:"Je débute"},
-  {id:"annee1",label:"Cycle 1 — année 1"},
-  {id:"annee2",label:"Cycle 1 — année 2"},
-  {id:"fin_c1",label:"Fin de Cycle 1"}
+  {id:"annee1",label:"Premiers repères"},
+  {id:"annee2",label:"Je commence la clé de fa"},
+  {id:"fin_c1",label:"Je lis déjà les deux clés"}
 ];
 const PRACTICE_DOMAINS=[
-  {id:"lecture",label:"Lecture"},
-  {id:"rythme",label:"Rythme"},
-  {id:"oreille",label:"Oreille"},
-  {id:"chant",label:"Chant"},
-  {id:"ecrit",label:"Écrit / théorie"},
-  {id:"integration",label:"Œuvre / intégration"}
+  {id:"lecture",label:"Lecture — évaluée"},
+  {id:"rythme",label:"Rythme — mission guidée"},
+  {id:"oreille",label:"Oreille — mission guidée"},
+  {id:"chant",label:"Chant — mission guidée"},
+  {id:"ecrit",label:"Écrit / théorie — mission guidée"},
+  {id:"integration",label:"Œuvre / intégration — guidée"}
 ];
+const CURRICULUM_CATALOG_VERSION=1;
+const CURRICULUM_SCOPE={
+  catalog:"data/curriculum-v1.json",
+  currentCompetencies:["c1-reading-landmarks","c1-reading-continuity"]
+};
+const CURRICULUM_EVIDENCE_TYPES=["recognition","production","retention","transfer","self_assessment","teacher_validation"];
+const CURRICULUM_PROGRESS_STATUSES=["not_started","learning","fragile","stable"];
+const MAX_CURRICULUM_OPAQUE_CHARS=1024*1024;
+const CURRICULUM_CURRENT_FALLBACK={
+  "c1-reading-landmarks":{id:"c1-reading-landmarks",deliveryStatus:"available_measured",evidence:["recognition","retention"],evidenceRequirements:{recognition:{minimumCovered:23},retention:{minimumCovered:23}}},
+  "c1-reading-continuity":{id:"c1-reading-continuity",deliveryStatus:"available_measured",evidence:["recognition","retention","transfer"],evidenceRequirements:{recognition:{minimumCovered:1},retention:{minimumCovered:1},transfer:{minimumCovered:1}}}
+};
+let CURRICULUM_CATALOG=null;
 const DAILY_MINUTES=[10,15,20,30,45,60].map(function(n){return {id:n,label:n+" minutes"};});
 const DAYS_PER_WEEK=[2,3,4,5,6,7].map(function(n){return {id:n,label:n+" jours / semaine"};});
 const THEME_MODES=[
@@ -857,6 +875,96 @@ function normalizeProfile(p){
     daysPerWeek:DAYS_PER_WEEK.some(function(x){return x.id===Number(p.daysPerWeek);})?Number(p.daysPerWeek):5,
     domains:domains
   };
+}
+function normalizeCurriculumProof(value){
+  value=isRecord(value)?value:{};
+  const attempts=clampInt(value.attempts,0,999999,0);
+  return {
+    attempts:attempts,
+    successes:clampInt(value.successes,0,attempts,0),
+    lastAt:clampInt(value.lastAt,0,Number.MAX_SAFE_INTEGER,0),
+    covered:clampInt(value.covered,0,9999,0)
+  };
+}
+function validCurriculumCatalog(value){
+  if(!isRecord(value)||!Array.isArray(value.cycles)||!Array.isArray(value.domains)||!Array.isArray(value.competencies)) return false;
+  const ids=safeMap();
+  for(let i=0;i<value.competencies.length;i++){
+    const c=value.competencies[i];
+    if(!isRecord(c)||!isSafeId(c.id)||ids[c.id]||!Array.isArray(c.evidence)||!Array.isArray(c.prerequisites)) return false;
+    if(!c.evidence.length||c.evidence.some(function(t){return CURRICULUM_EVIDENCE_TYPES.indexOf(t)<0;})) return false;
+    ids[c.id]=1;
+  }
+  return value.competencies.every(function(c){return c.prerequisites.every(function(id){return !!ids[id];});});
+}
+function curriculumCompetency(competencyId){
+  if(CURRICULUM_CATALOG){
+    return CURRICULUM_CATALOG.competencies.find(function(c){return c.id===competencyId;})||null;
+  }
+  return CURRICULUM_CURRENT_FALLBACK[competencyId]||null;
+}
+function curriculumStatusFromProofs(requested,proofs,selfRating,definition){
+  const types=Object.keys(proofs), attempts=types.reduce(function(n,type){return n+(proofs[type].attempts||0);},0);
+  if(!attempts&&!selfRating) return "not_started";
+  if(requested==="fragile") return "fragile";
+  if(requested!=="stable"||!definition||definition.deliveryStatus!=="available_measured") return "learning";
+  const required=(definition.evidence||[]).filter(function(type){return type!=="self_assessment";});
+  const rules=isRecord(definition.evidenceRequirements)?definition.evidenceRequirements:{};
+  const complete=required.length&&required.every(function(type){
+    const proof=proofs[type],rule=isRecord(rules[type])?rules[type]:{};
+    return !!proof&&proof.successes>0&&(!rule.minimumCovered||proof.covered>=rule.minimumCovered);
+  });
+  const durable=["retention","transfer","teacher_validation"].some(function(type){return proofs[type]&&proofs[type].successes>0;});
+  return complete&&durable?"stable":"learning";
+}
+function normalizeCurriculumState(value){
+  value=isRecord(value)?value:{};
+  if(typeof value.futureOpaque==="string"&&value.futureOpaque.length<=MAX_CURRICULUM_OPAQUE_CHARS){
+    try{const restored=JSON.parse(value.futureOpaque);if(isRecord(restored))value=restored;}catch(e){}
+  }
+  const sourceVersion=clampInt(value.catalogVersion,1,99,CURRICULUM_CATALOG_VERSION);
+  const runtimeVersion=CURRICULUM_CATALOG?clampInt(CURRICULUM_CATALOG.schemaVersion,1,99,CURRICULUM_CATALOG_VERSION):CURRICULUM_CATALOG_VERSION;
+  const forwardCompatible=sourceVersion>runtimeVersion;
+  if(forwardCompatible){
+    try{
+      const futureOpaque=JSON.stringify(value);
+      if(futureOpaque.length<=MAX_CURRICULUM_OPAQUE_CHARS) return {catalogVersion:sourceVersion,progress:safeMap(),futureOpaque:futureOpaque};
+    }catch(e){}
+    return {catalogVersion:sourceVersion,progress:safeMap(),futureOpaque:""};
+  }
+  const progress=safeMap(), raw=isRecord(value.progress)?value.progress:{};
+  Object.keys(raw).filter(isSafeId).slice(0,240).forEach(function(competencyId){
+    const definition=curriculumCompetency(competencyId);
+    if(CURRICULUM_CATALOG&&!forwardCompatible&&!definition) return;
+    const src=isRecord(raw[competencyId])?raw[competencyId]:{}, proofs=safeMap(), rawProofs=isRecord(src.proofs)?src.proofs:{};
+    CURRICULUM_EVIDENCE_TYPES.forEach(function(type){
+      if(hasOwn(rawProofs,type)) proofs[type]=normalizeCurriculumProof(rawProofs[type]);
+    });
+    const selfRating=clampInt(src.selfRating,0,4,0), requested=CURRICULUM_PROGRESS_STATUSES.indexOf(src.status)>=0?src.status:"not_started";
+    progress[competencyId]={
+      status:forwardCompatible?requested:curriculumStatusFromProofs(requested,proofs,selfRating,definition),
+      moduleId:isSafeId(src.moduleId)?String(src.moduleId):"",
+      updatedAt:clampInt(src.updatedAt,0,Number.MAX_SAFE_INTEGER,0),
+      selfRating:selfRating,
+      proofs:proofs
+    };
+  });
+  return {catalogVersion:sourceVersion,progress:progress};
+}
+function setCurriculumCatalog(value,persist){
+  if(!validCurriculumCatalog(value)) return false;
+  CURRICULUM_CATALOG=value;
+  if(DB){
+    DB=ensureStructure(DB);
+    if(persist) save({touch:false,cloud:false});
+  }
+  return true;
+}
+function loadCurriculumCatalog(){
+  if(!window||typeof window.fetch!=="function") return;
+  window.fetch(CURRICULUM_SCOPE.catalog,{cache:"no-cache"}).then(function(r){return r&&r.ok?r.json():null;}).then(function(value){
+    if(setCurriculumCatalog(value,true)){ try{renderHome();}catch(e){} }
+  }).catch(function(){});
 }
 const DAILY_BLOCK_IDS=["session","cible","rappel","reparation","transfert","lacunes","revisions","nouveaute","test","oeuvre"];
 const BONUS_EGG_DEFS=[
@@ -1147,6 +1255,59 @@ function normalizeKbdStats(value){
   }
   return out;
 }
+function derivedCurriculumEntry(db,competencyId,requested,proofs,updatedAt){
+  const one=safeMap();
+  one[competencyId]={status:requested,moduleId:"reading_engine_v1",updatedAt:updatedAt||0,selfRating:0,proofs:proofs};
+  return normalizeCurriculumState({catalogVersion:(db.curriculum&&db.curriculum.catalogVersion)||CURRICULUM_CATALOG_VERSION,progress:one}).progress[competencyId]||null;
+}
+function backfillCurriculumFromGame(db){
+  if(!isRecord(db)||!isRecord(db.curriculum)) return db;
+  const runtimeVersion=CURRICULUM_CATALOG?clampInt(CURRICULUM_CATALOG.schemaVersion,1,99,CURRICULUM_CATALOG_VERSION):CURRICULUM_CATALOG_VERSION;
+  if(clampInt(db.curriculum.catalogVersion,1,99,CURRICULUM_CATALOG_VERSION)>runtimeVersion) return db; // une ancienne app ne réécrit jamais un futur catalogue
+  const progress=db.curriculum.progress||safeMap();
+  let recognitionAttempts=0,recognitionSuccesses=0,retentionAttempts=0,retentionSuccesses=0,lastRecognition=0,lastRetention=0;
+  const recognitionCovered=safeMap(),retentionCovered=safeMap();
+  Object.keys(db.noteStats||{}).forEach(function(id){
+    const s=db.noteStats[id];
+    recognitionAttempts+=s.v||0;recognitionSuccesses+=Math.max(0,(s.v||0)-(s.e||0));lastRecognition=Math.max(lastRecognition,s.last||0);
+    retentionAttempts+=s.coldV||0;retentionSuccesses+=Math.max(0,(s.coldV||0)-(s.coldE||0));lastRetention=Math.max(lastRetention,s.lastCold||0);
+    if(s.v>0)recognitionCovered[id]=1;if((s.coldV||0)-(s.coldE||0)>0)retentionCovered[id]=1;
+  });
+  const useSeriesTotals=!recognitionAttempts,useSeriesRetention=!retentionAttempts;
+  PALIERS.forEach(function(p){TIER_IDS.forEach(function(t){(db.paliers[p.id][t].series||[]).forEach(function(row){
+    if(useSeriesTotals){recognitionAttempts+=10;recognitionSuccesses+=Math.max(0,10-(row.e||0));lastRecognition=Math.max(lastRecognition,row.ts||0);}
+    (row.ids||[]).forEach(function(id){if(NOTES[id])recognitionCovered[id]=1;});
+    if(row.cold){if(useSeriesRetention){retentionAttempts++;if(row.cold.ok)retentionSuccesses++;}if(row.cold.ok)retentionCovered[row.cold.id]=1;lastRetention=Math.max(lastRetention,row.ts||0);}
+  });});});
+  if(recognitionAttempts){
+    const fragile=(db.repairQueue||[]).length>0||(recognitionAttempts>=10&&recognitionSuccesses/recognitionAttempts<.8);
+    const rhodium=PALIERS.every(function(p){return !!(db.paliers&&db.paliers[p.id]&&db.paliers[p.id].rhodium&&db.paliers[p.id].rhodium.ok);});
+    const requiredNotes=uniq(PALIERS[PALIERS.length-1].notes).length,retainedNotes=Object.keys(retentionCovered).filter(function(id){return NOTES[id];}).length;
+    const proofs={
+      recognition:{attempts:recognitionAttempts,successes:recognitionSuccesses,lastAt:lastRecognition,covered:Object.keys(recognitionCovered).filter(function(id){return NOTES[id];}).length},
+      retention:{attempts:retentionAttempts,successes:retentionSuccesses,lastAt:lastRetention,covered:retainedNotes}
+    };
+    const entry=derivedCurriculumEntry(db,"c1-reading-landmarks",fragile?"fragile":(rhodium&&retainedNotes>=requiredNotes?"stable":"learning"),proofs,Math.max(lastRecognition,lastRetention));
+    if(entry) progress["c1-reading-landmarks"]=entry;
+  } else delete progress["c1-reading-landmarks"];
+
+  let passageAttempts=0,passageSuccesses=0,mastered=0,passageCovered=0,lastPassage=0,passageFragile=false;
+  Object.keys(db.pieceProgress||{}).forEach(function(pid){Object.keys(db.pieceProgress[pid]||{}).forEach(function(sid){
+    const s=db.pieceProgress[pid][sid];passageAttempts+=s.attempts||0;passageSuccesses+=(s.cleanAt||[]).length;lastPassage=Math.max(lastPassage,s.last||0);
+    if((s.cleanAt||[]).length)passageCovered++;if(s.mastery>=3||(s.cleanAt||[]).length>=2) mastered++;if(s.flagged||(s.attempts&&s.lastPrec<85)) passageFragile=true;
+  });});
+  if(passageAttempts){
+    const proofs={
+      recognition:{attempts:passageAttempts,successes:passageSuccesses,lastAt:lastPassage,covered:passageCovered},
+      retention:{attempts:mastered,successes:mastered,lastAt:lastPassage,covered:mastered},
+      transfer:{attempts:passageAttempts,successes:passageSuccesses,lastAt:lastPassage,covered:passageCovered}
+    };
+    const entry=derivedCurriculumEntry(db,"c1-reading-continuity",passageFragile?"fragile":(mastered?"stable":"learning"),proofs,lastPassage);
+    if(entry) progress["c1-reading-continuity"]=entry;
+  } else delete progress["c1-reading-continuity"];
+  db.curriculum.progress=progress;
+  return db;
+}
 /* Ambition posée par le joueur sur une pièce. */
 function normalizeGoal(g){
   if(!g||typeof g!=="object") return null;
@@ -1212,7 +1373,7 @@ function backupToDb(o){
   if(o.history && Array.isArray(o.history.events)) db.events=o.history.events;
   db._sezam={
     app:"SEZAM",
-    schema:12,
+    schema:13,
     userId:cleanId(o.userId,"user"),
     createdAt:clampInt(o.createdAt||o.timestamp,0,Number.MAX_SAFE_INTEGER,Date.now()),
     updatedAt:clampInt(o.timestamp,0,Number.MAX_SAFE_INTEGER,Date.now()),
@@ -1224,7 +1385,7 @@ function backupToDb(o){
 function ensureMeta(db){
   if(!db._sezam||typeof db._sezam!=="object") db._sezam={};
   db._sezam.app="SEZAM";
-  db._sezam.schema=12;
+  db._sezam.schema=13;
   if(!db._sezam.userId) db._sezam.userId=makeLocalId("user");
   db._sezam.userId=cleanId(db._sezam.userId,"user");
   if(db._sezam.playerId&&!isSafeId(db._sezam.playerId)) delete db._sezam.playerId;
@@ -1283,6 +1444,7 @@ function ensureStructure(db){
   db.events=Array.isArray(db.events)?db.events.slice(-500):[]; // journal d'événements local, toujours borné et normalisé
   db.kbdStats=normalizeKbdStats(db.kbdStats);
   db.profile=normalizeProfile(db.profile);
+  db.curriculum=normalizeCurriculumState(db.curriculum);
   db.dailyProgress=normalizeDailyProgress(db.dailyProgress);
   db.validationDrafts=normalizeValidationDrafts(db.validationDrafts);
   db.easterEggs=normalizeEasterEggs(db.easterEggs);
@@ -1325,8 +1487,8 @@ function ensureStructure(db){
   if(!db.mode||(db.mode!=="libre"&&TIER_IDS.indexOf(db.mode)<0)) db.mode="zen";
   if(db.mode!=="libre" && tierDef(db.mode) && tierDef(db.mode).future) db.mode="zen";
   if(!PALIERS.find(function(p){return p.id===db.sel;})) db.sel="P1";
-  db.v=11;
-  return db;
+  db.v=12;
+  return backfillCurriculumFromGame(db);
 }
 const LS_KEY="solfegeProto1", LS_MIRROR="solfegeProto1_mirror", LS_PREIMPORT="solfegeProto1_preimport", LS_CHECKPOINT="solfegeProto1_checkpoint";
 const PLAYER_REGISTRY_KEY="sezam_players_v1", PLAYER_FALLBACK_PREFIX="sezam_player_slot_", MAX_LOCAL_PLAYERS=8;
@@ -1583,7 +1745,7 @@ function save(opts){
   return ok&&registryOk;
 }
 function freshPlayerState(id,name){
-  const db=ensureStructure({_sezam:{app:"SEZAM",schema:12,userId:id,playerId:id,createdAt:Date.now(),updatedAt:Date.now()},profile:{displayName:name}});
+  const db=ensureStructure({_sezam:{app:"SEZAM",schema:13,userId:id,playerId:id,createdAt:Date.now(),updatedAt:Date.now()},profile:{displayName:name}});
   db._sezam.playerId=id;return db;
 }
 function playerSummary(state){
@@ -2311,6 +2473,11 @@ function openPlayerEditor(id){
   };
   setTimeout(function(){try{$("editPlayerName").focus();$("editPlayerName").select();}catch(e){}},0);
 }
+function curriculumScopeHtml(){
+  if(!CURRICULUM_CATALOG) return '<p>Le référentiel détaillé se charge. SEZAM évalue actuellement la lecture des notes ; il ne délivre aucune certification de cycle.</p>';
+  const rows=CURRICULUM_CATALOG.cycles.map(function(c){return '<li><b>'+esc(c.label)+'</b> — '+esc(c.appSummary||"Aucune validation annoncée.")+'</li>';}).join("");
+  return '<ol>'+rows+'</ol><p>'+esc(CURRICULUM_CATALOG.positioning&&CURRICULUM_CATALOG.positioning.statement||"")+'</p>';
+}
 function openMusicProfile(){
   const p=normalizeProfile(DB.profile), selected={};
   p.domains.forEach(function(id){selected[id]=1;});
@@ -2319,17 +2486,20 @@ function openMusicProfile(){
   }).join("");
   $("cardBox").innerHTML='<h3>Mon parcours</h3><h2>Une séance faite pour toi</h2>'+
     '<p>Ces réglages sont enregistrés sur ton appareil et inclus dans tes exports/QR. Ils rejoignent aussi ton Gist secret uniquement si tu actives la synchro GitHub.</p>'+
+    '<details class="curriculumScope"><summary>Repères du cursus · Cycles 1 → 3</summary>'+curriculumScopeHtml()+'</details>'+
     '<div class="profileGrid">'+
       '<label>Prénom ou nom d’usage<input id="profName" maxlength="40" autocomplete="nickname" value="'+esc(p.displayName)+'" placeholder="Facultatif"></label>'+
       '<label>Instrument<select id="profInstrument">'+optionHtml(PROFILE_INSTRUMENTS,p.instrument)+'</select></label>'+
-      '<label>Parcours<select id="profPath">'+optionHtml(PROFILE_PATHS,p.parcours)+'</select></label>'+
-      '<label>Niveau de départ<select id="profLevel">'+optionHtml(PROFILE_LEVELS,p.niveauDepart)+'</select></label>'+
+      '<label>Intention affichée<select id="profPath">'+optionHtml(PROFILE_PATHS,p.parcours)+'</select></label>'+
+      '<label>Point de départ déclaré<select id="profLevel">'+optionHtml(PROFILE_LEVELS,p.niveauDepart)+'</select></label>'+
+      '<p class="src" style="margin:0">Ce point de départ place l’exploration ; il ne valide aucun acquis et ne remplace pas un diagnostic.</p>'+
       '<label>Temps par séance<select id="profMinutes">'+optionHtml(DAILY_MINUTES,p.dailyMinutes)+'</select></label>'+
       '<label>Rythme hebdomadaire<select id="profDays">'+optionHtml(DAYS_PER_WEEK,p.daysPerWeek)+'</select></label>'+
       '<label>Date cible<input id="profTarget" type="date" value="'+esc(p.targetDate)+'"></label>'+
       '<label>Affinité<select id="profAffinity">'+optionHtml(PROFILE_AFFINITIES,p.affinity)+'</select></label>'+
       '<label>Aspiration<select id="profAspiration">'+optionHtml(PROFILE_ASPIRATIONS,p.aspiration)+'</select></label>'+
-    '</div><fieldset class="profileDomains" id="profDomains"><legend>Domaines à travailler</legend><div class="profileDomainGrid">'+domainHtml+'</div></fieldset>'+
+    '</div><fieldset class="profileDomains" id="profDomains"><legend>Missions de la séance</legend><div class="profileDomainGrid">'+domainHtml+'</div></fieldset>'+
+    '<p class="src">Seule la lecture produit aujourd’hui des preuves objectives. Les autres choix guident la séance sans valider une compétence.</p>'+
     '<p class="src" id="profMsg"></p><button id="profSave">Enregistrer mon parcours</button><button id="profCancel" style="margin-top:8px;background:var(--panel2);color:var(--ink)">Annuler</button>';
   $("overlay").classList.add("on");
   $("profCancel").onclick=function(){$("overlay").classList.remove("on");};
@@ -2532,6 +2702,8 @@ function dailyPlan(decision){
   ];
   const minutes=splitPlanMinutes(total,specs.map(function(x){return x.weight;}));
   const done=(DB.dailyProgress&&DB.dailyProgress[todayStr()])||{};
+  // Version du format de plan, volontairement stable entre v28 et v29 : une
+  // mise à jour de l'app ne doit pas faire rejouer une séance déjà terminée.
   const signature="v28:"+decision.palier.id+":"+(piece?piece.id:"aucune")+":"+total;
   const sessionDone=done.session===true||done.session===signature;
   return {
@@ -2621,7 +2793,7 @@ function renderPlayerState(decision){
       (amb?'<br>Ambition : '+esc(amb.def.label)+(amb.done?' ★ atteinte':' · '+amb.pct+' %'):'')+'</span></div>';
   }
   $("playerState").innerHTML=
-    '<div class="stateTile"><h3>Progression</h3><b>'+esc(prog)+'</b><span>'+esc(p.t)+'</span></div>'+
+    '<div class="stateTile"><h3>Lecture des notes</h3><b>'+esc(prog)+'</b><span>Repère Cycle 1 · '+esc(p.t)+'</span></div>'+
     '<div class="stateTile"><h3>Mémoire</h3><b>'+due+' à revoir</b><span>'+(prec===null?'Précision en construction':prec+'% précision globale')+'</span></div>'+
     pieceTile+
     '<div class="stateTile wide"><h3>Notes fragiles</h3><b>'+(frag.length?frag.map(function(id){return NOTES[id].n.toUpperCase();}).join(" · "):"Zone stable")+'</b><span>'+(frag.length?"Le coach les remet dans le jeu.":"Le prochain jeu ouvre la voie.")+'</span></div>';
@@ -4142,6 +4314,7 @@ function undoImport(){
   return "Import annulé : l'état précédent a été restauré.";
 }
 function renderStats(){
+  backfillCurriculumFromGame(DB);
   const playerName=activePlayerMeta()?activePlayerMeta().name:"Joueur";
   let v=0,e=0; Object.keys(DB.noteStats).forEach(function(k){v+=DB.noteStats[k].v;e+=DB.noteStats[k].e;});
   const prec=v?Math.round((v-e)/v*100):0;
@@ -5220,15 +5393,17 @@ function finishClavier(){
    Contrat : un token utilisateur, un gist, un fichier JSON ; les divergences concurrentes sont bloquées au lieu d'écraser un appareil.
    Le token reste uniquement en mémoire de session : jamais dans localStorage, DB, exports ou QR. */
 const LS_SYNC="sezam_sync", LS_SYNC_LEGACY="solado_sync",
-  GIST_FILE="sezam-progress.json", GIST_FILE_LEGACY="solado-save.json", GIST_DESC="SEZAM progression (auto)";
+  GIST_FILE="sezam-progress.json", GIST_FILE_LEGACY="solado-save.json", GIST_CLOUD_SCHEMA=2, GIST_DESC="SEZAM progression (auto)";
 let syncBusy=false, syncLastPush=0, syncQueued=null, syncTokenSessions=safeMap();
 function canSyncNow(){ return typeof navigator==="undefined" || navigator.onLine!==false; }
 function syncStorageKey(playerId){return LS_SYNC+":"+(isSafeId(playerId)?playerId:"invalid");}
-function playerGistFile(playerId){
+function playerGistUserId(playerId){
   playerId=isSafeId(playerId)?playerId:ACTIVE_PLAYER_ID;
   const meta=playerMetaById(playerId),userId=meta&&isSafeId(meta.userId)?meta.userId:playerId;
-  return "sezam-progress-"+(isSafeId(userId)?userId:"joueur")+".json";
+  return isSafeId(userId)?userId:"joueur";
 }
+function playerGistFile(playerId){return "sezam-progress-v2-"+playerGistUserId(playerId)+".json";}
+function legacyPlayerGistFile(playerId){return "sezam-progress-"+playerGistUserId(playerId)+".json";}
 function legacyGistAllowed(){const meta=activePlayerMeta();return !!(meta&&meta.legacyCloud);}
 function sessionTokenGet(playerId){playerId=isSafeId(playerId)?playerId:ACTIVE_PLAYER_ID;return syncTokenSessions[playerId]||"";}
 function sessionTokenSet(token,playerId){playerId=isSafeId(playerId)?playerId:ACTIVE_PLAYER_ID;syncTokenSessions[playerId]=String(token||"");}
@@ -5315,24 +5490,56 @@ function gistApi(method,path,body,cb){
 }
 function remoteFileName(g){
   if(!g||!g.files)return "";
-  const specific=playerGistFile(ACTIVE_PLAYER_ID);
+  const specific=playerGistFile(ACTIVE_PLAYER_ID),previousSpecific=legacyPlayerGistFile(ACTIVE_PLAYER_ID);
+  if(g.files[specific]&&g.files[previousSpecific]){
+    return cloudFileTimestamp(g.files[previousSpecific])>cloudFileTimestamp(g.files[specific])?previousSpecific:specific;
+  }
   if(g.files[specific])return specific;
+  if(g.files[previousSpecific])return previousSpecific;
   if(legacyGistAllowed()&&g.files[GIST_FILE])return GIST_FILE;
   if(legacyGistAllowed()&&g.files[GIST_FILE_LEGACY])return GIST_FILE_LEGACY;
   return "";
 }
+function cloudFileTimestamp(file){
+  if(!file||!file.content)return 0;
+  try{return stateTimestamp(JSON.parse(file.content));}catch(e){return 0;}
+}
 function remoteFile(g){
   const name=remoteFileName(g);return name&&g&&g.files?g.files[name]:null;
+}
+function mergeCurriculumStates(first,second){
+  const a=normalizeCurriculumState(first),b=normalizeCurriculumState(second);
+  if(a.catalogVersion!==b.catalogVersion) return a.catalogVersion>b.catalogVersion?a:b;
+  if(a.futureOpaque||b.futureOpaque) return b.futureOpaque?b:a;
+  const progress=safeMap(),aProgress=a.progress||{},bProgress=b.progress||{};
+  Object.keys(aProgress).forEach(function(id){progress[id]=aProgress[id];});
+  Object.keys(bProgress).forEach(function(id){
+    const before=progress[id],after=bProgress[id];
+    if(!before||(after.updatedAt||0)>=(before.updatedAt||0))progress[id]=after;
+  });
+  return normalizeCurriculumState({catalogVersion:a.catalogVersion,progress:progress});
 }
 function parseRemote(g){
   const fileName=remoteFileName(g),f=remoteFile(g);
   if(!f||f.truncated||!f.content) return null;
   let o=null; try{ o=JSON.parse(f.content); }catch(e){ return null; }
   if(!o||typeof o!=="object") return null;
+  if(clampInt(o.schema,1,99,1)>GIST_CLOUD_SCHEMA) return null;
   const expectedUserId=DB&&DB._sezam?DB._sezam.userId:"",isLegacy=fileName===GIST_FILE||fileName===GIST_FILE_LEGACY;
   if(!isLegacy&&(!o.userId||o.userId!==expectedUserId)) return null;
   if(isLegacy&&o.userId&&expectedUserId&&o.userId!==expectedUserId) return null;
   const db=ensureStructure(backupToDb(o));
+  const protectedName=playerGistFile(ACTIVE_PLAYER_ID),protectedFile=g&&g.files?g.files[protectedName]:null;
+  if(fileName!==protectedName&&protectedFile&&protectedFile.content){
+    try{
+      const protectedDoc=JSON.parse(protectedFile.content);
+      if(isRecord(protectedDoc)&&clampInt(protectedDoc.schema,1,99,1)<=GIST_CLOUD_SCHEMA&&(!protectedDoc.userId||protectedDoc.userId===expectedUserId)){
+        const protectedDb=ensureStructure(backupToDb(protectedDoc));
+        db.curriculum=mergeCurriculumStates(DB&&DB.curriculum,protectedDb.curriculum);
+        backfillCurriculumFromGame(db);
+      }
+    }catch(e){}
+  }
   db._sezam.playerId=ACTIVE_PLAYER_ID;
   const ts=stateTimestamp(o)||Date.parse(g&&g.updated_at||"")||stateTimestamp(db);
   if(ts) db._sezam.updatedAt=ts;
@@ -5342,17 +5549,17 @@ function cloudPieces(){
   return (DB.pieces||[]).map(function(piece){const copy=Object.assign({},piece);delete copy.attachment;return copy;});
 }
 function cloudDocument(){
-  ensureStructure(DB);
+  backfillCurriculumFromGame(DB);
   return {
     app:"SEZAM",
-    schema:1,
+    schema:GIST_CLOUD_SCHEMA,
     userId:DB._sezam.userId,
     deviceId:syncClientId(),
     timestamp:stateTimestamp(DB)||Date.now(),
     progress:{
       v:DB.v, mode:DB.mode, sel:DB.sel, seen:DB.seen, paliers:DB.paliers,
       days:DB.days, dailyProgress:DB.dailyProgress||{}, pieces:cloudPieces(), pieceProgress:DB.pieceProgress||{},
-      activePiece:DB.activePiece||"", pieceGoals:DB.pieceGoals||{}, questionClock:DB.questionClock||0, repairQueue:DB.repairQueue||[], validationDrafts:DB.validationDrafts||{}, easterEggs:DB.easterEggs||{}
+      activePiece:DB.activePiece||"", pieceGoals:DB.pieceGoals||{}, questionClock:DB.questionClock||0, repairQueue:DB.repairQueue||[], validationDrafts:DB.validationDrafts||{}, easterEggs:DB.easterEggs||{}, curriculum:DB.curriculum||normalizeCurriculumState(null)
     },
     scores:{ xp:DB.xp||0, noteStats:DB.noteStats||{}, kbdStats:DB.kbdStats||{} },
     settings:{ sound:DB.sound, soundLong:DB.soundLong, haptic:DB.haptic, profile:DB.profile||{}, themeMode:DB.themeMode||"classique" },
@@ -5419,7 +5626,9 @@ function syncPush(force){
     const decision=remote?syncTransferDecision(DB,remote):"push";
     if(decision==="conflict"){syncBusy=false;syncConflictStatus();return;}
     if(remote && decision==="pull"){ syncBusy=false; syncAdopt(remote); return; }
-    const files={},fileName=remoteFileName(g)||playerGistFile(ACTIVE_PLAYER_ID); files[fileName]={content:cloudSaveContent()};
+    // Écrit toujours le fichier v2. L'ancien fichier reste dans le Gist pour
+    // qu'une v28 encore ouverte ne puisse pas effacer les nouveaux champs.
+    const files={},fileName=playerGistFile(ACTIVE_PLAYER_ID); files[fileName]={content:cloudSaveContent()};
     gistApi("PATCH","/gists/"+syncCfg().gistId,{files:files},function(res){
       syncBusy=false;
       if(res){ syncLastPush=Date.now(); syncSet({lastSync:Date.now(),lastRemoteTs:stateTimestamp(DB)}); syncStatus("Synchronisé ✓"); }
@@ -5441,6 +5650,7 @@ function syncPull(){
     if(dec==="pull") syncAdopt(remote);
     else if(dec==="push") syncPush(true);
     else if(dec==="conflict") syncConflictStatus();
+    else if(remoteFileName(g)!==playerGistFile(ACTIVE_PLAYER_ID)) syncPush(true); // migration non destructive vers le fichier v2
     else { syncSet({lastSync:Date.now(),lastRemoteTs:stateTimestamp(DB)}); syncStatus("À jour ✓"); }
   });
 }
@@ -5492,9 +5702,10 @@ function activateSync(){
 /* ================= TRANSFERT QR (hors-ligne) ================= */
 // Sauvegarde compacte pour le QR : on n'exporte que l'utile (niveaux vides omis) ; ensureStructure reconstruit le reste à l'import.
 function compactSave(){
+  backfillCurriculumFromGame(DB);
   const out={v:DB.v,xp:DB.xp,sound:DB.sound,soundLong:DB.soundLong,haptic:DB.haptic,mode:DB.mode,sel:DB.sel,themeMode:DB.themeMode||"classique",
              _sezam:DB._sezam,days:DB.days,dailyProgress:DB.dailyProgress||{},seen:DB.seen,noteStats:{},paliers:{},pieces:DB.pieces||[],pieceProgress:DB.pieceProgress||{},
-             activePiece:DB.activePiece||"",pieceGoals:DB.pieceGoals||{},profile:DB.profile,kbdStats:DB.kbdStats,
+             activePiece:DB.activePiece||"",pieceGoals:DB.pieceGoals||{},profile:DB.profile,kbdStats:DB.kbdStats,curriculum:DB.curriculum||normalizeCurriculumState(null),
              questionClock:DB.questionClock||0,repairQueue:DB.repairQueue||[],validationDrafts:DB.validationDrafts||{},easterEggs:DB.easterEggs||{}};
   Object.keys(DB.noteStats||{}).forEach(function(k){ const s=DB.noteStats[k]; if(s&&(s.v||s.e||s.box||s.due)) out.noteStats[k]=s; });
   Object.keys(DB.paliers||{}).forEach(function(pid){
@@ -5669,7 +5880,7 @@ $("btnDownload").onclick=function(){
 
 load();
 idbRescue(function(){
-  renderHome(); loadWatchFeed(); applyStartupRecovery(); syncPull();
+  renderHome(); loadCurriculumCatalog(); loadWatchFeed(); applyStartupRecovery(); syncPull();
 });
 // Filet ultime : une erreur JS inattendue ne doit jamais coûter la progression.
 window.addEventListener("error",function(){ try{ save({touch:false,cloud:false}); }catch(e){} });

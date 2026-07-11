@@ -1,6 +1,6 @@
 # SEZAM — passation complète du chantier
 
-Document de transmission pour l'ingénieur·e qui reprend le projet. Tout ce qu'il faut savoir pour comprendre, modifier, tester et publier sans rien casser. Lecture complémentaire dans le dépôt : `README.md` (vue courte), `FICHE-COMPLETE-JEU.md` (fonctionnement et durées humaines), `sezam-doctrine-produit.md` (vision), `AUDIT-REPARATIONS.md` (audit des corrections), `PARTIE-TEMOIN.md` (mesures du bot), `DEPLOIEMENT.md` et `GUIDE-JOUEURS.md` (mise en ligne et doc joueurs).
+Document de transmission pour l'ingénieur·e qui reprend le projet. Tout ce qu'il faut savoir pour comprendre, modifier, tester et publier sans rien casser. Lecture complémentaire dans le dépôt : `README.md` (vue courte), `FICHE-COMPLETE-JEU.md` (fonctionnement et durées humaines), `CURSUS-CYCLES-1-3.md` (cadrage pédagogique C1→C3), `sezam-doctrine-produit.md` (vision), `AUDIT-REPARATIONS.md` (audit des corrections), `PARTIE-TEMOIN.md` (mesures du bot), `DEPLOIEMENT.md` et `GUIDE-JOUEURS.md` (mise en ligne et doc joueurs).
 
 ## 1. Le produit en trois phrases
 
@@ -10,7 +10,7 @@ SEZAM est une borne d'arcade musicale adaptative, offline-first, en français, d
 
 ```bash
 cd ~/Documents/music
-npm test                              # 537 contrôles moteur — DOIT afficher 0 échec
+npm test                              # 580 contrôles moteur — DOIT afficher 0 échec
 python3 -m http.server 4173           # puis ouvrir http://localhost:4173/index.html
 node tests/bot_completion.cjs         # joue la partie ENTIÈRE sur le vrai moteur (~3 s)
 ```
@@ -23,12 +23,14 @@ Remote `origin` configuré sur `https://github.com/YoGa0208/solado.git`. Toujour
 |---|---|
 | `index.html` | TOUTE l'application : HTML + CSS + JS vanilla, zéro framework, zéro build |
 | `prototype-solfege.html` | Copie **byte-identique** d'index.html (historique iOS ; un test impose l'égalité stricte) |
-| `sw.js` | Service worker : cache `sezam-solado-v28`, HTML réseau-d'abord, assets cache-d'abord |
+| `sw.js` | Service worker : cache `sezam-solado-v29`, HTML réseau-d'abord, assets cache-d'abord |
 | `manifest.json` | PWA installable (fond blanc, icônes SEZAM) |
-| `tests/engine.test.js` | 537 contrôles : charge le VRAI script d'index.html dans un bac à sable Node |
+| `tests/engine.test.js` | 580 contrôles : charge le VRAI script d'index.html dans un bac à sable Node |
 | `tests/bot_completion.cjs` | Bot qui finit le jeu à 100 % (QA de profondeur/équilibrage) |
 | `FICHE-COMPLETE-JEU.md` | Fiche non technique : niveaux, règles, trois fins et temps humains |
 | `data/music-watch.json` | Brèves culturelles servies sur l'accueil (fallback embarqué dans index.html) |
+| `data/curriculum-v1.json` | Référentiel versionné C1→C3 : domaines, prérequis, preuves et statut de livraison |
+| `CURSUS-CYCLES-1-3.md` | Durées officielles, hypothèses d'heures actives et règles d'évolution honnêtes |
 | `scripts/build_music_watch.js` | Générateur de veille depuis flux RSS (France Musique, The Strad…) avec repli hors-ligne |
 | `.github/workflows/pages.yml` | CI : npm test → build veille → déploiement GitHub Pages, cron toutes les 6 h |
 | `*.md` | Docs produit/audit/passation |
@@ -40,7 +42,7 @@ Un seul gros `<script>` "use strict" (précédé d'un script qrcode-generator em
 1. **CSS** avec thèmes par variables : `:root` (Classique blanc) + `[data-theme=partition|nocturne|luthier]`. Palette : pétrole `#0f4c5c`, céramique `#7fb8c2`, or `#b8893a`.
 2. **Sécurité** : `esc()` — obligatoire sur TOUTE donnée utilisateur/importée avant `innerHTML`.
 3. **Dictionnaires** : `NOTES` (23 notes, `p` = position de portée, `midi`, `mn` = repère mnémotechnique), `PALIERS` (15 : P1–P10 puis boss B1–B5), `TIERS` (Zen, Bronze 2 notes/5 s, Argent 3/4 s, Vermeil 4/3 s, Or 5/2 s, Rhodium 6/1 s ; gemmes/étoiles `future:true`), `SEGMENT_STATES` (5 états), `PIECE_AMBITIONS` (4 ambitions), `CARDS`/`CARDS_TIER` (cartes-cadeaux culturelles).
-4. **État & normalisation** : `DB` reste l'état du joueur actif ; `ensureStructure(db)` est LE point unique de normalisation (migrations historiques + schéma 12 inclus — ne jamais supprimer ces branches). `sezam_players_v1` contient le registre léger ; IndexedDB conserve `save:<playerId>` pour chaque joueur. Les normaliseurs assainissent aussi les maps, séries, étoiles, brouillons quotidiens et pièces jointes de tout import.
+4. **État & normalisation** : `DB` reste l'état du joueur actif ; `ensureStructure(db)` est LE point unique de normalisation (migrations historiques + schéma 13 inclus — ne jamais supprimer ces branches). `sezam_players_v1` contient le registre léger ; IndexedDB conserve `save:<playerId>` pour chaque joueur. Les normaliseurs assainissent aussi les maps, séries, étoiles, brouillons quotidiens, suivi futur du cursus et pièces jointes de tout import.
 5. **Stockage 3 filets** : localStorage `solfegeProto1` + `_mirror` + `_checkpoint` forment le cache triple du joueur actif ; IndexedDB `soladoBackup` garde un coffre `save:<playerId>` pour chaque joueur et le registre familial ; le Gist GitHub optionnel est lui aussi isolé par joueur avec détection des divergences.
 6. **Moteurs** (voir §5) puis **écrans** : `scrHome` (cockpit), `scrEx` (jeu), `scrRes` (résultat + bilan partition), `scrStats`, `scrPieces` (liste), `scrPiece` (fiche d'une pièce), `scrKbd` (clavier, module isolé `KX`).
 7. **SVG** : `staffSVG` (portée de jeu) et `pieceMapSVG` (carte de conquête multi-systèmes, passages teintés par état, halos dorés sur notes travaillées, zones tactiles `data-seg`).
@@ -69,8 +71,8 @@ Un seul gros `<script>` "use strict" (précédé d'un script qrcode-generator em
 ## 6. Invariants — à ne JAMAIS casser (tous testés)
 
 1. `index.html` strictement égal à `prototype-solfege.html` → `cp index.html prototype-solfege.html` avant tout commit.
-2. `APP_VERSION` (index.html) == numéro de `CACHE_NAME` (sw.js). Bump LES DEUX à chaque livraison (actuel : v28 / `sezam-solado-v28`).
-3. Clés de stockage intouchables : `solfegeProto1*`, `soladoBackup`, `sezam_players_v1`, gists `sezam-progress-<userId>.json` (+ lecture legacy `sezam-progress.json` et `solado-save.json`). Une progression ne se réinitialise JAMAIS.
+2. `APP_VERSION` (index.html) == numéro de `CACHE_NAME` (sw.js). Bump LES DEUX à chaque livraison (actuel : v29 / `sezam-solado-v29`).
+3. Clés de stockage intouchables : `solfegeProto1*`, `soladoBackup`, `sezam_players_v1`, gists v29 `sezam-progress-v2-<userId>.json` (+ lecture/migration de `sezam-progress-<userId>.json`, `sezam-progress.json` et `solado-save.json`). Une progression ne se réinitialise JAMAIS.
 4. Toute note d'un passage appartient au palier annoncé par ce passage (garde-fou pédagogique).
 5. Bibliothèque : domaine public uniquement, mélodies JUSTES (l'incipit d'Ode main gauche est verrouillé par test — on a déjà eu un mode lydien accidentel).
 6. `esc()` sur toute donnée non maîtrisée avant `innerHTML` ; ids passés au SVG filtrés par `cleanId`.
@@ -78,6 +80,7 @@ Un seul gros `<script>` "use strict" (précédé d'un script qrcode-generator em
 8. Hiérarchie du coach intouchable ; un appareil vierge n'écrase jamais une progression distante et deux appareils divergents déclenchent un conflit sans remplacement (`syncDecision`).
 9. Pas de dépendance d'exécution, pas de build, offline complet.
 10. Ton éditorial : journaliste scientifique, jamais scolaire (des tests interdisent le retour des libellés type « Culture générale », « En bref. », dates SEZAM·04/07).
+11. Zen→Rhodium décrit l'automatisation de lecture, jamais les cycles officiels. Aucun pourcentage, certification ou fin de Cycle 1 n'est affiché sans preuves multidomaines et validation humaine appropriée.
 
 ## 7. Tests — comment ça marche
 
@@ -89,7 +92,7 @@ Un seul gros `<script>` "use strict" (précédé d'un script qrcode-generator em
 
 ## 9. Synchronisation (optionnelle, par joueur)
 
-Trois niveaux : cache local immédiat → coffre IndexedDB par joueur → Gist secret GitHub par joueur. Le Gist n'est pas indexé mais reste accessible avec son lien et possède un historique. Chaque profil a sa clé locale `sezam_sync:<playerId>`, son token mémoire et son fichier `sezam-progress-<userId>.json`. Le joueur colle un token minimal (scope gist), gardé uniquement jusqu'au rechargement ; `syncEnsure` retrouve ou crée le Gist correspondant. Les pièces jointes et le journal d'événements ne partent pas dans le cloud. Toute réponse réseau capture le joueur et l'époque du changement : si le joueur actif a changé, la réponse est ignorée. Chaque envoi fait GET → comparaison → PATCH ; un distant illisible n'est jamais écrasé et une divergence entre deux appareils bloque le remplacement en demandant d'abord des exports. `looksLikeToken` n'accepte que `ghp_` et `github_pat_`.
+Trois niveaux : cache local immédiat → coffre IndexedDB par joueur → Gist secret GitHub par joueur. Le Gist n'est pas indexé mais reste accessible avec son lien et possède un historique. Chaque profil a sa clé locale `sezam_sync:<playerId>`, son token mémoire et son fichier v29 `sezam-progress-v2-<userId>.json`. La v29 lit encore le fichier v28, puis écrit le v2 à côté sans supprimer l'ancien : un onglet v28 resté ouvert ne peut donc pas effacer le suivi du cursus. Le joueur colle un token minimal (scope gist), gardé uniquement jusqu'au rechargement ; `syncEnsure` retrouve ou crée le Gist correspondant. Les pièces jointes et le journal d'événements ne partent pas dans le cloud. Toute réponse réseau capture le joueur et l'époque du changement : si le joueur actif a changé, la réponse est ignorée. Chaque envoi fait GET → comparaison → PATCH ; un distant illisible n'est jamais écrasé et une divergence entre deux appareils bloque le remplacement en demandant d'abord des exports. `looksLikeToken` n'accepte que `ghp_` et `github_pat_`.
 
 ## 10. Veille culturelle
 

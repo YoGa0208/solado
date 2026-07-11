@@ -25,7 +25,7 @@ La campagne est terminée lorsque les 15 paliers sont validés dans les 6 grades
 
 `15 paliers × 6 grades = 90 validations`
 
-Le dernier objectif est **B5 Rhodium — Examen Les Deux Clés**.
+Le dernier objectif est **B5 Rhodium — Bilan de lecture Les Deux Clés**.
 
 ### 2. Maîtriser la bibliothèque
 
@@ -57,11 +57,11 @@ Si toutes les révisions sont réussies dès leur première échéance :
 
 Le prestige final arrive donc au minimum **672 jours après la dernière validation Rhodium**, et non 672 jours après la première ouverture. Une révision d'étoile manquée revient trois jours plus tard sans retirer les étoiles déjà gagnées.
 
-## Les 6 cycles de maîtrise
+## Les 6 grades de maîtrise
 
-Le mot « cycle » désigne ici une traversée complète des 15 paliers, pas un cycle scolaire officiel. L'application propose des profils « Cycle 1 » ou « préparation Cycle 2 », mais le moteur de progression commun reste celui-ci.
+Chaque grade désigne une traversée complète des 15 paliers avec un degré d'automatisation plus exigeant. Il ne correspond pas à un cycle scolaire officiel.
 
-| Cycle de maîtrise | Notes par groupe | Temps autorisé | Paliers | Séries parfaites minimales |
+| Grade de maîtrise | Notes par groupe | Temps autorisé | Paliers | Séries parfaites minimales |
 |---|---:|---:|---:|---:|
 | Zen | 1 | sans chrono | 15 | 45 |
 | Bronze | 2 | 5 s par note | 15 | 45 |
@@ -73,9 +73,9 @@ Le mot « cycle » désigne ici une traversée complète des 15 paliers, pas un 
 
 La vitesse ne remplace jamais la précision. Le chrono vérifie un automatisme déjà construit ; il ne doit pas forcer un joueur à deviner.
 
-## Les 15 paliers de chaque cycle
+## Les 15 paliers de chaque grade
 
-Chaque cycle contient trois territoires de cinq paliers.
+Chaque grade contient trois territoires de cinq paliers.
 
 | Territoire | Paliers | Contenu | Nombre de positions au dernier palier |
 |---|---|---|---:|
@@ -101,7 +101,7 @@ Détail de la croissance :
 | B2 | 10 | les deux zones du do |
 | B3 | 14 | grand écart entre les registres |
 | B4 | 18 | presque toute l'étendue |
-| B5 | 23 | examen de tout l'ambitus |
+| B5 | 23 | bilan de lecture de tout l'ambitus |
 
 ## Comment un palier est validé
 
@@ -114,7 +114,7 @@ Le palier est validé par l'une de ces deux voies :
 
 Les questions de réparation et de transfert ne sont pas utilisées comme preuves de validation. Elles servent à apprendre, pas à gonfler artificiellement un score.
 
-Les paliers s'ouvrent dans l'ordre. Une fois les 15 paliers d'un cycle validés, le cycle suivant devient disponible. Dans la séance quotidienne corrigée, SEZAM passe lui-même au palier suivant ; après B5, il repart à P1 dans le grade supérieur.
+Les paliers s'ouvrent dans l'ordre. Une fois les 15 paliers d'un grade validés, le grade suivant devient disponible. Dans la séance quotidienne corrigée, SEZAM passe lui-même au palier suivant ; après B5, il repart à P1 dans le grade supérieur.
 
 ## La séance quotidienne corrigée
 
@@ -200,6 +200,12 @@ Dans la séance quotidienne corrigée, les 270 preuves représentent aussi 2 700
 
 ## Temps humain estimé
 
+### Ne pas confondre le jeu et le cursus officiel
+
+Le parcours musical complet du Cycle 1 à la fin du Cycle 3 demande normalement **8 à 14 années calendaires** : 3 à 5 ans pour le Cycle 1, 3 à 5 ans pour le Cycle 2 et 2 à 4 ans pour le Cycle 3. Un centre de fourchette réaliste est environ 10 à 11 ans.
+
+SEZAM ne remplace pas ce parcours. Le complément numérique futur est estimé à environ 200 à 560 heures actives réparties sur ces années, avec un cœur de planification à 300–450 heures. La campagne actuelle de lecture ci-dessous n'en est qu'un module. Voir `CURSUS-CYCLES-1-3.md` pour les sources, les domaines et la feuille de route.
+
 Deux routes sont distinguées :
 
 - **Route directe** : le joueur utilise surtout les sessions de 10 questions ;
@@ -218,7 +224,7 @@ La route quotidienne est plus longue, mais elle est pédagogiquement plus compl�
 
 ## Récompenses et secrets
 
-Le jeu récompense les réponses, les validations, les passages conquis, les cycles terminés et les défis. Les trophées couvrent notamment le premier jour, les séries de jours, les semaines régulières, le clavier, les XP, la première œuvre, toute la bibliothèque et Rhodium.
+Le jeu récompense les réponses, les validations, les passages conquis, les grades terminés et les défis. Les trophées couvrent notamment le premier jour, les séries de jours, les semaines régulières, le clavier, les XP, la première œuvre, toute la bibliothèque et Rhodium.
 
 Les trois easter eggs actuels sont :
 
@@ -256,3 +262,4 @@ Un changement n'est autorisé que depuis l'accueil et après la mise à l'abri d
 - **Partie parfaite de référence** : 330 séries, 3 208 questions et 9 711 réponses.
 - **Temps humain central** : environ 12 heures en route directe pour un intermédiaire, environ 17 heures avec la séance complète ; environ 25 ou 38 heures pour un débutant.
 - **Prestige absolu** : au minimum 672 jours après le dernier Rhodium.
+- **Cursus musical officiel C1→C3** : 8 à 14 ans ; SEZAM en est un complément, jamais une certification.
