@@ -1,11 +1,13 @@
 {
   "name": "Sezam",
   "short_name": "Sezam",
-  "description": "Entraînement musical hors-ligne : lecture de notes, clavier, progression, calendrier et synchro entre appareils.",
+  "description": "Entraînement musical hors-ligne : tes partitions comme terrain de jeu, lecture de notes, clavier, progression et synchro entre appareils.",
+  "id": "./",
   "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
-  "background_color": "#1a1612",
-  "theme_color": "#1a1612",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
   "icons": [
     {
       "src": "icon.svg",
@@ -18,6 +20,18 @@
       "sizes": "180x180",
       "type": "image/png",
       "purpose": "any"
+    },
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }

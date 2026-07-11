@@ -1,0 +1,133 @@
+{
+  "version": 1,
+  "updatedAt": "2026-07-11T07:25:21.871Z",
+  "generatedBy": "seed",
+  "sources": [
+    {
+      "name": "France Musique",
+      "feed": "https://www.radiofrance.fr/francemusique/rss"
+    },
+    {
+      "name": "The Violin Channel",
+      "feed": "https://theviolinchannel.com/feed/"
+    },
+    {
+      "name": "Early Music America",
+      "feed": "https://www.earlymusicamerica.org/feed/"
+    },
+    {
+      "name": "Classical Music",
+      "feed": "https://www.classical-music.com/feed/"
+    },
+    {
+      "name": "Gramophone",
+      "feed": "https://www.gramophone.co.uk/rss"
+    },
+    {
+      "name": "The Strad",
+      "feed": "https://www.thestrad.com/rss"
+    },
+    {
+      "name": "Bachtrack",
+      "feed": "https://bachtrack.com/rss"
+    }
+  ],
+  "items": [
+    {
+      "id": "seed-luthiers-cremone",
+      "kind": "culture",
+      "category": "Artisans",
+      "tag": "Lutherie",
+      "source": "SEZAM",
+      "url": "",
+      "publishedAt": "2026-07-04T00:00:00.000Z",
+      "title": "Cremone, ou l'art de regler la vibration",
+      "brief": "Le violon se comprend d'abord comme un systeme acoustique: bois, voutes, chevalet, ame et cordes transforment une pression d'archet en spectre sonore. Cremone sert de laboratoire historique pour observer comment un atelier stabilise des gestes, des mesures et des reputations.",
+      "report": [
+        "Stradivari n'est pas un mot magique; c'est un point d'entree vers une chaine de fabrication. Essence du bois, sechage, epaisseur de table, forme des voutes et vernis modifient la maniere dont l'instrument repond.",
+        "Le timbre vient d'un equilibre instable. L'ame transmet une partie de l'energie entre table et fond, le chevalet filtre les vibrations, les cordes imposent tension et attaque.",
+        "Pour l'ecoute, l'interet est tres concret: entendre un violon, c'est aussi entendre des choix d'atelier. La beaute n'annule pas la technique; elle en depend souvent."
+      ]
+    },
+    {
+      "id": "seed-solfege-clefs",
+      "kind": "culture",
+      "category": "Solfège",
+      "tag": "Lecture",
+      "source": "SEZAM",
+      "url": "",
+      "publishedAt": "2026-07-04T00:00:00.000Z",
+      "title": "Les clefs sont un systeme de coordonnees",
+      "brief": "Les clefs fixent une ligne de depart. Le lecteur calcule ensuite les hauteurs par relation, comme sur une carte, plutot que par devinette.",
+      "report": [
+        "G stylise, F stylise: les clefs gardent la trace de lettres anciennes devenues interface graphique. La portee ne nomme pas seulement les notes, elle organise une carte partagee.",
+        "Ce systeme economise de l'information. Une fois le repere pose, l'oeil lit des ecarts, des directions et des profils, ce qui rend possible la lecture rapide.",
+        "Le solfege devient alors moins un vocabulaire a reciter qu'un protocole collectif. Il permet a plusieurs musiciens de synchroniser un geste sans avoir entendu la piece ensemble."
+      ]
+    },
+    {
+      "id": "seed-compositrices-salon",
+      "kind": "culture",
+      "category": "Compositeurs",
+      "tag": "Histoire",
+      "source": "SEZAM",
+      "url": "",
+      "publishedAt": "2026-07-04T00:00:00.000Z",
+      "title": "Les salons: une infrastructure avant la salle moderne",
+      "brief": "Avant la diffusion industrielle, une partie de la musique circule dans des appartements, des salons et des reseaux prives. Ces espaces servent a tester des oeuvres, fabriquer des reputations et contourner parfois les portes fermees.",
+      "report": [
+        "Le salon n'est pas un simple decor bourgeois. Au XIXe siecle, c'est une infrastructure de diffusion: on y joue les nouveautes, on y rencontre des interpretes, on y observe les reactions avant l'espace public.",
+        "Pour les compositrices, ces lieux ouvrent et ferment a la fois. Ils donnent acces a l'execution et aux reseaux, mais rappellent aussi les obstacles imposes a celles qui veulent publier, diriger ou signer dans les memes conditions que les hommes.",
+        "Ecouter une piece de chambre avec ce contexte change l'echelle. L'oeuvre n'est pas seulement un objet sonore; elle depend de pieces, de corps proches, de codes sociaux et de circuits de legitimation."
+      ]
+    },
+    {
+      "id": "seed-oeuvre-sacre-printemps",
+      "kind": "culture",
+      "category": "Grandes oeuvres",
+      "tag": "Orchestre",
+      "source": "SEZAM",
+      "url": "",
+      "publishedAt": "2026-07-04T00:00:00.000Z",
+      "title": "Le Sacre du printemps: le rythme comme matiere",
+      "brief": "Le Sacre du printemps reste un cas d'ecole parce qu'il modifie la perception du rythme. Accents deplaces, blocs orchestraux et pulsations irregulieres font entendre le temps comme une matiere physique.",
+      "report": [
+        "En 1913, le choc ne tient pas seulement aux dissonances. Stravinsky reorganise la hierarchie: le rythme conduit l'ecoute, l'orchestre fabrique des masses, la danse expose un corps collectif sous tension.",
+        "Le contexte compte. Paris voit alors circuler ballet, peinture, ethnographie fantasmee, industries du spectacle et avant-gardes; l'oeuvre condense ces forces dans une forme qui refuse la politesse attendue.",
+        "Pour le solfege, la lecon est directe: une note juste ne suffit pas. Accent, mesure, pulsation et energie construisent le sens autant que la hauteur."
+      ]
+    },
+    {
+      "id": "seed-instrument-piano",
+      "kind": "culture",
+      "category": "Instruments",
+      "tag": "Piano",
+      "source": "SEZAM",
+      "url": "",
+      "publishedAt": "2026-07-04T00:00:00.000Z",
+      "title": "Le piano: une mecanique de nuance a domicile",
+      "brief": "Le piano s'impose parce qu'il associe une interface simple, le clavier, a une mecanique capable de nuances fines. Il devient a la fois instrument d'etude, outil de composition et reduction domestique de l'orchestre.",
+      "report": [
+        "Le pianoforte repond a un probleme precis: produire du doux et du fort par le toucher. L'attaque du marteau transforme le clavier en laboratoire de poids, de vitesse et de controle.",
+        "Au XIXe siecle, l'objet change d'echelle sociale. Il entre dans les foyers, les conservatoires, les salons, les maisons d'edition; il permet de travailler seul, d'accompagner et de reduire des oeuvres orchestrales.",
+        "Pour comprendre la musique occidentale, le piano sert de plan de coupe. Il rend visibles les intervalles, les accords et les superpositions, meme pour quelqu'un qui ne vise pas une carriere de pianiste."
+      ]
+    },
+    {
+      "id": "seed-art-histoire-opera",
+      "kind": "culture",
+      "category": "Histoire de l'art",
+      "tag": "Opera",
+      "source": "SEZAM",
+      "url": "",
+      "publishedAt": "2026-07-04T00:00:00.000Z",
+      "title": "L'opera: une machine multimedia avant le cinema",
+      "brief": "L'opera assemble texte, voix, fosse, scene, lumiere, costume, architecture et economie du spectacle. L'interet n'est pas seulement l'exces: c'est la coordination d'arts multiples dans un meme dispositif.",
+      "report": [
+        "Bien avant le cinema, l'opera organise une experience synchronisee. Decors, machinerie, voix, fosse, livret et public composent un systeme ou chaque element modifie la perception des autres.",
+        "Le genre fonctionne comme un carrefour historique. On y observe mythologie, politique, evolution des salles, statut des chanteurs, innovations techniques et conflits entre texte, musique et image.",
+        "Pour SEZAM, l'opera rappelle qu'une note ecrite appartient souvent a une chaine plus vaste. Elle peut devenir personnage, deplacement, foule, tension dramatique ou decision de mise en scene."
+      ]
+    }
+  ]
+}

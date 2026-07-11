@@ -1,0 +1,13 @@
+{
+  "name": "sezam",
+  "version": "1.0.0",
+  "private": true,
+  "engines": {
+    "node": "20.x"
+  },
+  "scripts": {
+    "build:watch": "node scripts/build_music_watch.js",
+    "test": "node tests/engine.test.js",
+    "serve": "python3 -m http.server 4173"
+  }
+}
