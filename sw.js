@@ -3,14 +3,19 @@
    - documents HTML → réseau d'abord (on récupère toujours la dernière version quand on est en ligne),
      cache en secours (l'app reste utilisable hors-ligne) ;
    - autres ressources → cache d'abord, mise à jour en fond (stale-while-revalidate). */
-const CACHE_NAME = "sezam-v12";
+const CACHE_NAME = "sezam-solado-v24";
+const CACHE_PREFIX = "sezam-solado-";
+const LEGACY_CACHE_NAMES = ["sezam-v12", "sezam-v21", "sezam-v23"];
 const ASSETS = [
   "./",
   "./index.html",
   "./prototype-solfege.html",
   "./manifest.json",
+  "./data/music-watch.json",
   "./icon.svg",
-  "./icon-180.png"
+  "./icon-180.png",
+  "./icon-192.png",
+  "./icon-512.png"
 ];
 
 self.addEventListener("install", event => {
@@ -24,7 +29,7 @@ self.addEventListener("install", event => {
 self.addEventListener("activate", event => {
   event.waitUntil(
     caches.keys()
-      .then(keys => Promise.all(keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))))
+      .then(keys => Promise.all(keys.filter(key => (key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME) || LEGACY_CACHE_NAMES.indexOf(key) >= 0).map(key => caches.delete(key))))
       .then(() => self.clients.claim())
   );
 });
@@ -33,7 +38,7 @@ self.addEventListener("fetch", event => {
   const req = event.request;
   if (req.method !== "GET") return;
   // Ne jamais intercepter le cross-origin (API GitHub de la synchro, etc.) : le cache ne doit voir que l'app.
-  if (!req.url.startsWith(self.location.origin)) return;
+  if (new URL(req.url).origin !== self.location.origin) return;
   const isDoc = req.mode === "navigate" || req.destination === "document";
   if (isDoc) {
     // Réseau d'abord : jamais une vieille version quand le réseau répond.
@@ -42,7 +47,7 @@ self.addEventListener("fetch", event => {
         .then(res => {
           if (res && res.ok) {
             const copy = res.clone();
-            caches.open(CACHE_NAME).then(c => c.put(req, copy));
+            return caches.open(CACHE_NAME).then(c => c.put(req, copy)).catch(() => {}).then(() => res);
           }
           return res;
         })
@@ -51,18 +56,11 @@ self.addEventListener("fetch", event => {
     return;
   }
   // Autres ressources : cache immédiat, rafraîchissement silencieux en fond.
-  event.respondWith(
-    caches.match(req).then(cached => {
-      const refresh = fetch(req)
-        .then(res => {
-          if (res && res.ok) {
-            const copy = res.clone();
-            caches.open(CACHE_NAME).then(c => c.put(req, copy));
-          }
-          return res;
-        })
-        .catch(() => cached);
-      return cached || refresh;
-    })
-  );
+  const refresh = fetch(req).then(res => {
+    if (!res || !res.ok) return res;
+    const copy = res.clone();
+    return caches.open(CACHE_NAME).then(c => c.put(req, copy)).catch(() => {}).then(() => res);
+  });
+  event.waitUntil(refresh.then(() => {}).catch(() => {}));
+  event.respondWith(caches.match(req).then(cached => cached || refresh).catch(() => refresh));
 });
