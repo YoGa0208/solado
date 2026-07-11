@@ -2,7 +2,7 @@
 
 Borne d'arcade musicale adaptative, offline-first, où **la partition est le terrain de jeu**. Le joueur conquiert ses pièces passage par passage; le coach invisible choisit le bon mode (Réparation > Flash > Session); chaque fin de session montre ce qui a été gagné dans la vraie musique.
 
-Chaque joueur peut régler son instrument, son niveau, son parcours, sa date cible, son temps disponible, sa cadence et les domaines à travailler. SEZAM compose alors un plan quotidien stable : 40 % de lacunes, 30 % de révisions, 20 % de nouveauté et 10 % de mini-test, avec un passage de l'œuvre active pour les séances longues. Les exercices de lecture sont vérifiés par l'app ; les missions hors écran sont explicitement indiquées et peuvent être marquées comme faites.
+Chaque joueur peut régler son instrument, son niveau, son parcours, sa date cible, son temps disponible, sa cadence et les domaines à travailler. En v25, un seul bouton lance une séance plafonnée au temps choisi : 20 % de rappel à froid, 60 % de cible, 10 % de réparation et 10 % de transfert. Une erreur ne revient jamais avant deux autres questions ; la séance quotidienne la garde dans son créneau Réparation, puis vérifie un contraste. Les répétitions immédiates ne peuvent plus faire croire à une mémoire durable. Les exercices de lecture sont vérifiés par l'app et les missions hors écran restent explicitement autoévaluées.
 
 ## Architecture
 
@@ -10,8 +10,9 @@ Un seul fichier applicatif: `index.html` (HTML + CSS + JS, zéro dépendance d'e
 
 ### Moteurs
 
-- **Decision Engine** (`coachDecision`): hiérarchie verrouillée ERROR→REPAIR, PAUSE→FLASH, PERF→SESSION.
-- **Daily Planner** (`dailyPlan`): quatre profils de parcours, budget en minutes, échéance, lacunes/SRS, domaines et œuvre active. Dans cette version, le parcours, l'instrument et le niveau décrivent le profil ; l'adaptation mesurée porte sur le temps, les acquis et les domaines.
+- **Decision Engine** (`coachDecision`): hiérarchie verrouillée ERROR→REPAIR, PAUSE→FLASH, PERF→SESSION, avec file persistante des confusions réellement observées.
+- **Daily Planner** (`dailyPlan`, `buildDailySession`): quatre profils de parcours, chronomètre global, rappel à froid, cible, réparation et transfert. Les quatre phases s'enchaînent sans écran intermédiaire et aucune nouvelle question ne démarre après l'échéance.
+- **Memory Engine** (`srsReview`): cinq boîtes espacées à 1, 3, 7, 16 et 30 jours. Une réponse anticipée ou une réparation immédiate consolide sans augmenter artificiellement la stabilité.
 - **Partition Engine**: pièces avec mélodies réelles (`PIECES_BUILTIN`), passages ancrés sur les mesures (`mesFrom`/`mesTo`), 5 états (À découvrir, En travail, Fragile, Validé, Maîtrisé), ambitions du joueur, carte de conquête SVG (`pieceMapSVG`).
 - **Session scriptée**: jouer un passage = lire ses notes dans l'ordre réel (`segmentScript`); un passage fragile repasse en réparation pondérée SRS.
 - **Storage Engine**: localStorage (3 filets: clé, miroir, checkpoint jamais dégradé) + IndexedDB + Gist secret GitHub optionnel. Le token reste en session, les pièces jointes restent locales. Clés historiques intouchables: `solfegeProto1`, `soladoBackup`, `sezam-progress.json`.
@@ -19,7 +20,7 @@ Un seul fichier applicatif: `index.html` (HTML + CSS + JS, zéro dépendance d'e
 ## Développement
 
 ```bash
-npm test            # 330 tests moteur (charge le vrai script d'index.html, zéro duplication)
+npm test            # 397 tests moteur (charge le vrai script d'index.html, zéro duplication)
 npm run serve       # http://localhost:4173
 npm run build:watch # régénère la veille musicale (fallback hors-ligne intégré)
 ```

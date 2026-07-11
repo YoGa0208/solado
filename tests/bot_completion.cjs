@@ -50,7 +50,7 @@ function loadEngine() {
   src = src.replace(/^<script>/, "").replace(/<\/script>$/, "");
   const exportsList = ["ensureStructure","PALIERS","TIERS","TIER_IDS","NOTES","tierUnlocked","tierComplete","palierPlayable",
     "startCoachPlay","startPieceSegment","nextQuestion","answer","answerPos","pieceById","pieceSegments","segmentStateId",
-    "pieceMelody","PIECES_BUILTIN","setPieceGoal","ambitionProgress","trophyDefs","checkValidation","segmentScript",
+    "pieceMelody","PIECES_BUILTIN","setPieceGoal","ambitionProgress","trophyDefs","checkValidation","segmentScript","segmentProgress","SEGMENT_MASTERY_GAP_MS",
     "compactSave","currentRecoveryCode","pieceStateCounts","valProgress"];
   const footer = "\n;return {" + exportsList.map(n => n + ":(typeof " + n + "!=='undefined'?" + n + ":undefined)").join(",") +
     ",getDB:function(){return DB;},setDB:function(x){DB=x;},getEX:function(){return EX;}};";
@@ -124,6 +124,9 @@ E.PIECES_BUILTIN.filter(p => E.pieceMelody(p)).forEach(p => {
       E.startPieceSegment(p.id, seg.id);
       playSerieToEnd();
       stats.pieceRuns++;
+      const progress = E.segmentProgress(p.id, seg.id);
+      if (progress.cleanAt && progress.cleanAt.length === 1)
+        progress.cleanAt[0] = Date.now() - E.SEGMENT_MASTERY_GAP_MS - 1000; // simule le retour du lendemain
     }
     if (E.segmentStateId(p.id, seg.id) !== "maitrise") { console.log("BLOQUÉ : " + p.id + "/" + seg.id + " jamais maîtrisé"); process.exit(1); }
   });

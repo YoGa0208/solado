@@ -10,7 +10,7 @@ SEZAM est une borne d'arcade musicale adaptative, offline-first, en français, d
 
 ```bash
 cd ~/Documents/music
-npm test                              # 330 tests moteur — DOIT afficher 0 échec
+npm test                              # 397 tests moteur — DOIT afficher 0 échec
 python3 -m http.server 4173           # puis ouvrir http://localhost:4173/index.html
 node tests/bot_completion.cjs         # joue la partie ENTIÈRE sur le vrai moteur (~3 s)
 ```
@@ -23,9 +23,9 @@ Remote `origin` configuré sur `https://github.com/YoGa0208/solado.git`. Toujour
 |---|---|
 | `index.html` | TOUTE l'application : HTML + CSS + JS vanilla, zéro framework, zéro build |
 | `prototype-solfege.html` | Copie **byte-identique** d'index.html (historique iOS ; un test impose l'égalité stricte) |
-| `sw.js` | Service worker : cache `sezam-solado-v24`, HTML réseau-d'abord, assets cache-d'abord |
+| `sw.js` | Service worker : cache `sezam-solado-v25`, HTML réseau-d'abord, assets cache-d'abord |
 | `manifest.json` | PWA installable (fond blanc, icônes SEZAM) |
-| `tests/engine.test.js` | 330 tests : charge le VRAI script d'index.html dans un bac à sable Node |
+| `tests/engine.test.js` | 397 tests : charge le VRAI script d'index.html dans un bac à sable Node |
 | `tests/bot_completion.cjs` | Bot qui finit le jeu à 100 % (QA de profondeur/équilibrage) |
 | `data/music-watch.json` | Brèves culturelles servies sur l'accueil (fallback embarqué dans index.html) |
 | `scripts/build_music_watch.js` | Générateur de veille depuis flux RSS (France Musique, The Strad…) avec repli hors-ligne |
@@ -50,9 +50,9 @@ Un seul gros `<script>` "use strict" (précédé d'un script qrcode-generator em
 
 **Coach (`coachDecision`)** — hiérarchie VERROUILLÉE par tests : ≥2 erreurs récentes ou ≥2 notes en réparation → RÉPARATION ; pause longue (>5 j, `LONG_BREAK_MS`) → FLASH ; sinon SESSION. Le bouton JOUER passe par `startCoachPlay(force?)`.
 
-**Plan quotidien (`dailyPlan`)** — enveloppe le coach sans casser sa hiérarchie. Le profil choisit parcours, instrument, niveau, échéance, durée, cadence et domaines. À partir de 15 min : 40 % lacunes, 30 % SRS, 20 % nouveauté, 10 % mini-test ; à partir de 30 min, la nouveauté peut être partagée avec un passage de l'œuvre active. Les missions hors écran sont marquées `automatic:false` et leur validation vit dans `dailyProgress`.
+**Séance quotidienne (`dailyPlan` + `buildDailySession`)** — un seul bouton orchestre, dans le temps choisi, 20 % de rappel à froid, 60 % de cible, 10 % de réparation et 10 % de transfert. Le chronomètre global n'ouvre plus de question après l'échéance ; la question en cours peut finir. Le tempo du niveau reste contrôlé pendant la cible. Les missions hors écran sont annoncées comme autoévaluées.
 
-**Progression paliers** — `checkValidation` : 3 séries consécutives avec ≤1 erreur au total, OU 5 séries dans la semaine avec ≤2. Un tier n'est débloqué que si le précédent est complet partout (`tierUnlocked`/`tierComplete`). SRS Leitner 5 boîtes (`srsReview`, délais 0/0/1/3/7/16 j) alimente les pondérations (`weightedPick`) et les révisions. Étoiles = revalidation calendaire (7/30/90/180/365 j) après Rhodium.
+**Progression paliers** — `checkValidation` : 3 séries consécutives avec ≤1 erreur au total, OU 5 séries dans la semaine avec ≤2, avec couverture de toutes les notes. Les questions de réparation/transfert sont exclues des preuves de validation. Un tier n'est débloqué que si le précédent est complet partout (`tierUnlocked`/`tierComplete`). SRS Leitner 5 boîtes (`srsReview`, délais 1/3/7/16/30 j) : seule une réussite réellement due augmente la boîte. Étoiles = revalidation calendaire (7/30/90/180/365 j) après Rhodium.
 
 **Partition (le cœur récent)** — `PIECES_BUILTIN` : 8 pièces jouables du domaine public avec `melody.measures` (tableaux d'ids NOTES, mesure par mesure) + 4 pièces d'écoute (quiz « premier regard » seulement). Chaque passage (`segments[]`) porte `mesFrom/mesTo` (1-based), un `level` (palier), une main, un focus. Règles clés :
 
@@ -68,7 +68,7 @@ Un seul gros `<script>` "use strict" (précédé d'un script qrcode-generator em
 ## 6. Invariants — à ne JAMAIS casser (tous testés)
 
 1. `index.html` strictement égal à `prototype-solfege.html` → `cp index.html prototype-solfege.html` avant tout commit.
-2. `APP_VERSION` (index.html) == numéro de `CACHE_NAME` (sw.js). Bump LES DEUX à chaque livraison (actuel : v24 / `sezam-solado-v24`).
+2. `APP_VERSION` (index.html) == numéro de `CACHE_NAME` (sw.js). Bump LES DEUX à chaque livraison (actuel : v25 / `sezam-solado-v25`).
 3. Clés de stockage intouchables : `solfegeProto1*`, `soladoBackup`, gist `sezam-progress.json` (+ lecture legacy `solado-save.json`). Une progression ne se réinitialise JAMAIS.
 4. Toute note d'un passage appartient au palier annoncé par ce passage (garde-fou pédagogique).
 5. Bibliothèque : domaine public uniquement, mélodies JUSTES (l'incipit d'Ode main gauche est verrouillé par test — on a déjà eu un mode lydien accidentel).

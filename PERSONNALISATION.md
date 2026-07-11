@@ -11,11 +11,13 @@ Le profil « Mon parcours » permet de choisir :
 - une date cible, une durée de séance et un nombre de jours par semaine ;
 - les domaines à travailler : lecture, rythme, oreille, chant, écrit/théorie et intégration dans une œuvre.
 
-Le plan du jour respecte le temps choisi. À partir de 15 minutes, il répartit la séance entre lacunes, révisions espacées, nouveauté et mini-test. À partir de 30 minutes, il ajoute un passage de l'œuvre active si le domaine « Œuvre / intégration » est sélectionné.
+Le plan du jour respecte le temps choisi comme un plafond souple : le chronomètre global laisse terminer la question en cours, puis n'en démarre pas une nouvelle. Un seul bouton enchaîne 20 % de rappel à froid, 60 % de travail ciblé, 10 % de réparation et 10 % de transfert. Le tempo Bronze à Rhodium reste vérifié pendant la cible. Une mission hors écran choisie dans les domaines du profil peut occuper la phase de transfert ; elle reste annoncée comme autoévaluée.
+
+Une confusion n'est plus seulement comptée comme une faute. SEZAM mémorise la réponse choisie, impose au moins deux questions intermédiaires, puis repropose la note dans le créneau Réparation avant de vérifier une note proche au Transfert. Cette boucle reste dans le temps prévu. Si l'erreur arrive trop tard, elle reste prioritaire à la séance suivante.
 
 ## Ce que SEZAM vérifie
 
-La lecture de notes, le clavier, les séries, les révisions espacées et les passages encodés sont vérifiés automatiquement. Le rythme, l'oreille, le chant et l'écrit commencent par des missions hors écran : l'application les présente comme autoévaluées et permet de les marquer comme faites. Elle ne prétend pas les avoir écoutées ou corrigées.
+La lecture de notes, le clavier, les séries, les révisions espacées et les passages encodés sont vérifiés automatiquement. Une note ne progresse dans la mémoire que lors d'un rappel réellement arrivé à échéance. Un palier doit aussi couvrir toutes ses notes, et un passage ne devient « Maîtrisé » qu'après deux réussites propres séparées d'au moins 20 heures. Le rythme, l'oreille, le chant et l'écrit commencent toujours par des missions hors écran honnêtement autoévaluées : l'application ne prétend pas les avoir écoutées ou corrigées.
 
 ## Autonomie des données
 
@@ -23,4 +25,4 @@ Le profil, le plan accompli et la progression sont d'abord enregistrés sur l'ap
 
 ## Prochaine étape pédagogique
 
-Le socle prévu pour la suite est une matrice complète de compétences du Cycle 1 : diagnostic initial, maîtrise par domaine, prérequis, remédiations et validations multi-domaines. Cette extension devra conserver la distinction entre ce que l'application mesure réellement et ce que l'élève ou le professeur valide.
+Le socle prévu pour la suite est une matrice complète de compétences du Cycle 1 : diagnostic initial invisible, maîtrise par domaine, prérequis et validations multi-domaines. Les premières extensions mesurées viseront le rythme frappé et l'oreille sans micro obligatoire, en conservant la distinction entre ce que l'application mesure réellement et ce que l'élève ou le professeur valide.
