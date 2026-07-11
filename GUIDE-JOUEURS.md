@@ -23,7 +23,7 @@ Sur l'accueil, la tuile **« Ton œuvre en cours »** t'ouvre ta pièce :
 - **Facile / Juste bien / Difficile** : ton ressenti ajuste l'ordre des prochains passages.
 - **Bibliothèque** : huit pièces du domaine public t'attendent, du tout premier niveau (Au clair de la lune, trois notes) à la clé de fa (Ode à la joie main gauche). Tu peux aussi ajouter tes propres partitions.
 
-## Comment la v25 te fait progresser
+## Comment la v26 te fait progresser
 
 - La première question est un **rappel à froid**, sans indice : elle mesure ce qui est vraiment resté.
 - Après une erreur, lis la correction. En série, la note revient après deux autres questions ; dans la séance quotidienne, elle attend au moins ces deux questions puis son créneau Réparation. Un contraste proche vérifie ensuite que tu ne devines pas.
@@ -31,6 +31,12 @@ Sur l'accueil, la tuile **« Ton œuvre en cours »** t'ouvre ta pièce :
 - Un passage est **Maîtrisé** seulement après deux réussites propres séparées dans le temps.
 - Une conquête déjà gagnée reste dans tes trophées, même si un nouvel essai révèle qu'un passage doit être retravaillé.
 - Le chronomètre global laisse finir l'élément en cours, puis arrête la séance. Dans les niveaux Bronze à Rhodium, le tempo propre au niveau reste toutefois vérifié pendant la phase cible.
+
+## Le temps bonus et les secrets
+
+Si tu termines la mission et le transfert avant la fin du chrono, SEZAM ouvre un **atelier bonus**. Explore la portée : certains détails peuvent être remis en place ou réveillés. Les trouver rapporte quelques XP et peut révéler un trophée secret, mais ne modifie jamais ton score, ta mémoire espacée ni la validation d'un palier.
+
+La clé de fa utilisée dans les vrais exercices est toujours placée sur sa quatrième ligne. Une clé volontairement déplacée ne peut apparaître que dans cet atelier : si tu la repères et la remets spontanément, le jeu récompense ton œil de musicien-copiste.
 
 ## Ta progression est en sécurité
 

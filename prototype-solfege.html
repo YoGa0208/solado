@@ -316,6 +316,11 @@
   .corrBox h4{margin:0 0 5px;font-size:12px;color:var(--or-deep);letter-spacing:.4px;text-transform:uppercase}
   .corrBox p{margin:5px 0;font-size:13px;line-height:1.4;color:var(--petrole)}
   .corrBox b{color:var(--ink)}
+  .bonusHint{display:inline-block;margin-top:7px;padding:5px 9px;border:1px dashed rgba(184,137,58,.55);border-radius:999px;color:var(--or-deep);font-size:11px}
+  #bonusTarget{outline:none;transform-box:fill-box;transform-origin:center;transition:transform .35s ease,opacity .25s ease}
+  #bonusTarget:hover,#bonusTarget:focus{filter:drop-shadow(0 0 5px rgba(184,137,58,.65))}
+  .bonusSolved{animation:bonusPulse .55s ease}
+  @keyframes bonusPulse{50%{transform:scale(1.08);filter:drop-shadow(0 0 8px rgba(184,137,58,.8))}}
   /* ===== Partition — terrain de jeu (carte de conquête, ambitions, bilan) ===== */
   .pieceMap{display:block;background:var(--paper);border:1px solid rgba(15,76,92,.16);border-radius:18px 8px 18px 8px;padding:10px 6px 4px;margin:10px 0 6px;overflow:hidden}
   .palier.pieceCard{flex-direction:column;align-items:stretch}
@@ -536,7 +541,7 @@ function esc(s){
   });
 }
 /* ================= DONNÉES ================= */
-const APP_VERSION="v25"; // garder aligné avec CACHE_NAME de sw.js (testé)
+const APP_VERSION="v26"; // garder aligné avec CACHE_NAME de sw.js (testé)
 const NOTES = {
   do4 :{n:"do", clef:"sol", p:-2, midi:60, mn:"Le do du milieu est transpercé par sa petite ligne, rien qu'à lui."},
   re4 :{n:"ré", clef:"sol", p:-1, midi:62, mn:"Collé juste sous la portée."},
@@ -818,6 +823,11 @@ function normalizeProfile(p){
   };
 }
 const DAILY_BLOCK_IDS=["session","cible","rappel","reparation","transfert","lacunes","revisions","nouveaute","test","oeuvre"];
+const BONUS_EGG_DEFS=[
+  {id:"clef-fa",xp:3,title:"Œil du copiste"},
+  {id:"ligne-or",xp:2,title:"Ligne d’or"},
+  {id:"etoile-muette",xp:1,title:"Étoile muette"}
+];
 function normalizeDailyProgress(value){
   const out={};
   if(!value||typeof value!=="object"||Array.isArray(value)) return out;
@@ -830,6 +840,15 @@ function normalizeDailyProgress(value){
     if(Object.keys(day).length) out[k]=day;
   });
   return out;
+}
+function normalizeEasterEggs(value){
+  value=(value&&typeof value==="object"&&!Array.isArray(value))?value:{};
+  const allowed=BONUS_EGG_DEFS.map(function(x){return x.id;}), byId={};
+  if(value.byId&&typeof value.byId==="object"&&!Array.isArray(value.byId)) allowed.forEach(function(id){
+    const n=clampInt(value.byId[id],0,9999,0); if(n) byId[id]=n;
+  });
+  const today=Array.isArray(value.today)?uniq(value.today.filter(function(id){return allowed.indexOf(id)>=0;})):[];
+  return {day:/^\d{4}-\d{2}-\d{2}$/.test(value.day||"")?value.day:"",today:today,total:clampInt(value.total,0,999999,0),byId:byId};
 }
 function cleanId(v,prefix){
   v=String(v==null?"":v).replace(/[^a-zA-Z0-9_-]/g,"").slice(0,48);
@@ -1082,7 +1101,7 @@ function backupToDb(o){
   if(o.history && Array.isArray(o.history.events)) db.events=o.history.events;
   db._sezam={
     app:"SEZAM",
-    schema:9,
+    schema:10,
     userId:cleanId(o.userId,"user"),
     createdAt:clampInt(o.createdAt||o.timestamp,0,Number.MAX_SAFE_INTEGER,Date.now()),
     updatedAt:clampInt(o.timestamp,0,Number.MAX_SAFE_INTEGER,Date.now()),
@@ -1094,7 +1113,7 @@ function backupToDb(o){
 function ensureMeta(db){
   if(!db._sezam||typeof db._sezam!=="object") db._sezam={};
   db._sezam.app="SEZAM";
-  db._sezam.schema=9;
+  db._sezam.schema=10;
   if(!db._sezam.userId) db._sezam.userId=makeLocalId("user");
   db._sezam.userId=cleanId(db._sezam.userId,"user");
   const ts=stateTimestamp(db);
@@ -1154,6 +1173,7 @@ function ensureStructure(db){
   if(!db.kbdStats.byPc||typeof db.kbdStats.byPc!=="object") db.kbdStats.byPc={};
   db.profile=normalizeProfile(db.profile);
   db.dailyProgress=normalizeDailyProgress(db.dailyProgress);
+  db.easterEggs=normalizeEasterEggs(db.easterEggs);
   if(!THEME_MODES.find(function(x){return x.id===db.themeMode;})) db.themeMode="classique";
   if(previousVersion<7 && db.themeMode==="partition") db.themeMode="classique";
   if(!db.paliers) db.paliers={};
@@ -1471,9 +1491,27 @@ function practiceTotals(){
   });
   return out;
 }
+function easterEggState(){
+  DB.easterEggs=normalizeEasterEggs(DB.easterEggs);
+  const key=todayStr();
+  if(DB.easterEggs.day!==key){ DB.easterEggs.day=key; DB.easterEggs.today=[]; }
+  return DB.easterEggs;
+}
+function awardEasterEgg(id){
+  const def=BONUS_EGG_DEFS.find(function(x){return x.id===id;}), eggs=easterEggState();
+  if(!def) return {awarded:false,xp:0,title:"Secret"};
+  if(eggs.today.indexOf(id)>=0) return {awarded:false,xp:0,title:def.title};
+  eggs.today.push(id); eggs.total++;
+  eggs.byId[id]=clampInt((eggs.byId[id]||0)+1,1,9999,1);
+  DB.xp+=def.xp;
+  logEvent("easter_egg",{id:id,xp:def.xp,total:eggs.total});
+  save(); header();
+  return {awarded:true,xp:def.xp,title:def.title};
+}
 function trophyDefs(){
   const totals=practiceTotals(), ws=weekStats(), st=streak(), best=longestStreak();
   const kbd=DB.kbdStats||{total:0,ok:0};
+  const eggs=normalizeEasterEggs(DB.easterEggs);
   return [
     {id:"first",ico:"✓",t:"Premier jour",s:"mise en route",on:totals.days>=1},
     {id:"streak3",ico:"3",t:"3 jours",s:"élan",on:st>=3||best>=3},
@@ -1484,9 +1522,11 @@ function trophyDefs(){
     {id:"xp1000",ico:"XP",t:"1000 XP",s:"volume",on:(DB.xp||0)>=1000},
     {id:"premierepiece",ico:"𝄞",t:"Première œuvre",s:"une pièce maîtrisée",on:masteredPiecesCount()>=1},
     {id:"bibliotheque",ico:"𝄢",t:"Bibliothèque",s:"toutes les pièces maîtrisées",on:masteredPiecesCount()>=PIECES_BUILTIN.filter(function(p){return pieceMelody(p);}).length},
-    {id:"rhodium",ico:"Rh",t:"Rhodium",s:"vitesse tenue",on:tierComplete("rhodium")}
+    {id:"rhodium",ico:"Rh",t:"Rhodium",s:"vitesse tenue",on:tierComplete("rhodium")},
+    {id:"copiste",ico:"𝄢",t:"Œil du copiste",s:"3 clés remises",on:(eggs.byId["clef-fa"]||0)>=3,secret:true}
   ];
 }
+function shownTrophyDefs(){return trophyDefs().filter(function(t){return !t.secret||t.on;});}
 // Nombre de pièces jouables dont TOUS les passages sont Maîtrisés (la conquête complète d'une œuvre).
 function masteredPiecesCount(){
   return allPieces().filter(function(p){
@@ -1591,13 +1631,23 @@ function clefSVG(clef,top,half,opts){
     return '<text class="clef clef-sol" data-ref-p="2" data-ref-y="'+fmtN(staffY(top,half,2))+
       '" x="'+fmtN(x)+'" y="'+fmtN(y)+'" font-size="'+fmtN(size)+'" font-family="'+musicFont+'" fill="'+color+'">\u{1D11E}</text>';
   }
-  const x=opts.x!==undefined?opts.x:18;
+  // Clé de fa vectorielle : le glyphe Unicode varie trop selon la police et le navigateur.
+  // Les deux points encadrent toujours la 4e ligne (fa, p=6), y compris dans Firefox/macOS.
+  const x=opts.x!==undefined?opts.x:18, scale=half/9;
   const yFa=staffY(top,half,6), yUpper=staffY(top,half,7), yLower=staffY(top,half,5);
-  const size=opts.size||half*7.4;
-  return '<text class="clef clef-fa" data-ref-p="6" data-ref-y="'+fmtN(yFa)+
-    '" data-upper-y="'+fmtN(yUpper)+'" data-lower-y="'+fmtN(yLower)+
-    '" x="'+fmtN(x)+'" y="'+fmtN(yFa)+'" font-size="'+fmtN(size)+
-    '" font-family="'+musicFont+'" fill="'+color+'" dominant-baseline="central">\u{1D122}</text>';
+  const shift=Number(opts.yShift)||0, drawFa=yFa+shift, drawUpper=yUpper+shift, drawLower=yLower+shift;
+  const interactive=!!opts.interactive;
+  const attrs=interactive?' id="bonusTarget" role="button" tabindex="0" aria-label="Clé de fa déplacée : toucher pour la remettre" style="cursor:pointer"':'';
+  return '<g class="clef clef-fa" data-ref-p="6" data-ref-y="'+fmtN(yFa)+
+    '" data-upper-y="'+fmtN(yUpper)+'" data-lower-y="'+fmtN(yLower)+'" data-shift="'+fmtN(shift)+'"'+attrs+'>'+
+    '<circle class="clef-fa-head" cx="'+fmtN(x+8*scale)+'" cy="'+fmtN(drawFa)+'" r="'+fmtN(5.2*scale)+'" fill="'+color+'"/>'+
+    '<path class="clef-fa-curve" d="M '+fmtN(x+8*scale)+' '+fmtN(drawFa)+
+      ' C '+fmtN(x+16*scale)+' '+fmtN(drawFa-22*scale)+' '+fmtN(x+36*scale)+' '+fmtN(drawFa-18*scale)+' '+fmtN(x+36*scale)+' '+fmtN(drawFa-1*scale)+
+      ' C '+fmtN(x+36*scale)+' '+fmtN(drawFa+16*scale)+' '+fmtN(x+22*scale)+' '+fmtN(drawFa+27*scale)+' '+fmtN(x+6*scale)+' '+fmtN(drawFa+31*scale)+
+      '" fill="none" stroke="'+color+'" stroke-width="'+fmtN(5.2*scale)+'" stroke-linecap="round"/>'+
+    '<circle class="clef-fa-dot upper" data-dot-p="7" cx="'+fmtN(x+47*scale)+'" cy="'+fmtN(drawUpper)+'" r="'+fmtN(2.8*scale)+'" fill="'+color+'"/>'+
+    '<circle class="clef-fa-dot lower" data-dot-p="5" cx="'+fmtN(x+47*scale)+'" cy="'+fmtN(drawLower)+'" r="'+fmtN(2.8*scale)+'" fill="'+color+'"/>'+
+    '</g>';
 }
 // big : 0/absent = note de groupe · 1 = grande note (question note seule) · 2 = grande note + halo doré (découverte/préparation)
 function noteGlyph(x,p,color,acc,big){
@@ -1639,6 +1689,29 @@ function staffSVG(clef,notes,caretX){ // notes=[{p,color,x,acc,big,mark}]
   s+='</svg>';
   return s;
 }
+function bonusStaffSVG(kind,solved){
+  const W=STAFF.W,H=STAFF.H, color="#3d4250";
+  let s='<svg id="bonusStaffSvg" viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block">';
+  for(let i=0;i<5;i++){
+    const y=STAFF.top+i*2*STAFF.half, gold=kind==="ligne-or"&&i===2&&!solved;
+    if(gold){
+      s+='<g id="bonusTarget" role="button" tabindex="0" aria-label="Ligne dorée cachée : toucher pour la révéler" style="cursor:pointer">'+
+        '<line x1="14" y1="'+y+'" x2="'+(W-14)+'" y2="'+y+'" stroke="#b8893a" stroke-width="2.4"/>'+
+        '<line x1="14" y1="'+y+'" x2="'+(W-14)+'" y2="'+y+'" stroke="transparent" stroke-width="18"/></g>';
+    } else s+='<line x1="14" y1="'+y+'" x2="'+(W-14)+'" y2="'+y+'" stroke="#4a4337" stroke-width="1.6"/>';
+  }
+  if(kind==="clef-fa"){
+    const clef=clefSVG("fa",STAFF.top,STAFF.half,{x:18,yShift:solved?0:-2*STAFF.half,interactive:!solved,color:solved?"#5e6e51":color});
+    s+=solved?'<g class="bonusSolved">'+clef+'</g>':clef;
+  } else s+=clefSVG("fa",STAFF.top,STAFF.half,{x:18,color:color});
+  if(kind==="etoile-muette"){
+    if(solved) s+='<text class="bonusSolved" x="278" y="37" text-anchor="middle" font-size="24" fill="#b8893a">★</text>';
+    else s+='<text id="bonusTarget" role="button" tabindex="0" aria-label="Étoile discrète : toucher pour la réveiller" x="278" y="37" text-anchor="middle" font-size="16" fill="#d8c9a8" style="cursor:pointer">☆</text>';
+  }
+  if(solved) s+='<text x="'+(W-18)+'" y="'+(H-16)+'" text-anchor="end" font-size="13" font-weight="700" fill="#5e6e51">secret trouvé ✓</text>';
+  s+='</svg>';
+  return s;
+}
 
 /* ================= ÉCRANS ================= */
 const $=function(id){return document.getElementById(id);};
@@ -1673,14 +1746,14 @@ function renderRitual(){
   $("ritualStats").innerHTML=
     '<div class="rstat"><div class="v">'+st+'</div><div class="l">jours de suite</div></div>'+
     '<div class="rstat"><div class="v">'+ws.current+'</div><div class="l">semaines</div></div>'+
-    '<div class="rstat"><div class="v">'+trophiesEarned()+'/'+trophyDefs().length+'</div><div class="l">trophées</div></div>';
+    '<div class="rstat"><div class="v">'+trophiesEarned()+'/'+shownTrophyDefs().length+'</div><div class="l">trophées</div></div>';
   $("ritualNote").textContent = todayCount
     ? "Investissement compté : séries, rafales, révisions et clavier. Meilleure suite : "+best+" jour"+(best>1?"s":"")+"."
     : "Un jour coché suffit à garder le fil. Une petite série propre vaut mieux qu'une grande séance brouillonne.";
   renderCalendar();
 }
 function renderTrophies(){
-  $("trophyStrip").innerHTML=trophyDefs().map(function(t){ // tous les trophées, aucun caché
+  $("trophyStrip").innerHTML=shownTrophyDefs().map(function(t){
     return '<div class="trophy '+(t.on?'on':'')+'"><span class="ico">'+esc(t.ico)+'</span><b>'+esc(t.t)+'</b><small>'+esc(t.s)+'</small></div>';
   }).join("");
 }
@@ -1936,7 +2009,7 @@ function dailyPlan(decision){
   ];
   const minutes=splitPlanMinutes(total,specs.map(function(x){return x.weight;}));
   const done=(DB.dailyProgress&&DB.dailyProgress[todayStr()])||{};
-  const signature="v25:"+decision.palier.id+":"+(piece?piece.id:"aucune")+":"+total;
+  const signature="v26:"+decision.palier.id+":"+(piece?piece.id:"aucune")+":"+total;
   const sessionDone=done.session===true||done.session===signature;
   return {
     total:total,
@@ -2336,7 +2409,7 @@ function buildDailySession(decision,now){
   });
   return {startAt:now,endAt:now+totalMs,totalMs:totalMs,totalMinutes:profile.dailyMinutes,blocks:blocks,
     targetPool:targetPool,dueSnapshot:dueSnapshot,repairSnapshot:repairSnapshot,
-    coldPool:uniq(dueSnapshot.concat(targetPool)),transferScript:transferScript.slice(),transferIdx:0,
+    coldPool:uniq(dueSnapshot.concat(targetPool)),transferScript:transferScript.slice(),transferIdx:0,transferReads:0,bonusIndex:0,bonusFound:0,
     pieceId:piece?piece.id:"",segmentId:seg?seg.id:"",segmentTitle:seg?seg.title:"",decisionKind:decision.kind,
     focusDomain:focusDomain,transferMission:dailyMission(focusDomain,piece),missionDone:false};
 }
@@ -2364,7 +2437,8 @@ function updateDailyClock(){
   const sec=Math.ceil(left/1000), mm=Math.floor(sec/60), ss=String(sec%60).padStart(2,"0");
   const tempo=EX.limit&&EX.currentTask&&EX.currentTask.phase==="cible"&&EX.currentTask.role==="baseline"
     ? " · tempo "+Math.round(EX.limit/1000)+" s / "+EX.groupN+" note"+(EX.groupN>1?"s":"") : "";
-  $("exMode").textContent="Séance · "+dailyPhaseLabel(phase?phase.id:"transfert")+" · "+mm+":"+ss+" restantes"+tempo;
+  const phaseName=EX.currentTask&&EX.currentTask.role==="bonus"?"Atelier bonus":dailyPhaseLabel(phase?phase.id:"transfert");
+  $("exMode").textContent="Séance · "+phaseName+" · "+mm+":"+ss+" restantes"+tempo;
   if(left<=0){ EX.stopRequested=true; $("btnQuit").textContent="Terminer maintenant"; }
 }
 function startDailyClock(){
@@ -2545,6 +2619,19 @@ function dailyTransferChunk(daily,n){
   }
   return out;
 }
+function dailyTransferReadyForBonus(daily){
+  if(!daily) return false;
+  const needsMission=daily.focusDomain!=="lecture"&&daily.focusDomain!=="integration";
+  if(needsMission&&!daily.missionDone) return false;
+  if(daily.transferScript&&daily.transferScript.length) return (daily.transferIdx||0)>=daily.transferScript.length;
+  return (daily.transferReads||0)>=3;
+}
+function dailyBonusTask(daily){
+  const kinds=BONUS_EGG_DEFS.map(function(x){return x.id;});
+  const idx=clampInt(daily&&daily.bonusIndex,0,999999,0), kind=kinds[idx%kinds.length];
+  if(daily) daily.bonusIndex=idx+1;
+  return {role:"bonus",phase:"transfert",qtype:"bonus",bonusKind:kind,bonusSolved:false};
+}
 function spacingTask(phase){
   return {role:"spacing",phase:phase||"reparation",qtype:"mission",mission:{
     title:"Intervalle actif",note:"Frappe quatre pulsations régulières, respire, puis reprends la lecture."
@@ -2578,8 +2665,10 @@ function questionTask(){
   if(phase.id==="transfert"){
     if(EX.daily.focusDomain!=="lecture"&&EX.daily.focusDomain!=="integration"&&!EX.daily.missionDone)
       return {role:"transfer",phase:"transfert",qtype:"mission",mission:EX.daily.transferMission};
+    if(dailyTransferReadyForBonus(EX.daily)) return dailyBonusTask(EX.daily);
     const seq=dailyTransferChunk(EX.daily,EX.groupN);
     if(!seq&&!pool.length) return spacingTask("transfert");
+    EX.daily.transferReads=(EX.daily.transferReads||0)+1;
     return {role:"transfer",phase:"transfert",pool:pool,seq:seq,qtype:"lect"};
   }
   return pool.length?{role:"baseline",phase:phase.id,pool:pool}:spacingTask(phase.id);
@@ -2592,7 +2681,7 @@ function nextQuestion(){
   const task=questionTask(); EX.currentTask=task; EX.currentQuestionTested=[];
   const ecritOk=(EX.mode==="libre"||EX.mode==="zen") && EX.kind==="serie" && !EX.script && task.role==="baseline" && task.phase!=="transfert";
   EX.qtype=task.qtype||((ecritOk && Math.random()<ECRIT_RATIO)?"ecrit":"lect");
-  if(task.qtype==="mission"){
+  if(task.qtype==="mission"||task.qtype==="bonus"){
     EX.seq=[];
   } else if(task.seq&&task.seq.length){
     EX.seq=task.seq.slice();
@@ -2614,7 +2703,9 @@ function nextQuestion(){
   $("feedback").className="feedback";
   $("btnNext").style.display="none";
   $("btnNext").textContent="Continuer";
-  if(EX.qtype==="mission"){
+  if(EX.qtype==="bonus"){
+    renderBonusTask();
+  } else if(EX.qtype==="mission"){
     $("staffbox").innerHTML='<div style="padding:28px 18px;text-align:center;font-family:var(--serif);font-size:38px;color:var(--or-deep)">♪</div>';
     $("feedback").innerHTML='<b>'+esc(task.mission.title)+'</b><br>'+esc(task.mission.note)+'<br><span class="src">Mission hors écran · autoévaluation honnête</span>';
     renderMissionControls();
@@ -2680,6 +2771,45 @@ function renderMissionControls(){
   const done=document.createElement("button"); done.textContent="Fait ✓"; done.onclick=function(){completeMission(true);};
   const skip=document.createElement("button"); skip.textContent=EX&&EX.currentTask&&EX.currentTask.role==="spacing"?"Continuer":"Passer aujourd’hui"; skip.onclick=function(){completeMission(false);};
   a.appendChild(done);a.appendChild(skip);
+}
+function renderBonusControls(){
+  const a=$("answers"); a.className="answers"; a.innerHTML="";
+  const next=document.createElement("button");
+  next.textContent=EX&&EX.currentTask&&EX.currentTask.bonusSolved?"Continuer le temps bonus":"Un autre mystère";
+  next.onclick=function(){ if(EX&&!EX.done) nextQuestion(); };
+  a.appendChild(next);
+}
+function renderBonusTask(){
+  const task=EX&&EX.currentTask;
+  if(!task||task.qtype!=="bonus") return;
+  $("staffbox").innerHTML=bonusStaffSVG(task.bonusKind,!!task.bonusSolved);
+  if(task.bonusSolved){
+    $("feedback").className="feedback good";
+    $("feedback").innerHTML='<b>'+esc(task.bonusMessage||"Secret repéré")+'</b><br><span class="src">Le temps restant devient une petite réserve de curiosité.</span>';
+  } else {
+    $("feedback").className="feedback";
+    $("feedback").innerHTML='<b>Atelier bonus</b> · explore la portée : quelque chose mérite peut-être ton attention.'+
+      '<br><span class="bonusHint">Rien n’est obligatoire · le chrono continue</span>';
+  }
+  renderBonusControls();
+  const target=$("bonusTarget");
+  if(target&&!task.bonusSolved){
+    const solve=function(){solveBonusEgg();};
+    target.addEventListener("click",solve);
+    target.addEventListener("keydown",function(ev){if(ev.key==="Enter"||ev.key===" "){ev.preventDefault();solve();}});
+  }
+}
+function solveBonusEgg(){
+  const task=EX&&EX.currentTask;
+  if(!task||EX.done||task.qtype!=="bonus"||task.bonusSolved) return;
+  const reward=awardEasterEgg(task.bonusKind);
+  task.bonusSolved=true;
+  if(reward.awarded){
+    if(EX.daily) EX.daily.bonusFound=(EX.daily.bonusFound||0)+1;
+    task.bonusMessage="Secret trouvé · "+reward.title+" · +"+reward.xp+" XP";
+    sfxWin(); vibrate([18,25,35]);
+  } else task.bonusMessage=reward.title+" · déjà repéré aujourd’hui";
+  renderBonusTask();
 }
 function completeMission(done){
   if(!EX||EX.done||EX.waiting||EX.qtype!=="mission") return;
@@ -3033,7 +3163,8 @@ function finishSerie(){
   if(isDaily){
     const ps=EX.phaseStats;
     $("resVal").innerHTML="Rappel <b>"+(ps.rappel.n||0)+"</b> · Cible <b>"+(ps.cible.n||0)+"</b> · Réparation <b>"+(ps.reparation.n||0)+"</b> · Transfert <b>"+(ps.transfert.n||0)+"</b>"+
-      ((DB.repairQueue||[]).length?"<br>"+(DB.repairQueue||[]).length+" confusion"+((DB.repairQueue||[]).length>1?"s":"")+" gardée"+((DB.repairQueue||[]).length>1?"s":"")+" pour le prochain rappel à froid.":"<br>Toutes les réparations prévues sont refermées.");
+      ((DB.repairQueue||[]).length?"<br>"+(DB.repairQueue||[]).length+" confusion"+((DB.repairQueue||[]).length>1?"s":"")+" gardée"+((DB.repairQueue||[]).length>1?"s":"")+" pour le prochain rappel à froid.":"<br>Toutes les réparations prévues sont refermées.")+
+      ((EX.daily.bonusFound||0)?"<br>Secret"+((EX.daily.bonusFound||0)>1?"s":"")+" repéré"+((EX.daily.bonusFound||0)>1?"s":"")+" : <b>"+EX.daily.bonusFound+"</b>.":"");
     $("btnAgain").style.display="none";
   } else if(isRepair){
     const left=repairPool().length;
@@ -3284,7 +3415,7 @@ function renderStats(){
     '<div class="stat"><div class="v">'+weeks.current+'</div><div class="l">semaines d\'affilée</div></div>'+
     '<div class="stat"><div class="v">'+medals+'/'+total+'</div><div class="l">validations ('+days+' jours)</div></div>'+
     '<div class="stat"><div class="v star">★ '+stars+'</div><div class="l">défis parfaits</div></div>'+
-    '<div class="stat"><div class="v">'+trophiesEarned()+'/'+trophyDefs().length+'</div><div class="l">trophées</div></div>';
+    '<div class="stat"><div class="v">'+trophiesEarned()+'/'+shownTrophyDefs().length+'</div><div class="l">trophées</div></div>';
   const frag=Object.keys(DB.noteStats)
     .filter(function(k){const s=DB.noteStats[k];return s.e>=2 && s.e/s.v>0.2;})
     .sort(function(a,b){return DB.noteStats[b].e-DB.noteStats[a].e;}).slice(0,4);
@@ -4419,7 +4550,7 @@ function cloudDocument(){
     progress:{
       v:DB.v, mode:DB.mode, sel:DB.sel, seen:DB.seen, paliers:DB.paliers,
       days:DB.days, dailyProgress:DB.dailyProgress||{}, pieces:cloudPieces(), pieceProgress:DB.pieceProgress||{},
-      activePiece:DB.activePiece||"", pieceGoals:DB.pieceGoals||{}, questionClock:DB.questionClock||0, repairQueue:DB.repairQueue||[]
+      activePiece:DB.activePiece||"", pieceGoals:DB.pieceGoals||{}, questionClock:DB.questionClock||0, repairQueue:DB.repairQueue||[], easterEggs:DB.easterEggs||{}
     },
     scores:{ xp:DB.xp||0, noteStats:DB.noteStats||{}, kbdStats:DB.kbdStats||{} },
     settings:{ sound:DB.sound, soundLong:DB.soundLong, haptic:DB.haptic, profile:DB.profile||{}, themeMode:DB.themeMode||"classique" },
@@ -4541,7 +4672,7 @@ function compactSave(){
   const out={v:DB.v,xp:DB.xp,sound:DB.sound,soundLong:DB.soundLong,haptic:DB.haptic,mode:DB.mode,sel:DB.sel,themeMode:DB.themeMode||"classique",
              _sezam:DB._sezam,days:DB.days,dailyProgress:DB.dailyProgress||{},seen:DB.seen,noteStats:{},paliers:{},pieces:DB.pieces||[],pieceProgress:DB.pieceProgress||{},
              activePiece:DB.activePiece||"",pieceGoals:DB.pieceGoals||{},profile:DB.profile,kbdStats:DB.kbdStats,
-             questionClock:DB.questionClock||0,repairQueue:DB.repairQueue||[]};
+             questionClock:DB.questionClock||0,repairQueue:DB.repairQueue||[],easterEggs:DB.easterEggs||{}};
   Object.keys(DB.noteStats||{}).forEach(function(k){ const s=DB.noteStats[k]; if(s&&(s.v||s.e||s.box||s.due)) out.noteStats[k]=s; });
   Object.keys(DB.paliers||{}).forEach(function(pid){
     const st=DB.paliers[pid], o={};

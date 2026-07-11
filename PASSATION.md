@@ -10,7 +10,7 @@ SEZAM est une borne d'arcade musicale adaptative, offline-first, en français, d
 
 ```bash
 cd ~/Documents/music
-npm test                              # 397 tests moteur — DOIT afficher 0 échec
+npm test                              # 410 tests moteur — DOIT afficher 0 échec
 python3 -m http.server 4173           # puis ouvrir http://localhost:4173/index.html
 node tests/bot_completion.cjs         # joue la partie ENTIÈRE sur le vrai moteur (~3 s)
 ```
@@ -23,9 +23,9 @@ Remote `origin` configuré sur `https://github.com/YoGa0208/solado.git`. Toujour
 |---|---|
 | `index.html` | TOUTE l'application : HTML + CSS + JS vanilla, zéro framework, zéro build |
 | `prototype-solfege.html` | Copie **byte-identique** d'index.html (historique iOS ; un test impose l'égalité stricte) |
-| `sw.js` | Service worker : cache `sezam-solado-v25`, HTML réseau-d'abord, assets cache-d'abord |
+| `sw.js` | Service worker : cache `sezam-solado-v26`, HTML réseau-d'abord, assets cache-d'abord |
 | `manifest.json` | PWA installable (fond blanc, icônes SEZAM) |
-| `tests/engine.test.js` | 397 tests : charge le VRAI script d'index.html dans un bac à sable Node |
+| `tests/engine.test.js` | 410 tests : charge le VRAI script d'index.html dans un bac à sable Node |
 | `tests/bot_completion.cjs` | Bot qui finit le jeu à 100 % (QA de profondeur/équilibrage) |
 | `data/music-watch.json` | Brèves culturelles servies sur l'accueil (fallback embarqué dans index.html) |
 | `scripts/build_music_watch.js` | Générateur de veille depuis flux RSS (France Musique, The Strad…) avec repli hors-ligne |
@@ -39,7 +39,7 @@ Un seul gros `<script>` "use strict" (précédé d'un script qrcode-generator em
 1. **CSS** avec thèmes par variables : `:root` (Classique blanc) + `[data-theme=partition|nocturne|luthier]`. Palette : pétrole `#0f4c5c`, céramique `#7fb8c2`, or `#b8893a`.
 2. **Sécurité** : `esc()` — obligatoire sur TOUTE donnée utilisateur/importée avant `innerHTML`.
 3. **Dictionnaires** : `NOTES` (23 notes, `p` = position de portée, `midi`, `mn` = repère mnémotechnique), `PALIERS` (15 : P1–P10 puis boss B1–B5), `TIERS` (Zen, Bronze 2 notes/5 s, Argent 3/4 s, Vermeil 4/3 s, Or 5/2 s, Rhodium 6/1 s ; gemmes/étoiles `future:true`), `SEGMENT_STATES` (5 états), `PIECE_AMBITIONS` (4 ambitions), `CARDS`/`CARDS_TIER` (cartes-cadeaux culturelles).
-4. **État & normalisation** : `DB` global ; `ensureStructure(db)` est LE point unique de normalisation (migrations v1→v8 incluses — ne jamais supprimer ces branches). `normalizeProfile`, `normalizePiece/Segment/Melody/Goal/SegmentState` assainissent tout import.
+4. **État & normalisation** : `DB` global ; `ensureStructure(db)` est LE point unique de normalisation (migrations historiques + schéma 10 inclus — ne jamais supprimer ces branches). `normalizeProfile`, `normalizePiece/Segment/Melody/Goal/SegmentState/EasterEggs` assainissent tout import.
 5. **Stockage 3 filets** : localStorage `solfegeProto1` + `_mirror` + `_checkpoint` (le checkpoint n'est JAMAIS écrasé par un état moins bon — `stateScore`/`shouldAdopt`), IndexedDB `soladoBackup`, et Gist GitHub optionnel.
 6. **Moteurs** (voir §5) puis **écrans** : `scrHome` (cockpit), `scrEx` (jeu), `scrRes` (résultat + bilan partition), `scrStats`, `scrPieces` (liste), `scrPiece` (fiche d'une pièce), `scrKbd` (clavier, module isolé `KX`).
 7. **SVG** : `staffSVG` (portée de jeu) et `pieceMapSVG` (carte de conquête multi-systèmes, passages teintés par état, halos dorés sur notes travaillées, zones tactiles `data-seg`).
@@ -50,7 +50,7 @@ Un seul gros `<script>` "use strict" (précédé d'un script qrcode-generator em
 
 **Coach (`coachDecision`)** — hiérarchie VERROUILLÉE par tests : ≥2 erreurs récentes ou ≥2 notes en réparation → RÉPARATION ; pause longue (>5 j, `LONG_BREAK_MS`) → FLASH ; sinon SESSION. Le bouton JOUER passe par `startCoachPlay(force?)`.
 
-**Séance quotidienne (`dailyPlan` + `buildDailySession`)** — un seul bouton orchestre, dans le temps choisi, 20 % de rappel à froid, 60 % de cible, 10 % de réparation et 10 % de transfert. Le chronomètre global n'ouvre plus de question après l'échéance ; la question en cours peut finir. Le tempo du niveau reste contrôlé pendant la cible. Les missions hors écran sont annoncées comme autoévaluées.
+**Séance quotidienne (`dailyPlan` + `buildDailySession`)** — un seul bouton orchestre, dans le temps choisi, 20 % de rappel à froid, 60 % de cible, 10 % de réparation et 10 % de transfert. Le chronomètre global n'ouvre plus de question après l'échéance ; la question en cours peut finir. Le tempo du niveau reste contrôlé pendant la cible. Une fois mission et transfert terminés, `dailyBonusTask` sert des eggs facultatifs au lieu de laisser un temps mort. `solveBonusEgg` attribue de petits XP une fois par jour sans toucher `EX.i`, `hist`, SRS ou validation.
 
 **Progression paliers** — `checkValidation` : 3 séries consécutives avec ≤1 erreur au total, OU 5 séries dans la semaine avec ≤2, avec couverture de toutes les notes. Les questions de réparation/transfert sont exclues des preuves de validation. Un tier n'est débloqué que si le précédent est complet partout (`tierUnlocked`/`tierComplete`). SRS Leitner 5 boîtes (`srsReview`, délais 1/3/7/16/30 j) : seule une réussite réellement due augmente la boîte. Étoiles = revalidation calendaire (7/30/90/180/365 j) après Rhodium.
 
@@ -68,7 +68,7 @@ Un seul gros `<script>` "use strict" (précédé d'un script qrcode-generator em
 ## 6. Invariants — à ne JAMAIS casser (tous testés)
 
 1. `index.html` strictement égal à `prototype-solfege.html` → `cp index.html prototype-solfege.html` avant tout commit.
-2. `APP_VERSION` (index.html) == numéro de `CACHE_NAME` (sw.js). Bump LES DEUX à chaque livraison (actuel : v25 / `sezam-solado-v25`).
+2. `APP_VERSION` (index.html) == numéro de `CACHE_NAME` (sw.js). Bump LES DEUX à chaque livraison (actuel : v26 / `sezam-solado-v26`).
 3. Clés de stockage intouchables : `solfegeProto1*`, `soladoBackup`, gist `sezam-progress.json` (+ lecture legacy `solado-save.json`). Une progression ne se réinitialise JAMAIS.
 4. Toute note d'un passage appartient au palier annoncé par ce passage (garde-fou pédagogique).
 5. Bibliothèque : domaine public uniquement, mélodies JUSTES (l'incipit d'Ode main gauche est verrouillé par test — on a déjà eu un mode lydien accidentel).
@@ -112,6 +112,6 @@ P2 : meilleur temps personnel par palier aux tiers chronométrés ; une pièce s
 
 ## 15. Pièges d'environnement rencontrés (si vous outillez pareil)
 
-Le montage Cowork protège certaines suppressions (`.git/index.lock` : passer par l'autorisation de suppression avant `rm`). Sandbox Linux arm64 sans root : Playwright chromium s'installe avec `PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=1`, et il manque `libXdamage.so.1` → compiler un stub (6 symboles vides, gcc -shared) et le passer en `LD_LIBRARY_PATH` — jamais appelé en headless. Les glyphes de clé (𝄞/𝄢) dépendent des polices système : rendus sur iOS/Android/desktop récents, potentiellement absents dans un headless nu (cosmétique uniquement). Chaque commande bash de l'environnement est isolée : pas de processus de fond entre deux appels — mesurer au plancher et additionner les temps de réflexion arithmétiquement.
+Le montage Cowork protège certaines suppressions (`.git/index.lock` : passer par l'autorisation de suppression avant `rm`). La clé de fa est vectorielle : ne jamais la remplacer par le glyphe Unicode 𝄢, dont l'alignement varie selon Firefox, Safari, Chrome et les polices installées. Les deux points doivent encadrer `p=6` via les positions `p=7` et `p=5`. Chaque commande bash de l'environnement est isolée : pas de processus de fond entre deux appels — mesurer au plancher et additionner les temps de réflexion arithmétiquement.
 
 Bonne reprise. La règle d'or tient en une ligne : **si `npm test` est vert, les deux fichiers HTML sont identiques et les versions sont alignées, vous pouvez livrer.**
