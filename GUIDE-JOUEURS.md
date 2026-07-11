@@ -5,7 +5,7 @@ Bienvenue dans SEZAM, ton entraînement musical. Tout tient en une idée : **ta 
 ## Démarrer (30 secondes)
 
 1. Ouvre le lien SEZAM dans le navigateur de ton téléphone ou de ton ordinateur.
-2. Appuie sur **JOUER**. C'est tout — le coach invisible choisit pour toi la bonne session (Flash, Session ou Réparation).
+2. Appuie sur **FAIRE MA SÉANCE**. C'est tout — le coach invisible enchaîne rappel à froid, cible du jour, réparation et transfert, puis s'arrête au temps choisi.
 3. Pour l'avoir comme une vraie app : dans le navigateur, *Partager → Ajouter à l'écran d'accueil* (iPhone) ou *Installer l'application* (Android/Chrome). SEZAM fonctionne ensuite même sans internet.
 
 ## Ta partition, ton projet
@@ -22,6 +22,15 @@ Sur l'accueil, la tuile **« Ton œuvre en cours »** t'ouvre ta pièce :
 - **Vu en cours** : tu marques ce que tu as travaillé avec ton professeur.
 - **Facile / Juste bien / Difficile** : ton ressenti ajuste l'ordre des prochains passages.
 - **Bibliothèque** : huit pièces du domaine public t'attendent, du tout premier niveau (Au clair de la lune, trois notes) à la clé de fa (Ode à la joie main gauche). Tu peux aussi ajouter tes propres partitions.
+
+## Comment la v25 te fait progresser
+
+- La première question est un **rappel à froid**, sans indice : elle mesure ce qui est vraiment resté.
+- Après une erreur, lis la correction. En série, la note revient après deux autres questions ; dans la séance quotidienne, elle attend au moins ces deux questions puis son créneau Réparation. Un contraste proche vérifie ensuite que tu ne devines pas.
+- Une réussite répétée immédiatement consolide, mais ne devient pas artificiellement un souvenir « ancré ».
+- Un passage est **Maîtrisé** seulement après deux réussites propres séparées dans le temps.
+- Une conquête déjà gagnée reste dans tes trophées, même si un nouvel essai révèle qu'un passage doit être retravaillé.
+- Le chronomètre global laisse finir l'élément en cours, puis arrête la séance. Dans les niveaux Bronze à Rhodium, le tempo propre au niveau reste toutefois vérifié pendant la phase cible.
 
 ## Ta progression est en sécurité
 

@@ -67,26 +67,29 @@ function loadEngine() {
   if (!src) throw new Error("Script principal introuvable dans index.html");
   src = src.replace(/^<script>/, "").replace(/<\/script>$/, "");
   const exportsList = [
-    "esc", "checkValidation", "srs", "srsReview", "isDue", "ensureStructure",
+    "esc", "checkValidation", "seriesCover", "recentCoveredIds", "validationMissingIds", "srs", "srsReview", "isDue", "coldRecallId", "ensureStructure",
     "importSave", "compactSave", "undoImport", "tierUnlocked", "tierComplete",
     "palierPlayable", "valProgress", "PALIERS", "TIERS", "TIER_IDS", "NOTES",
     "buildKeyboard", "pcOf", "isWhite", "pickKbdTarget", "nameOptions", "withAcc",
     "baseNoteObj", "kbdRangeFor", "freshPalierState", "SRS_DAYS", "normalizePiece", "normalizeAttachment", "normalizeSegment", "MAX_PIECE_ATTACHMENT_BYTES", "MAX_TOTAL_ATTACHMENT_BYTES", "SAFE_ATTACHMENT_TYPES", "pieceFileType",
-    "normalizeQuestion", "normalizeDay", "normalizeSegmentState", "markDay", "activeDayKeys", "streak", "todayStr",
+    "normalizeQuestion", "normalizeDay", "normalizeSegmentState", "normalizeNoteStat", "normalizeConfusions", "normalizeRepairItem", "normalizeRepairQueue", "markDay", "activeDayKeys", "streak", "todayStr",
     "longestStreak", "weekStats", "practiceTotals", "trophyDefs", "trophiesEarned",
     "writtenLabelOf", "kbdLabelOf", "recoveryCodeInfo", "applyRecoveryCode",
     "trainingFocusText", "stateTimestamp", "stateScore", "shouldAdopt", "backupToDb", "THEME_MODES", "themeModeLabel", "watchHomeItems",
     "PROFILE_INSTRUMENTS", "PROFILE_PATHS", "PROFILE_LEVELS", "PRACTICE_DOMAINS", "normalizeProfile", "normalizeDailyProgress",
     "coachDecision", "repairPool", "fragileNoteIds", "globalPrecision", "sessionCountToday",
-    "dailyPlan", "splitPlanMinutes", "targetCadence", "dailyMission", "DAILY_BLOCK_IDS", "runDailyBlock",
+    "dailyPlan", "splitPlanMinutes", "targetCadence", "dailyMission", "dailyFocusDomain", "DAILY_BLOCK_IDS", "runDailyBlock",
+    "buildDailySession", "dailyPhaseAt", "dailyPhasePool", "dailyPhaseLabel", "startDailySession",
+    "pendingRepairIds", "responseKey", "confusedNoteId", "recordConfusion", "scheduleRepair", "dueRepairForSession", "repairBlockedIds", "ordinaryQuestionPool", "nearTransferId", "advanceRepair",
+    "validationRecordFromQuestions", "questionTask", "completeMission", "startRevision", "timeUp", "updateDailyClock", "clearQTimers", "clearDailyTimer",
     "recentErrorsCount", "longPauseSignal", "timeSinceLastSession", "lastPracticeAt", "LONG_BREAK_MS",
     "pieceSegments", "segmentNotePool", "segmentQuestionCount", "segmentGroupN", "segmentProgress", "segmentProgressLabel",
-    "segmentMastery", "recordSegmentResult", "nextSegmentForPiece", "PIECE_SEGMENT_HANDS", "PIECE_SEGMENT_FOCUSES",
+    "segmentMastery", "recordSegmentResult", "SEGMENT_MASTERY_GAP_MS", "nextSegmentForPiece", "PIECE_SEGMENT_HANDS", "PIECE_SEGMENT_FOCUSES",
     "PIECES_BUILTIN", "SEGMENT_STATES", "PIECE_AMBITIONS", "normalizeMelody", "pieceMelody", "pieceClef", "pieceById",
     "segmentMeasures", "segmentScript", "segmentStateId", "segmentStateDef", "segmentStateRank", "pieceStateCounts",
     "goalDef", "pieceGoal", "setPieceGoal", "ambitionProgress", "activePieceObj", "defaultActivePieceId", "ensureActivePiece",
     "noteOccurrencesInPiece", "measureSegment", "pieceMapSVG", "mapLegendHtml", "markSegmentSeen", "toggleSegmentFlag",
-    "setSegmentFeel", "feelLabel", "beginSerie", "answer", "startPieceSegment", "renderResPiece", "nextQuestion",
+    "setSegmentFeel", "feelLabel", "beginSerie", "answer", "answerPos", "startPieceSegment", "renderResPiece", "nextQuestion",
     "beginClavier", "nextKbd", "kbdTap", "renderKbd",
     "STAFF", "staffSVG", "clefSVG", "noteGlyph", "yOf", "previewNoteHtml",
     "currentRecoveryCode", "mirrorIntro", "tone", "save", "readKey",
@@ -94,7 +97,7 @@ function loadEngine() {
     "cloudDocument", "cloudSaveContent", "cloudPieces", "looksLikeToken", "persistOnExit", "APP_VERSION"
   ];
   const footer = "\n;return {" + exportsList.map(n => n + ":(typeof " + n + "!=='undefined'?" + n + ":undefined)").join(",") +
-    ",getDB:function(){return DB;},setDB:function(x){DB=x;},getKX:function(){return KX;},getEX:function(){return EX;},haltEX:function(){if(EX)EX.done=true;}};";
+    ",getDB:function(){return DB;},setDB:function(x){DB=x;},getKX:function(){return KX;},getEX:function(){return EX;},getEl:function(id){return document.getElementById(id);},haltEX:function(){if(EX)EX.done=true;}};";
   const fn = new Function("document", "localStorage", "navigator", "window", "sessionStorage", src + footer);
   return fn(makeDocument(), makeLocalStorage(), navigatorStub, windowStub, makeLocalStorage());
 }
@@ -111,6 +114,20 @@ pass++;
 
 /* helper : DB fraîche */
 function freshDB() { const db = E.ensureStructure({}); E.setDB(db); return db; }
+function masterSegment(pieceId, segmentId, base) {
+  base = base || (Date.now() - E.SEGMENT_MASTERY_GAP_MS - 1000);
+  E.recordSegmentResult({ pieceId, segmentId }, 5, 5, 0, base);
+  E.recordSegmentResult({ pieceId, segmentId }, 5, 5, 0, base + E.SEGMENT_MASTERY_GAP_MS);
+}
+function answerCurrentCorrect() {
+  const ex = E.getEX();
+  if (ex.qtype === "ecrit") {
+    ex.writePos = E.NOTES[ex.seq[0]].p;
+    E.answerPos(ex.writePos);
+  } else {
+    while (!ex.waiting && !ex.done && ex.k < ex.seq.length) E.answer(E.NOTES[ex.seq[ex.k]].n);
+  }
+}
 
 /* 1) Échappement HTML (XSS) */
 group("Sécurité — échappement des textes utilisateur");
@@ -130,21 +147,145 @@ ok(E.checkValidation([{ e: 0, ts: now }, { e: 0, ts: now }, { e: 1, ts: now }, {
 const old = now - 8 * 864e5;
 ok(E.checkValidation([{ e: 1, ts: old }, { e: 1, ts: old }, { e: 0, ts: now }]) === false,
   "séries trop vieilles ne comptent pas pour la règle des 5");
+ok(E.checkValidation([
+  {e:0,ts:now,ids:["sol4"]},{e:0,ts:now,ids:["la4"]},{e:0,ts:now,ids:["sol4","la4"]}
+],["sol4","la4","si4"],now) === false,
+  "trois séries propres sans couverture de SI ne valident pas le palier");
+ok(E.checkValidation([
+  {e:0,ts:now,ids:["sol4"]},{e:0,ts:now,ids:["la4"]},{e:0,ts:now,ids:["si4"]}
+],["sol4","la4","si4"],now) === true,
+  "trois séries propres couvrant toutes les notes valident le palier");
 
 /* 3) SRS Leitner */
 group("SRS — répétition espacée (Leitner 5 boîtes)");
 freshDB();
+const t0 = 1800000000000;
 ok(E.isDue("sol4") === false, "note jamais vue → pas due");
-E.srsReview("sol4", true);
+E.srsReview("sol4", true, t0);
 eq(E.srs("sol4").box, 1, "1 bonne réponse → boîte 1");
-ok(E.isDue("sol4") === true, "boîte 1 (délai 0 j) → due immédiatement");
-E.srsReview("sol4", true);
-eq(E.srs("sol4").box, 2, "2 bonnes réponses → boîte 2");
-ok(E.isDue("sol4") === false, "boîte 2 (délai 1 j) → plus due aujourd'hui");
-E.srsReview("sol4", false);
+ok(E.isDue("sol4", t0) === false, "première réussite → rappel demain, pas immédiatement");
+for (let i = 0; i < 9; i++) E.srsReview("sol4", true, t0 + i + 1);
+eq(E.srs("sol4").box, 1, "dix réussites immédiates restent en boîte 1");
+ok(E.isDue("sol4", t0 + 864e5) === true, "boîte 1 due à J+1");
+E.srsReview("sol4", true, t0 + 864e5);
+eq(E.srs("sol4").box, 2, "réussite à l'échéance → boîte 2");
+ok(E.isDue("sol4", t0 + 864e5) === false, "boîte 2 reprogrammée dans le futur");
+E.srsReview("sol4", false, t0 + 864e5 + 1000);
 eq(E.srs("sol4").box, 1, "une erreur → retour boîte 1");
-for (let i = 0; i < 9; i++) E.srsReview("la4", true);
-eq(E.srs("la4").box, 5, "la boîte plafonne à 5 (ancrage)");
+E.srsReview("sol4", true, t0 + 864e5 + 2000, false);
+eq(E.srs("sol4").box, 1, "une réparation immédiate ne fait pas monter la boîte");
+ok(E.srs("sol4").due > t0 + 864e5 + 2000, "une réparation réussie repousse l'échéance et ne peut pas faire remonter la boîte juste après");
+E.srsReview("si4", true, t0, false);
+eq(E.srs("si4").box, 0, "un transfert sur une note neuve n'invente pas une acquisition SRS");
+E.getDB().noteStats.la4 = E.normalizeNoteStat({v:20,e:0,box:5,due:t0});
+E.srsReview("la4", true, t0);
+eq(E.srs("la4").box, 5, "la boîte 5 reste au maximum");
+eq(E.srs("la4").due, t0 + 30 * 864e5, "une boîte 5 due est rafraîchie à J+30");
+
+group("Réparation active — confusion, délai et transfert");
+freshDB();
+E.getDB().questionClock = 1;
+E.recordConfusion("sol4", {kind:"name", value:"la"});
+eq(E.getDB().noteStats.sol4.confusions["name:la"], 1, "la réponse erronée LA à SOL est mémorisée");
+let repair = E.scheduleRepair("sol4", {kind:"name", value:"la"}, {pool:["sol4","la4","si4"], qtype:"lect", palierId:"P1"});
+eq(repair.confusedId, "la4", "la note choisie à tort devient le contraste ciblé");
+eq(repair.dueQuestion, 4, "le re-test est prévu après deux autres questions");
+E.getDB().questionClock = 2;
+ok(E.dueRepairForSession() === null, "la réparation ne revient pas après une seule question");
+E.getDB().questionClock = 3;
+eq(E.dueRepairForSession().sourceId, "sol4", "la quatrième question est le re-test de SOL");
+ok(E.repairBlockedIds().indexOf("sol4")>=0&&E.repairBlockedIds().indexOf("la4")>=0,
+  "même arrivée à échéance, une confusion reste exclue des questions ordinaires");
+E.getDB().questionClock = 4;
+E.advanceRepair(repair, true, ["sol4","la4","si4"]);
+repair = E.getDB().repairQueue[0];
+eq(repair.stage, "transfer", "un re-test réussi programme un transfert");
+eq(repair.probeId, "la4", "le transfert vérifie la discrimination avec LA");
+eq(repair.dueQuestion, 6, "une question sépare le re-test du transfert");
+E.getDB().questionClock = 6;
+E.advanceRepair(repair, true, ["sol4","la4","si4"]);
+eq(E.getDB().repairQueue.length, 0, "un transfert réussi referme la réparation");
+ok(E.getDB().noteStats.sol4.needsRepair === false, "la note réparée sort de la file fragile");
+const malformedRepairs = E.normalizeRepairQueue([{sourceId:"pirate"},{sourceId:"sol4",stage:"hack",wrongKind:"hack",dueQuestion:-4}]);
+eq(malformedRepairs.length, 1, "les réparations importées sont filtrées et normalisées");
+freshDB();
+E.scheduleRepair("sol4",{kind:"name",value:"la"},{pool:["sol4","la4","si4"],qtype:"lect",palierId:"P1"});
+E.scheduleRepair("si4",{kind:"name",value:"sol"},{pool:["sol4","la4","si4"],qtype:"lect",palierId:"P1"});
+E.beginSerie({sessionMode:"session",n:3,palier:E.PALIERS[0],pool:["sol4","la4","si4"],mode:"zen",groupN:1,cold:false});
+eq(E.getEX().currentTask.role,"spacing","si tout le vocabulaire attend une réparation, le moteur insère un intervalle actif au lieu d'une note étrangère");
+eq(E.getEX().seq,[],"l'intervalle actif ne peut ni gonfler la couverture ni répéter trop tôt une confusion");
+E.haltEX();
+freshDB();
+E.beginSerie({sessionMode:"session",n:6,palier:E.PALIERS[0],pool:["sol4","la4","si4"],mode:"zen",groupN:1,cold:false});
+let active = E.getEX(); active.qtype="lect"; active.seq=["sol4"]; active.k=0; active.currentTask={role:"baseline",phase:"cible"}; active.currentQuestionTested=[];
+E.answer("la");
+eq(E.getDB().repairQueue[0].dueQuestion, 4, "une erreur au premier slot programme bien le slot 4");
+E.nextQuestion(); active=E.getEX();
+ok(active.seq.indexOf("sol4")<0, "la note fautive ne peut pas réapparaître dès la question 2");
+answerCurrentCorrect();
+E.nextQuestion(); active=E.getEX();
+ok(active.seq.indexOf("sol4")<0, "la note fautive reste bloquée à la question 3");
+answerCurrentCorrect();
+E.nextQuestion(); active=E.getEX();
+eq(active.currentTask.role, "retest", "après deux questions intercalées, le moteur impose le re-test");
+eq(active.seq, ["sol4"], "le re-test reprend exactement la note fautive");
+answerCurrentCorrect();
+E.nextQuestion(); answerCurrentCorrect();
+E.nextQuestion(); active=E.getEX();
+eq(active.currentTask.role, "transfer", "le dernier slot devient le transfert contrasté");
+eq(active.seq, ["la4"], "le transfert cible la note initialement confondue");
+answerCurrentCorrect(); E.nextQuestion();
+eq(E.getEX().hist.length, 6, "réparation et transfert remplacent des questions : la série reste à six slots");
+eq(E.getEX().n, 6, "la boucle active ne rallonge jamais le nombre prévu de questions");
+eq(E.getDB().repairQueue.length, 0, "la réparation réelle est refermée après le transfert");
+freshDB();
+const reviewNow=Date.now();
+E.getDB().noteStats.sol4=E.normalizeNoteStat({v:4,e:0,box:1,due:reviewNow-1000});
+E.startRevision();
+E.getEX().qtype="lect"; E.getEX().seq=["sol4"]; E.getEX().k=0;
+E.answer("la");
+const xpBeforeSpacing=E.getDB().xp;
+E.nextQuestion();
+eq(E.getEX().currentTask.role,"spacing","une révision à une note insère le premier intervalle après l'erreur");
+E.completeMission(true); E.clearQTimers();
+eq(E.getEX().i,1,"un intervalle ne compte jamais comme réponse musicale dans le score de révision");
+eq(E.getDB().xp,xpBeforeSpacing,"un intervalle ne donne aucun XP artificiel");
+E.nextQuestion();
+eq(E.getEX().currentTask.role,"spacing","deux activités séparent réellement l'erreur de son re-test");
+E.completeMission(true); E.clearQTimers(); E.nextQuestion();
+eq(E.getEX().currentTask.role,"retest","la révision sert ensuite le vrai re-test sans progression SRS");
+E.haltEX();
+const noInflation=E.validationRecordFromQuestions([
+  {phase:"cible",role:"baseline",ok:true,ids:["sol4"]},
+  {phase:"cible",role:"baseline",ok:true,ids:["la4"]},
+  {phase:"cible",role:"baseline",ok:true,ids:["si4"]},
+  {phase:"cible",role:"baseline",ok:true,ids:["sol4"]},
+  {phase:"cible",role:"baseline",ok:true,ids:["la4"]},
+  {phase:"cible",role:"baseline",ok:true,ids:["si4"]},
+  {phase:"cible",role:"baseline",ok:true,ids:["sol4"]},
+  {phase:"reparation",role:"retest",ok:true,ids:["la4"]},
+  {phase:"transfert",role:"transfer",ok:true,ids:["si4"]}
+],8,null,false);
+eq(noInflation,null,"les réparations ne complètent jamais artificiellement une série de validation");
+const honestRecord=E.validationRecordFromQuestions([
+  {phase:"cible",role:"cold",ok:true,ids:["sol4"]},
+  {phase:"cible",role:"baseline",ok:true,ids:["la4"]},
+  {phase:"cible",role:"baseline",ok:true,ids:["si4"]},
+  {phase:"cible",role:"baseline",ok:true,ids:["sol4"]},
+  {phase:"cible",role:"baseline",ok:true,ids:["la4"]},
+  {phase:"cible",role:"baseline",ok:true,ids:["si4"]},
+  {phase:"cible",role:"baseline",ok:true,ids:["sol4"]},
+  {phase:"cible",role:"baseline",ok:false,ids:["la4"]},
+  {phase:"reparation",role:"retest",ok:true,ids:["la4"]}
+],8,{id:"sol4",ok:true},false);
+eq(honestRecord.e,1,"la validation normalise uniquement les huit questions cibles honnêtes");
+eq(honestRecord.ids.sort(),["la4","si4","sol4"],"la couverture de validation exclut les sondes de réparation");
+freshDB();
+E.getDB().questionClock = 12;
+E.scheduleRepair("si4", {kind:"name",value:"sol"}, {pool:["sol4","la4","si4"],qtype:"lect",palierId:"P1"});
+const repairRoundTrip = E.ensureStructure(JSON.parse(E.compactSave()));
+eq(repairRoundTrip.repairQueue[0].sourceId, "si4", "la réparation tardive survit à l'export et à l'import");
+ok(E.cloudDocument().progress.repairQueue[0].sourceId === "si4", "la file de réparation voyage aussi dans la sauvegarde cloud");
 
 /* 4) Import / Export */
 group("Sauvegarde — import / export non destructifs");
@@ -212,13 +353,20 @@ const gamePiece = E.normalizePiece({ id: "piece-jeu", titre: "Partition jeu", cl
   { id: "seg-b", title: "Mesures 3-4", level: "P2", focus: "coordination" }
 ] });
 eq(E.segmentProgressLabel(gamePiece.id, "seg-a"), "nouveau", "jeu partition : un segment commence avec l'état nouveau");
-let stSeg = E.recordSegmentResult({ pieceId: gamePiece.id, segmentId: "seg-a" }, 5, 5, 0);
-ok(stSeg.mastery >= 3 && E.segmentProgressLabel(gamePiece.id, "seg-a") === "validé",
-  "jeu partition : un passage propre devient validé");
+const segT0 = 1800000000000;
+let stSeg = E.recordSegmentResult({ pieceId: gamePiece.id, segmentId: "seg-a" }, 5, 5, 0, segT0);
+ok(E.segmentProgressLabel(gamePiece.id, "seg-a") === "validé",
+  "jeu partition : un premier passage propre devient validé, pas maîtrisé immédiatement");
+stSeg = E.recordSegmentResult({ pieceId: gamePiece.id, segmentId: "seg-a" }, 5, 5, 0, segT0 + 5*60000);
+eq(E.segmentProgressLabel(gamePiece.id, "seg-a"), "validé", "deux réussites rapprochées ne simulent pas la rétention");
+stSeg = E.recordSegmentResult({ pieceId: gamePiece.id, segmentId: "seg-a" }, 5, 5, 0, segT0 + E.SEGMENT_MASTERY_GAP_MS);
+eq(E.segmentProgressLabel(gamePiece.id, "seg-a"), "maîtrisé dans le temps", "une réussite espacée confirme la maîtrise");
 eq(E.nextSegmentForPiece(gamePiece).id, "seg-b", "jeu partition : le prochain segment utile est choisi automatiquement");
 stSeg = E.recordSegmentResult({ pieceId: gamePiece.id, segmentId: "seg-b" }, 3, 5, 2);
 ok(E.segmentProgressLabel(gamePiece.id, "seg-b") === "à réparer",
   "jeu partition : un passage fragile revient en réparation");
+E.recordSegmentResult({ pieceId: gamePiece.id, segmentId: "seg-a" }, 2, 5, 3, segT0 + E.SEGMENT_MASTERY_GAP_MS + 1000);
+eq(E.segmentProgressLabel(gamePiece.id, "seg-a"), "à réparer", "un résultat récent faible rend un ancien passage maîtrisé à nouveau fragile");
 ok(E.compactSave().indexOf('"pieceProgress"') >= 0, "progression de partition incluse dans la sauvegarde compacte");
 freshDB();
 ok(E.recoveryCodeInfo("P4+").complete === true, "code P4+ reconnu comme palier validé");
@@ -431,7 +579,7 @@ ok(/continuité/.test(E.mirrorIntro()), "streak ≥ 10 jours → intro continuit
 group("Service worker & fichiers — garde-fous de livraison");
 const swSrc = fs.readFileSync(path.join(__dirname, "..", "sw.js"), "utf8");
 const mv = swSrc.match(/sezam-solado-v(\d+)/);
-ok(mv && Number(mv[1]) >= 24, "CACHE_NAME dédié à l'app et incrémenté (≥ sezam-solado-v24)");
+ok(mv && Number(mv[1]) >= 25, "CACHE_NAME dédié à l'app et incrémenté (≥ sezam-solado-v25)");
 ok(/navigate/.test(swSrc), "documents servis réseau d'abord (plus de vieille version à vie)");
 ok(/new URL\(req\.url\)\.origin !== self\.location\.origin/.test(swSrc), "le SW compare réellement les origines et n'intercepte pas l'API GitHub");
 ok(/key\.startsWith\(CACHE_PREFIX\) && key !== CACHE_NAME/.test(swSrc), "le SW ne supprime que les anciens caches SEZAM, jamais ceux d'une autre app");
@@ -503,7 +651,7 @@ eq(E.getDB().profile.parcours, "libre", "ancien joueur : parcours libre par déf
 eq(E.getDB().profile.dailyMinutes, 20, "durée de séance par défaut : 20 minutes");
 eq(E.getDB().profile.daysPerWeek, 5, "cadence par défaut : 5 jours par semaine");
 eq(E.getDB().profile.domains, E.PRACTICE_DOMAINS.map(d => d.id), "les six domaines sont proposés par défaut");
-eq(E.getDB()._sezam.schema, 8, "schéma local v8 pour le profil et le plan quotidien");
+eq(E.getDB()._sezam.schema, 9, "schéma local v9 pour la séance et les réparations actives");
 const sanitizedProfile = E.normalizeProfile({
   displayName: "  <Youcef>   Test  ", instrument: "inconnu", parcours: "rattrapage_a2",
   niveauDepart: "annee2", targetDate: "2026-02-30", dailyMinutes: 999, daysPerWeek: 0,
@@ -518,29 +666,74 @@ eq(sanitizedProfile.domains, ["lecture", "rythme"], "domaines inconnus et doublo
 freshDB();
 let firstDecision = E.coachDecision();
 let plan = E.dailyPlan(firstDecision);
-eq(plan.blocks.map(b => b.minutes), [8, 6, 4, 2], "plan 20 min : répartition 40/30/20/10 exacte");
+eq(plan.blocks.map(b => b.minutes), [4, 12, 2, 2], "plan 20 min : répartition rappel 20 %, cible 60 %, réparation 10 %, transfert 10 %");
 eq(plan.blocks.reduce((sum,b) => sum + b.minutes, 0), 20, "le plan respecte exactement le temps choisi");
-eq(plan.blocks[0].action, firstDecision.kind, "la première action du plan suit réellement la décision du coach");
+eq(plan.blocks.map(b => b.id), ["rappel","cible","reparation","transfert"], "le plan visible suit exactement l'ordre réel sans multiplier les boutons");
 E.getDB().profile.dailyMinutes = 10;
 plan = E.dailyPlan(E.coachDecision());
-eq(plan.blocks.map(b => b.minutes), [6, 4], "plan 10 min : deux blocs essentiels, sans émietter la séance");
+eq(plan.blocks.map(b => b.minutes), [2, 6, 1, 1], "plan 10 min : les quatre fonctions restent dans le même budget");
 E.getDB().profile.dailyMinutes = 30;
 E.getDB().profile.domains = ["integration"];
 E.getDB().activePiece = "aclair";
 plan = E.dailyPlan(E.coachDecision());
-ok(plan.blocks.some(b => b.id === "nouveaute" && b.automatic === false && /Intégration/.test(b.title)),
-  "profil intégration seule : l'œuvre reste bien dans le plan, même sans domaine Lecture");
+ok(plan.blocks.some(b => b.id === "transfert" && /Intégration/.test(b.title)),
+  "profil intégration seule : l'œuvre reste dans la séance unique");
 eq(plan.blocks.reduce((sum,b) => sum + b.minutes, 0), 30, "plan long : le passage reste inclus dans le budget total");
-E.getDB().dailyProgress[E.todayStr()]={nouveaute:"domaine:rythme"};
+E.getDB().dailyProgress[E.todayStr()]={session:"v25:autre"};
 plan=E.dailyPlan(E.coachDecision());
-ok(plan.blocks.find(b => b.id === "nouveaute").done === false,
-  "une validation d'un autre domaine n'apparaît pas comme faite après personnalisation");
+ok(plan.blocks.every(b => b.done === false), "une ancienne signature de séance n'apparaît pas comme faite après personnalisation");
+E.getDB().dailyProgress[E.todayStr()]={session:plan.signature};
+ok(E.dailyPlan(E.coachDecision()).blocks.every(b => b.done === true), "la séance unique terminée valide les quatre blocs ensemble");
 E.getDB().dailyProgress["2026-07-11"] = { oeuvre:true };
 ok(E.compactSave().indexOf('"dailyProgress"') >= 0 && E.compactSave().indexOf('"profile"') >= 0,
   "profil et validations quotidiennes inclus dans la sauvegarde compacte");
 const personalizedCloud = E.cloudDocument();
 ok(personalizedCloud.progress.dailyProgress && personalizedCloud.settings.profile.parcours === "libre",
   "profil et plan quotidien inclus dans la sauvegarde cloud");
+freshDB();
+E.getDB().profile.dailyMinutes = 20;
+const dailyStart = 1800000000000;
+const dailyBuilt = E.buildDailySession(E.coachDecision(), dailyStart);
+eq(dailyBuilt.blocks.map(b => Math.round((b.endAt-b.startAt)/60000)), [4,12,2,2],
+  "orchestrateur 20 min : rappel 20 %, cible 60 %, réparation 10 %, transfert 10 %");
+eq(dailyBuilt.endAt-dailyBuilt.startAt, 20*60000, "le chronomètre global possède une échéance exacte");
+eq(E.dailyPhaseAt(dailyBuilt,dailyStart).id, "rappel", "la séance commence par un rappel à froid");
+eq(E.dailyPhaseAt(dailyBuilt,dailyStart+4*60000).id, "cible", "la cible démarre exactement à la borne des 20 %");
+eq(E.dailyPhaseAt(dailyBuilt,dailyStart+16*60000).id, "reparation", "la réparation prend le relais à 80 %");
+eq(E.dailyPhaseAt(dailyBuilt,dailyStart+18*60000).id, "transfert", "le transfert clôt les 10 % restants");
+eq(E.dailyPhaseAt(dailyBuilt,dailyBuilt.endAt), null, "aucune nouvelle question ne démarre après l'échéance");
+E.getDB().noteStats.sol4 = E.normalizeNoteStat({v:3,e:0,box:2,due:dailyStart-1000});
+const dailyWithDue = E.buildDailySession(E.coachDecision(), dailyStart);
+ok(dailyWithDue.dueSnapshot.indexOf("sol4") >= 0 && dailyWithDue.coldPool[0] === "sol4",
+  "les notes réellement dues sont photographiées au démarrage et prioritaires à froid");
+freshDB();
+const pendingStart=Date.now();
+E.getDB().noteStats.sol4=E.normalizeNoteStat({v:3,e:1,box:1,due:pendingStart-1000});
+E.scheduleRepair("sol4",{kind:"name",value:"la"},{pool:["sol4","la4","si4"],qtype:"lect",palierId:"P1"});
+const pendingDaily=E.buildDailySession(E.coachDecision(),pendingStart);
+ok(pendingDaily.dueSnapshot.indexOf("sol4")<0,"une note encore en réparation ne se déguise jamais en rappel SRS dû");
+E.beginSerie({sessionMode:"daily",palier:E.PALIERS[0],pool:E.PALIERS[0].notes,mode:"zen",groupN:1,openEnded:true,daily:pendingDaily,cold:true});
+ok(E.getEX().currentTask.role==="cold"&&E.getEX().seq.indexOf("sol4")<0&&E.getEX().seq.indexOf("la4")<0,
+  "le test à froid exclut la note fautive et la confusion tant que leur réparation n'est pas refermée");
+E.clearQTimers(); E.clearDailyTimer(); E.haltEX();
+freshDB();
+const timedStart=Date.now(), timedDaily=E.buildDailySession(E.coachDecision(),timedStart);
+timedDaily.blocks[0].endAt=timedStart-1;
+E.beginSerie({sessionMode:"daily",palier:E.PALIERS[0],pool:E.PALIERS[0].notes,mode:"bronze",groupN:2,openEnded:true,daily:timedDaily,cold:false});
+eq(E.getEX().limit,10000,"la séance quotidienne conserve le tempo Bronze pendant la cible");
+eq(E.getEX().currentTask.phase,"cible","le test du tempo porte bien sur la phase cible");
+ok(/Tempo Bronze/.test(E.getEl("feedback").innerHTML),"le joueur voit le tempo de niveau avant de pouvoir être déclaré trop tard");
+const timedQid=E.getEX().qid;
+E.timeUp(timedQid);
+eq(E.getEX().hist,[false],"le délai Bronze déclenche réellement la correction de la question cible");
+timedDaily.endAt=Date.now()-1;
+E.updateDailyClock();
+eq(E.getEl("btnQuit").textContent,"Terminer maintenant","à l'échéance, le bouton annonce clairement la fin");
+E.getEl("btnQuit").onclick();
+ok(E.getEX().done===true&&E.getDB().dailyProgress[E.todayStr()].session,"le clic d'échéance termine et enregistre réellement le bilan quotidien");
+E.clearQTimers(); E.clearDailyTimer();
+ok(idx.indexOf('data-plan-action') < 0 && idx.indexOf('$("btnPlayNow").onclick=startDailySession') >= 0,
+  "un seul bouton principal lance toute la séance chronométrée");
 
 /* 16) Charte SEZAM — rebrand sans casse de données */
 group("Charte SEZAM — identité appliquée, données intactes");
@@ -627,10 +820,11 @@ const segIds = E.pieceSegments(pAclair).map(s => s.id);
 eq(E.segmentStateId("aclair", segIds[0]), "adecouvrir", "passage jamais joué → À découvrir");
 E.markSegmentSeen("aclair", segIds[0]);
 eq(E.segmentStateId("aclair", segIds[0]), "entravail", "« vu en cours » (décision du joueur) → En travail");
-E.recordSegmentResult({ pieceId: "aclair", segmentId: segIds[0] }, 5, 5, 0);
+const stateBase = Date.now() - E.SEGMENT_MASTERY_GAP_MS - 1000;
+E.recordSegmentResult({ pieceId: "aclair", segmentId: segIds[0] }, 5, 5, 0, stateBase);
 eq(E.segmentStateId("aclair", segIds[0]), "valide", "un passage propre (1 fois) → Validé");
-E.recordSegmentResult({ pieceId: "aclair", segmentId: segIds[0] }, 5, 5, 0);
-eq(E.segmentStateId("aclair", segIds[0]), "maitrise", "deux passages propres → Maîtrisé");
+E.recordSegmentResult({ pieceId: "aclair", segmentId: segIds[0] }, 5, 5, 0, stateBase + E.SEGMENT_MASTERY_GAP_MS);
+eq(E.segmentStateId("aclair", segIds[0]), "maitrise", "deux passages propres espacés → Maîtrisé");
 E.recordSegmentResult({ pieceId: "aclair", segmentId: segIds[1] }, 3, 5, 2);
 eq(E.segmentStateId("aclair", segIds[1]), "fragile", "60 % avec erreurs → Fragile");
 E.toggleSegmentFlag("aclair", segIds[2]);
@@ -638,8 +832,7 @@ eq(E.segmentStateId("aclair", segIds[2]), "fragile", "« à retravailler » pos�
 eq(E.nextSegmentForPiece(pAclair).id, segIds[2], "le passage marqué par le joueur passe DEVANT tout le reste");
 E.toggleSegmentFlag("aclair", segIds[2]);
 eq(E.nextSegmentForPiece(pAclair).id, segIds[1], "sans marque joueur : le fragile est prioritaire");
-E.recordSegmentResult({ pieceId: "aclair", segmentId: segIds[1] }, 5, 5, 0);
-E.recordSegmentResult({ pieceId: "aclair", segmentId: segIds[1] }, 5, 5, 0);
+masterSegment("aclair", segIds[1]);
 ok(["adecouvrir"].indexOf(E.segmentStateId("aclair", segIds[2])) >= 0 &&
   E.nextSegmentForPiece(pAclair).id === segIds[2], "réparé → le prochain passage utile devient la découverte suivante");
 const counts = E.pieceStateCounts(pAclair);
@@ -657,8 +850,7 @@ E.setPieceGoal("aclair", "lire");
 let amb = E.ambitionProgress(E.pieceById("aclair"));
 ok(amb && amb.def.id === "lire" && amb.pct === 0 && amb.done === false, "ambition « lire » posée : 0 %, en cours");
 E.pieceSegments(E.pieceById("aclair")).forEach(s => {
-  E.recordSegmentResult({ pieceId: "aclair", segmentId: s.id }, 5, 5, 0);
-  E.recordSegmentResult({ pieceId: "aclair", segmentId: s.id }, 5, 5, 0);
+  masterSegment("aclair", s.id);
 });
 amb = E.ambitionProgress(E.pieceById("aclair"));
 ok(amb.done === true && amb.pct === 100, "tous les passages conquis → ambition atteinte");
@@ -734,9 +926,14 @@ try {
 ok(threwPiece === null, "le parcours partition ne lève aucune exception" + (threwPiece ? " — " + threwPiece.message : ""));
 freshDB();
 E.recordSegmentResult({ pieceId: "aclair", segmentId: "aclair_p1" }, 2, 5, 3); // le passage devient fragile
+E.getDB().questionClock=3;
+E.scheduleRepair("fa2",{kind:"name",value:"do"},{pool:["fa2","sol2","la2"],qtype:"lect",palierId:"P6"});
+E.getDB().questionClock=5;
 E.startPieceSegment("aclair", "aclair_p1");
 ok(E.getEX().script === null || !E.getEX().script, "passage fragile → réparation ciblée pondérée (le script laisse place au SRS)");
 ok(E.getEX().pool.join(",") === "sol4,la4,si4", "la réparation reste cantonnée aux notes du passage");
+eq(E.getEX().currentTask.role,"transfer","un passage est traité comme transfert musical, jamais comme réparation globale");
+ok(E.getEX().seq.every(id => E.getEX().pool.indexOf(id)>=0),"toutes les questions d'un passage restent dans son propre vocabulaire");
 E.haltEX();
 
 group("Partition — cohérence pédagogique et justesse musicale (audit)");
@@ -785,15 +982,16 @@ group("Partition — trophées de conquête d'œuvres");
 freshDB();
 ok(E.trophyDefs().find(t => t.id === "premierepiece").on === false, "trophée « Première œuvre » verrouillé au départ");
 E.pieceSegments(E.pieceById("aclair")).forEach(s => {
-  E.recordSegmentResult({ pieceId: "aclair", segmentId: s.id }, 5, 5, 0);
-  E.recordSegmentResult({ pieceId: "aclair", segmentId: s.id }, 5, 5, 0);
+  masterSegment("aclair", s.id);
 });
 ok(E.trophyDefs().find(t => t.id === "premierepiece").on === true, "une pièce entièrement maîtrisée débloque « Première œuvre »");
+E.recordSegmentResult({pieceId:"aclair",segmentId:"aclair_p1"},1,5,4,Date.now()+E.SEGMENT_MASTERY_GAP_MS);
+ok(E.segmentStateId("aclair","aclair_p1")==="fragile", "un nouvel essai faible rend bien le passage fragile pour le coach");
+ok(E.trophyDefs().find(t => t.id === "premierepiece").on === true, "un trophée conquis n'est jamais retiré après un essai faible");
 ok(E.trophyDefs().find(t => t.id === "bibliotheque").on === false, "« Bibliothèque » attend les 8 pièces");
 E.PIECES_BUILTIN.filter(p => E.pieceMelody(p)).forEach(p => {
   E.pieceSegments(p).forEach(s => {
-    E.recordSegmentResult({ pieceId: p.id, segmentId: s.id }, 5, 5, 0);
-    E.recordSegmentResult({ pieceId: p.id, segmentId: s.id }, 5, 5, 0);
+    masterSegment(p.id, s.id);
   });
 });
 ok(E.trophyDefs().find(t => t.id === "bibliotheque").on === true, "toutes les pièces maîtrisées débloquent « Bibliothèque »");

@@ -295,6 +295,8 @@
   .dailyBlock small{display:block;font-size:10.8px;line-height:1.25;color:var(--dim);margin-top:2px}
   .dailyToggle{min-height:38px;border:1px solid rgba(15,76,92,.18);border-radius:999px;background:var(--paper);color:var(--petrole);padding:7px 10px;font-size:10.5px;white-space:nowrap}
   .dailyToggle.done{background:var(--ceramique2);border-color:var(--vert);color:var(--vert);font-weight:800}
+  .dailyAuto{align-self:center;border:1px solid rgba(15,76,92,.14);border-radius:999px;padding:5px 8px;color:var(--dim);font-size:10px;white-space:nowrap}
+  .dailyAuto.done{background:var(--ceramique2);border-color:var(--vert);color:var(--vert);font-weight:800}
   .dailyAuto{font-size:10.5px;color:var(--dim);white-space:nowrap}
   .profileGrid{display:grid;grid-template-columns:1fr;gap:8px;margin-top:10px}
   .profileGrid label{font-size:11.5px;color:var(--dim);letter-spacing:.4px;text-transform:uppercase}
@@ -534,7 +536,7 @@ function esc(s){
   });
 }
 /* ================= DONNÉES ================= */
-const APP_VERSION="v24"; // garder aligné avec CACHE_NAME de sw.js (testé)
+const APP_VERSION="v25"; // garder aligné avec CACHE_NAME de sw.js (testé)
 const NOTES = {
   do4 :{n:"do", clef:"sol", p:-2, midi:60, mn:"Le do du milieu est transpercé par sa petite ligne, rien qu'à lui."},
   re4 :{n:"ré", clef:"sol", p:-1, midi:62, mn:"Collé juste sous la portée."},
@@ -756,6 +758,7 @@ const SEGMENT_STATES=[
   {id:"valide",     label:"Validé",      color:"#819d70", fill:"rgba(129,157,112,.20)"},
   {id:"maitrise",   label:"Maîtrisé",    color:"#b8893a", fill:"rgba(184,137,58,.20)"}
 ];
+const SEGMENT_MASTERY_GAP_MS=20*36e5;
 /* Ambitions : le joueur nomme sa réussite, le jeu la sert. */
 const PIECE_AMBITIONS=[
   {id:"lire",    label:"Lire la pièce en entier",   hint:"chaque passage au moins validé"},
@@ -814,7 +817,7 @@ function normalizeProfile(p){
     domains:domains
   };
 }
-const DAILY_BLOCK_IDS=["lacunes","revisions","nouveaute","test","oeuvre"];
+const DAILY_BLOCK_IDS=["session","cible","rappel","reparation","transfert","lacunes","revisions","nouveaute","test","oeuvre"];
 function normalizeDailyProgress(value){
   const out={};
   if(!value||typeof value!=="object"||Array.isArray(value)) return out;
@@ -938,8 +941,66 @@ function normalizeDay(d){
     last:clampInt(d.last,0,Number.MAX_SAFE_INTEGER,0)
   };
 }
+function normalizeConfusions(value){
+  const out={};
+  if(!value||typeof value!=="object"||Array.isArray(value)) return out;
+  Object.keys(value).slice(0,24).forEach(function(k){
+    const key=cleanText(k,32,"");
+    if(/^(name:[a-zà-ÿ♯♭-]+|position:-?\d+|timeout)$/.test(key)) out[key]=clampInt(value[k],1,999,1);
+  });
+  return out;
+}
+function normalizeNoteStat(s){
+  if(!s||typeof s!=="object"||Array.isArray(s)) s={};
+  return {
+    v:clampInt(s.v,0,999999,0),
+    e:clampInt(s.e,0,999999,0),
+    box:clampInt(s.box,0,5,0),
+    due:clampInt(s.due,0,Number.MAX_SAFE_INTEGER,0),
+    last:clampInt(s.last||s.lastReview,0,Number.MAX_SAFE_INTEGER,0),
+    lastReview:clampInt(s.lastReview||s.last,0,Number.MAX_SAFE_INTEGER,0),
+    lastCold:clampInt(s.lastCold,0,Number.MAX_SAFE_INTEGER,0),
+    coldV:clampInt(s.coldV,0,999999,0),
+    coldE:clampInt(s.coldE,0,999999,0),
+    lastWrongAt:clampInt(s.lastWrongAt,0,Number.MAX_SAFE_INTEGER,0),
+    lastRepairAt:clampInt(s.lastRepairAt,0,Number.MAX_SAFE_INTEGER,0),
+    needsRepair:!!s.needsRepair,
+    confusions:normalizeConfusions(s.confusions)
+  };
+}
+function normalizeRepairItem(item){
+  if(!item||typeof item!=="object"||!NOTES[item.sourceId]) return null;
+  const stage=item.stage==="transfer"?"transfer":"retest";
+  const wrongKind=["name","position","timeout"].indexOf(item.wrongKind)>=0?item.wrongKind:"timeout";
+  return {
+    id:cleanId(item.id,"rep"),
+    sourceId:item.sourceId,
+    probeId:NOTES[item.probeId]?item.probeId:item.sourceId,
+    stage:stage,
+    wrongKind:wrongKind,
+    wrongValue:cleanText(item.wrongValue,24,""),
+    confusedId:NOTES[item.confusedId]?item.confusedId:"",
+    dueQuestion:clampInt(item.dueQuestion,1,999999999,1),
+    attempts:clampInt(item.attempts,1,99,1),
+    qtype:item.qtype==="ecrit"?"ecrit":"lect",
+    palierId:validPalierId(item.palierId,"P1"),
+    createdAt:clampInt(item.createdAt,0,Number.MAX_SAFE_INTEGER,Date.now()),
+    updatedAt:clampInt(item.updatedAt,0,Number.MAX_SAFE_INTEGER,Date.now())
+  };
+}
+function normalizeRepairQueue(value){
+  if(!Array.isArray(value)) return [];
+  const seen={};
+  return value.map(normalizeRepairItem).filter(function(item){
+    if(!item||seen[item.sourceId]) return false;
+    seen[item.sourceId]=1; return true;
+  }).sort(function(a,b){return a.dueQuestion-b.dueQuestion||a.createdAt-b.createdAt;}).slice(0,32);
+}
 function normalizeSegmentState(s){
   if(!s||typeof s!=="object") s={};
+  let cleanAt=Array.isArray(s.cleanAt)?s.cleanAt.map(function(ts){return clampInt(ts,0,Number.MAX_SAFE_INTEGER,0);}).filter(Boolean).sort().slice(-4):[];
+  if(!cleanAt.length && clampInt(s.mastery,0,3,0)>=3 && s.last) cleanAt=[clampInt(s.last,0,Number.MAX_SAFE_INTEGER,0)];
+  const masteredOnceAt=clampInt(s.masteredOnceAt||(clampInt(s.mastery,0,3,0)>=3?s.last:0),0,Number.MAX_SAFE_INTEGER,0);
   return {
     attempts:clampInt(s.attempts,0,999,0),
     ok:clampInt(s.ok,0,9999,0),
@@ -947,6 +1008,10 @@ function normalizeSegmentState(s){
     best:clampInt(s.best,0,100,0),
     mastery:clampInt(s.mastery,0,3,0),
     last:clampInt(s.last,0,Number.MAX_SAFE_INTEGER,0),
+    lastPrec:clampInt(s.lastPrec!==undefined?s.lastPrec:s.best,0,100,0),
+    lastErrs:clampInt(s.lastErrs,0,999,0),
+    cleanAt:cleanAt,
+    masteredOnceAt:masteredOnceAt,
     seen:!!s.seen,          // « vu en cours » — le joueur l'a marqué lui-même
     flagged:!!s.flagged,    // « à retravailler » — décision du joueur, prioritaire
     feel:clampInt(s.feel,0,3,0) // difficulté ressentie : 1 facile · 2 juste · 3 difficile
@@ -1017,7 +1082,7 @@ function backupToDb(o){
   if(o.history && Array.isArray(o.history.events)) db.events=o.history.events;
   db._sezam={
     app:"SEZAM",
-    schema:8,
+    schema:9,
     userId:cleanId(o.userId,"user"),
     createdAt:clampInt(o.createdAt||o.timestamp,0,Number.MAX_SAFE_INTEGER,Date.now()),
     updatedAt:clampInt(o.timestamp,0,Number.MAX_SAFE_INTEGER,Date.now()),
@@ -1029,7 +1094,7 @@ function backupToDb(o){
 function ensureMeta(db){
   if(!db._sezam||typeof db._sezam!=="object") db._sezam={};
   db._sezam.app="SEZAM";
-  db._sezam.schema=8;
+  db._sezam.schema=9;
   if(!db._sezam.userId) db._sezam.userId=makeLocalId("user");
   db._sezam.userId=cleanId(db._sezam.userId,"user");
   const ts=stateTimestamp(db);
@@ -1071,7 +1136,12 @@ function ensureStructure(db){
   });
   if(!db.sel) db.sel="P1";
   if(!db.xp) db.xp=0;
-  if(!db.noteStats) db.noteStats={};
+  if(!db.noteStats||typeof db.noteStats!=="object"||Array.isArray(db.noteStats)) db.noteStats={};
+  Object.keys(db.noteStats).forEach(function(id){
+    if(!NOTES[id]) delete db.noteStats[id]; else db.noteStats[id]=normalizeNoteStat(db.noteStats[id]);
+  });
+  db.questionClock=clampInt(db.questionClock,0,999999998,0);
+  db.repairQueue=normalizeRepairQueue(db.repairQueue);
   if(!db.days) db.days={};
   Object.keys(db.days).forEach(function(k){
     if(!/^\d{4}-\d{2}-\d{2}$/.test(k)) delete db.days[k];
@@ -1121,7 +1191,7 @@ function ensureStructure(db){
   if(!db.mode||(db.mode!=="libre"&&TIER_IDS.indexOf(db.mode)<0)) db.mode="zen";
   if(db.mode!=="libre" && tierDef(db.mode) && tierDef(db.mode).future) db.mode="zen";
   if(!PALIERS.find(function(p){return p.id===db.sel;})) db.sel="P1";
-  db.v=8;
+  db.v=9;
   return db;
 }
 const LS_KEY="solfegeProto1", LS_MIRROR="solfegeProto1_mirror", LS_PREIMPORT="solfegeProto1_preimport", LS_CHECKPOINT="solfegeProto1_checkpoint";
@@ -1299,22 +1369,42 @@ function visiblePaliers(){
   }
   return out;
 }
-function checkValidation(seriesArr){
+function seriesCover(window,requiredIds){
+  if(!requiredIds||!requiredIds.length) return true;
+  const seen={};
+  window.forEach(function(s){(s.ids||[]).forEach(function(id){seen[id]=1;});});
+  return requiredIds.every(function(id){return !!seen[id];});
+}
+function checkValidation(seriesArr,requiredIds,now){
+  now=Number.isFinite(Number(now))?Number(now):Date.now();
   const l3=seriesArr.slice(-3);
-  if(l3.length===3 && l3.reduce(function(a,x){return a+x.e;},0)<=1) return true;
-  const week=Date.now()-7*864e5;
+  if(l3.length===3 && l3.reduce(function(a,x){return a+x.e;},0)<=1 && seriesCover(l3,requiredIds)) return true;
+  const week=now-7*DAY_MS;
   const l5=seriesArr.slice(-5).filter(function(x){return x.ts>=week;});
-  if(l5.length===5 && l5.reduce(function(a,x){return a+x.e;},0)<=2) return true;
+  if(l5.length===5 && l5.reduce(function(a,x){return a+x.e;},0)<=2 && seriesCover(l5,requiredIds)) return true;
   return false;
+}
+function recentCoveredIds(seriesArr){
+  const week=Date.now()-7*DAY_MS, seen={};
+  seriesArr.slice(-5).filter(function(s){return (s.ts||0)>=week;}).forEach(function(s){(s.ids||[]).forEach(function(id){seen[id]=1;});});
+  return Object.keys(seen);
+}
+function validationMissingIds(pid,tid,requiredIds){
+  const m=DB.paliers[pid]&&DB.paliers[pid][tid];
+  if(!m) return (requiredIds||[]).slice();
+  const seen=recentCoveredIds(m.series||[]);
+  return (requiredIds||[]).filter(function(id){return seen.indexOf(id)<0;});
 }
 function valProgress(pid,tid){
   const m=DB.paliers[pid][tid];
   if(m.ok) return "Validé ✓";
   const s=m.series;
-  if(!s.length) return "0/3 séries propres";
+  const p=PALIERS.find(function(x){return x.id===pid;}), required=p?p.notes:[];
+  const covered=required.length-required.filter(function(id){return recentCoveredIds(s).indexOf(id)<0;}).length;
+  if(!s.length) return "0/3 séries propres · 0/"+required.length+" notes";
   let k=0,err=0;
   for(let i=s.length-1;i>=0 && k<3;i--){ if(err+s[i].e<=1){err+=s[i].e;k++;} else break; }
-  return k+"/3 séries propres";
+  return k+"/3 séries propres · "+covered+"/"+required.length+" notes";
 }
 function dayActive(d){ return !!(d && ((d.series||0)+(d.rafales||0)+(d.clavier||0)+(d.revisions||0)>0 || d.perfect)); }
 function activeDayKeys(){
@@ -1401,8 +1491,11 @@ function trophyDefs(){
 function masteredPiecesCount(){
   return allPieces().filter(function(p){
     if(!pieceMelody(p)) return false;
-    const c=pieceStateCounts(p);
-    return c.total>0 && c.maitrise===c.total;
+    const segments=pieceSegments(p);
+    return segments.length>0&&segments.every(function(seg){
+      const st=segmentProgress(p.id,seg.id);
+      return !!st.masteredOnceAt||segmentStateId(p.id,seg.id)==="maitrise";
+    });
   }).length;
 }
 function trophiesEarned(){return trophyDefs().filter(function(t){return t.on;}).length;}
@@ -1745,7 +1838,8 @@ function fragileNoteIds(limit){
   return limit?ids.slice(0,limit):ids;
 }
 function repairPool(){
-  return uniq(unlockedNoteIds().filter(isDue).concat(fragileNoteIds(24))).slice(0,40);
+  const marked=Object.keys(DB.noteStats||{}).filter(function(id){return NOTES[id]&&DB.noteStats[id].needsRepair;});
+  return uniq(pendingRepairIds().concat(unlockedNoteIds().filter(isDue),marked,fragileNoteIds(24))).slice(0,40);
 }
 function globalPrecision(){
   let v=0,e=0;
@@ -1822,45 +1916,36 @@ function dailyMission(domain,piece){
   };
   return missions[domain]||{title:"Nouveau repère",note:"Découvre les notes suivantes du palier actuel."};
 }
+function dailyFocusDomain(profile){
+  const chosen=(profile.domains||[]).filter(function(id){return id!=="lecture";});
+  if(!chosen.length) return "lecture";
+  const dayNumber=Math.floor(parseDayKey(todayStr()).getTime()/DAY_MS);
+  return chosen[Math.abs(dayNumber)%chosen.length];
+}
 function dailyPlan(decision){
   const profile=normalizeProfile(DB.profile), total=profile.dailyMinutes, piece=activePieceObj();
-  const manualDomains=profile.domains.filter(function(id){return id!=="lecture";});
-  const dayNumber=Math.floor(parseDayKey(todayStr()).getTime()/DAY_MS);
-  const noveltyDomain=manualDomains.length?manualDomains[Math.abs(dayNumber)%manualDomains.length]:"lecture";
-  const novelty=dailyMission(noveltyDomain,piece), frag=fragileNoteIds(3), due=dueCount();
-  const firstTitle=frag.length?"Réparer "+frag.map(function(id){return NOTES[id].n.toUpperCase();}).join(" · "):(decision.kind==="flash"?"Flash de reprise":"Session guidée "+decision.palier.id);
-  const firstNote=decision.reason+" "+decision.n+" questions vérifiées.";
-  const reviewTitle=due?"Révisions espacées":"Ancrage actif";
-  const reviewNote=due?due+" note"+(due>1?"s":"")+" à revoir aujourd’hui.":"Un rappel court fixe les nouveaux repères.";
-  let specs;
-  if(total<=10){
-    specs=[
-      {id:"lacunes",weight:.6,title:firstTitle,note:firstNote,automatic:true,action:decision.kind},
-      {id:"revisions",weight:.4,title:due?"Révision + mini-test":"Rappel + mini-test",note:reviewNote,automatic:true,action:due?"revision":"flash"}
-    ];
-  } else {
-    specs=[
-      {id:"lacunes",weight:.4,title:firstTitle,note:firstNote,automatic:true,action:decision.kind},
-      {id:"revisions",weight:.3,title:reviewTitle,note:reviewNote,automatic:true,action:due?"revision":"flash"},
-      {id:"nouveaute",weight:.2,title:novelty.title,note:novelty.note,automatic:noveltyDomain==="lecture",action:noveltyDomain==="lecture"?"session":""},
-      {id:"test",weight:.1,title:"Mini-test",note:"Une vérification courte clôt la séance.",automatic:true,action:"flash"}
-    ];
-    if(total>=30&&piece&&profile.domains.indexOf("integration")>=0&&noveltyDomain!=="integration"){
-      specs[2].weight=.1;
-      const mission=dailyMission("integration",piece);
-      specs.push({id:"oeuvre",weight:.1,title:mission.title,note:mission.note,automatic:false});
-    }
-  }
+  const frag=fragileNoteIds(3), due=dueCount(), pending=(DB.repairQueue||[]).length;
+  const focusDomain=dailyFocusDomain(profile), transferMission=dailyMission(focusDomain,piece);
+  const firstTitle=frag.length?"Cible · "+frag.map(function(id){return NOTES[id].n.toUpperCase();}).join(" · "):"Cible · "+decision.palier.id;
+  const firstNote=decision.reason+" Le coach garde la difficulté utile.";
+  const specs=[
+    {id:"rappel",weight:.2,title:due?"Rappels réellement dus":"Rappel à froid",note:due?due+" note"+(due>1?"s":"")+" à retrouver sans aide.":"La note la moins récente ouvre la séance.",automatic:true},
+    {id:"cible",weight:.6,title:firstTitle,note:firstNote,automatic:true},
+    {id:"reparation",weight:.1,title:pending?"Réparations actives":"Consolidation sans aide",note:pending?pending+" confusion"+(pending>1?"s":"")+" reviendra"+(pending>1?"ont":"")+" après un délai.":"Toute erreur remplacera une question ordinaire.",automatic:true},
+    {id:"transfert",weight:.1,title:focusDomain!=="lecture"?transferMission.title:(piece?"Transfert · "+piece.titre:"Mini-transfert"),note:focusDomain!=="lecture"?transferMission.note:(piece?"La fin de séance rejoint un passage réel.":"Une variante vérifie que l’acquis change de contexte."),automatic:true}
+  ];
   const minutes=splitPlanMinutes(total,specs.map(function(x){return x.weight;}));
   const done=(DB.dailyProgress&&DB.dailyProgress[todayStr()])||{};
+  const signature="v25:"+decision.palier.id+":"+(piece?piece.id:"aucune")+":"+total;
+  const sessionDone=done.session===true||done.session===signature;
   return {
     total:total,
     path:labelFrom(PROFILE_PATHS,profile.parcours),
     cadence:targetCadence(profile),
     profile:profile,
+    signature:signature,
     blocks:specs.map(function(s,i){
-      const signature=s.id==="nouveaute"?("domaine:"+noveltyDomain):(s.id==="oeuvre"?("piece:"+(piece?piece.id:"aucune")):s.id);
-      return Object.assign({},s,{minutes:minutes[i],signature:signature,done:done[s.id]===true||done[s.id]===signature});
+      return Object.assign({},s,{minutes:minutes[i],signature:signature,done:sessionDone});
     })
   };
 }
@@ -1873,19 +1958,11 @@ function toggleDailyBlock(id,signature){
   logEvent("plan_quotidien",{block:id,done:!!DB.dailyProgress[key][id]});
   save(); renderHome();
 }
-function runDailyBlock(action){
-  if(action==="revision"&&dueCount()>0){startRevision();return;}
-  startCoachPlay(action==="repair"||action==="flash"||action==="session"?action:"session");
-}
+function runDailyBlock(){ startDailySession(); }
 function renderDailyPlan(plan){
   $("dailyPlan").innerHTML='<div class="dailyPlanHead"><span>Séance du jour · '+esc(plan.path)+'</span><b>'+plan.total+' min</b></div>'+plan.blocks.map(function(b){
-    const action=b.automatic?'<button class="dailyToggle" data-plan-action="'+esc(b.action||"session")+'">Jouer</button>':'<button class="dailyToggle'+(b.done?' done':'')+'" data-plan-id="'+esc(b.id)+'" data-plan-signature="'+esc(b.signature)+'" aria-pressed="'+(b.done?'true':'false')+'">'+(b.done?'Fait ✓':'Marquer fait')+'</button>';
-    return '<div class="dailyBlock"><span class="mins">'+b.minutes+' min</span><span><b>'+esc(b.title)+'</b><small>'+esc(b.note)+'</small></span>'+action+'</div>';
+    return '<div class="dailyBlock"><span class="mins">'+b.minutes+' min</span><span><b>'+esc(b.title)+'</b><small>'+esc(b.note)+'</small></span><span class="dailyAuto'+(b.done?' done':'')+'">'+(b.done?'Fait ✓':'Inclus')+'</span></div>';
   }).join("");
-  $("dailyPlan").querySelectorAll("[data-plan-id]").forEach(function(btn){
-    btn.onclick=function(){toggleDailyBlock(btn.getAttribute("data-plan-id"),btn.getAttribute("data-plan-signature"));};
-  });
-  $("dailyPlan").querySelectorAll("[data-plan-action]").forEach(function(btn){btn.onclick=function(){runDailyBlock(btn.getAttribute("data-plan-action"));};});
 }
 function coachDecision(force){
   const p=PALIERS.find(function(x){return x.id===DB.sel;})||PALIERS[0];
@@ -1913,7 +1990,8 @@ function renderCockpit(decision,plan){
   const p=decision.palier, modeLabelText=decision.kind==="repair"?"Réparation":modeLabel(decision.mode);
   const hello=plan.profile.displayName?plan.profile.displayName+", ":"";
   $("coachKicker").textContent="Coach invisible · "+plan.path;
-  $("coachPitch").textContent=hello+"ta séance personnalisée dure "+plan.total+" minutes. On commence par "+decision.label.toLowerCase()+" : "+decision.n+" questions.";
+  $("coachPitch").textContent=hello+"ta séance vise "+plan.total+" minutes et laisse finir la question en cours. Rappel à froid, cible, réparation puis transfert : Sezam enchaîne tout.";
+  $("btnPlayNow").textContent="FAIRE MA SÉANCE · "+plan.total+" MIN";
   $("cockpitMeta").innerHTML=
     '<span><b>'+esc(p.id)+'</b><small>palier</small></span>'+
     '<span><b>'+esc(modeLabelText)+'</b><small>mode</small></span>'+
@@ -2051,24 +2129,60 @@ function renderHome(){
 }
 
 /* ---- moteur ---- */
-let EX=null, rafTimer=null, qInt=null, qTo=null;
+let EX=null, rafTimer=null, qInt=null, qTo=null, dailyTimer=null;
 function clearQTimers(){ if(qInt!==null){clearInterval(qInt);qInt=null;} if(qTo!==null){clearTimeout(qTo);qTo=null;} }
+function clearDailyTimer(){ if(dailyTimer!==null){clearInterval(dailyTimer);dailyTimer=null;} }
 /* ===== SRS — répétition espacée (Leitner 5 boîtes) ===== */
-// box 1..5 ; jours avant la prochaine échéance par boîte. box 5 = ancré.
-const SRS_DAYS=[0,0,1,3,7,16];
+// Une répétition immédiate répare, mais seule une échéance réelle augmente la stabilité.
+const SRS_DAYS=[0,1,3,7,16,30];
 function srs(id){ const s=noteStat(id); if(s.box===undefined)s.box=0; if(s.due===undefined)s.due=0; return s; }
-function srsReview(id,correct){
+function srsReview(id,correct,now,allowAdvance){
+  now=Number.isFinite(Number(now))?Number(now):Date.now();
+  if(allowAdvance===undefined) allowAdvance=true;
   const s=srs(id);
-  s.box = correct ? Math.min(5,(s.box||0)+1) : 1; // juste → on monte d'une boîte ; faux → retour boîte 1
-  s.due = Date.now() + (SRS_DAYS[s.box]||0)*864e5;
+  const wasDue=s.box>=1 && (s.due||0)<=now;
+  s.last=now; s.lastReview=now;
+  if(!correct){
+    s.box=1; s.due=now+SRS_DAYS[1]*DAY_MS;
+    return {advanced:false,correct:false,wasDue:wasDue,box:s.box,due:s.due};
+  }
+  if(!s.box){
+    if(!allowAdvance) return {advanced:false,correct:true,newItem:true,wasDue:false,box:s.box,due:s.due};
+    s.box=1; s.due=now+SRS_DAYS[1]*DAY_MS;
+    return {advanced:true,correct:true,newItem:true,wasDue:false,box:s.box,due:s.due};
+  }
+  if(allowAdvance && wasDue){
+    s.box=Math.min(5,s.box+1);
+    s.due=now+SRS_DAYS[s.box]*DAY_MS;
+    return {advanced:true,correct:true,wasDue:true,box:s.box,due:s.due};
+  }
+  if(!allowAdvance) s.due=Math.max(s.due||0,now+SRS_DAYS[1]*DAY_MS);
+  return {advanced:false,correct:true,wasDue:wasDue,box:s.box,due:s.due};
 }
-function isDue(id){ const s=DB.noteStats[id]; return !!(s && s.box>=1 && (s.due||0)<=Date.now()); }
+function isDue(id,now){ now=Number.isFinite(Number(now))?Number(now):Date.now(); const s=DB.noteStats[id]; return !!(s && s.box>=1 && (s.due||0)<=now); }
 function unlockedNoteIds(){
   const set={};
   PALIERS.forEach(function(p){ if(palierPlayable(p.id,"zen")) p.notes.forEach(function(id){set[id]=1;}); });
   return Object.keys(set);
 }
-function dueCount(){ let n=0; unlockedNoteIds().forEach(function(id){ if(isDue(id)) n++; }); return n; }
+function dueCount(){
+  const pending=repairBlockedIds(); let n=0;
+  unlockedNoteIds().forEach(function(id){ if(pending.indexOf(id)<0&&isDue(id)) n++; });
+  return n;
+}
+function coldRecallId(pool,now){
+  now=Number.isFinite(Number(now))?Number(now):Date.now();
+  const ids=uniq((pool||[]).filter(function(id){return NOTES[id];}));
+  if(!ids.length) return null;
+  const due=ids.filter(function(id){return isDue(id,now);}).sort(function(a,b){return (DB.noteStats[a].due||0)-(DB.noteStats[b].due||0);});
+  if(due.length) return due[0];
+  const fresh=ids.filter(function(id){const s=DB.noteStats[id];return !s||!(s.v||0);});
+  if(fresh.length) return fresh[0];
+  return ids.slice().sort(function(a,b){
+    const sa=DB.noteStats[a]||{}, sb=DB.noteStats[b]||{};
+    return (sa.lastCold||sa.last||0)-(sb.lastCold||sb.last||0);
+  })[0];
+}
 // Sélection pilotée par le SRS : neuves à introduire, dues prioritaires (d'autant plus en retard), ancrées rares.
 function weightedPick(pool,exclude){
   const now=Date.now();
@@ -2085,6 +2199,96 @@ function weightedPick(pool,exclude){
   let tot=w.reduce(function(a,b){return a+b;},0), r=Math.random()*tot;
   for(let i=0;i<pool.length;i++){ r-=w[i]; if(r<=0) return pool[i]; }
   return pool[pool.length-1];
+}
+function pendingRepairIds(){
+  return uniq((DB.repairQueue||[]).map(function(item){return item&&item.sourceId;})).filter(function(id){return NOTES[id];});
+}
+function responseKey(response){
+  if(!response||response.kind==="timeout") return "timeout";
+  if(response.kind==="position") return "position:"+clampInt(response.value,-99,99,0);
+  return "name:"+cleanText(response.value,16,"").toLowerCase();
+}
+function confusedNoteId(targetId,response,pool){
+  if(!NOTES[targetId]||!response||response.kind==="timeout") return "";
+  const target=NOTES[targetId], ids=uniq((pool||[]).concat(unlockedNoteIds())).filter(function(id){return NOTES[id]&&NOTES[id].clef===target.clef;});
+  let candidates=[];
+  if(response.kind==="name") candidates=ids.filter(function(id){return NOTES[id].n===String(response.value||"").toLowerCase();});
+  else if(response.kind==="position") candidates=ids.filter(function(id){return NOTES[id].p===Number(response.value);});
+  candidates.sort(function(a,b){return Math.abs(NOTES[a].p-target.p)-Math.abs(NOTES[b].p-target.p);});
+  return candidates[0]||"";
+}
+function recordConfusion(targetId,response){
+  if(!NOTES[targetId]) return;
+  const s=noteStat(targetId), key=responseKey(response);
+  s.confusions=normalizeConfusions(s.confusions);
+  s.confusions[key]=clampInt((s.confusions[key]||0)+1,1,999,1);
+  s.lastWrongAt=Date.now(); s.needsRepair=true;
+}
+function scheduleRepair(targetId,response,context){
+  if(!NOTES[targetId]) return null;
+  context=context||{}; response=response||{kind:"timeout",value:""};
+  if(!Array.isArray(DB.repairQueue)) DB.repairQueue=[];
+  const now=Date.now(), confused=confusedNoteId(targetId,response,context.pool||[]);
+  let item=DB.repairQueue.find(function(x){return x&&x.sourceId===targetId;});
+  if(!item){
+    item={id:makeLocalId("rep"),sourceId:targetId,probeId:targetId,stage:"retest",wrongKind:response.kind||"timeout",wrongValue:response.value==null?"":String(response.value),confusedId:confused,
+      dueQuestion:(DB.questionClock||0)+3,attempts:1,qtype:context.qtype==="ecrit"?"ecrit":"lect",palierId:context.palierId||"P1",createdAt:now,updatedAt:now};
+    DB.repairQueue.push(item);
+  } else {
+    item.probeId=targetId; item.stage="retest"; item.wrongKind=response.kind||"timeout"; item.wrongValue=response.value==null?"":String(response.value);
+    item.confusedId=confused||item.confusedId||""; item.dueQuestion=Math.max(item.dueQuestion||0,(DB.questionClock||0)+3);
+    item.attempts=clampInt((item.attempts||0)+1,1,99,1); item.updatedAt=now;
+  }
+  DB.repairQueue=normalizeRepairQueue(DB.repairQueue);
+  return DB.repairQueue.find(function(x){return x.sourceId===targetId;})||null;
+}
+function dueRepairForSession(pool){
+  const next=(DB.questionClock||0)+1;
+  return (DB.repairQueue||[]).filter(function(item){
+    if(!item||item.dueQuestion>next) return false;
+    return !pool||!pool.length||pool.indexOf(item.sourceId)>=0||pool.indexOf(item.probeId)>=0;
+  })
+    .sort(function(a,b){return a.dueQuestion-b.dueQuestion||a.createdAt-b.createdAt;})[0]||null;
+}
+function repairBlockedIds(){
+  const blocked=[];
+  (DB.repairQueue||[]).forEach(function(item){
+    if(!item) return;
+    if(NOTES[item.sourceId]) blocked.push(item.sourceId);
+    if(NOTES[item.probeId]) blocked.push(item.probeId);
+    if(NOTES[item.confusedId]) blocked.push(item.confusedId);
+  });
+  return uniq(blocked);
+}
+function ordinaryQuestionPool(pool,fallback,strict){
+  const source=uniq((pool||[]).filter(function(id){return NOTES[id];})), blocked=repairBlockedIds();
+  let available=source.filter(function(id){return blocked.indexOf(id)<0;});
+  const secondary=uniq(((fallback&&fallback.length)?fallback:(EX&&EX.palier?EX.palier.notes:[])).filter(function(id){return NOTES[id];}));
+  if(!available.length&&!strict) available=secondary.filter(function(id){return blocked.indexOf(id)<0;});
+  return uniq(available);
+}
+function nearTransferId(item,pool){
+  if(item&&NOTES[item.confusedId]) return item.confusedId;
+  const source=item&&NOTES[item.sourceId]?NOTES[item.sourceId]:null;
+  if(!source) return item?item.sourceId:null;
+  const ids=uniq((pool||[]).concat(unlockedNoteIds())).filter(function(id){return id!==item.sourceId&&NOTES[id]&&NOTES[id].clef===source.clef;});
+  ids.sort(function(a,b){return Math.abs(NOTES[a].p-source.p)-Math.abs(NOTES[b].p-source.p);});
+  return ids[0]||item.sourceId;
+}
+function advanceRepair(item,correct,pool){
+  if(!item) return;
+  const idx=(DB.repairQueue||[]).findIndex(function(x){return x.id===item.id;});
+  if(idx<0) return;
+  const live=DB.repairQueue[idx], now=Date.now();
+  if(!correct){ live.stage="retest"; live.probeId=live.sourceId; live.dueQuestion=(DB.questionClock||0)+3; live.updatedAt=now; return; }
+  if(live.stage==="retest"){
+    live.stage="transfer"; live.probeId=nearTransferId(live,pool); live.dueQuestion=(DB.questionClock||0)+2; live.updatedAt=now;
+    noteStat(live.sourceId).lastRepairAt=now;
+    return;
+  }
+  noteStat(live.sourceId).needsRepair=false;
+  noteStat(live.sourceId).lastRepairAt=now;
+  DB.repairQueue.splice(idx,1);
 }
 /* ===== Étoiles — stabilité dans le temps (revalidation espacée d'un palier) ===== */
 const STAR_DAYS=[7,30,90,180,365]; // délai jusqu'à l'étoile suivante
@@ -2115,6 +2319,67 @@ function newNotesOf(pid){
   const neuves=cur.filter(function(id){return prev.indexOf(id)<0;});
   return neuves.length?neuves:cur;
 }
+function buildDailySession(decision,now){
+  now=Number.isFinite(Number(now))?Number(now):Date.now();
+  const profile=normalizeProfile(DB.profile), totalMs=profile.dailyMinutes*60000;
+  const targetPool=uniq((decision.pool&&decision.pool.length?decision.pool:decision.palier.notes).filter(function(id){return NOTES[id];}));
+  const pending=repairBlockedIds();
+  const dueSnapshot=unlockedNoteIds().filter(function(id){return pending.indexOf(id)<0&&isDue(id,now);});
+  const repairSnapshot=repairPool().filter(function(id){return dueSnapshot.indexOf(id)<0;});
+  const focusDomain=dailyFocusDomain(profile), piece=ensureActivePiece(), seg=piece?nextSegmentForPiece(piece):null;
+  const transferScript=(piece&&seg)?(segmentScript(seg,piece)||segmentNotePool(seg,piece)||[]):[];
+  const weights=[.2,.6,.1,.1], ids=["rappel","cible","reparation","transfert"];
+  let cursor=now;
+  const blocks=ids.map(function(id,i){
+    const duration=i===ids.length-1?now+totalMs-cursor:Math.round(totalMs*weights[i]);
+    const block={id:id,startAt:cursor,endAt:cursor+duration}; cursor=block.endAt; return block;
+  });
+  return {startAt:now,endAt:now+totalMs,totalMs:totalMs,totalMinutes:profile.dailyMinutes,blocks:blocks,
+    targetPool:targetPool,dueSnapshot:dueSnapshot,repairSnapshot:repairSnapshot,
+    coldPool:uniq(dueSnapshot.concat(targetPool)),transferScript:transferScript.slice(),transferIdx:0,
+    pieceId:piece?piece.id:"",segmentId:seg?seg.id:"",segmentTitle:seg?seg.title:"",decisionKind:decision.kind,
+    focusDomain:focusDomain,transferMission:dailyMission(focusDomain,piece),missionDone:false};
+}
+function dailyPhaseAt(daily,now){
+  if(!daily) return null;
+  now=Number.isFinite(Number(now))?Number(now):Date.now();
+  return daily.blocks.find(function(b){return now<b.endAt;})||null;
+}
+function dailyPhaseLabel(id){
+  return {rappel:"Rappel à froid",cible:"Cible du jour",reparation:"Réparation",transfert:"Transfert musical"}[id]||"Séance";
+}
+function dailyPhasePool(daily,phaseId){
+  if(!daily) return [];
+  if(phaseId==="rappel") return daily.coldPool.slice();
+  if(phaseId==="reparation"){
+    const live=repairPool().filter(function(id){return daily.dueSnapshot.indexOf(id)<0;});
+    return (live.length?live:(daily.repairSnapshot.length?daily.repairSnapshot:daily.targetPool)).slice();
+  }
+  return daily.targetPool.slice();
+}
+function updateDailyClock(){
+  if(!EX||EX.done||!EX.daily){clearDailyTimer();return;}
+  const now=Date.now(), left=Math.max(0,EX.daily.endAt-now), phase=dailyPhaseAt(EX.daily,now);
+  $("timerfill").style.width=Math.max(0,left/EX.daily.totalMs*100)+"%";
+  const sec=Math.ceil(left/1000), mm=Math.floor(sec/60), ss=String(sec%60).padStart(2,"0");
+  const tempo=EX.limit&&EX.currentTask&&EX.currentTask.phase==="cible"&&EX.currentTask.role==="baseline"
+    ? " · tempo "+Math.round(EX.limit/1000)+" s / "+EX.groupN+" note"+(EX.groupN>1?"s":"") : "";
+  $("exMode").textContent="Séance · "+dailyPhaseLabel(phase?phase.id:"transfert")+" · "+mm+":"+ss+" restantes"+tempo;
+  if(left<=0){ EX.stopRequested=true; $("btnQuit").textContent="Terminer maintenant"; }
+}
+function startDailyClock(){
+  clearDailyTimer(); updateDailyClock(); dailyTimer=setInterval(updateDailyClock,500);
+}
+function startDailySession(){
+  if(EX&&!EX.done&&EX.daily) return;
+  const d=coachDecision();
+  if(d.palier&&d.palier.id){DB.sel=d.palier.id;DB.seen[d.palier.id]=true;}
+  if(d.mode&&d.mode!=="libre") DB.mode=d.mode;
+  const daily=buildDailySession(d,Date.now());
+  save();
+  beginSerie({sessionMode:"daily",label:"Séance du jour",palier:d.palier,pool:d.targetPool,mode:d.mode,groupN:d.groupN,
+    openEnded:true,daily:daily,cold:true});
+}
 function startCoachPlay(force){
   const d=coachDecision(force);
   if(d.palier && d.palier.id){ DB.sel=d.palier.id; DB.seen[d.palier.id]=true; }
@@ -2136,17 +2401,27 @@ function beginSerie(opts){
   const p=opts.palier||PALIERS.find(function(x){return x.id===DB.sel;})||PALIERS[0];
   const mode=opts.mode||DB.mode;
   const td=mode==="libre"?null:tierDef(mode);
-  const groupN=opts.groupN || (td?td.n:1), msNote=(opts.msNote!==undefined)?opts.msNote:(td?td.ms:null);
-  const total=opts.n||10, pool=(opts.pool&&opts.pool.length)?opts.pool:p.notes;
+  const groupN=opts.groupN || (td?td.n:1), openEnded=!!opts.openEnded;
+  const msNote=(opts.msNote!==undefined)?opts.msNote:(td?td.ms:null);
+  const total=openEnded?0:(opts.n||10), pool=(opts.pool&&opts.pool.length)?opts.pool:p.notes;
+  const sessionMode=opts.sessionMode||"session";
+  const coldEligible=opts.cold!==false&&(sessionMode==="session"||sessionMode==="daily");
+  const coverage=(mode!=="libre"&&DB.paliers[p.id])?validationMissingIds(p.id,mode,p.notes):[];
+  const coldSource=(opts.daily&&opts.daily.coldPool.length)?opts.daily.coldPool:pool;
+  const coldPool=ordinaryQuestionPool(coldSource,p.notes,true), coldId=coldEligible?coldRecallId(coldPool,Date.now()):null;
   EX={kind:"serie",sessionMode:opts.sessionMode||"session",mode:mode,n:total,groupN:groupN,msNote:msNote,limit:msNote?msNote*groupN:null,
       palier:p,pool:pool,i:0,ok:0,errs:[],times:[],hist:[],last:null,waiting:false,done:false,qid:0,
       qtype:"lect",seq:[],k:0,writePos:4,segment:opts.segment||null,
-      script:(opts.script&&opts.script.length)?opts.script.slice():null,scriptIdx:0,seenIds:[]};
+      script:(opts.script&&opts.script.length)?opts.script.slice():null,scriptIdx:0,seenIds:[],testedIds:[],coverageIds:[],coverageQueue:coverage,
+      openEnded:openEnded,daily:opts.daily||null,stopRequested:false,currentTask:null,questionRecords:[],phaseStats:{rappel:{n:0,ok:0},cible:{n:0,ok:0},reparation:{n:0,ok:0},transfert:{n:0,ok:0}},
+      coldPending:coldEligible&&!!coldId,coldId:coldId,coldResult:null};
   logEvent("serie_start",{palier:p.id,mode:mode,groupe:groupN,type:EX.sessionMode,n:total,segment:EX.segment?EX.segment.segmentId:null,piece:EX.segment?EX.segment.pieceId:null});
   const label=opts.label || (EX.sessionMode==="flash"?"Flash":EX.sessionMode==="repair"?"Réparation":"Session");
   $("exMode").textContent=label+" · "+(EX.segment?EX.segment.segmentTitle:p.t)+(groupN>1?" · groupes de "+groupN:"");
-  $("timerbar").classList.toggle("on",!!EX.limit);
-  show("scrEx"); nextQuestion();
+  $("timerbar").classList.toggle("on",!!EX.limit||!!EX.daily);
+  $("btnQuit").textContent=EX.daily?"Arrêter la séance":"Abandonner la série";
+  $("btnAgain").style.display="block";
+  show("scrEx"); if(EX.daily) startDailyClock(); nextQuestion();
 }
 function trainingFocusText(mode){
   if(mode==="libre") return "Mode Libre : reconnaître, écouter, chanter. Le rythme reste posé.";
@@ -2215,6 +2490,10 @@ function startRafale(){
 function renderDots(){
   const d=$("exDots"); d.innerHTML="";
   if(EX.kind!=="serie"){$("exCount").textContent=EX.ok+" justes";return;}
+  if(EX.openEnded){
+    EX.hist.slice(-12).forEach(function(ok){const s=document.createElement("span");s.className="dot "+(ok?"g":"b");d.appendChild(s);});
+    $("exCount").textContent=EX.i+" réponses"; return;
+  }
   for(let i=0;i<EX.n;i++){const s=document.createElement("span");s.className="dot";d.appendChild(s);}
   const dots=d.children;
   EX.hist.forEach(function(ok,i){ if(dots[i]) dots[i].className="dot "+(ok?"g":"b"); });
@@ -2247,38 +2526,126 @@ function drawWriteStaff(){
     drawWriteStaff();
   });
 }
+function pickCoverageSeq(pool,n){
+  const missing=(EX.coverageQueue||[]).filter(function(id){return pool.indexOf(id)>=0&&EX.coverageIds.indexOf(id)<0;});
+  if(!missing.length) return pickSeq(pool,n);
+  const first=missing[0], same=pool.filter(function(id){return NOTES[id].clef===NOTES[first].clef;});
+  const seq=[first];
+  while(seq.length<n) seq.push(weightedPick(same.length?same:pool,seq[seq.length-1]));
+  return seq;
+}
+function dailyTransferChunk(daily,n){
+  if(!daily||!daily.transferScript.length) return null;
+  const blocked=repairBlockedIds(), script=daily.transferScript.filter(function(id){return blocked.indexOf(id)<0;});
+  if(!script.length) return null;
+  const size=Math.max(1,Math.min(n||1,2)), out=[];
+  for(let i=0;i<size;i++){
+    out.push(script[daily.transferIdx%script.length]);
+    daily.transferIdx++;
+  }
+  return out;
+}
+function spacingTask(phase){
+  return {role:"spacing",phase:phase||"reparation",qtype:"mission",mission:{
+    title:"Intervalle actif",note:"Frappe quatre pulsations régulières, respire, puis reprends la lecture."
+  }};
+}
+function questionTask(){
+  let phase=EX.daily?dailyPhaseAt(EX.daily,Date.now()):null;
+  if(EX.coldPending){
+    EX.coldPending=false;
+    if(EX.coldId) return {role:"cold",phase:EX.daily?"rappel":"cible",probeId:EX.coldId,qtype:"lect",cold:true};
+  }
+  if(EX.sessionMode==="piece") return {role:"transfer",phase:"transfert",pool:EX.pool};
+  const dueReview=EX.review==="due";
+  const mayRepair=!EX.script&&(!EX.review||dueReview)&&EX.kind==="serie"&&EX.sessionMode!=="piece";
+  const scopedPool=(EX.daily||(EX.sessionMode==="repair"&&!EX.review))?null:EX.pool;
+  let repair=mayRepair?dueRepairForSession(scopedPool):null;
+  if(repair&&dueReview&&((repair.createdAt||0)<(EX.reviewStartedAt||0))) repair=null;
+  if(repair&&EX.daily){
+    phase=phase||EX.daily.blocks[EX.daily.blocks.length-1];
+    const planned=(repair.stage==="retest"&&phase.id==="reparation")||(repair.stage==="transfer"&&phase.id==="transfert");
+    if(!planned) repair=null;
+  }
+  if(repair) return {role:repair.stage,phase:repair.stage==="transfer"?"transfert":"reparation",probeId:repair.probeId,qtype:repair.qtype,repairId:repair.id};
+  if(!EX.daily){
+    const base=(EX.pool&&EX.pool.length)?EX.pool:(EX.palier&&EX.palier.notes)||[];
+    const ordinary=ordinaryQuestionPool(base,EX.palier&&EX.palier.notes,!!EX.review);
+    return ordinary.length?{role:"baseline",phase:"cible",pool:ordinary}:spacingTask("reparation");
+  }
+  phase=phase||EX.daily.blocks[EX.daily.blocks.length-1];
+  const pool=ordinaryQuestionPool(dailyPhasePool(EX.daily,phase.id),[],true);
+  if(phase.id==="transfert"){
+    if(EX.daily.focusDomain!=="lecture"&&EX.daily.focusDomain!=="integration"&&!EX.daily.missionDone)
+      return {role:"transfer",phase:"transfert",qtype:"mission",mission:EX.daily.transferMission};
+    const seq=dailyTransferChunk(EX.daily,EX.groupN);
+    if(!seq&&!pool.length) return spacingTask("transfert");
+    return {role:"transfer",phase:"transfert",pool:pool,seq:seq,qtype:"lect"};
+  }
+  return pool.length?{role:"baseline",phase:phase.id,pool:pool}:spacingTask(phase.id);
+}
 function nextQuestion(){
   if(EX.done) return;
   clearQTimers();
-  if(EX.kind==="serie" && EX.i>=EX.n) return finishSerie();
-  const ecritOk=(EX.mode==="libre"||EX.mode==="zen") && EX.kind==="serie" && !EX.script;
-  EX.qtype=(ecritOk && Math.random()<ECRIT_RATIO)?"ecrit":"lect";
-  if(EX.script){
+  if(EX.daily&&(EX.stopRequested||Date.now()>=EX.daily.endAt)&&EX.i>0) return finishSerie();
+  if(EX.kind==="serie" && !EX.openEnded && EX.i>=EX.n) return finishSerie();
+  const task=questionTask(); EX.currentTask=task; EX.currentQuestionTested=[];
+  const ecritOk=(EX.mode==="libre"||EX.mode==="zen") && EX.kind==="serie" && !EX.script && task.role==="baseline" && task.phase!=="transfert";
+  EX.qtype=task.qtype||((ecritOk && Math.random()<ECRIT_RATIO)?"ecrit":"lect");
+  if(task.qtype==="mission"){
+    EX.seq=[];
+  } else if(task.seq&&task.seq.length){
+    EX.seq=task.seq.slice();
+  } else if(task.probeId&&NOTES[task.probeId]){
+    EX.seq=[task.probeId];
+  } else if(EX.script){
     // Lecture de la partition dans l'ordre : chaque question est le prochain fragment réel de la pièce.
     const from=EX.scriptIdx, chunk=EX.script.slice(from,from+EX.groupN);
     EX.scriptIdx=from+chunk.length;
     if(EX.scriptIdx>=EX.script.length) EX.scriptIdx=0; // si la série dépasse, on reboucle au début
     EX.seq=chunk.length?chunk:pickSeq((EX.pool&&EX.pool.length)?EX.pool:EX.palier.notes,EX.groupN);
   } else {
-    EX.seq=pickSeq((EX.pool&&EX.pool.length)?EX.pool:EX.palier.notes, EX.qtype==="ecrit"?1:EX.groupN);
+    const pool=(task.pool&&task.pool.length)?task.pool:((EX.pool&&EX.pool.length)?EX.pool:EX.palier.notes);
+    const group=(EX.qtype==="ecrit"||task.phase==="rappel"||task.phase==="reparation")?1:EX.groupN;
+    EX.seq=(task.phase==="cible")?pickCoverageSeq(pool,group):pickSeq(pool,group);
   }
   EX.last=EX.seq[EX.seq.length-1];
   EX.k=0; EX.t0=Date.now(); EX.waiting=false; EX.qid++;
   $("feedback").className="feedback";
   $("btnNext").style.display="none";
   $("btnNext").textContent="Continuer";
-  if(EX.qtype==="lect"){
+  if(EX.qtype==="mission"){
+    $("staffbox").innerHTML='<div style="padding:28px 18px;text-align:center;font-family:var(--serif);font-size:38px;color:var(--or-deep)">♪</div>';
+    $("feedback").innerHTML='<b>'+esc(task.mission.title)+'</b><br>'+esc(task.mission.note)+'<br><span class="src">Mission hors écran · autoévaluation honnête</span>';
+    renderMissionControls();
+  } else if(EX.qtype==="lect"){
     drawChunk();
-    $("feedback").innerHTML=segmentCueHtml()+(EX.seq.length>1?"Lis le groupe, dans l'ordre.":"Quelle est cette note ?");
+    let prompt=EX.seq.length>1?"Lis le groupe, dans l'ordre.":"Quelle est cette note ?";
+    if(task.role==="cold") prompt="Test à froid · "+prompt;
+    else if(task.role==="retest") prompt="Réparation active · retrouve la note corrigée.";
+    else if(task.role==="transfer"&&task.repairId) prompt="Contraste · reconnais la note voisine sans aide.";
+    else if(task.phase==="transfert") prompt="Transfert musical · "+prompt;
+    const tempoCue=EX.daily&&EX.limit&&task.phase==="cible"&&task.role==="baseline"
+      ? '<br><span class="src">Tempo '+esc(modeLabel(EX.mode))+' · '+Math.round(EX.limit/1000)+' s pour '+EX.groupN+' note'+(EX.groupN>1?'s':'')+'</span>' : '';
+    $("feedback").innerHTML=segmentCueHtml()+prompt+tempoCue;
     renderAnswers(true);
   } else {
     EX.writePos=4;
     drawWriteStaff();
-    $("feedback").innerHTML=segmentCueHtml()+"Place sur la portée : <span class='big'>"+ecritLabel(NOTES[EX.seq[0]],EX.seq[0])+"</span>";
+    const writeTempo=EX.daily&&EX.limit&&task.phase==="cible"&&task.role==="baseline"
+      ? '<br><span class="src">Tempo '+esc(modeLabel(EX.mode))+' · '+Math.round(EX.limit/1000)+' s</span>' : '';
+    $("feedback").innerHTML=segmentCueHtml()+"Place sur la portée : <span class='big'>"+ecritLabel(NOTES[EX.seq[0]],EX.seq[0])+"</span>"+writeTempo;
     renderWriteControls();
   }
   renderDots();
-  if(EX.kind==="serie" && EX.limit){
+  if(EX.daily){
+    updateDailyClock();
+    if(EX.limit&&task.phase==="cible"&&task.role==="baseline"&&EX.qtype!=="mission"){
+      const qid=EX.qid, lim=EX.limit;
+      qTo=setTimeout(function(){ timeUp(qid); },lim);
+    }
+  }
+  else if(EX.kind==="serie" && EX.limit){
     const qid=EX.qid, lim=EX.limit;
     $("timerfill").style.width="100%";
     qInt=setInterval(function(){
@@ -2308,9 +2675,76 @@ function renderWriteControls(){
   ok.onclick=function(){ answerPos(EX.writePos); };
   a.appendChild(down);a.appendChild(up);a.appendChild(ok);
 }
-function noteStat(id){ if(!DB.noteStats[id])DB.noteStats[id]={v:0,e:0}; return DB.noteStats[id]; }
+function renderMissionControls(){
+  const a=$("answers"); a.className="answers"; a.innerHTML="";
+  const done=document.createElement("button"); done.textContent="Fait ✓"; done.onclick=function(){completeMission(true);};
+  const skip=document.createElement("button"); skip.textContent=EX&&EX.currentTask&&EX.currentTask.role==="spacing"?"Continuer":"Passer aujourd’hui"; skip.onclick=function(){completeMission(false);};
+  a.appendChild(done);a.appendChild(skip);
+}
+function completeMission(done){
+  if(!EX||EX.done||EX.waiting||EX.qtype!=="mission") return;
+  if(EX.daily&&EX.currentTask&&EX.currentTask.role==="transfer") EX.daily.missionDone=true;
+  EX.currentQuestionTested=[];
+  completeQuestionMeta(!!done,null,{kind:"mission",value:done?"done":"skip"});
+  const spacing=EX.currentTask&&EX.currentTask.role==="spacing";
+  if(!spacing){
+    if(done){EX.ok++;DB.xp++;}
+    EX.hist.push(!!done); EX.i++;
+  }
+  EX.times.push(Date.now()-EX.t0);
+  EX.waiting=true; $("feedback").className="feedback "+(done?"good":"");
+  $("feedback").textContent=done?(spacing?"✓ Pulsation faite — la mémoire a eu son intervalle.":"✓ Transfert hors écran intégré à la séance.")
+    :(spacing?"Intervalle compté — poursuis calmement.":"Mission passée — elle pourra revenir un autre jour.");
+  renderDots(); save(); qTo=setTimeout(function(){if(EX&&!EX.done)nextQuestion();},250);
+}
+function noteStat(id){ DB.noteStats[id]=normalizeNoteStat(DB.noteStats[id]); return DB.noteStats[id]; }
+function trackTestedId(id){
+  if(!EX||!NOTES[id]) return;
+  if(!Array.isArray(EX.testedIds)) EX.testedIds=[];
+  if(!Array.isArray(EX.currentQuestionTested)) EX.currentQuestionTested=[];
+  if(!Array.isArray(EX.coverageIds)) EX.coverageIds=[];
+  if(EX.testedIds.indexOf(id)<0) EX.testedIds.push(id);
+  if(EX.currentQuestionTested.indexOf(id)<0) EX.currentQuestionTested.push(id);
+  if((!EX.daily||EX.currentTask.phase==="cible")&&EX.coverageIds.indexOf(id)<0) EX.coverageIds.push(id);
+}
+function questionAllowsSrsAdvance(){
+  const task=EX&&EX.currentTask;
+  if(!task) return true;
+  const currentId=EX&&EX.seq&&EX.seq[EX.k];
+  if(EX.sessionMode==="piece"||(currentId&&repairBlockedIds().indexOf(currentId)>=0)) return false;
+  return task.role==="cold"||(task.role==="baseline"&&task.phase!=="reparation"&&task.phase!=="transfert");
+}
+function completeQuestionMeta(correct,failId,response){
+  if(!EX) return;
+  if(!EX.phaseStats) EX.phaseStats={rappel:{n:0,ok:0},cible:{n:0,ok:0},reparation:{n:0,ok:0},transfert:{n:0,ok:0}};
+  if(!Array.isArray(EX.questionRecords)) EX.questionRecords=[];
+  DB.questionClock=clampInt((DB.questionClock||0)+1,0,999999998,0);
+  const task=EX.currentTask||{role:"baseline",phase:"cible"};
+  if(task.cold||task.role==="cold"){
+    const coldId=failId||EX.currentQuestionTested[0]||EX.seq[0], cs=NOTES[coldId]?noteStat(coldId):null;
+    if(cs){cs.lastCold=Date.now();cs.coldV++;if(!correct)cs.coldE++;}
+    if(!EX.coldResult) EX.coldResult={id:coldId,ok:!!correct};
+  }
+  const existing=task.repairId?(DB.repairQueue||[]).find(function(item){return item.id===task.repairId;}):null;
+  if(!correct&&failId){
+    recordConfusion(failId,response);
+    if(existing){
+      advanceRepair(existing,false,EX.pool);
+      if(failId!==existing.sourceId) scheduleRepair(failId,response,{pool:EX.pool,qtype:EX.qtype,palierId:EX.palier&&EX.palier.id});
+    }
+    else scheduleRepair(failId,response,{pool:EX.pool,qtype:EX.qtype,palierId:EX.palier&&EX.palier.id});
+  } else if(correct&&existing){
+    advanceRepair(existing,true,EX.pool);
+  }
+  let phase=task.phase||"cible";
+  if(task.role==="retest") phase="reparation";
+  if(task.role==="transfer") phase="transfert";
+  if(!EX.phaseStats[phase]) EX.phaseStats[phase]={n:0,ok:0};
+  EX.phaseStats[phase].n++; if(correct) EX.phaseStats[phase].ok++;
+  EX.questionRecords.push({phase:phase,role:task.role,ok:!!correct,ids:(EX.currentQuestionTested||[]).slice()});
+}
 function hearHtml(id){ return '<br><button class="hearbtn" onclick="tone(NOTES[\''+id+'\'].midi)">♪ réécouter — chante-la</button>'; }
-function correctionHtml(failId,msg){
+function correctionHtml(failId,msg,response){
   const nt=NOTES[failId], clef=nt.clef==="sol"?"clé de sol":"clé de fa";
   const pos=(EX&&EX.qtype==="lect"&&EX.seq&&EX.seq.length>1)?EX.k+1:null;
   let html='<div class="corrBox"><h4>Correction à valider</h4>'+
@@ -2318,6 +2752,10 @@ function correctionHtml(failId,msg){
   if(pos) html+='<p>Élément '+pos+'/'+EX.seq.length+' du groupe : la note à cet endroit était <b>'+esc(nt.n.toUpperCase())+'</b>.</p>';
   else if(EX&&EX.qtype==="ecrit") html+='<p>En écriture, il fallait placer <b>'+esc(nt.n.toUpperCase())+'</b> exactement sur sa ligne ou son interligne.</p>';
   else html+='<p>La note attendue était <b>'+esc(nt.n.toUpperCase())+'</b>.</p>';
+  const repairWhen=EX&&EX.daily?" Elle reviendra dans la phase Réparation, jamais avant deux autres questions.":" Elle reviendra après deux autres questions.";
+  if(response&&response.kind==="name"&&response.value) html+='<p>Tu as répondu <b>'+esc(String(response.value).toUpperCase())+'</b> : compare les deux repères.'+repairWhen+'</p>';
+  else if(response&&response.kind==="position") html+='<p>Ta position choisie est mémorisée.'+repairWhen+'</p>';
+  else if(response&&response.kind==="timeout") html+='<p>'+(EX&&EX.limit?'Le tempo du niveau est dépassé.':'Pas de pénalité de vitesse ici.')+repairWhen+'</p>';
   html+='<p><b>Repère :</b> '+esc(nt.mn)+'</p>'+
     '<p><b>Avant de continuer :</b> regarde sa position sur la portée, réécoute, redis le repère.</p>'+
     '<p class="src">'+clef+' · correction note par note</p></div>';
@@ -2329,6 +2767,7 @@ function noteSessionIds(){
 }
 function afterGood(){
   noteSessionIds();
+  completeQuestionMeta(true,null,null);
   EX.ok++; DB.xp++; EX.hist.push(true); EX.i++;
   EX.times.push(Date.now()-EX.t0);
   if(EX.seq.length>1) sfxMelody(EX.seq); else sfxGood(NOTES[EX.seq[0]].midi);
@@ -2341,20 +2780,21 @@ function afterGood(){
   setTimeout(function(){ if(EX&&!EX.done){ nextQuestion(); } }, adv);
   renderDots(); save();
 }
-function afterWrong(failId,msg){
+function afterWrong(failId,msg,response){
   noteSessionIds();
   noteStat(failId).e++;
+  completeQuestionMeta(false,failId,response||{kind:"timeout",value:null});
   EX.errs.push(failId); EX.hist.push(false); EX.i++;
   EX.times.push(Date.now()-EX.t0);
   sfxBad(); vibrate([40,30,40]);
   const nt=NOTES[failId];
   $("feedback").className="feedback bad";
-  $("feedback").innerHTML=correctionHtml(failId,msg)+hearHtml(failId);
+  $("feedback").innerHTML=correctionHtml(failId,msg,response)+hearHtml(failId);
   tone(nt.midi,undefined,0.4);
   if(EX.kind==="serie"){
     EX.waiting=true;
     if(EX.qtype==="lect") renderAnswers(false); else $("answers").innerHTML="";
-    $("btnNext").textContent="J'ai lu la correction";
+    $("btnNext").textContent="J’ai compris — elle reviendra";
     $("btnNext").style.display="block";
   } else {
     EX.waiting=true;
@@ -2366,6 +2806,7 @@ function timeUp(qid){
   if(!EX||EX.done||EX.waiting||EX.qid!==qid) return;
   clearQTimers();
   const failId=EX.seq[Math.min(EX.k,EX.seq.length-1)];
+  trackTestedId(failId);
   noteStat(failId).v++;          // seule la note non répondue est comptée ici (les précédentes l'ont été dans answer)
   srsReview(failId,false);
   if(EX.qtype==="ecrit"){
@@ -2376,14 +2817,15 @@ function timeUp(qid){
     $("staffbox").innerHTML=staffSVG(NOTES[EX.seq[0]].clef,EX.seq.map(function(id,i){
       return {p:NOTES[id].p,color:i<EX.k?"#5e6e51":(i===EX.k?"#a8472a":"#15171c"),mark:i===EX.k?"bad":undefined,x:xs[i]};}),null);
   }
-  afterWrong(failId,"✕ Trop tard — la note "+(EX.k+1)+" était "+NOTES[failId].n.toUpperCase());
+  afterWrong(failId,"✕ Trop tard — la note "+(EX.k+1)+" était "+NOTES[failId].n.toUpperCase(),{kind:"timeout",value:null});
 }
 function answer(nm){
   if(!EX||EX.waiting||EX.done||EX.qtype!=="lect") return;
   const id=EX.seq[EX.k], nt=NOTES[id];
+  trackTestedId(id);
   noteStat(id).v++;
   if(nm===nt.n){
-    srsReview(id,true);
+    srsReview(id,true,Date.now(),questionAllowsSrsAdvance());
     EX.k++;
     if(EX.k>=EX.seq.length){ clearQTimers(); if(EX.seq.length>1) drawChunk(); afterGood(); }
     else drawChunk();
@@ -2394,10 +2836,10 @@ function answer(nm){
       const xs=chunkXs(EX.seq.length);
       $("staffbox").innerHTML=staffSVG(nt.clef,EX.seq.map(function(sid,i){
         return {p:NOTES[sid].p,color:i<EX.k?"#5e6e51":(i===EX.k?"#a8472a":"#15171c"),mark:i===EX.k?"bad":undefined,x:xs[i]};}),null);
-      afterWrong(id,"✕ La note "+(EX.k+1)+" était "+nt.n.toUpperCase());
+      afterWrong(id,"✕ La note "+(EX.k+1)+" était "+nt.n.toUpperCase(),{kind:"name",value:nm});
     } else {
       $("staffbox").innerHTML=staffSVG(nt.clef,[{p:nt.p,color:"#a8472a",mark:"bad",x:STAFF.W*0.62,big:1}]);
-      afterWrong(id,"✕ C'était "+nt.n.toUpperCase());
+      afterWrong(id,"✕ C'était "+nt.n.toUpperCase(),{kind:"name",value:nm});
     }
   }
 }
@@ -2405,16 +2847,17 @@ function answerPos(p){
   if(!EX||EX.waiting||EX.done||EX.qtype!=="ecrit") return;
   clearQTimers();
   const id=EX.seq[0], nt=NOTES[id];
+  trackTestedId(id);
   noteStat(id).v++;
   if(p===nt.p){
-    srsReview(id,true);
+    srsReview(id,true,Date.now(),questionAllowsSrsAdvance());
     $("staffbox").innerHTML=staffSVG(nt.clef,[{p:nt.p,color:"#5e6e51",mark:"good",x:STAFF.W*0.62,big:1}]);
     afterGood();
   } else {
     srsReview(id,false);
     // ta note (rouge) et la bonne position (sombre) côte à côte : comparaison immédiate, marques lisibles
     $("staffbox").innerHTML=staffSVG(nt.clef,[{p:p,color:"#a8472a",mark:"bad",x:STAFF.W*0.5,big:1},{p:nt.p,color:"#15171c",mark:"good",x:STAFF.W*0.74,big:1}]);
-    afterWrong(id,"✕ "+nt.n.toUpperCase()+" était à droite (note sombre ✓)");
+    afterWrong(id,"✕ "+nt.n.toUpperCase()+" était à droite (note sombre ✓)",{kind:"position",value:p});
   }
 }
 function avgMs(){ return EX.times.length?Math.round(EX.times.reduce(function(a,b){return a+b;},0)/EX.times.length):0; }
@@ -2522,19 +2965,36 @@ function renderResPiece(){
   box.innerHTML=h;
   bindResPiece(piece,null);
 }
+function completeDailyProgress(){
+  if(!EX||!EX.daily) return;
+  if(!DB.dailyProgress) DB.dailyProgress={};
+  const key=todayStr(); if(!DB.dailyProgress[key]) DB.dailyProgress[key]={};
+  const plan=dailyPlan(coachDecision());
+  DB.dailyProgress[key].session=plan.signature;
+}
+function validationRecordFromQuestions(records,minQuestions,cold,daily){
+  const target=(records||[]).filter(function(q){
+    return q&&q.phase==="cible"&&(q.role==="baseline"||q.role==="cold");
+  });
+  if(target.length<minQuestions) return null;
+  const ids=uniq([].concat.apply([],target.map(function(q){return q.ids||[];})));
+  const normalizedErrors=Math.round(target.filter(function(q){return !q.ok;}).length/target.length*10);
+  return {ts:Date.now(),e:normalizedErrors,ids:ids,cold:cold||null,daily:!!daily};
+}
 function finishSerie(){
-  EX.done=true; clearQTimers();
-  const p=EX.palier, errs=EX.errs.length;
+  EX.done=true; clearQTimers(); clearDailyTimer();
+  const p=EX.palier, errs=EX.errs.length, answered=EX.hist.length, isDaily=EX.sessionMode==="daily";
   if(EX.review==="star"){ markDay("revision",EX.ok); return finishStarReview(errs); }
   if(EX.review==="due"){ markDay("revision",EX.ok); return finishDueReview(errs); }
-  const isRepair=EX.sessionMode==="repair", isFlash=EX.sessionMode==="flash", isSession=EX.sessionMode==="session", isPiece=EX.sessionMode==="piece";
+  const isRepair=EX.sessionMode==="repair", isFlash=EX.sessionMode==="flash", isSession=EX.sessionMode==="session"||isDaily, isPiece=EX.sessionMode==="piece";
   markDay(isRepair?"revision":"serie",EX.ok);
   let newlyPalier=false, newlyTier=null;
   if(isSession && EX.mode!=="libre"){
     const td=tierDef(EX.mode), m=DB.paliers[p.id][EX.mode];
-    m.series.push({ts:Date.now(),e:errs});
-    if(errs<=1) DB.xp+=10;
-    if(!m.ok && checkValidation(m.series)){
+    const minQuestions=isDaily?10:Math.min(8,EX.n||8);
+    const record=validationRecordFromQuestions(EX.questionRecords,minQuestions,EX.coldResult||null,isDaily);
+    if(record){m.series.push(record);if(record.e<=1)DB.xp+=10;}
+    if(record&&!m.ok && checkValidation(m.series,p.notes)){
       m.ok=true; DB.xp+=td.xp; newlyPalier=true;
       if(EX.mode==="rhodium") startStarSchedule(p.id); // étoiles : seulement après validation au Rhodium (axe temps, après la vitesse)
       if(tierComplete(EX.mode)){ newlyTier=EX.mode; DB.xp+=100; }
@@ -2551,20 +3011,31 @@ function finishSerie(){
       DB.xp+=after==="maitrise"?25:15;
     }
   }
-  logEvent("serie_end",{palier:p.id,mode:EX.mode,type:EX.sessionMode,ok:EX.ok,errs:errs,avgMs:avgMs(),valide:newlyPalier,segment:EX.segment?EX.segment.segmentId:null,piece:EX.segment?EX.segment.pieceId:null});
+  if(isDaily){completeDailyProgress();logEvent("daily_session_end",{minutes:EX.daily.totalMinutes,elapsed:Date.now()-EX.daily.startAt,ok:EX.ok,answered:answered,repairs:(EX.phaseStats.reparation||{}).n||0});}
+  const errsForLog=isDaily&&answered?Math.round(errs/answered*10):errs;
+  logEvent("serie_end",{palier:p.id,mode:EX.mode,type:EX.sessionMode,ok:EX.ok,errs:errsForLog,avgMs:avgMs(),valide:newlyPalier,segment:EX.segment?EX.segment.segmentId:null,piece:EX.segment?EX.segment.pieceId:null});
   save(); header(); syncPush();
-  const prec=Math.round(EX.ok/EX.n*100), label=isRepair?"Réparation":(isFlash?"Flash":(isPiece?"Partition":modeLabel(EX.mode==="rafale"?"zen":EX.mode)));
-  $("resScore").innerHTML=EX.ok+"<small>/"+EX.n+"</small>";
-  $("resSub").textContent="Précision "+prec+"% · "+(avgMs()/1000).toFixed(1)+" s par question · "+label;
-  $("resSolado").textContent=isRepair
+  const scoreN=Math.max(1,isDaily?answered:EX.n), prec=Math.round(EX.ok/scoreN*100), label=isDaily?"Séance du jour":(isRepair?"Réparation":(isFlash?"Flash":(isPiece?"Partition":modeLabel(EX.mode==="rafale"?"zen":EX.mode))));
+  $("resScore").innerHTML=EX.ok+"<small>/"+(isDaily?answered:EX.n)+"</small>";
+  $("resSub").textContent=isDaily
+    ? "Séance du jour · "+Math.max(1,Math.round((Date.now()-EX.daily.startAt)/60000))+" min · précision "+prec+" %"
+    : "Précision "+prec+"% · "+(avgMs()/1000).toFixed(1)+" s par question · "+label;
+  $("resSolado").textContent=isDaily
+    ? (EX.coldResult&&EX.coldResult.ok?"Rappel à froid réussi. La séance a ciblé, réparé puis transféré sans lancer de nouvelle question après l’échéance.":"Le test à froid a révélé le point utile. Les confusions restent programmées, pas oubliées.")
+    : (isRepair
     ? (errs?"Réparation active. Les notes fragiles reviennent avec un meilleur espacement.":"Réparation nette. La mémoire gagne en stabilité.")
-    : (isFlash ? (errs?"Flash utile. Le coach garde ces notes au chaud pour la suite.":"Flash propre. Le réflexe répond vite.") : (isPiece ? (errs?"Segment utile. Les notes du passage deviennent un exercice ciblé avant le piano.":"Segment propre. Le passage est prêt pour un vrai essai au clavier.") : jarvisMsg(EX.ok,EX.n)));
+    : (isFlash ? (errs?"Flash utile. Le coach garde ces notes au chaud pour la suite.":"Flash propre. Le réflexe répond vite.") : (isPiece ? (errs?"Segment utile. Les notes du passage deviennent un exercice ciblé avant le piano.":"Segment propre. Le passage est prêt pour un vrai essai au clavier.") : jarvisMsg(EX.ok,EX.n))));
   const eb=$("resErrs");
   if(errs){ eb.style.display="block";
     eb.innerHTML=EX.errs.map(function(id){const nt=NOTES[id];
       return '<div class="er"><b>'+nt.n+'</b> ('+ (nt.clef==="sol"?"clé de sol":"clé de fa") +') — '+nt.mn+'</div>';}).join("");
   } else eb.style.display="none";
-  if(isRepair){
+  if(isDaily){
+    const ps=EX.phaseStats;
+    $("resVal").innerHTML="Rappel <b>"+(ps.rappel.n||0)+"</b> · Cible <b>"+(ps.cible.n||0)+"</b> · Réparation <b>"+(ps.reparation.n||0)+"</b> · Transfert <b>"+(ps.transfert.n||0)+"</b>"+
+      ((DB.repairQueue||[]).length?"<br>"+(DB.repairQueue||[]).length+" confusion"+((DB.repairQueue||[]).length>1?"s":"")+" gardée"+((DB.repairQueue||[]).length>1?"s":"")+" pour le prochain rappel à froid.":"<br>Toutes les réparations prévues sont refermées.");
+    $("btnAgain").style.display="none";
+  } else if(isRepair){
     const left=repairPool().length;
     $("resVal").innerHTML = left ? "Réparation restante : <b>"+left+"</b> note"+(left>1?"s":"")+"." : "<b>Réparation terminée.</b>";
   } else if(isFlash){
@@ -2592,11 +3063,13 @@ function finishSerie(){
   else if(segPromotion==="maitrise") sfxWin(); // un passage maîtrisé sonne comme une victoire
 }
 function startRevision(){
-  const pool=unlockedNoteIds().filter(isDue).slice(0,40);
+  const pending=repairBlockedIds();
+  const pool=unlockedNoteIds().filter(function(id){return pending.indexOf(id)<0&&isDue(id);}).slice(0,40);
   if(!pool.length) return;
+  const reviewStartedAt=Date.now();
   EX={kind:"serie",sessionMode:"repair",mode:"libre",review:"due",n:10,groupN:1,msNote:null,limit:null,
       palier:{id:"REV",t:"Révision du jour",notes:pool},pool:pool,i:0,ok:0,errs:[],times:[],hist:[],last:null,waiting:false,done:false,qid:0,
-      qtype:"lect",seq:[],k:0,writePos:4};
+      qtype:"lect",seq:[],k:0,writePos:4,reviewStartedAt:reviewStartedAt};
   logEvent("due_review_start",{nb:pool.length});
   $("exMode").textContent="↻ Révision du jour";
   $("timerbar").classList.remove("on");
@@ -2616,12 +3089,17 @@ function finishDueReview(errs){
     eb.innerHTML=EX.errs.map(function(id){const nt=NOTES[id];
       return '<div class="er"><b>'+nt.n+'</b> ('+(nt.clef==="sol"?"clé de sol":"clé de fa")+') — '+nt.mn+'</div>';}).join("");
   } else eb.style.display="none";
-  const left=unlockedNoteIds().filter(isDue).length;
+  const left=dueCount();
   $("resVal").innerHTML = left ? "Encore <b>"+left+"</b> note"+(left>1?"s":"")+" à revoir aujourd'hui." : "<b>Révisions du jour terminées.</b>";
   show("scrRes");
 }
 function startStarReview(pid){
   const p=PALIERS.find(function(x){return x.id===pid;});
+  const pending=repairBlockedIds();
+  if(p&&p.notes.some(function(id){return pending.indexOf(id)>=0;})){
+    logEvent("star_review_deferred",{palier:pid,reason:"repair_pending"});
+    startRepair(); return;
+  }
   EX={kind:"serie",mode:"libre",review:"star",starPid:pid,n:10,groupN:1,msNote:null,limit:null,
       palier:p,i:0,ok:0,errs:[],times:[],hist:[],last:null,waiting:false,done:false,qid:0,
       qtype:"lect",seq:[],k:0,writePos:4};
@@ -2984,8 +3462,9 @@ function segmentStateId(pid,sid){
   const st=segmentProgress(pid,sid);
   if(st.flagged) return "fragile";                       // décision du joueur : prioritaire
   if(!st.attempts) return st.seen?"entravail":"adecouvrir";
-  if(st.mastery>=3&&st.attempts>=2) return "maitrise";
-  if(st.mastery>=2) return "valide";
+  if(st.lastErrs>0&&st.lastPrec<85) return "fragile";    // le dernier essai compte plus que l'ancien record
+  if((st.cleanAt||[]).length>=2&&st.lastPrec>=95&&st.lastErrs===0) return "maitrise";
+  if(st.lastPrec>=85||st.mastery>=2) return "valide";
   if(st.errs>0&&st.best<85) return "fragile";
   return "entravail";
 }
@@ -3229,21 +3708,28 @@ function segmentMastery(ok,n,errs){
 function segmentProgressLabel(pid,sid){
   const st=segmentProgress(pid,sid);
   if(!st.attempts) return "nouveau";
-  if(st.mastery>=3) return "validé";
-  if(st.best>=85) return "propre";
-  if(st.errs) return "à réparer";
+  const state=segmentStateId(pid,sid);
+  if(state==="maitrise") return "maîtrisé dans le temps";
+  if(state==="valide") return "validé";
+  if(state==="fragile") return "à réparer";
   return st.attempts+" passage"+(st.attempts>1?"s":"");
 }
-function recordSegmentResult(seg,ok,n,errs){
+function recordSegmentResult(seg,ok,n,errs,now){
   if(!seg||!seg.pieceId||!seg.segmentId) return null;
+  now=Number.isFinite(Number(now))?Number(now):Date.now();
   const st=segmentProgress(seg.pieceId,seg.segmentId);
   const prec=n?Math.round(ok/n*100):0;
   st.attempts++;
   st.ok+=clampInt(ok,0,999,0);
   st.errs+=clampInt(errs,0,999,0);
   st.best=Math.max(st.best,prec);
-  st.mastery=Math.max(st.mastery,segmentMastery(ok,n,errs));
-  st.last=Date.now();
+  st.mastery=segmentMastery(ok,n,errs);
+  st.lastPrec=prec; st.lastErrs=clampInt(errs,0,999,0); st.last=now;
+  if(prec>=95&&errs===0){
+    const lastClean=st.cleanAt.length?st.cleanAt[st.cleanAt.length-1]:0;
+    if(!lastClean||now-lastClean>=SEGMENT_MASTERY_GAP_MS) st.cleanAt=st.cleanAt.concat(now).slice(-4);
+    if(st.cleanAt.length>=2&&!st.masteredOnceAt) st.masteredOnceAt=now;
+  }
   if(prec>=85) st.flagged=false; // un passage réparé proprement sort de « à retravailler »
   return st;
 }
@@ -3933,7 +4419,7 @@ function cloudDocument(){
     progress:{
       v:DB.v, mode:DB.mode, sel:DB.sel, seen:DB.seen, paliers:DB.paliers,
       days:DB.days, dailyProgress:DB.dailyProgress||{}, pieces:cloudPieces(), pieceProgress:DB.pieceProgress||{},
-      activePiece:DB.activePiece||"", pieceGoals:DB.pieceGoals||{}
+      activePiece:DB.activePiece||"", pieceGoals:DB.pieceGoals||{}, questionClock:DB.questionClock||0, repairQueue:DB.repairQueue||[]
     },
     scores:{ xp:DB.xp||0, noteStats:DB.noteStats||{}, kbdStats:DB.kbdStats||{} },
     settings:{ sound:DB.sound, soundLong:DB.soundLong, haptic:DB.haptic, profile:DB.profile||{}, themeMode:DB.themeMode||"classique" },
@@ -4054,7 +4540,8 @@ function activateSync(){
 function compactSave(){
   const out={v:DB.v,xp:DB.xp,sound:DB.sound,soundLong:DB.soundLong,haptic:DB.haptic,mode:DB.mode,sel:DB.sel,themeMode:DB.themeMode||"classique",
              _sezam:DB._sezam,days:DB.days,dailyProgress:DB.dailyProgress||{},seen:DB.seen,noteStats:{},paliers:{},pieces:DB.pieces||[],pieceProgress:DB.pieceProgress||{},
-             activePiece:DB.activePiece||"",pieceGoals:DB.pieceGoals||{},profile:DB.profile,kbdStats:DB.kbdStats};
+             activePiece:DB.activePiece||"",pieceGoals:DB.pieceGoals||{},profile:DB.profile,kbdStats:DB.kbdStats,
+             questionClock:DB.questionClock||0,repairQueue:DB.repairQueue||[]};
   Object.keys(DB.noteStats||{}).forEach(function(k){ const s=DB.noteStats[k]; if(s&&(s.v||s.e||s.box||s.due)) out.noteStats[k]=s; });
   Object.keys(DB.paliers||{}).forEach(function(pid){
     const st=DB.paliers[pid], o={};
@@ -4087,7 +4574,7 @@ function showSaveQR(){
 }
 
 /* ================= LIAISONS ================= */
-$("btnPlayNow").onclick=function(){ startCoachPlay(); };
+$("btnPlayNow").onclick=startDailySession;
 $("btnProfileQuick").onclick=openMusicProfile;
 $("btnSerie").onclick=startSerie;
 $("btnRafale").onclick=startRafale;
@@ -4110,8 +4597,16 @@ $("btnNext").onclick=function(){
     nextQuestion();
   }
 };
-$("btnQuit").onclick=function(){ if(EX&&!EX.done)logEvent("abandon",{palier:EX.palier?EX.palier.id:null,mode:EX.mode,i:EX.i}); if(rafTimer)clearInterval(rafTimer); clearQTimers(); if(EX)EX.done=true; save(); renderHome(); show("scrHome"); };
+$("btnQuit").onclick=function(){
+  if(EX&&EX.daily&&!EX.done&&(EX.stopRequested||Date.now()>=EX.daily.endAt)){
+    logEvent("daily_session_finish",{palier:EX.palier?EX.palier.id:null,mode:EX.mode,i:EX.i});
+    finishSerie(); return;
+  }
+  if(EX&&!EX.done) logEvent(EX.daily?"daily_session_abort":"abandon",{palier:EX.palier?EX.palier.id:null,mode:EX.mode,i:EX.i});
+  if(rafTimer)clearInterval(rafTimer); clearQTimers(); clearDailyTimer(); if(EX)EX.done=true; save(); renderHome(); show("scrHome");
+};
 $("btnAgain").onclick=function(){
+  if(EX.daily){renderHome();show("scrHome");return;}
   if(EX.review==="due"){ if(unlockedNoteIds().filter(isDue).length){ startRevision(); } else { renderHome(); show("scrHome"); } return; }
   if(EX.review==="star"){ renderHome(); show("scrHome"); return; }
   if(EX.kind==="rafale") startRafale();
