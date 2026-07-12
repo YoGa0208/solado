@@ -4140,7 +4140,7 @@ function finishStarReview(errs){
   $("resSub").textContent="Révision d'étoile · "+EX.palier.t;
   $("resSolado").textContent= advanced
     ? "Stabilité confirmée. Cet acquis tient dans le temps — c'est exactement ce que mesure une étoile."
-    : (clean ? "Déjà au maximum : 5 étoiles, acquis définitif." : (!coverageOk
+    : (clean ? "Déjà au maximum : 5 étoiles — stabilité au long cours confirmée. L’entretien léger continue." : (!coverageOk
       ? "Échantillon incomplet : l’étoile attend que toutes les notes prévues aient été réellement testées."
       : (!repairsClear?"Une confusion reste à réparer avant de confirmer la stabilité.":"Encore un passage utile. Les étoiles restent acquises — la révision revient bientôt.")));
   const eb=$("resErrs");
