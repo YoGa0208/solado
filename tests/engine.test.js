@@ -685,6 +685,10 @@ eq(kbdStat.e, 1, "l'échec clavier reste compté comme signal de fragilité");
 E.getDB().noteStats.la4 = E.normalizeNoteStat({});
 E.recordKbdAnswer(true, { midi: E.NOTES.la4.midi, id: "la4" });
 eq(E.getDB().noteStats.la4.box, 0, "un succès clavier n'initialise pas le calendrier de lecture d'une note jamais lue");
+eq(E.coldRecallId(["la4"], Date.now()), null, "une exposition au seul clavier ne devient jamais un faux rappel à froid de lecture");
+E.beginSerie({sessionMode:"session",n:1,palier:E.PALIERS[0],pool:["la4"],mode:"zen",groupN:1,cold:false});
+ok(E.getEX().pendingDecouverte === true, "une note uniquement jouée au clavier garde sa Découverte sur portée");
+E.haltEX();
 
 /* 9ter) Verrou H17 — une révision due correcte n'attribue l'XP qu'une seule fois */
 group("Révision due — attribution unique de l'XP (verrou H17)");
@@ -729,6 +733,7 @@ for (let i = 0; i < 10; i++) dEx.questionRecords.push({ phase: "cible", role: "b
 dEx.questionRecords.push({ phase: "transfert", role: "transfer", ok: true, ids: ["sol4"] });
 dEx.phaseStats = { rappel:{n:0,ok:0}, cible:{n:10,ok:10}, reparation:{n:0,ok:0}, transfert:{n:1,ok:1} };
 dEx.hist = new Array(11).fill(true); dEx.ok = 11; dEx.i = 11;
+dEx.transferReached = true; // scénario synthétique : le moteur réel pose ce drapeau dans completeQuestionMeta
 E.finishSerie();
 ok(String(E.getEl("resSub").textContent || "").indexOf("sans transfert") < 0, "transfert atteint : le titre redevient « Séance du jour » sans mention");
 
@@ -747,6 +752,15 @@ ok(typeof E.getEl("btnDecGo").onclick === "function", "le bouton de continuation
 if (typeof E.getEl("btnDecGo").onclick === "function") E.getEl("btnDecGo").onclick();
 ok(E.getEX().pendingDecouverte !== true && !!E.getEX().currentTask, "après la Découverte, la première vraie question démarre");
 ok(E.getDB().seen.P1 === true, "le palier est marqué découvert au moment où l'écran est réellement montré");
+E.haltEX();
+freshDB();
+E.beginSerie({ sessionMode: "session", n: 6, palier: E.PALIERS[2], pool: E.PALIERS[2].notes, mode: "zen", groupN: 1, cold: false });
+eq(E.getEX().introducedIds.length, 6, "un palier de sept notes ne marque introduites que les six réellement affichées");
+if (typeof E.getEl("btnDecGo").onclick === "function") E.getEl("btnDecGo").onclick();
+ok(E.getEX().pendingDecouverte === true && !E.getEX().currentTask, "la septième note ouvre une seconde Découverte avant toute question");
+eq(E.getEX().introducedIds.length, 7, "la seconde tranche introduit la dernière note seulement lorsqu'elle est affichée");
+if (typeof E.getEl("btnDecGo").onclick === "function") E.getEl("btnDecGo").onclick();
+ok(E.getEX().pendingDecouverte !== true && !!E.getEX().currentTask, "la question démarre seulement après toutes les tranches de Découverte");
 E.haltEX();
 freshDB();
 const hDaily = E.buildDailySession({ kind: "session", reason: "t", palier: E.PALIERS[0], pool: E.PALIERS[0].notes }, Date.now());
@@ -772,6 +786,17 @@ eq(E.getDB().xp, xp0 + 1, "l'engagement garde sa petite XP, séparée des preuve
 eq(mEx.phaseStats.transfert.n, 1, "le transfert reste marqué atteint pour le titre de séance");
 ok(mEx.daily.missionDone === true, "la mission du domaine du jour est bien refermée");
 eq(E.dailyScoredCount(), 0, "aucune mission ne compte parmi les 10 vraies questions");
+E.clearQTimers(); E.clearDailyTimer(); E.haltEX();
+freshDB();
+seedSeen(["sol4","la4","si4"]);
+const skipDaily = E.buildDailySession({ kind: "session", reason: "t", palier: E.PALIERS[0], pool: ["sol4","la4","si4"] }, Date.now());
+E.beginSerie({ sessionMode: "daily", openEnded: true, palier: E.PALIERS[0], pool: ["sol4","la4","si4"], mode: "zen", groupN: 1, daily: skipDaily, cold: false });
+const skipEx = E.getEX();
+skipEx.currentTask = { role: "transfer", phase: "transfert", qtype: "mission", mission: { title: "t", note: "n" } };
+skipEx.qtype = "mission"; skipEx.seq = []; skipEx.waiting = false;
+E.completeMission(false);
+eq(skipEx.phaseStats.transfert.n, 0, "une mission passée ne prétend pas que le transfert a été atteint");
+ok(skipEx.transferReached !== true, "une mission passée conserve l'indicateur sans transfert");
 E.clearQTimers(); E.clearDailyTimer(); E.haltEX();
 
 /* 9octies) Accessibilité & PWA — verrous de la passe 4 */

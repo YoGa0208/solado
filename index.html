@@ -2960,15 +2960,22 @@ function dueCount(){
   unlockedNoteIds().forEach(function(id){ if(pending.indexOf(id)<0&&isDue(id)) n++; });
   return n;
 }
+function hasReadingExposure(id){
+  const s=DB.noteStats[id];
+  // `last` est la trace actuelle d'une lecture sur portée. `box` garde la compatibilité
+  // avec les sauvegardes SRS historiques ; `v` seul reste un simple signal multimodal.
+  return !!(s&&((s.last||0)>0||(s.box||0)>0));
+}
 function coldRecallId(pool,now){
   now=Number.isFinite(Number(now))?Number(now):Date.now();
-  const ids=uniq((pool||[]).filter(function(id){return NOTES[id];}));
-  if(!ids.length) return null;
-  const due=ids.filter(function(id){return isDue(id,now);}).sort(function(a,b){return (DB.noteStats[a].due||0)-(DB.noteStats[b].due||0);});
-  if(due.length) return due[0];
-  // Jamais une note neuve en « rappel à froid » : une note doit avoir été vue avant d'être rappelée (H19).
-  const seen=ids.filter(function(id){const s=DB.noteStats[id];return !!(s&&(s.v||0));});
+  // `v` agrège plusieurs modalités (dont le clavier) : seule une trace datée sur portée
+  // prouve qu'une note a déjà été réellement lue et peut donc revenir « à froid » (H18/H19).
+  const seen=uniq((pool||[]).filter(function(id){
+    return NOTES[id]&&hasReadingExposure(id);
+  }));
   if(!seen.length) return null;
+  const due=seen.filter(function(id){return isDue(id,now);}).sort(function(a,b){return (DB.noteStats[a].due||0)-(DB.noteStats[b].due||0);});
+  if(due.length) return due[0];
   return seen.sort(function(a,b){
     const sa=DB.noteStats[a]||{}, sb=DB.noteStats[b]||{};
     return (sa.lastCold||sa.last||0)-(sb.lastCold||sb.last||0);
@@ -3306,7 +3313,7 @@ function beginSerie(opts){
       palier:p,pool:pool,i:0,ok:0,errs:[],times:[],hist:[],last:null,waiting:false,done:false,qid:0,
       qtype:"lect",seq:[],k:0,writePos:4,segment:opts.segment||null,
       script:(opts.script&&opts.script.length)?opts.script.slice():null,scriptIdx:0,seenIds:[],testedIds:[],coverageIds:[],coverageQueue:coverage,
-      openEnded:openEnded,daily:opts.daily||null,stopRequested:false,currentTask:null,questionRecords:[],phaseStats:{rappel:{n:0,ok:0},cible:{n:0,ok:0},reparation:{n:0,ok:0},transfert:{n:0,ok:0}},
+      openEnded:openEnded,daily:opts.daily||null,stopRequested:false,currentTask:null,questionRecords:[],phaseStats:{rappel:{n:0,ok:0},cible:{n:0,ok:0},reparation:{n:0,ok:0},transfert:{n:0,ok:0}},transferReached:false,
       coldPending:coldEligible&&!!coldId,coldId:coldId,coldResult:null,questionDeadlineAt:0,pausedQuestionRemaining:null,pausedResumeNext:false,
       dailyValidationBuffer:opts.daily&&mode!=="libre"?dailyDraftRecords(p.id,mode):[]};
   logEvent("serie_start",{palier:p.id,mode:mode,groupe:groupN,type:EX.sessionMode,n:total,segment:EX.segment?EX.segment.segmentId:null,piece:EX.segment?EX.segment.pieceId:null});
@@ -3513,8 +3520,7 @@ function freshTargetNoteIds(){
   if(!Array.isArray(EX.introducedIds)) EX.introducedIds=[];
   const base=(EX.daily&&EX.daily.targetPool&&EX.daily.targetPool.length)?EX.daily.targetPool:((EX.pool&&EX.pool.length)?EX.pool:(EX.palier&&EX.palier.notes)||[]);
   return uniq(base).filter(function(id){
-    const s=DB.noteStats[id];
-    return NOTES[id]&&!(s&&(s.v||0))&&EX.introducedIds.indexOf(id)<0;
+    return NOTES[id]&&!hasReadingExposure(id)&&EX.introducedIds.indexOf(id)<0;
   });
 }
 function nextQuestion(){
@@ -3527,13 +3533,16 @@ function nextQuestion(){
   const freshIntro=freshTargetNoteIds();
   if(freshIntro.length){
     const session=EX;
-    EX.introducedIds=EX.introducedIds.concat(freshIntro);
+    // L'écran affiche au plus six notes : seule la tranche réellement montrée est marquée
+    // introduite. Les suivantes ouvrent une nouvelle tranche avant toute question (H19).
+    const introBatch=freshIntro.slice(0,6);
+    EX.introducedIds=EX.introducedIds.concat(introBatch);
     EX.pendingDecouverte=true;
     showDecouverte(EX.palier.id,function(){
       if(EX!==session||EX.done) return;
       EX.pendingDecouverte=false;
       nextQuestion();
-    },freshIntro);
+    },introBatch);
     return;
   }
   const task=questionTask(); EX.currentTask=task; EX.currentQuestionTested=[];
@@ -3728,8 +3737,13 @@ function completeQuestionMeta(correct,failId,response){
   let phase=task.phase||"cible";
   if(task.role==="retest") phase="reparation";
   if(task.role==="transfer") phase="transfert";
+  const skippedTransfer=phase==="transfert"&&response&&response.kind==="mission"&&response.value==="skip";
+  const transferSpacing=phase==="transfert"&&task.role==="spacing";
   if(!EX.phaseStats[phase]) EX.phaseStats[phase]={n:0,ok:0};
-  EX.phaseStats[phase].n++; if(correct) EX.phaseStats[phase].ok++;
+  if(!skippedTransfer&&!transferSpacing){
+    EX.phaseStats[phase].n++; if(correct) EX.phaseStats[phase].ok++;
+    if(phase==="transfert") EX.transferReached=true;
+  }
   const questionRecord={phase:phase,role:task.role,ok:!!correct,ids:(EX.currentQuestionTested||[]).slice()};
   EX.questionRecords.push(questionRecord);
   recordDailyTargetEvidence(questionRecord);
@@ -4019,7 +4033,7 @@ function finishSerie(){
     }
   }
   const dailyQualified=isDaily&&dailySessionQualified(), activeElapsed=isDaily?dailyActiveElapsed(EX.daily,Date.now()):0;
-  const transferReached=!!(EX.phaseStats&&EX.phaseStats.transfert&&(EX.phaseStats.transfert.n||0)>0); // distingue séance complète et pratique sans transfert atteint (F20) — affichage seulement
+  const transferReached=!!EX.transferReached; // tentative réelle : lecture ou mission faite, jamais mission passée (F20/F21)
   if(isDaily){
     if(dailyQualified) completeDailyProgress();
     logEvent("daily_session_end",{minutes:EX.daily.totalMinutes,elapsed:activeElapsed,complete:dailyQualified,scored:dailyScoredCount(),ok:EX.ok,answered:answered,repairs:(EX.phaseStats.reparation||{}).n||0,proofs:(EX.daily.proofs||[]).length,promotions:(EX.daily.promotions||[]).length});
