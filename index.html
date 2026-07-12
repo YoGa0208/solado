@@ -3677,10 +3677,9 @@ function completeMission(done){
   EX.currentQuestionTested=[];
   completeQuestionMeta(!!done,null,{kind:"mission",value:done?"done":"skip"});
   const spacing=EX.currentTask&&EX.currentTask.role==="spacing";
-  if(!spacing){
-    if(done){EX.ok++;DB.xp++;}
-    EX.hist.push(!!done); EX.i++;
-  }
+  // Une mission auto-déclarée n'est jamais une réponse mesurée : elle n'entre ni dans la précision
+  // ni dans le compte de questions (F21). Elle garde une petite XP d'engagement, séparée des preuves.
+  if(!spacing&&done) DB.xp++;
   EX.times.push(Date.now()-EX.t0);
   EX.waiting=true; $("feedback").className="feedback "+(done?"good":"");
   $("feedback").textContent=done?(spacing?"✓ Pulsation faite — la mémoire a eu son intervalle.":"✓ Transfert hors écran intégré à la séance.")
