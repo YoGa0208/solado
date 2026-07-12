@@ -774,6 +774,20 @@ ok(mEx.daily.missionDone === true, "la mission du domaine du jour est bien refer
 eq(E.dailyScoredCount(), 0, "aucune mission ne compte parmi les 10 vraies questions");
 E.clearQTimers(); E.clearDailyTimer(); E.haltEX();
 
+/* 9octies) Accessibilité & PWA — verrous de la passe 4 */
+group("Accessibilité & PWA — caches historiques, carte au clavier, cibles, contraste (A1-A4)");
+const swSrcA4 = fs.readFileSync(path.join(__dirname, "..", "sw.js"), "utf8");
+ok(/LEGACY_CACHE_PREFIXES/.test(swSrcA4) && swSrcA4.indexOf('"solado-v"') >= 0, "le service worker connaît les caches historiques solado-v* du rebranding (A1)");
+ok(swSrcA4.indexOf("key.startsWith(p)") >= 0, "le ménage par préfixe est réellement branché dans activate (A1)");
+ok(/key !== CACHE_NAME/.test(swSrcA4) && swSrcA4.indexOf("sezam-solado-") >= 0, "le cache actif n'est jamais supprimé par le ménage (garde B12)");
+const mapSvgA11y = E.pieceMapSVG(E.pieceById("aclair"));
+ok(mapSvgA11y.indexOf('tabindex="0"') >= 0 && mapSvgA11y.indexOf('role="button"') >= 0, "chaque passage de la carte est focusable au clavier avec un rôle (A2)");
+ok(/aria-label="Passage : /.test(mapSvgA11y), "chaque passage annonce son libellé et son état au lecteur d'écran (A2)");
+const appSrcA4 = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
+ok(appSrcA4.indexOf("g.onkeydown") >= 0, "Entrée/Espace ouvrent un passage de la carte (A2)");
+ok(/\.linkbtn\{[^}]*min-height:40px/.test(appSrcA4), "les boutons-liens du volet options atteignent la taille tactile minimale (A3)");
+ok(appSrcA4.indexOf("--dim:#5e777b") < 0 && appSrcA4.indexOf("--dim:#566e72") >= 0, "le texte d'aide atteint au moins 4,5:1 sur les thèmes clairs (A4)");
+
 /* 9) Portée — géométrie agrandie, grandes notes, marques lisibles */
 group("Portée — géométrie mobile, grandes notes, marques");
 freshDB();
