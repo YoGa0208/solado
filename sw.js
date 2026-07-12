@@ -6,6 +6,8 @@
 const CACHE_NAME = "sezam-solado-v29";
 const CACHE_PREFIX = "sezam-solado-";
 const LEGACY_CACHE_NAMES = ["sezam-v12", "sezam-v21", "sezam-v23"];
+// Caches de cette application avant le rebranding (préfixes historiques). Jamais ceux d'une autre app (B12).
+const LEGACY_CACHE_PREFIXES = ["solado-v", "sezam-v"];
 const ASSETS = [
   "./",
   "./index.html",
@@ -30,7 +32,7 @@ self.addEventListener("install", event => {
 self.addEventListener("activate", event => {
   event.waitUntil(
     caches.keys()
-      .then(keys => Promise.all(keys.filter(key => (key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME) || LEGACY_CACHE_NAMES.indexOf(key) >= 0).map(key => caches.delete(key))))
+      .then(keys => Promise.all(keys.filter(key => key !== CACHE_NAME && ((key.startsWith(CACHE_PREFIX)) || LEGACY_CACHE_NAMES.indexOf(key) >= 0 || LEGACY_CACHE_PREFIXES.some(p => key.startsWith(p)))).map(key => caches.delete(key))))
       .then(() => self.clients.claim())
   );
 });
