@@ -3993,6 +3993,7 @@ function finishSerie(){
     }
   }
   const dailyQualified=isDaily&&dailySessionQualified(), activeElapsed=isDaily?dailyActiveElapsed(EX.daily,Date.now()):0;
+  const transferReached=!!(EX.phaseStats&&EX.phaseStats.transfert&&(EX.phaseStats.transfert.n||0)>0); // distingue séance complète et pratique sans transfert atteint (F20) — affichage seulement
   if(isDaily){
     if(dailyQualified) completeDailyProgress();
     logEvent("daily_session_end",{minutes:EX.daily.totalMinutes,elapsed:activeElapsed,complete:dailyQualified,scored:dailyScoredCount(),ok:EX.ok,answered:answered,repairs:(EX.phaseStats.reparation||{}).n||0,proofs:(EX.daily.proofs||[]).length,promotions:(EX.daily.promotions||[]).length});
@@ -4000,13 +4001,13 @@ function finishSerie(){
   const errsForLog=isDaily&&answered?Math.round(errs/answered*10):errs;
   logEvent("serie_end",{palier:p.id,mode:EX.mode,type:EX.sessionMode,ok:EX.ok,errs:errsForLog,avgMs:avgMs(),valide:newlyPalier,segment:EX.segment?EX.segment.segmentId:null,piece:EX.segment?EX.segment.pieceId:null});
   save(); header(); syncPush();
-  const scoreN=Math.max(1,isDaily?answered:EX.n), prec=Math.round(EX.ok/scoreN*100), label=isDaily?(dailyQualified?"Séance du jour":"Séance partielle"):(isRepair?"Réparation":(isFlash?"Flash":(isPiece?"Partition":modeLabel(EX.mode==="rafale"?"zen":EX.mode))));
+  const scoreN=Math.max(1,isDaily?answered:EX.n), prec=Math.round(EX.ok/scoreN*100), label=isDaily?(dailyQualified?(transferReached?"Séance du jour":"Séance du jour · sans transfert"):"Séance partielle"):(isRepair?"Réparation":(isFlash?"Flash":(isPiece?"Partition":modeLabel(EX.mode==="rafale"?"zen":EX.mode))));
   $("resScore").innerHTML=EX.ok+"<small>/"+(isDaily?answered:EX.n)+"</small>";
   $("resSub").textContent=isDaily
     ? label+" · "+Math.max(1,Math.round(activeElapsed/60000))+" min actives · précision "+prec+" %"
     : "Précision "+prec+"% · "+(avgMs()/1000).toFixed(1)+" s par question · "+label;
   $("resSolado").textContent=isDaily
-    ? (!dailyQualified?"Cette pratique est conservée, mais la séance n’est pas marquée terminée : il faut au moins 10 vraies questions musicales.":(EX.coldResult&&EX.coldResult.ok?"Rappel à froid réussi. La séance a ciblé, réparé puis transféré sans lancer de nouvelle question après l’échéance.":"Le test à froid a révélé le point utile. Les confusions restent programmées, pas oubliées."))
+    ? (!dailyQualified?"Cette pratique est conservée, mais la séance n’est pas marquée terminée : il faut au moins 10 vraies questions musicales.":(!transferReached?"Dix vraies questions : la séance compte. Le transfert musical n’a pas été atteint aujourd’hui — il reviendra en fin de prochaine séance.":(EX.coldResult&&EX.coldResult.ok?"Rappel à froid réussi. La séance a ciblé, réparé puis transféré sans lancer de nouvelle question après l’échéance.":"Le test à froid a révélé le point utile. Les confusions restent programmées, pas oubliées.")))
     : (isRepair
     ? (errs?"Réparation active. Les notes fragiles reviennent avec un meilleur espacement.":"Réparation nette. La mémoire gagne en stabilité.")
     : (isFlash ? (errs?"Flash utile. Le coach garde ces notes au chaud pour la suite.":"Flash propre. Le réflexe répond vite.") : (isPiece ? (errs?"Segment utile. Les notes du passage deviennent un exercice ciblé avant le piano.":"Segment propre. Le passage est prêt pour un vrai essai au clavier.") : jarvisMsg(EX.ok,EX.n))));
