@@ -5292,7 +5292,9 @@ function recordKbdAnswer(correct,o){
   if(!DB.kbdStats.byPc[pc]) DB.kbdStats.byPc[pc]={v:0,e:0};
   DB.kbdStats.byPc[pc].v++;
   if(!correct) DB.kbdStats.byPc[pc].e++;
-  if(o.id){ const s=noteStat(o.id); s.v++; if(!correct) s.e++; srsReview(o.id,correct); }
+  // Modalité clavier ≠ preuve de lecture sur portée : on nourrit les compteurs d'usage (v/e)
+  // comme signal de priorité, mais le calendrier SRS de lecture (box/due) n'est jamais modifié ici (H18).
+  if(o.id){ const s=noteStat(o.id); s.v++; if(!correct) s.e++; }
 }
 function startClavier(){
   let cfg={clef:"sol",dir:"read",acc:false};
