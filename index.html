@@ -2966,9 +2966,10 @@ function coldRecallId(pool,now){
   if(!ids.length) return null;
   const due=ids.filter(function(id){return isDue(id,now);}).sort(function(a,b){return (DB.noteStats[a].due||0)-(DB.noteStats[b].due||0);});
   if(due.length) return due[0];
-  const fresh=ids.filter(function(id){const s=DB.noteStats[id];return !s||!(s.v||0);});
-  if(fresh.length) return fresh[0];
-  return ids.slice().sort(function(a,b){
+  // Jamais une note neuve en « rappel à froid » : une note doit avoir été vue avant d'être rappelée (H19).
+  const seen=ids.filter(function(id){const s=DB.noteStats[id];return !!(s&&(s.v||0));});
+  if(!seen.length) return null;
+  return seen.sort(function(a,b){
     const sa=DB.noteStats[a]||{}, sb=DB.noteStats[b]||{};
     return (sa.lastCold||sa.last||0)-(sb.lastCold||sb.last||0);
   })[0];
@@ -3350,9 +3351,10 @@ function showSeriePreview(pid,onContinue){
   };
 }
 // Écran Découverte : je montre la/les note(s) neuve(s) avant de tester (I-do → You-do)
-function showDecouverte(pid, onContinue){
+function showDecouverte(pid, onContinue, idsOverride){
   const p=PALIERS.find(function(x){return x.id===pid;});
-  const neuves=newNotesOf(pid).slice(0,6);
+  const neuves=((idsOverride&&idsOverride.length)?idsOverride:newNotesOf(pid)).slice(0,6);
+  if(!p||!neuves.length){ if(onContinue) onContinue(); return; }
   logEvent("decouverte",{palier:pid,nb:neuves.length});
   let body='<h3>Découverte — '+p.t+'</h3><h2>'+(neuves.length>1?"De nouvelles notes":"Une nouvelle note")+'</h2>'+
     '<p style="margin-bottom:10px">Regarde où elle se place, écoute-la, puis on la teste. Pression basse, oreille ouverte.</p>';
@@ -3503,12 +3505,37 @@ function questionTask(){
   }
   return pool.length?{role:"baseline",phase:phase.id,pool:pool}:spacingTask(phase.id);
 }
+function freshTargetNoteIds(){
+  if(!EX||EX.kind!=="serie"||EX.done) return [];
+  if(EX.sessionMode!=="session"&&EX.sessionMode!=="daily") return [];
+  if(EX.review||EX.script||EX.segment) return [];
+  if(EX.daily){ const ph=dailyPhaseAt(EX.daily,Date.now()); if(!ph||(ph.id!=="rappel"&&ph.id!=="cible")) return []; }
+  if(!Array.isArray(EX.introducedIds)) EX.introducedIds=[];
+  const base=(EX.daily&&EX.daily.targetPool&&EX.daily.targetPool.length)?EX.daily.targetPool:((EX.pool&&EX.pool.length)?EX.pool:(EX.palier&&EX.palier.notes)||[]);
+  return uniq(base).filter(function(id){
+    const s=DB.noteStats[id];
+    return NOTES[id]&&!(s&&(s.v||0))&&EX.introducedIds.indexOf(id)<0;
+  });
+}
 function nextQuestion(){
   if(EX.done) return;
   clearQTimers();
   if(EX.daily&&(EX.stopRequested||Date.now()>=EX.daily.endAt)) return finishSerie();
   if(EX.review==="star"&&(DB.repairQueue||[]).length&&EX.i>0) return finishSerie();
   if(EX.kind==="serie" && !EX.openEnded && EX.i>=EX.n) return finishSerie();
+  // Découverte avant interrogation : toute note jamais exposée est présentée d'abord, sans notation (H19).
+  const freshIntro=freshTargetNoteIds();
+  if(freshIntro.length){
+    const session=EX;
+    EX.introducedIds=EX.introducedIds.concat(freshIntro);
+    EX.pendingDecouverte=true;
+    showDecouverte(EX.palier.id,function(){
+      if(EX!==session||EX.done) return;
+      EX.pendingDecouverte=false;
+      nextQuestion();
+    },freshIntro);
+    return;
+  }
   const task=questionTask(); EX.currentTask=task; EX.currentQuestionTested=[];
   const ecritOk=(EX.mode==="libre"||EX.mode==="zen") && EX.kind==="serie" && !EX.script && task.role==="baseline" && task.phase!=="transfert";
   EX.qtype=task.qtype||((ecritOk && Math.random()<ECRIT_RATIO)?"ecrit":"lect");
