@@ -133,7 +133,7 @@ function loadEngine(runtime) {
     "segmentMeasures", "segmentScript", "segmentStateId", "segmentStateDef", "segmentStateRank", "pieceStateCounts",
     "goalDef", "pieceGoal", "setPieceGoal", "ambitionProgress", "activePieceObj", "defaultActivePieceId", "ensureActivePiece",
     "noteOccurrencesInPiece", "measureSegment", "pieceMapSVG", "mapLegendHtml", "markSegmentSeen", "toggleSegmentFlag",
-    "setSegmentFeel", "feelLabel", "beginSerie", "answer", "answerPos", "startPieceSegment", "renderResPiece", "nextQuestion",
+    "setSegmentFeel", "feelLabel", "beginSerie", "answer", "answerPos", "startPieceSegment", "renderResPiece", "nextQuestion", "finishSerie",
     "beginClavier", "nextKbd", "kbdTap", "renderKbd", "recordKbdAnswer",
     "STAFF", "staffSVG", "bonusStaffSVG", "clefSVG", "noteGlyph", "yOf", "previewNoteHtml",
     "currentRecoveryCode", "mirrorIntro", "tone", "save", "readKey", "bestLocalState", "recognizableStoredState", "utf8ByteLength", "decodedBase64Bytes", "MAX_IMPORT_TEXT_BYTES",
@@ -691,6 +691,41 @@ E.startRevision();
 for (let i = 0; i < 10 && E.getEX() && !E.getEX().done; i++) { answerCurrentCorrect(); E.nextQuestion(); }
 ok(E.getEX() && E.getEX().done === true, "la révision du jour se termine après dix réponses");
 eq(E.getDB().xp - xpBefore, 10, "dix réponses justes en révision due = exactement 10 XP (aucune double attribution)");
+
+/* 9quater) Étoiles — le maximum parle de stabilité entretenue, jamais d'acquis définitif (grille H16) */
+group("Étoiles — vocabulaire honnête au niveau maximum (H16)");
+freshDB();
+E.getDB().paliers.P1.star = E.normalizeStar({ level: 5, started: true, due: 0 });
+E.startStarReview("P1");
+for (let i = 0; i < 12 && E.getEX() && !E.getEX().done; i++) { answerCurrentCorrect(); E.nextQuestion(); }
+ok(E.getEX() && E.getEX().done === true, "la révision d'étoile au niveau maximum se termine");
+const starMsg = String(E.getEl("resSolado").textContent || "");
+ok(starMsg.indexOf("définitif") < 0, "aucun message d'étoile ne promet un acquis définitif");
+ok(/stabilit/i.test(starMsg), "le message du niveau maximum parle de stabilité entretenue");
+
+/* 9quinquies) Bilan quotidien — séance complète distinguée d'une pratique sans transfert (grille F20) */
+group("Bilan quotidien — distinction séance complète / sans transfert (F20)");
+freshDB();
+const dQ = E.buildDailySession({ kind: "session", reason: "test", palier: E.PALIERS[0], pool: ["sol4","la4","si4"] }, Date.now());
+E.beginSerie({ sessionMode: "daily", openEnded: true, palier: E.PALIERS[0], pool: ["sol4","la4","si4"], mode: "zen", groupN: 1, daily: dQ, cold: false });
+let dEx = E.getEX();
+for (let i = 0; i < 10; i++) dEx.questionRecords.push({ phase: "cible", role: "baseline", ok: true, ids: ["sol4"] });
+dEx.phaseStats = { rappel:{n:0,ok:0}, cible:{n:10,ok:10}, reparation:{n:0,ok:0}, transfert:{n:0,ok:0} };
+dEx.hist = new Array(10).fill(true); dEx.ok = 10; dEx.i = 10;
+E.finishSerie();
+ok(String(E.getEl("resSub").textContent || "").indexOf("sans transfert") >= 0, "dix questions sans transfert : le titre distingue la pratique de la séance complète");
+ok(String(E.getEl("resSolado").textContent || "").indexOf("transféré") < 0, "le bilan ne prétend jamais avoir transféré quand le transfert n'a pas eu lieu");
+ok(!!(E.getDB().dailyProgress || {})[E.todayStr()], "la pratique reste marquée faite : seul le vocabulaire change (la règle des 10 questions est inchangée)");
+freshDB();
+const dQ2 = E.buildDailySession({ kind: "session", reason: "test", palier: E.PALIERS[0], pool: ["sol4","la4","si4"] }, Date.now());
+E.beginSerie({ sessionMode: "daily", openEnded: true, palier: E.PALIERS[0], pool: ["sol4","la4","si4"], mode: "zen", groupN: 1, daily: dQ2, cold: false });
+dEx = E.getEX();
+for (let i = 0; i < 10; i++) dEx.questionRecords.push({ phase: "cible", role: "baseline", ok: true, ids: ["sol4"] });
+dEx.questionRecords.push({ phase: "transfert", role: "transfer", ok: true, ids: ["sol4"] });
+dEx.phaseStats = { rappel:{n:0,ok:0}, cible:{n:10,ok:10}, reparation:{n:0,ok:0}, transfert:{n:1,ok:1} };
+dEx.hist = new Array(11).fill(true); dEx.ok = 11; dEx.i = 11;
+E.finishSerie();
+ok(String(E.getEl("resSub").textContent || "").indexOf("sans transfert") < 0, "transfert atteint : le titre redevient « Séance du jour » sans mention");
 
 /* 9) Portée — géométrie agrandie, grandes notes, marques lisibles */
 group("Portée — géométrie mobile, grandes notes, marques");
