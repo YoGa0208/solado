@@ -134,7 +134,7 @@ function loadEngine(runtime) {
     "goalDef", "pieceGoal", "setPieceGoal", "ambitionProgress", "activePieceObj", "defaultActivePieceId", "ensureActivePiece",
     "noteOccurrencesInPiece", "measureSegment", "pieceMapSVG", "mapLegendHtml", "markSegmentSeen", "toggleSegmentFlag",
     "setSegmentFeel", "feelLabel", "beginSerie", "answer", "answerPos", "startPieceSegment", "renderResPiece", "nextQuestion",
-    "beginClavier", "nextKbd", "kbdTap", "renderKbd",
+    "beginClavier", "nextKbd", "kbdTap", "renderKbd", "recordKbdAnswer",
     "STAFF", "staffSVG", "bonusStaffSVG", "clefSVG", "noteGlyph", "yOf", "previewNoteHtml",
     "currentRecoveryCode", "mirrorIntro", "tone", "save", "readKey", "bestLocalState", "recognizableStoredState", "utf8ByteLength", "decodedBase64Bytes", "MAX_IMPORT_TEXT_BYTES",
     "normalizePlayerRegistry", "normalizePlayerName", "activePlayerMeta", "playerMetaById", "createPlayer", "switchPlayer", "renamePlayer", "deletePlayer", "playerInitial", "openPlayerSwitcher", "MAX_LOCAL_PLAYERS", "PLAYER_REGISTRY_KEY", "PLAYER_FALLBACK_PREFIX",
@@ -661,6 +661,36 @@ try {
   kx.done = true;
 } catch (e) { threw = e; }
 ok(threw === null, "le parcours clavier ne lève aucune exception" + (threw ? " — " + threw.message : ""));
+
+/* 9bis) Intégrité des preuves — le clavier ne touche jamais au calendrier SRS de lecture (grille H18) */
+group("Clavier — modalité séparée : aucun effet sur le SRS de lecture (H18)");
+freshDB();
+const kbdNow = Date.now();
+E.getDB().noteStats.sol4 = E.normalizeNoteStat({ v: 8, e: 0, box: 3, due: kbdNow - 1000 });
+E.recordKbdAnswer(true, { midi: E.NOTES.sol4.midi, id: "sol4" });
+let kbdStat = E.getDB().noteStats.sol4;
+eq(kbdStat.box, 3, "une réussite clavier n'avance pas la boîte SRS d'une note due en lecture");
+ok((kbdStat.due || 0) <= kbdNow, "une réussite clavier ne repousse pas l'échéance de lecture");
+ok(E.isDue("sol4", kbdNow), "la note reste due en lecture après un succès clavier");
+eq(kbdStat.v, 9, "le compteur d'expositions reste nourri (signal de priorité, pas une preuve)");
+E.recordKbdAnswer(false, { midi: E.NOTES.sol4.midi, id: "sol4" });
+kbdStat = E.getDB().noteStats.sol4;
+eq(kbdStat.box, 3, "un échec clavier ne rétrograde pas une boîte de lecture gagnée à l'échéance");
+eq(kbdStat.e, 1, "l'échec clavier reste compté comme signal de fragilité");
+E.getDB().noteStats.la4 = E.normalizeNoteStat({});
+E.recordKbdAnswer(true, { midi: E.NOTES.la4.midi, id: "la4" });
+eq(E.getDB().noteStats.la4.box, 0, "un succès clavier n'initialise pas le calendrier de lecture d'une note jamais lue");
+
+/* 9ter) Verrou H17 — une révision due correcte n'attribue l'XP qu'une seule fois */
+group("Révision due — attribution unique de l'XP (verrou H17)");
+freshDB();
+E.getDB().noteStats.sol4 = E.normalizeNoteStat({ v: 5, e: 0, box: 2, due: Date.now() - 1000 });
+E.getDB().noteStats.la4 = E.normalizeNoteStat({ v: 5, e: 0, box: 2, due: Date.now() - 1000 });
+const xpBefore = E.getDB().xp;
+E.startRevision();
+for (let i = 0; i < 10 && E.getEX() && !E.getEX().done; i++) { answerCurrentCorrect(); E.nextQuestion(); }
+ok(E.getEX() && E.getEX().done === true, "la révision du jour se termine après dix réponses");
+eq(E.getDB().xp - xpBefore, 10, "dix réponses justes en révision due = exactement 10 XP (aucune double attribution)");
 
 /* 9) Portée — géométrie agrandie, grandes notes, marques lisibles */
 group("Portée — géométrie mobile, grandes notes, marques");
