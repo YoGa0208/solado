@@ -788,6 +788,11 @@ ok(appSrcA4.indexOf("g.onkeydown") >= 0, "Entrée/Espace ouvrent un passage de l
 ok(/\.linkbtn\{[^}]*min-height:40px/.test(appSrcA4), "les boutons-liens du volet options atteignent la taille tactile minimale (A3)");
 ok(appSrcA4.indexOf("--dim:#5e777b") < 0 && appSrcA4.indexOf("--dim:#566e72") >= 0, "le texte d'aide atteint au moins 4,5:1 sur les thèmes clairs (A4)");
 
+/* 9nonies) Finition — le trophée dit ce qu'il mesure (grille J24) */
+group("Partition — le libellé Maîtrisé précise sa portée réelle (J24)");
+ok(/hauteurs/.test(E.mapLegendHtml()), "la légende de la carte précise que Validé/Maîtrisé mesurent les hauteurs");
+ok(!/rythme mesuré|jeu instrumental certifié/.test(E.mapLegendHtml()), "la légende n'invente aucune certification");
+
 /* 9) Portée — géométrie agrandie, grandes notes, marques lisibles */
 group("Portée — géométrie mobile, grandes notes, marques");
 freshDB();
