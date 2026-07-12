@@ -4064,7 +4064,8 @@ function startRevision(){
   show("scrEx"); nextQuestion();
 }
 function finishDueReview(errs){
-  DB.xp+=EX.ok;
+  // L'XP des réponses justes est déjà versée réponse par réponse (afterGood) :
+  // aucun second versement en fin de révision, sinon une révision due paierait double (H17).
   logEvent("due_review_end",{ok:EX.ok,errs:errs});
   save(); header(); syncPush();
   $("resScore").innerHTML=EX.ok+"<small>/10</small>";
