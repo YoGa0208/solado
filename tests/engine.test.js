@@ -168,6 +168,9 @@ function masterSegment(pieceId, segmentId, base) {
   E.recordSegmentResult({ pieceId, segmentId }, 5, 5, 0, base);
   E.recordSegmentResult({ pieceId, segmentId }, 5, 5, 0, base + E.SEGMENT_MASTERY_GAP_MS);
 }
+function seedSeen(ids) { // pré-expose des notes : ces tests visent la réparation/le tempo, pas l'introduction
+  ids.forEach(function (id) { E.getDB().noteStats[id] = E.normalizeNoteStat({ v: 1, e: 0, last: Date.now() - 864e5 }); });
+}
 function answerCurrentCorrect() {
   const ex = E.getEX();
   if (ex.qtype === "ecrit") {
@@ -260,11 +263,13 @@ eq(malformedRepairs.length, 1, "les réparations importées sont filtrées et no
 freshDB();
 E.scheduleRepair("sol4",{kind:"name",value:"la"},{pool:["sol4","la4","si4"],qtype:"lect",palierId:"P1"});
 E.scheduleRepair("si4",{kind:"name",value:"sol"},{pool:["sol4","la4","si4"],qtype:"lect",palierId:"P1"});
+seedSeen(["sol4","la4","si4"]);
 E.beginSerie({sessionMode:"session",n:3,palier:E.PALIERS[0],pool:["sol4","la4","si4"],mode:"zen",groupN:1,cold:false});
 eq(E.getEX().currentTask.role,"spacing","si tout le vocabulaire attend une réparation, le moteur insère un intervalle actif au lieu d'une note étrangère");
 eq(E.getEX().seq,[],"l'intervalle actif ne peut ni gonfler la couverture ni répéter trop tôt une confusion");
 E.haltEX();
 freshDB();
+seedSeen(["sol4","la4","si4"]);
 E.beginSerie({sessionMode:"session",n:6,palier:E.PALIERS[0],pool:["sol4","la4","si4"],mode:"zen",groupN:1,cold:false});
 let active = E.getEX(); active.qtype="lect"; active.seq=["sol4"]; active.k=0; active.currentTask={role:"baseline",phase:"cible"}; active.currentQuestionTested=[];
 E.answer("la");
@@ -727,6 +732,48 @@ dEx.hist = new Array(11).fill(true); dEx.ok = 11; dEx.i = 11;
 E.finishSerie();
 ok(String(E.getEl("resSub").textContent || "").indexOf("sans transfert") < 0, "transfert atteint : le titre redevient « Séance du jour » sans mention");
 
+/* 9sexies) Découverte obligatoire — aucune note neuve interrogée ni « à froid » sans présentation (grille H19) */
+group("Découverte — aucune note neuve testée sans présentation (H19)");
+freshDB();
+E.getDB().noteStats.sol4 = E.normalizeNoteStat({ v: 2, e: 0, box: 1, due: Date.now() + 864e5, last: Date.now() - 3 * 864e5 });
+eq(E.coldRecallId(["sol4","la4"], Date.now()), "sol4", "le rappel à froid choisit une note déjà vue plutôt qu'une neuve");
+eq(E.coldRecallId(["la4","si4"], Date.now()), null, "aucun rappel à froid quand tout le vocabulaire est neuf");
+freshDB();
+E.beginSerie({ sessionMode: "session", n: 6, palier: E.PALIERS[0], pool: E.PALIERS[0].notes, mode: "zen", groupN: 1, cold: false });
+ok(E.getEX().pendingDecouverte === true, "une série sur des notes jamais vues ouvre la Découverte avant toute question");
+ok(!E.getEX().currentTask, "aucune question n'est posée pendant la Découverte");
+ok(/Découverte/.test(E.getEl("cardBox").innerHTML), "l'écran Découverte présente réellement les notes neuves");
+ok(typeof E.getEl("btnDecGo").onclick === "function", "le bouton de continuation est branché");
+if (typeof E.getEl("btnDecGo").onclick === "function") E.getEl("btnDecGo").onclick();
+ok(E.getEX().pendingDecouverte !== true && !!E.getEX().currentTask, "après la Découverte, la première vraie question démarre");
+ok(E.getDB().seen.P1 === true, "le palier est marqué découvert au moment où l'écran est réellement montré");
+E.haltEX();
+freshDB();
+const hDaily = E.buildDailySession({ kind: "session", reason: "t", palier: E.PALIERS[0], pool: E.PALIERS[0].notes }, Date.now());
+E.beginSerie({ sessionMode: "daily", openEnded: true, palier: E.PALIERS[0], pool: E.PALIERS[0].notes, mode: "zen", groupN: 1, daily: hDaily, cold: true });
+ok(!E.getEX().coldId, "séance entièrement neuve : aucun faux rappel à froid sur une note jamais enseignée");
+E.clearQTimers(); E.clearDailyTimer(); E.haltEX();
+
+/* 9septies) Mission hors écran — déclarée, jamais comptée comme mesure (grille F21) */
+group("Mission hors écran — hors précision et hors compte de réponses (F21)");
+freshDB();
+seedSeen(["sol4","la4","si4"]);
+const mDaily = E.buildDailySession({ kind: "session", reason: "t", palier: E.PALIERS[0], pool: ["sol4","la4","si4"] }, Date.now());
+E.beginSerie({ sessionMode: "daily", openEnded: true, palier: E.PALIERS[0], pool: ["sol4","la4","si4"], mode: "zen", groupN: 1, daily: mDaily, cold: false });
+const mEx = E.getEX();
+mEx.currentTask = { role: "transfer", phase: "transfert", qtype: "mission", mission: { title: "t", note: "n" } };
+mEx.qtype = "mission"; mEx.seq = []; mEx.waiting = false;
+const ok0 = mEx.ok, hist0 = mEx.hist.length, i0 = mEx.i, xp0 = E.getDB().xp;
+E.completeMission(true);
+eq(mEx.ok, ok0, "une mission déclarée « faite » ne gonfle pas la précision de la séance");
+eq(mEx.hist.length, hist0, "une mission n'entre pas dans le compte de réponses");
+eq(mEx.i, i0, "une mission n'est pas numérotée comme une question");
+eq(E.getDB().xp, xp0 + 1, "l'engagement garde sa petite XP, séparée des preuves");
+eq(mEx.phaseStats.transfert.n, 1, "le transfert reste marqué atteint pour le titre de séance");
+ok(mEx.daily.missionDone === true, "la mission du domaine du jour est bien refermée");
+eq(E.dailyScoredCount(), 0, "aucune mission ne compte parmi les 10 vraies questions");
+E.clearQTimers(); E.clearDailyTimer(); E.haltEX();
+
 /* 9) Portée — géométrie agrandie, grandes notes, marques lisibles */
 group("Portée — géométrie mobile, grandes notes, marques");
 freshDB();
@@ -1032,6 +1079,7 @@ E.getDB().noteStats.sol4=E.normalizeNoteStat({v:3,e:1,box:1,due:pendingStart-100
 E.scheduleRepair("sol4",{kind:"name",value:"la"},{pool:["sol4","la4","si4"],qtype:"lect",palierId:"P1"});
 const pendingDaily=E.buildDailySession(E.coachDecision(),pendingStart);
 ok(pendingDaily.dueSnapshot.indexOf("sol4")<0,"une note encore en réparation ne se déguise jamais en rappel SRS dû");
+seedSeen(["la4","si4"]);
 E.beginSerie({sessionMode:"daily",palier:E.PALIERS[0],pool:E.PALIERS[0].notes,mode:"zen",groupN:1,openEnded:true,daily:pendingDaily,cold:true});
 ok(E.getEX().currentTask.role==="cold"&&E.getEX().seq.indexOf("sol4")<0&&E.getEX().seq.indexOf("la4")<0,
   "le test à froid exclut la note fautive et la confusion tant que leur réparation n'est pas refermée");
@@ -1039,6 +1087,7 @@ E.clearQTimers(); E.clearDailyTimer(); E.haltEX();
 freshDB();
 const timedStart=Date.now(), timedDaily=E.buildDailySession(E.coachDecision(),timedStart);
 timedDaily.blocks[0].endAt=timedStart-1;
+seedSeen(["sol4","la4","si4"]);
 E.beginSerie({sessionMode:"daily",palier:E.PALIERS[0],pool:E.PALIERS[0].notes,mode:"bronze",groupN:2,openEnded:true,daily:timedDaily,cold:false});
 eq(E.getEX().limit,10000,"la séance quotidienne conserve le tempo Bronze pendant la cible");
 eq(E.getEX().currentTask.phase,"cible","le test du tempo porte bien sur la phase cible");
@@ -1104,6 +1153,7 @@ freshDB();
   item.dueQuestion=1;
 });
 const blockedStart=Date.now(), blockedDaily=E.buildDailySession(E.coachDecision(),blockedStart);
+seedSeen(["sol4","la4","si4"]);
 E.beginSerie({sessionMode:"daily",palier:E.PALIERS[0],pool:E.PALIERS[0].notes,mode:"zen",groupN:1,openEnded:true,daily:blockedDaily,cold:false});
 ok(E.getEX().currentTask.role!=="spacing"&&E.getEX().seq.length===1,
   "un vocabulaire entièrement en réparation due reste jouable au lieu de produire des intervalles passifs en boucle");
