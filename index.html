@@ -16,7 +16,7 @@
   :root{
     /* Charte SEZAM — classique blanc :
        fond blanc, texte bleu pétrole, volumes bleu céramique, or pour les contrastes. */
-    --bg:#ffffff; --panel:#ffffff; --panel2:#eef5f4; --ink:#0f4c5c; --dim:#5e777b;
+    --bg:#ffffff; --panel:#ffffff; --panel2:#eef5f4; --ink:#0f4c5c; --dim:#566e72;
     --creme:#ffffff; --paper:#ffffff; --petrole:#0f4c5c; --petrole2:#083947; --ceramique:#7fb8c2; --ceramique2:#d7e9e8;
     --vert:#819d70; --rouge:#b45f4b; --accent:var(--petrole); --or:#b8893a; --or-deep:#8d6826; --good:#4f6f43; --bad:var(--rouge); --gueules:var(--rouge); --gold:#d8a94d;
     --bronze:#c77d48; --argent:#8fa7b0; --vermeil:#d17e62; --rhod:#5e9daf;
@@ -24,7 +24,7 @@
     --sans:"Inter",-apple-system,BlinkMacSystemFont,"Helvetica Neue","Segoe UI",sans-serif;
   }
   :root[data-theme="partition"]{
-    --bg:#f8f1df; --panel:#fffaf0; --panel2:#e3f0ef; --ink:#0f4c5c; --dim:#5e777b;
+    --bg:#f8f1df; --panel:#fffaf0; --panel2:#e3f0ef; --ink:#0f4c5c; --dim:#566e72;
     --creme:#f8f1df; --paper:#fffdf7; --petrole:#0f4c5c; --petrole2:#083947; --ceramique:#7fb8c2; --ceramique2:#d7e9e8;
     --vert:#819d70; --rouge:#b45f4b; --accent:var(--petrole); --or:#b8893a; --or-deep:#8d6826; --good:#4f6f43; --bad:var(--rouge); --gueules:var(--rouge); --gold:#d8a94d;
     --bronze:#c77d48; --argent:#8fa7b0; --vermeil:#d17e62; --rhod:#5e9daf;
@@ -132,7 +132,7 @@
   .secbtn{width:100%;padding:13px;border:1px solid rgba(184,137,58,.34);border-radius:999px;
     background:linear-gradient(135deg,var(--paper),rgba(127,184,194,.28));color:var(--petrole);font-size:15px;font-weight:600;margin-bottom:8px}
   .linkrow{display:flex;justify-content:space-between;align-items:center;margin-top:4px}
-  .linkbtn{background:none;border:none;color:var(--dim);font-size:13px;text-decoration:underline}
+  .linkbtn{background:none;border:none;color:var(--dim);font-size:13px;text-decoration:underline;min-height:40px;padding:10px 6px}
   .defi{font-size:13px;color:var(--or-deep)}
 
   .exhead{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--dim);margin:4px 0 8px}
@@ -4682,7 +4682,8 @@ function pieceMapSVG(piece,opts){
       if(!seg) continue;
       const st=segmentStateDef(segmentStateId(piece.id,seg.id));
       const mx=x0+(m-m0)*mw;
-      s+='<g data-seg="'+esc(seg.id)+'">';
+      const segFirst=(m+1)===seg.mesFrom; // un seul arrêt clavier par passage (A2)
+      s+='<g data-seg="'+esc(seg.id)+'"'+(segFirst?' tabindex="0" role="button" aria-label="Passage : '+esc(seg.title||seg.id)+' — '+esc(st.label)+'"':'')+'>';
       s+='<rect x="'+mx+'" y="'+(top-9)+'" width="'+mw+'" height="70" fill="'+st.fill+'"/>';
       s+='<rect x="'+(mx+1)+'" y="'+(top+8*hf+6)+'" width="'+(mw-2)+'" height="3.5" rx="1.5" fill="'+st.color+'"/>';
       if(opts.highlight===seg.id)
@@ -4727,7 +4728,9 @@ function mapLegendHtml(){
 function bindPieceMap(container,cb){
   if(!container||!container.querySelectorAll) return;
   container.querySelectorAll("[data-seg]").forEach(function(g){
-    g.onclick=function(){ cb(g.getAttribute("data-seg")); };
+    const open=function(){ cb(g.getAttribute("data-seg")); };
+    g.onclick=open;
+    g.onkeydown=function(ev){ if(ev.key==="Enter"||ev.key===" "){ ev.preventDefault(); open(); } }; // Entrée/Espace (A2)
   });
 }
 function segmentChoiceLabel(list,id){
