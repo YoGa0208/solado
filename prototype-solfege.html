@@ -4723,7 +4723,8 @@ function pieceMapSVG(piece,opts){
 function mapLegendHtml(){
   return '<div class="mapLegend">'+SEGMENT_STATES.map(function(st){
     return '<span><i style="background:'+st.fill+';border-color:'+st.color+'"></i>'+esc(st.label)+'</span>';
-  }).join("")+'</div>';
+  }).join("")+
+  '<small style="display:block;margin-top:3px;color:var(--dim);font-size:11px">Validé / Maîtrisé mesurent la lecture des hauteurs dans l\'ordre — pas encore le rythme ni le jeu instrumental.</small></div>';
 }
 function bindPieceMap(container,cb){
   if(!container||!container.querySelectorAll) return;
