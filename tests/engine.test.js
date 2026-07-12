@@ -875,7 +875,7 @@ const mv = swSrc.match(/sezam-solado-v(\d+)/);
 ok(mv && Number(mv[1]) >= 28, "CACHE_NAME dédié à l'app et incrémenté (≥ sezam-solado-v28)");
 ok(/navigate/.test(swSrc), "documents servis réseau d'abord (plus de vieille version à vie)");
 ok(/new URL\(req\.url\)\.origin !== self\.location\.origin/.test(swSrc), "le SW compare réellement les origines et n'intercepte pas l'API GitHub");
-ok(/key\.startsWith\(CACHE_PREFIX\) && key !== CACHE_NAME/.test(swSrc), "le SW ne supprime que les anciens caches SEZAM, jamais ceux d'une autre app");
+ok(swSrc.indexOf("key !== CACHE_NAME && ((key.startsWith(CACHE_PREFIX)) || LEGACY_CACHE_NAMES.indexOf(key) >= 0 || LEGACY_CACHE_PREFIXES.some(p => key.startsWith(p)))") >= 0, "le SW ne supprime que les anciens caches SEZAM (préfixes à nous, jamais le cache actif), jamais ceux d'une autre app");
 ok(/LEGACY_CACHE_NAMES/.test(swSrc) && /sezam-v12/.test(swSrc), "migration : l'ancien cache public v12 est retiré explicitement");
 ok(/skipWaiting/.test(swSrc) && /clients\.claim/.test(swSrc), "activation immédiate du nouveau SW conservée");
 ok(/icon-180\.png/.test(swSrc), "icône iOS précachée");
