@@ -133,8 +133,8 @@ function loadEngine(runtime) {
     "segmentMeasures", "segmentScript", "segmentStateId", "segmentStateDef", "segmentStateRank", "pieceStateCounts",
     "goalDef", "pieceGoal", "setPieceGoal", "ambitionProgress", "activePieceObj", "defaultActivePieceId", "ensureActivePiece",
     "noteOccurrencesInPiece", "measureSegment", "pieceMapSVG", "mapLegendHtml", "markSegmentSeen", "toggleSegmentFlag",
-    "setSegmentFeel", "feelLabel", "beginSerie", "answer", "answerPos", "startPieceSegment", "renderResPiece", "nextQuestion",
-    "beginClavier", "nextKbd", "kbdTap", "renderKbd",
+    "setSegmentFeel", "feelLabel", "beginSerie", "answer", "answerPos", "startPieceSegment", "renderResPiece", "nextQuestion", "finishSerie",
+    "beginClavier", "nextKbd", "kbdTap", "renderKbd", "recordKbdAnswer",
     "STAFF", "staffSVG", "bonusStaffSVG", "clefSVG", "noteGlyph", "yOf", "previewNoteHtml",
     "currentRecoveryCode", "mirrorIntro", "tone", "save", "readKey", "bestLocalState", "recognizableStoredState", "utf8ByteLength", "decodedBase64Bytes", "MAX_IMPORT_TEXT_BYTES",
     "normalizePlayerRegistry", "normalizePlayerName", "activePlayerMeta", "playerMetaById", "createPlayer", "switchPlayer", "renamePlayer", "deletePlayer", "playerInitial", "openPlayerSwitcher", "MAX_LOCAL_PLAYERS", "PLAYER_REGISTRY_KEY", "PLAYER_FALLBACK_PREFIX",
@@ -167,6 +167,9 @@ function masterSegment(pieceId, segmentId, base) {
   base = base || (Date.now() - E.SEGMENT_MASTERY_GAP_MS - 1000);
   E.recordSegmentResult({ pieceId, segmentId }, 5, 5, 0, base);
   E.recordSegmentResult({ pieceId, segmentId }, 5, 5, 0, base + E.SEGMENT_MASTERY_GAP_MS);
+}
+function seedSeen(ids) { // pré-expose des notes : ces tests visent la réparation/le tempo, pas l'introduction
+  ids.forEach(function (id) { E.getDB().noteStats[id] = E.normalizeNoteStat({ v: 1, e: 0, last: Date.now() - 864e5 }); });
 }
 function answerCurrentCorrect() {
   const ex = E.getEX();
@@ -260,11 +263,13 @@ eq(malformedRepairs.length, 1, "les réparations importées sont filtrées et no
 freshDB();
 E.scheduleRepair("sol4",{kind:"name",value:"la"},{pool:["sol4","la4","si4"],qtype:"lect",palierId:"P1"});
 E.scheduleRepair("si4",{kind:"name",value:"sol"},{pool:["sol4","la4","si4"],qtype:"lect",palierId:"P1"});
+seedSeen(["sol4","la4","si4"]);
 E.beginSerie({sessionMode:"session",n:3,palier:E.PALIERS[0],pool:["sol4","la4","si4"],mode:"zen",groupN:1,cold:false});
 eq(E.getEX().currentTask.role,"spacing","si tout le vocabulaire attend une réparation, le moteur insère un intervalle actif au lieu d'une note étrangère");
 eq(E.getEX().seq,[],"l'intervalle actif ne peut ni gonfler la couverture ni répéter trop tôt une confusion");
 E.haltEX();
 freshDB();
+seedSeen(["sol4","la4","si4"]);
 E.beginSerie({sessionMode:"session",n:6,palier:E.PALIERS[0],pool:["sol4","la4","si4"],mode:"zen",groupN:1,cold:false});
 let active = E.getEX(); active.qtype="lect"; active.seq=["sol4"]; active.k=0; active.currentTask={role:"baseline",phase:"cible"}; active.currentQuestionTested=[];
 E.answer("la");
@@ -662,6 +667,157 @@ try {
 } catch (e) { threw = e; }
 ok(threw === null, "le parcours clavier ne lève aucune exception" + (threw ? " — " + threw.message : ""));
 
+/* 9bis) Intégrité des preuves — le clavier ne touche jamais au calendrier SRS de lecture (grille H18) */
+group("Clavier — modalité séparée : aucun effet sur le SRS de lecture (H18)");
+freshDB();
+const kbdNow = Date.now();
+E.getDB().noteStats.sol4 = E.normalizeNoteStat({ v: 8, e: 0, box: 3, due: kbdNow - 1000 });
+E.recordKbdAnswer(true, { midi: E.NOTES.sol4.midi, id: "sol4" });
+let kbdStat = E.getDB().noteStats.sol4;
+eq(kbdStat.box, 3, "une réussite clavier n'avance pas la boîte SRS d'une note due en lecture");
+ok((kbdStat.due || 0) <= kbdNow, "une réussite clavier ne repousse pas l'échéance de lecture");
+ok(E.isDue("sol4", kbdNow), "la note reste due en lecture après un succès clavier");
+eq(kbdStat.v, 9, "le compteur d'expositions reste nourri (signal de priorité, pas une preuve)");
+E.recordKbdAnswer(false, { midi: E.NOTES.sol4.midi, id: "sol4" });
+kbdStat = E.getDB().noteStats.sol4;
+eq(kbdStat.box, 3, "un échec clavier ne rétrograde pas une boîte de lecture gagnée à l'échéance");
+eq(kbdStat.e, 1, "l'échec clavier reste compté comme signal de fragilité");
+E.getDB().noteStats.la4 = E.normalizeNoteStat({});
+E.recordKbdAnswer(true, { midi: E.NOTES.la4.midi, id: "la4" });
+eq(E.getDB().noteStats.la4.box, 0, "un succès clavier n'initialise pas le calendrier de lecture d'une note jamais lue");
+eq(E.coldRecallId(["la4"], Date.now()), null, "une exposition au seul clavier ne devient jamais un faux rappel à froid de lecture");
+E.beginSerie({sessionMode:"session",n:1,palier:E.PALIERS[0],pool:["la4"],mode:"zen",groupN:1,cold:false});
+ok(E.getEX().pendingDecouverte === true, "une note uniquement jouée au clavier garde sa Découverte sur portée");
+E.haltEX();
+
+/* 9ter) Verrou H17 — une révision due correcte n'attribue l'XP qu'une seule fois */
+group("Révision due — attribution unique de l'XP (verrou H17)");
+freshDB();
+E.getDB().noteStats.sol4 = E.normalizeNoteStat({ v: 5, e: 0, box: 2, due: Date.now() - 1000 });
+E.getDB().noteStats.la4 = E.normalizeNoteStat({ v: 5, e: 0, box: 2, due: Date.now() - 1000 });
+const xpBefore = E.getDB().xp;
+E.startRevision();
+for (let i = 0; i < 10 && E.getEX() && !E.getEX().done; i++) { answerCurrentCorrect(); E.nextQuestion(); }
+ok(E.getEX() && E.getEX().done === true, "la révision du jour se termine après dix réponses");
+eq(E.getDB().xp - xpBefore, 10, "dix réponses justes en révision due = exactement 10 XP (aucune double attribution)");
+
+/* 9quater) Étoiles — le maximum parle de stabilité entretenue, jamais d'acquis définitif (grille H16) */
+group("Étoiles — vocabulaire honnête au niveau maximum (H16)");
+freshDB();
+E.getDB().paliers.P1.star = E.normalizeStar({ level: 5, started: true, due: 0 });
+E.startStarReview("P1");
+for (let i = 0; i < 12 && E.getEX() && !E.getEX().done; i++) { answerCurrentCorrect(); E.nextQuestion(); }
+ok(E.getEX() && E.getEX().done === true, "la révision d'étoile au niveau maximum se termine");
+const starMsg = String(E.getEl("resSolado").textContent || "");
+ok(starMsg.indexOf("définitif") < 0, "aucun message d'étoile ne promet un acquis définitif");
+ok(/stabilit/i.test(starMsg), "le message du niveau maximum parle de stabilité entretenue");
+
+/* 9quinquies) Bilan quotidien — séance complète distinguée d'une pratique sans transfert (grille F20) */
+group("Bilan quotidien — distinction séance complète / sans transfert (F20)");
+freshDB();
+const dQ = E.buildDailySession({ kind: "session", reason: "test", palier: E.PALIERS[0], pool: ["sol4","la4","si4"] }, Date.now());
+E.beginSerie({ sessionMode: "daily", openEnded: true, palier: E.PALIERS[0], pool: ["sol4","la4","si4"], mode: "zen", groupN: 1, daily: dQ, cold: false });
+let dEx = E.getEX();
+for (let i = 0; i < 10; i++) dEx.questionRecords.push({ phase: "cible", role: "baseline", ok: true, ids: ["sol4"] });
+dEx.phaseStats = { rappel:{n:0,ok:0}, cible:{n:10,ok:10}, reparation:{n:0,ok:0}, transfert:{n:0,ok:0} };
+dEx.hist = new Array(10).fill(true); dEx.ok = 10; dEx.i = 10;
+E.finishSerie();
+ok(String(E.getEl("resSub").textContent || "").indexOf("sans transfert") >= 0, "dix questions sans transfert : le titre distingue la pratique de la séance complète");
+ok(String(E.getEl("resSolado").textContent || "").indexOf("transféré") < 0, "le bilan ne prétend jamais avoir transféré quand le transfert n'a pas eu lieu");
+ok(!!(E.getDB().dailyProgress || {})[E.todayStr()], "la pratique reste marquée faite : seul le vocabulaire change (la règle des 10 questions est inchangée)");
+freshDB();
+const dQ2 = E.buildDailySession({ kind: "session", reason: "test", palier: E.PALIERS[0], pool: ["sol4","la4","si4"] }, Date.now());
+E.beginSerie({ sessionMode: "daily", openEnded: true, palier: E.PALIERS[0], pool: ["sol4","la4","si4"], mode: "zen", groupN: 1, daily: dQ2, cold: false });
+dEx = E.getEX();
+for (let i = 0; i < 10; i++) dEx.questionRecords.push({ phase: "cible", role: "baseline", ok: true, ids: ["sol4"] });
+dEx.questionRecords.push({ phase: "transfert", role: "transfer", ok: true, ids: ["sol4"] });
+dEx.phaseStats = { rappel:{n:0,ok:0}, cible:{n:10,ok:10}, reparation:{n:0,ok:0}, transfert:{n:1,ok:1} };
+dEx.hist = new Array(11).fill(true); dEx.ok = 11; dEx.i = 11;
+dEx.transferReached = true; // scénario synthétique : le moteur réel pose ce drapeau dans completeQuestionMeta
+E.finishSerie();
+ok(String(E.getEl("resSub").textContent || "").indexOf("sans transfert") < 0, "transfert atteint : le titre redevient « Séance du jour » sans mention");
+
+/* 9sexies) Découverte obligatoire — aucune note neuve interrogée ni « à froid » sans présentation (grille H19) */
+group("Découverte — aucune note neuve testée sans présentation (H19)");
+freshDB();
+E.getDB().noteStats.sol4 = E.normalizeNoteStat({ v: 2, e: 0, box: 1, due: Date.now() + 864e5, last: Date.now() - 3 * 864e5 });
+eq(E.coldRecallId(["sol4","la4"], Date.now()), "sol4", "le rappel à froid choisit une note déjà vue plutôt qu'une neuve");
+eq(E.coldRecallId(["la4","si4"], Date.now()), null, "aucun rappel à froid quand tout le vocabulaire est neuf");
+freshDB();
+E.beginSerie({ sessionMode: "session", n: 6, palier: E.PALIERS[0], pool: E.PALIERS[0].notes, mode: "zen", groupN: 1, cold: false });
+ok(E.getEX().pendingDecouverte === true, "une série sur des notes jamais vues ouvre la Découverte avant toute question");
+ok(!E.getEX().currentTask, "aucune question n'est posée pendant la Découverte");
+ok(/Découverte/.test(E.getEl("cardBox").innerHTML), "l'écran Découverte présente réellement les notes neuves");
+ok(typeof E.getEl("btnDecGo").onclick === "function", "le bouton de continuation est branché");
+if (typeof E.getEl("btnDecGo").onclick === "function") E.getEl("btnDecGo").onclick();
+ok(E.getEX().pendingDecouverte !== true && !!E.getEX().currentTask, "après la Découverte, la première vraie question démarre");
+ok(E.getDB().seen.P1 === true, "le palier est marqué découvert au moment où l'écran est réellement montré");
+E.haltEX();
+freshDB();
+E.beginSerie({ sessionMode: "session", n: 6, palier: E.PALIERS[2], pool: E.PALIERS[2].notes, mode: "zen", groupN: 1, cold: false });
+eq(E.getEX().introducedIds.length, 6, "un palier de sept notes ne marque introduites que les six réellement affichées");
+if (typeof E.getEl("btnDecGo").onclick === "function") E.getEl("btnDecGo").onclick();
+ok(E.getEX().pendingDecouverte === true && !E.getEX().currentTask, "la septième note ouvre une seconde Découverte avant toute question");
+eq(E.getEX().introducedIds.length, 7, "la seconde tranche introduit la dernière note seulement lorsqu'elle est affichée");
+if (typeof E.getEl("btnDecGo").onclick === "function") E.getEl("btnDecGo").onclick();
+ok(E.getEX().pendingDecouverte !== true && !!E.getEX().currentTask, "la question démarre seulement après toutes les tranches de Découverte");
+E.haltEX();
+freshDB();
+const hDaily = E.buildDailySession({ kind: "session", reason: "t", palier: E.PALIERS[0], pool: E.PALIERS[0].notes }, Date.now());
+E.beginSerie({ sessionMode: "daily", openEnded: true, palier: E.PALIERS[0], pool: E.PALIERS[0].notes, mode: "zen", groupN: 1, daily: hDaily, cold: true });
+ok(!E.getEX().coldId, "séance entièrement neuve : aucun faux rappel à froid sur une note jamais enseignée");
+E.clearQTimers(); E.clearDailyTimer(); E.haltEX();
+
+/* 9septies) Mission hors écran — déclarée, jamais comptée comme mesure (grille F21) */
+group("Mission hors écran — hors précision et hors compte de réponses (F21)");
+freshDB();
+seedSeen(["sol4","la4","si4"]);
+const mDaily = E.buildDailySession({ kind: "session", reason: "t", palier: E.PALIERS[0], pool: ["sol4","la4","si4"] }, Date.now());
+E.beginSerie({ sessionMode: "daily", openEnded: true, palier: E.PALIERS[0], pool: ["sol4","la4","si4"], mode: "zen", groupN: 1, daily: mDaily, cold: false });
+const mEx = E.getEX();
+mEx.currentTask = { role: "transfer", phase: "transfert", qtype: "mission", mission: { title: "t", note: "n" } };
+mEx.qtype = "mission"; mEx.seq = []; mEx.waiting = false;
+const ok0 = mEx.ok, hist0 = mEx.hist.length, i0 = mEx.i, xp0 = E.getDB().xp;
+E.completeMission(true);
+eq(mEx.ok, ok0, "une mission déclarée « faite » ne gonfle pas la précision de la séance");
+eq(mEx.hist.length, hist0, "une mission n'entre pas dans le compte de réponses");
+eq(mEx.i, i0, "une mission n'est pas numérotée comme une question");
+eq(E.getDB().xp, xp0 + 1, "l'engagement garde sa petite XP, séparée des preuves");
+eq(mEx.phaseStats.transfert.n, 1, "le transfert reste marqué atteint pour le titre de séance");
+ok(mEx.daily.missionDone === true, "la mission du domaine du jour est bien refermée");
+eq(E.dailyScoredCount(), 0, "aucune mission ne compte parmi les 10 vraies questions");
+E.clearQTimers(); E.clearDailyTimer(); E.haltEX();
+freshDB();
+seedSeen(["sol4","la4","si4"]);
+const skipDaily = E.buildDailySession({ kind: "session", reason: "t", palier: E.PALIERS[0], pool: ["sol4","la4","si4"] }, Date.now());
+E.beginSerie({ sessionMode: "daily", openEnded: true, palier: E.PALIERS[0], pool: ["sol4","la4","si4"], mode: "zen", groupN: 1, daily: skipDaily, cold: false });
+const skipEx = E.getEX();
+skipEx.currentTask = { role: "transfer", phase: "transfert", qtype: "mission", mission: { title: "t", note: "n" } };
+skipEx.qtype = "mission"; skipEx.seq = []; skipEx.waiting = false;
+E.completeMission(false);
+eq(skipEx.phaseStats.transfert.n, 0, "une mission passée ne prétend pas que le transfert a été atteint");
+ok(skipEx.transferReached !== true, "une mission passée conserve l'indicateur sans transfert");
+E.clearQTimers(); E.clearDailyTimer(); E.haltEX();
+
+/* 9octies) Accessibilité & PWA — verrous de la passe 4 */
+group("Accessibilité & PWA — caches historiques, carte au clavier, cibles, contraste (A1-A4)");
+const swSrcA4 = fs.readFileSync(path.join(__dirname, "..", "sw.js"), "utf8");
+ok(/LEGACY_CACHE_PREFIXES/.test(swSrcA4) && swSrcA4.indexOf('"solado-v"') >= 0, "le service worker connaît les caches historiques solado-v* du rebranding (A1)");
+ok(swSrcA4.indexOf("key.startsWith(p)") >= 0, "le ménage par préfixe est réellement branché dans activate (A1)");
+ok(/key !== CACHE_NAME/.test(swSrcA4) && swSrcA4.indexOf("sezam-solado-") >= 0, "le cache actif n'est jamais supprimé par le ménage (garde B12)");
+const mapSvgA11y = E.pieceMapSVG(E.pieceById("aclair"));
+ok(mapSvgA11y.indexOf('tabindex="0"') >= 0 && mapSvgA11y.indexOf('role="button"') >= 0, "chaque passage de la carte est focusable au clavier avec un rôle (A2)");
+ok(/aria-label="Passage : /.test(mapSvgA11y), "chaque passage annonce son libellé et son état au lecteur d'écran (A2)");
+const appSrcA4 = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
+ok(appSrcA4.indexOf("g.onkeydown") >= 0, "Entrée/Espace ouvrent un passage de la carte (A2)");
+ok(/\.linkbtn\{[^}]*min-height:40px/.test(appSrcA4), "les boutons-liens du volet options atteignent la taille tactile minimale (A3)");
+ok(appSrcA4.indexOf("--dim:#5e777b") < 0 && appSrcA4.indexOf("--dim:#566e72") >= 0, "le texte d'aide atteint au moins 4,5:1 sur les thèmes clairs (A4)");
+
+/* 9nonies) Finition — le trophée dit ce qu'il mesure (grille J24) */
+group("Partition — le libellé Maîtrisé précise sa portée réelle (J24)");
+ok(/hauteurs/.test(E.mapLegendHtml()), "la légende de la carte précise que Validé/Maîtrisé mesurent les hauteurs");
+ok(!/rythme mesuré|jeu instrumental certifié/.test(E.mapLegendHtml()), "la légende n'invente aucune certification");
+
 /* 9) Portée — géométrie agrandie, grandes notes, marques lisibles */
 group("Portée — géométrie mobile, grandes notes, marques");
 freshDB();
@@ -749,7 +905,7 @@ const mv = swSrc.match(/sezam-solado-v(\d+)/);
 ok(mv && Number(mv[1]) >= 28, "CACHE_NAME dédié à l'app et incrémenté (≥ sezam-solado-v28)");
 ok(/navigate/.test(swSrc), "documents servis réseau d'abord (plus de vieille version à vie)");
 ok(/new URL\(req\.url\)\.origin !== self\.location\.origin/.test(swSrc), "le SW compare réellement les origines et n'intercepte pas l'API GitHub");
-ok(/key\.startsWith\(CACHE_PREFIX\) && key !== CACHE_NAME/.test(swSrc), "le SW ne supprime que les anciens caches SEZAM, jamais ceux d'une autre app");
+ok(swSrc.indexOf("key !== CACHE_NAME && ((key.startsWith(CACHE_PREFIX)) || LEGACY_CACHE_NAMES.indexOf(key) >= 0 || LEGACY_CACHE_PREFIXES.some(p => key.startsWith(p)))") >= 0, "le SW ne supprime que les anciens caches SEZAM (préfixes à nous, jamais le cache actif), jamais ceux d'une autre app");
 ok(/LEGACY_CACHE_NAMES/.test(swSrc) && /sezam-v12/.test(swSrc), "migration : l'ancien cache public v12 est retiré explicitement");
 ok(/skipWaiting/.test(swSrc) && /clients\.claim/.test(swSrc), "activation immédiate du nouveau SW conservée");
 ok(/icon-180\.png/.test(swSrc), "icône iOS précachée");
@@ -967,6 +1123,7 @@ E.getDB().noteStats.sol4=E.normalizeNoteStat({v:3,e:1,box:1,due:pendingStart-100
 E.scheduleRepair("sol4",{kind:"name",value:"la"},{pool:["sol4","la4","si4"],qtype:"lect",palierId:"P1"});
 const pendingDaily=E.buildDailySession(E.coachDecision(),pendingStart);
 ok(pendingDaily.dueSnapshot.indexOf("sol4")<0,"une note encore en réparation ne se déguise jamais en rappel SRS dû");
+seedSeen(["la4","si4"]);
 E.beginSerie({sessionMode:"daily",palier:E.PALIERS[0],pool:E.PALIERS[0].notes,mode:"zen",groupN:1,openEnded:true,daily:pendingDaily,cold:true});
 ok(E.getEX().currentTask.role==="cold"&&E.getEX().seq.indexOf("sol4")<0&&E.getEX().seq.indexOf("la4")<0,
   "le test à froid exclut la note fautive et la confusion tant que leur réparation n'est pas refermée");
@@ -974,6 +1131,7 @@ E.clearQTimers(); E.clearDailyTimer(); E.haltEX();
 freshDB();
 const timedStart=Date.now(), timedDaily=E.buildDailySession(E.coachDecision(),timedStart);
 timedDaily.blocks[0].endAt=timedStart-1;
+seedSeen(["sol4","la4","si4"]);
 E.beginSerie({sessionMode:"daily",palier:E.PALIERS[0],pool:E.PALIERS[0].notes,mode:"bronze",groupN:2,openEnded:true,daily:timedDaily,cold:false});
 eq(E.getEX().limit,10000,"la séance quotidienne conserve le tempo Bronze pendant la cible");
 eq(E.getEX().currentTask.phase,"cible","le test du tempo porte bien sur la phase cible");
@@ -1039,6 +1197,7 @@ freshDB();
   item.dueQuestion=1;
 });
 const blockedStart=Date.now(), blockedDaily=E.buildDailySession(E.coachDecision(),blockedStart);
+seedSeen(["sol4","la4","si4"]);
 E.beginSerie({sessionMode:"daily",palier:E.PALIERS[0],pool:E.PALIERS[0].notes,mode:"zen",groupN:1,openEnded:true,daily:blockedDaily,cold:false});
 ok(E.getEX().currentTask.role!=="spacing"&&E.getEX().seq.length===1,
   "un vocabulaire entièrement en réparation due reste jouable au lieu de produire des intervalles passifs en boucle");

@@ -16,7 +16,7 @@
   :root{
     /* Charte SEZAM — classique blanc :
        fond blanc, texte bleu pétrole, volumes bleu céramique, or pour les contrastes. */
-    --bg:#ffffff; --panel:#ffffff; --panel2:#eef5f4; --ink:#0f4c5c; --dim:#5e777b;
+    --bg:#ffffff; --panel:#ffffff; --panel2:#eef5f4; --ink:#0f4c5c; --dim:#566e72;
     --creme:#ffffff; --paper:#ffffff; --petrole:#0f4c5c; --petrole2:#083947; --ceramique:#7fb8c2; --ceramique2:#d7e9e8;
     --vert:#819d70; --rouge:#b45f4b; --accent:var(--petrole); --or:#b8893a; --or-deep:#8d6826; --good:#4f6f43; --bad:var(--rouge); --gueules:var(--rouge); --gold:#d8a94d;
     --bronze:#c77d48; --argent:#8fa7b0; --vermeil:#d17e62; --rhod:#5e9daf;
@@ -24,7 +24,7 @@
     --sans:"Inter",-apple-system,BlinkMacSystemFont,"Helvetica Neue","Segoe UI",sans-serif;
   }
   :root[data-theme="partition"]{
-    --bg:#f8f1df; --panel:#fffaf0; --panel2:#e3f0ef; --ink:#0f4c5c; --dim:#5e777b;
+    --bg:#f8f1df; --panel:#fffaf0; --panel2:#e3f0ef; --ink:#0f4c5c; --dim:#566e72;
     --creme:#f8f1df; --paper:#fffdf7; --petrole:#0f4c5c; --petrole2:#083947; --ceramique:#7fb8c2; --ceramique2:#d7e9e8;
     --vert:#819d70; --rouge:#b45f4b; --accent:var(--petrole); --or:#b8893a; --or-deep:#8d6826; --good:#4f6f43; --bad:var(--rouge); --gueules:var(--rouge); --gold:#d8a94d;
     --bronze:#c77d48; --argent:#8fa7b0; --vermeil:#d17e62; --rhod:#5e9daf;
@@ -132,7 +132,7 @@
   .secbtn{width:100%;padding:13px;border:1px solid rgba(184,137,58,.34);border-radius:999px;
     background:linear-gradient(135deg,var(--paper),rgba(127,184,194,.28));color:var(--petrole);font-size:15px;font-weight:600;margin-bottom:8px}
   .linkrow{display:flex;justify-content:space-between;align-items:center;margin-top:4px}
-  .linkbtn{background:none;border:none;color:var(--dim);font-size:13px;text-decoration:underline}
+  .linkbtn{background:none;border:none;color:var(--dim);font-size:13px;text-decoration:underline;min-height:40px;padding:10px 6px}
   .defi{font-size:13px;color:var(--or-deep)}
 
   .exhead{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--dim);margin:4px 0 8px}
@@ -569,7 +569,7 @@ function esc(s){
   });
 }
 /* ================= DONNÉES ================= */
-const APP_VERSION="v29"; // garder aligné avec CACHE_NAME de sw.js (testé)
+const APP_VERSION="v30"; // garder aligné avec CACHE_NAME de sw.js (testé)
 const NOTES = {
   do4 :{n:"do", clef:"sol", p:-2, midi:60, mn:"Le do du milieu est transpercé par sa petite ligne, rien qu'à lui."},
   re4 :{n:"ré", clef:"sol", p:-1, midi:62, mn:"Collé juste sous la portée."},
@@ -2960,15 +2960,23 @@ function dueCount(){
   unlockedNoteIds().forEach(function(id){ if(pending.indexOf(id)<0&&isDue(id)) n++; });
   return n;
 }
+function hasReadingExposure(id){
+  const s=DB.noteStats[id];
+  // `last` est la trace actuelle d'une lecture sur portée. `box` garde la compatibilité
+  // avec les sauvegardes SRS historiques ; `v` seul reste un simple signal multimodal.
+  return !!(s&&((s.last||0)>0||(s.box||0)>0));
+}
 function coldRecallId(pool,now){
   now=Number.isFinite(Number(now))?Number(now):Date.now();
-  const ids=uniq((pool||[]).filter(function(id){return NOTES[id];}));
-  if(!ids.length) return null;
-  const due=ids.filter(function(id){return isDue(id,now);}).sort(function(a,b){return (DB.noteStats[a].due||0)-(DB.noteStats[b].due||0);});
+  // `v` agrège plusieurs modalités (dont le clavier) : seule une trace datée sur portée
+  // prouve qu'une note a déjà été réellement lue et peut donc revenir « à froid » (H18/H19).
+  const seen=uniq((pool||[]).filter(function(id){
+    return NOTES[id]&&hasReadingExposure(id);
+  }));
+  if(!seen.length) return null;
+  const due=seen.filter(function(id){return isDue(id,now);}).sort(function(a,b){return (DB.noteStats[a].due||0)-(DB.noteStats[b].due||0);});
   if(due.length) return due[0];
-  const fresh=ids.filter(function(id){const s=DB.noteStats[id];return !s||!(s.v||0);});
-  if(fresh.length) return fresh[0];
-  return ids.slice().sort(function(a,b){
+  return seen.sort(function(a,b){
     const sa=DB.noteStats[a]||{}, sb=DB.noteStats[b]||{};
     return (sa.lastCold||sa.last||0)-(sb.lastCold||sb.last||0);
   })[0];
@@ -3305,7 +3313,7 @@ function beginSerie(opts){
       palier:p,pool:pool,i:0,ok:0,errs:[],times:[],hist:[],last:null,waiting:false,done:false,qid:0,
       qtype:"lect",seq:[],k:0,writePos:4,segment:opts.segment||null,
       script:(opts.script&&opts.script.length)?opts.script.slice():null,scriptIdx:0,seenIds:[],testedIds:[],coverageIds:[],coverageQueue:coverage,
-      openEnded:openEnded,daily:opts.daily||null,stopRequested:false,currentTask:null,questionRecords:[],phaseStats:{rappel:{n:0,ok:0},cible:{n:0,ok:0},reparation:{n:0,ok:0},transfert:{n:0,ok:0}},
+      openEnded:openEnded,daily:opts.daily||null,stopRequested:false,currentTask:null,questionRecords:[],phaseStats:{rappel:{n:0,ok:0},cible:{n:0,ok:0},reparation:{n:0,ok:0},transfert:{n:0,ok:0}},transferReached:false,
       coldPending:coldEligible&&!!coldId,coldId:coldId,coldResult:null,questionDeadlineAt:0,pausedQuestionRemaining:null,pausedResumeNext:false,
       dailyValidationBuffer:opts.daily&&mode!=="libre"?dailyDraftRecords(p.id,mode):[]};
   logEvent("serie_start",{palier:p.id,mode:mode,groupe:groupN,type:EX.sessionMode,n:total,segment:EX.segment?EX.segment.segmentId:null,piece:EX.segment?EX.segment.pieceId:null});
@@ -3350,9 +3358,10 @@ function showSeriePreview(pid,onContinue){
   };
 }
 // Écran Découverte : je montre la/les note(s) neuve(s) avant de tester (I-do → You-do)
-function showDecouverte(pid, onContinue){
+function showDecouverte(pid, onContinue, idsOverride){
   const p=PALIERS.find(function(x){return x.id===pid;});
-  const neuves=newNotesOf(pid).slice(0,6);
+  const neuves=((idsOverride&&idsOverride.length)?idsOverride:newNotesOf(pid)).slice(0,6);
+  if(!p||!neuves.length){ if(onContinue) onContinue(); return; }
   logEvent("decouverte",{palier:pid,nb:neuves.length});
   let body='<h3>Découverte — '+p.t+'</h3><h2>'+(neuves.length>1?"De nouvelles notes":"Une nouvelle note")+'</h2>'+
     '<p style="margin-bottom:10px">Regarde où elle se place, écoute-la, puis on la teste. Pression basse, oreille ouverte.</p>';
@@ -3503,12 +3512,39 @@ function questionTask(){
   }
   return pool.length?{role:"baseline",phase:phase.id,pool:pool}:spacingTask(phase.id);
 }
+function freshTargetNoteIds(){
+  if(!EX||EX.kind!=="serie"||EX.done) return [];
+  if(EX.sessionMode!=="session"&&EX.sessionMode!=="daily") return [];
+  if(EX.review||EX.script||EX.segment) return [];
+  if(EX.daily){ const ph=dailyPhaseAt(EX.daily,Date.now()); if(!ph||(ph.id!=="rappel"&&ph.id!=="cible")) return []; }
+  if(!Array.isArray(EX.introducedIds)) EX.introducedIds=[];
+  const base=(EX.daily&&EX.daily.targetPool&&EX.daily.targetPool.length)?EX.daily.targetPool:((EX.pool&&EX.pool.length)?EX.pool:(EX.palier&&EX.palier.notes)||[]);
+  return uniq(base).filter(function(id){
+    return NOTES[id]&&!hasReadingExposure(id)&&EX.introducedIds.indexOf(id)<0;
+  });
+}
 function nextQuestion(){
   if(EX.done) return;
   clearQTimers();
   if(EX.daily&&(EX.stopRequested||Date.now()>=EX.daily.endAt)) return finishSerie();
   if(EX.review==="star"&&(DB.repairQueue||[]).length&&EX.i>0) return finishSerie();
   if(EX.kind==="serie" && !EX.openEnded && EX.i>=EX.n) return finishSerie();
+  // Découverte avant interrogation : toute note jamais exposée est présentée d'abord, sans notation (H19).
+  const freshIntro=freshTargetNoteIds();
+  if(freshIntro.length){
+    const session=EX;
+    // L'écran affiche au plus six notes : seule la tranche réellement montrée est marquée
+    // introduite. Les suivantes ouvrent une nouvelle tranche avant toute question (H19).
+    const introBatch=freshIntro.slice(0,6);
+    EX.introducedIds=EX.introducedIds.concat(introBatch);
+    EX.pendingDecouverte=true;
+    showDecouverte(EX.palier.id,function(){
+      if(EX!==session||EX.done) return;
+      EX.pendingDecouverte=false;
+      nextQuestion();
+    },introBatch);
+    return;
+  }
   const task=questionTask(); EX.currentTask=task; EX.currentQuestionTested=[];
   const ecritOk=(EX.mode==="libre"||EX.mode==="zen") && EX.kind==="serie" && !EX.script && task.role==="baseline" && task.phase!=="transfert";
   EX.qtype=task.qtype||((ecritOk && Math.random()<ECRIT_RATIO)?"ecrit":"lect");
@@ -3650,10 +3686,9 @@ function completeMission(done){
   EX.currentQuestionTested=[];
   completeQuestionMeta(!!done,null,{kind:"mission",value:done?"done":"skip"});
   const spacing=EX.currentTask&&EX.currentTask.role==="spacing";
-  if(!spacing){
-    if(done){EX.ok++;DB.xp++;}
-    EX.hist.push(!!done); EX.i++;
-  }
+  // Une mission auto-déclarée n'est jamais une réponse mesurée : elle n'entre ni dans la précision
+  // ni dans le compte de questions (F21). Elle garde une petite XP d'engagement, séparée des preuves.
+  if(!spacing&&done) DB.xp++;
   EX.times.push(Date.now()-EX.t0);
   EX.waiting=true; $("feedback").className="feedback "+(done?"good":"");
   $("feedback").textContent=done?(spacing?"✓ Pulsation faite — la mémoire a eu son intervalle.":"✓ Transfert hors écran intégré à la séance.")
@@ -3702,8 +3737,13 @@ function completeQuestionMeta(correct,failId,response){
   let phase=task.phase||"cible";
   if(task.role==="retest") phase="reparation";
   if(task.role==="transfer") phase="transfert";
+  const skippedTransfer=phase==="transfert"&&response&&response.kind==="mission"&&response.value==="skip";
+  const transferSpacing=phase==="transfert"&&task.role==="spacing";
   if(!EX.phaseStats[phase]) EX.phaseStats[phase]={n:0,ok:0};
-  EX.phaseStats[phase].n++; if(correct) EX.phaseStats[phase].ok++;
+  if(!skippedTransfer&&!transferSpacing){
+    EX.phaseStats[phase].n++; if(correct) EX.phaseStats[phase].ok++;
+    if(phase==="transfert") EX.transferReached=true;
+  }
   const questionRecord={phase:phase,role:task.role,ok:!!correct,ids:(EX.currentQuestionTested||[]).slice()};
   EX.questionRecords.push(questionRecord);
   recordDailyTargetEvidence(questionRecord);
@@ -3993,6 +4033,7 @@ function finishSerie(){
     }
   }
   const dailyQualified=isDaily&&dailySessionQualified(), activeElapsed=isDaily?dailyActiveElapsed(EX.daily,Date.now()):0;
+  const transferReached=!!EX.transferReached; // tentative réelle : lecture ou mission faite, jamais mission passée (F20/F21)
   if(isDaily){
     if(dailyQualified) completeDailyProgress();
     logEvent("daily_session_end",{minutes:EX.daily.totalMinutes,elapsed:activeElapsed,complete:dailyQualified,scored:dailyScoredCount(),ok:EX.ok,answered:answered,repairs:(EX.phaseStats.reparation||{}).n||0,proofs:(EX.daily.proofs||[]).length,promotions:(EX.daily.promotions||[]).length});
@@ -4000,13 +4041,13 @@ function finishSerie(){
   const errsForLog=isDaily&&answered?Math.round(errs/answered*10):errs;
   logEvent("serie_end",{palier:p.id,mode:EX.mode,type:EX.sessionMode,ok:EX.ok,errs:errsForLog,avgMs:avgMs(),valide:newlyPalier,segment:EX.segment?EX.segment.segmentId:null,piece:EX.segment?EX.segment.pieceId:null});
   save(); header(); syncPush();
-  const scoreN=Math.max(1,isDaily?answered:EX.n), prec=Math.round(EX.ok/scoreN*100), label=isDaily?(dailyQualified?"Séance du jour":"Séance partielle"):(isRepair?"Réparation":(isFlash?"Flash":(isPiece?"Partition":modeLabel(EX.mode==="rafale"?"zen":EX.mode))));
+  const scoreN=Math.max(1,isDaily?answered:EX.n), prec=Math.round(EX.ok/scoreN*100), label=isDaily?(dailyQualified?(transferReached?"Séance du jour":"Séance du jour · sans transfert"):"Séance partielle"):(isRepair?"Réparation":(isFlash?"Flash":(isPiece?"Partition":modeLabel(EX.mode==="rafale"?"zen":EX.mode))));
   $("resScore").innerHTML=EX.ok+"<small>/"+(isDaily?answered:EX.n)+"</small>";
   $("resSub").textContent=isDaily
     ? label+" · "+Math.max(1,Math.round(activeElapsed/60000))+" min actives · précision "+prec+" %"
     : "Précision "+prec+"% · "+(avgMs()/1000).toFixed(1)+" s par question · "+label;
   $("resSolado").textContent=isDaily
-    ? (!dailyQualified?"Cette pratique est conservée, mais la séance n’est pas marquée terminée : il faut au moins 10 vraies questions musicales.":(EX.coldResult&&EX.coldResult.ok?"Rappel à froid réussi. La séance a ciblé, réparé puis transféré sans lancer de nouvelle question après l’échéance.":"Le test à froid a révélé le point utile. Les confusions restent programmées, pas oubliées."))
+    ? (!dailyQualified?"Cette pratique est conservée, mais la séance n’est pas marquée terminée : il faut au moins 10 vraies questions musicales.":(!transferReached?"Dix vraies questions : la séance compte. Le transfert musical n’a pas été atteint aujourd’hui — il reviendra en fin de prochaine séance.":(EX.coldResult&&EX.coldResult.ok?"Rappel à froid réussi. La séance a ciblé, réparé puis transféré sans lancer de nouvelle question après l’échéance.":"Le test à froid a révélé le point utile. Les confusions restent programmées, pas oubliées.")))
     : (isRepair
     ? (errs?"Réparation active. Les notes fragiles reviennent avec un meilleur espacement.":"Réparation nette. La mémoire gagne en stabilité.")
     : (isFlash ? (errs?"Flash utile. Le coach garde ces notes au chaud pour la suite.":"Flash propre. Le réflexe répond vite.") : (isPiece ? (errs?"Segment utile. Les notes du passage deviennent un exercice ciblé avant le piano.":"Segment propre. Le passage est prêt pour un vrai essai au clavier.") : jarvisMsg(EX.ok,EX.n))));
@@ -4064,7 +4105,8 @@ function startRevision(){
   show("scrEx"); nextQuestion();
 }
 function finishDueReview(errs){
-  DB.xp+=EX.ok;
+  // L'XP des réponses justes est déjà versée réponse par réponse (afterGood) :
+  // aucun second versement en fin de révision, sinon une révision due paierait double (H17).
   logEvent("due_review_end",{ok:EX.ok,errs:errs});
   save(); header(); syncPush();
   $("resScore").innerHTML=EX.ok+"<small>/10</small>";
@@ -4139,7 +4181,7 @@ function finishStarReview(errs){
   $("resSub").textContent="Révision d'étoile · "+EX.palier.t;
   $("resSolado").textContent= advanced
     ? "Stabilité confirmée. Cet acquis tient dans le temps — c'est exactement ce que mesure une étoile."
-    : (clean ? "Déjà au maximum : 5 étoiles, acquis définitif." : (!coverageOk
+    : (clean ? "Déjà au maximum : 5 étoiles — stabilité au long cours confirmée. L’entretien léger continue." : (!coverageOk
       ? "Échantillon incomplet : l’étoile attend que toutes les notes prévues aient été réellement testées."
       : (!repairsClear?"Une confusion reste à réparer avant de confirmer la stabilité.":"Encore un passage utile. Les étoiles restent acquises — la révision revient bientôt.")));
   const eb=$("resErrs");
@@ -4654,7 +4696,8 @@ function pieceMapSVG(piece,opts){
       if(!seg) continue;
       const st=segmentStateDef(segmentStateId(piece.id,seg.id));
       const mx=x0+(m-m0)*mw;
-      s+='<g data-seg="'+esc(seg.id)+'">';
+      const segFirst=(m+1)===seg.mesFrom; // un seul arrêt clavier par passage (A2)
+      s+='<g data-seg="'+esc(seg.id)+'"'+(segFirst?' tabindex="0" role="button" aria-label="Passage : '+esc(seg.title||seg.id)+' — '+esc(st.label)+'"':'')+'>';
       s+='<rect x="'+mx+'" y="'+(top-9)+'" width="'+mw+'" height="70" fill="'+st.fill+'"/>';
       s+='<rect x="'+(mx+1)+'" y="'+(top+8*hf+6)+'" width="'+(mw-2)+'" height="3.5" rx="1.5" fill="'+st.color+'"/>';
       if(opts.highlight===seg.id)
@@ -4694,12 +4737,15 @@ function pieceMapSVG(piece,opts){
 function mapLegendHtml(){
   return '<div class="mapLegend">'+SEGMENT_STATES.map(function(st){
     return '<span><i style="background:'+st.fill+';border-color:'+st.color+'"></i>'+esc(st.label)+'</span>';
-  }).join("")+'</div>';
+  }).join("")+
+  '<small style="display:block;margin-top:3px;color:var(--dim);font-size:11px">Validé / Maîtrisé mesurent la lecture des hauteurs dans l\'ordre — pas encore le rythme ni le jeu instrumental.</small></div>';
 }
 function bindPieceMap(container,cb){
   if(!container||!container.querySelectorAll) return;
   container.querySelectorAll("[data-seg]").forEach(function(g){
-    g.onclick=function(){ cb(g.getAttribute("data-seg")); };
+    const open=function(){ cb(g.getAttribute("data-seg")); };
+    g.onclick=open;
+    g.onkeydown=function(ev){ if(ev.key==="Enter"||ev.key===" "){ ev.preventDefault(); open(); } }; // Entrée/Espace (A2)
   });
 }
 function segmentChoiceLabel(list,id){
@@ -5292,7 +5338,9 @@ function recordKbdAnswer(correct,o){
   if(!DB.kbdStats.byPc[pc]) DB.kbdStats.byPc[pc]={v:0,e:0};
   DB.kbdStats.byPc[pc].v++;
   if(!correct) DB.kbdStats.byPc[pc].e++;
-  if(o.id){ const s=noteStat(o.id); s.v++; if(!correct) s.e++; srsReview(o.id,correct); }
+  // Modalité clavier ≠ preuve de lecture sur portée : on nourrit les compteurs d'usage (v/e)
+  // comme signal de priorité, mais le calendrier SRS de lecture (box/due) n'est jamais modifié ici (H18).
+  if(o.id){ const s=noteStat(o.id); s.v++; if(!correct) s.e++; }
 }
 function startClavier(){
   let cfg={clef:"sol",dir:"read",acc:false};

@@ -53,7 +53,7 @@ function loadEngine() {
     "pieceMelody","PIECES_BUILTIN","setPieceGoal","ambitionProgress","trophyDefs","checkValidation","segmentScript","segmentProgress","SEGMENT_MASTERY_GAP_MS",
     "compactSave","currentRecoveryCode","pieceStateCounts","valProgress"];
   const footer = "\n;return {" + exportsList.map(n => n + ":(typeof " + n + "!=='undefined'?" + n + ":undefined)").join(",") +
-    ",getDB:function(){return DB;},setDB:function(x){DB=x;},getEX:function(){return EX;}};";
+    ",getDB:function(){return DB;},setDB:function(x){DB=x;},getEX:function(){return EX;},getEl:function(id){return document.getElementById(id);}};";
   const noopTimer = function () { return 0; };
   const fn = new Function("document", "localStorage", "navigator", "window", "setTimeout", "setInterval", "clearTimeout", "clearInterval", src + footer);
   return fn(makeDocument(), makeLocalStorage(), navigatorStub, windowStub, noopTimer, noopTimer, function () {}, function () {});
@@ -85,6 +85,7 @@ function playSerieToEnd() {
   while (guard++ < 400) {
     const ex = E.getEX();
     if (!ex || ex.done) break;
+    if (ex.pendingDecouverte) { const go = E.getEl("btnDecGo"); if (go && typeof go.onclick === "function") { go.onclick(); continue; } } // découverte : observation à son rythme, aucun délai imposé par l'app
     if (ex.waiting) { E.nextQuestion(); continue; } // en app réelle : avance automatique
     playCurrentQuestion();
   }
