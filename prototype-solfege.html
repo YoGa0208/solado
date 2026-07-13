@@ -415,7 +415,7 @@
     <div class="playerState" id="playerState"></div>
     <div class="watch" id="watchBox"></div>
     <details class="homeOptions" id="homeOptions">
-      <summary>Progression et outils</summary>
+      <summary>Défis et outils</summary>
       <div class="mission"><span class="who">Sezam</span><br><span id="missionTxt"></span></div>
       <div class="ritual" id="ritualBox">
         <div class="ritualTop"><span class="who">Rituel</span><b id="ritualTitle"></b></div>
@@ -569,7 +569,7 @@ function esc(s){
   });
 }
 /* ================= DONNÉES ================= */
-const APP_VERSION="v30"; // garder aligné avec CACHE_NAME de sw.js (testé)
+const APP_VERSION="v31"; // garder aligné avec CACHE_NAME de sw.js (testé)
 const NOTES = {
   do4 :{n:"do", clef:"sol", p:-2, midi:60, mn:"Le do du milieu est transpercé par sa petite ligne, rien qu'à lui."},
   re4 :{n:"ré", clef:"sol", p:-1, midi:62, mn:"Collé juste sous la portée."},
@@ -612,6 +612,38 @@ const PALIERS = [
   {id:"B3", t:"Boss · grand écart",    sub:"deux clés, zone 3",      notes:U(["sol4","la4","si4","do5","re5","mi5","fa5"],["re3","mi3","fa3","sol3","la3","si3","do4f"])},
   {id:"B4", t:"Boss · presque tout",   sub:"deux clés, zone 4",      notes:U(["mi4","fa4","sol4","la4","si4","do5","re5","mi5","fa5"],["si2","do3","re3","mi3","fa3","sol3","la3","si3","do4f"])},
   {id:"B5", t:"Bilan de lecture · Les Deux Clés",sub:"tout l'ambitus",notes:U(["do4","re4","mi4","fa4","sol4","la4","si4","do5","re5","mi5","fa5"],["fa2","sol2","la2","si2","do3","re3","mi3","fa3","sol3","la3","si3","do4f"])}
+];
+/* ===== Parcours d'apprentissage court =====
+   Les paliers historiques restent les défis de précision. Le parcours principal,
+   lui, ne demande jamais de rester bloqué longtemps sur le même petit vocabulaire :
+   3 notes au départ, puis exactement une nouvelle note par exercice. */
+const MAX_QUESTIONS_PER_EXERCISE=25;
+const COURSE_MAX_EXERCISES=12;
+const COURSE_QUESTION_BUDGET=12;
+const COURSES=[
+  {id:"sol",label:"Clé de sol",steps:[
+    {id:"sol-01",notes:["sol4","la4","si4"],newNote:""},
+    {id:"sol-02",notes:["sol4","la4","si4","do5"],newNote:"do5"},
+    {id:"sol-03",notes:["sol4","la4","si4","do5","re5"],newNote:"re5"},
+    {id:"sol-04",notes:["sol4","la4","si4","do5","re5","mi5"],newNote:"mi5"},
+    {id:"sol-05",notes:["sol4","la4","si4","do5","re5","mi5","fa5"],newNote:"fa5"},
+    {id:"sol-06",notes:["fa4","sol4","la4","si4","do5","re5","mi5","fa5"],newNote:"fa4"},
+    {id:"sol-07",notes:["mi4","fa4","sol4","la4","si4","do5","re5","mi5","fa5"],newNote:"mi4"},
+    {id:"sol-08",notes:["re4","mi4","fa4","sol4","la4","si4","do5","re5","mi5","fa5"],newNote:"re4"},
+    {id:"sol-09",notes:["do4","re4","mi4","fa4","sol4","la4","si4","do5","re5","mi5","fa5"],newNote:"do4"}
+  ]},
+  {id:"fa",label:"Clé de fa",steps:[
+    {id:"fa-01",notes:["fa3","sol3","la3"],newNote:""},
+    {id:"fa-02",notes:["fa3","sol3","la3","si3"],newNote:"si3"},
+    {id:"fa-03",notes:["fa3","sol3","la3","si3","do4f"],newNote:"do4f"},
+    {id:"fa-04",notes:["mi3","fa3","sol3","la3","si3","do4f"],newNote:"mi3"},
+    {id:"fa-05",notes:["re3","mi3","fa3","sol3","la3","si3","do4f"],newNote:"re3"},
+    {id:"fa-06",notes:["do3","re3","mi3","fa3","sol3","la3","si3","do4f"],newNote:"do3"},
+    {id:"fa-07",notes:["si2","do3","re3","mi3","fa3","sol3","la3","si3","do4f"],newNote:"si2"},
+    {id:"fa-08",notes:["la2","si2","do3","re3","mi3","fa3","sol3","la3","si3","do4f"],newNote:"la2"},
+    {id:"fa-09",notes:["sol2","la2","si2","do3","re3","mi3","fa3","sol3","la3","si3","do4f"],newNote:"sol2"},
+    {id:"fa-10",notes:["fa2","sol2","la2","si2","do3","re3","mi3","fa3","sol3","la3","si3","do4f"],newNote:"fa2"}
+  ]}
 ];
 const CARDS = {
   P1:{t:"La clé de sol est une lettre",x:"La clé de sol est un G (sol en notation anglo-saxonne) devenu décoratif au fil des siècles de copie. Sa boucle s'enroule autour de la ligne du sol : la clé ne décore pas, elle désigne.",s:"À vérifier : Grove Music, art. « Clef »."},
@@ -875,6 +907,71 @@ function normalizeProfile(p){
     daysPerWeek:DAYS_PER_WEEK.some(function(x){return x.id===Number(p.daysPerWeek);})?Number(p.daysPerWeek):5,
     domains:domains
   };
+}
+function courseById(id){ return COURSES.find(function(course){return course.id===id;})||null; }
+function freshCourseProgress(){
+  return {version:1,currentItem:"sol",steps:{sol:0,fa:0},exercises:{sol:0,fa:0},complete:false};
+}
+function normalizeCourseProgress(value){
+  const out=freshCourseProgress(), src=isRecord(value)?value:{};
+  COURSES.forEach(function(course){
+    const max=Math.min(COURSE_MAX_EXERCISES,course.steps.length);
+    out.steps[course.id]=clampInt(src.steps&&src.steps[course.id],0,max,0);
+    out.exercises[course.id]=clampInt(src.exercises&&src.exercises[course.id],0,max,out.steps[course.id]);
+  });
+  if(out.steps.sol>=COURSES[0].steps.length) out.currentItem="fa";
+  if(out.steps.fa>=COURSES[1].steps.length){ out.currentItem="fa"; out.complete=true; }
+  else if(src.currentItem==="fa"&&out.steps.sol>=COURSES[0].steps.length) out.currentItem="fa";
+  return out;
+}
+function currentCourseState(){
+  if(!DB) return null;
+  DB.courseProgress=normalizeCourseProgress(DB.courseProgress);
+  const progress=DB.courseProgress;
+  if(progress.complete) return null;
+  let item=courseById(progress.currentItem)||COURSES[0];
+  let index=progress.steps[item.id]||0;
+  if(index>=item.steps.length){
+    const next=COURSES[COURSES.indexOf(item)+1];
+    if(!next){ progress.complete=true; return null; }
+    item=next; progress.currentItem=item.id; index=progress.steps[item.id]||0;
+  }
+  const step=item.steps[index];
+  return step?{item:item,index:index,step:step,progress:progress}:null;
+}
+function coursePalierFor(step){
+  return PALIERS.find(function(p){ return step.notes.every(function(id){return p.notes.indexOf(id)>=0;}); })||PALIERS[0];
+}
+function courseQuestionBudget(step){
+  const count=step&&Array.isArray(step.notes)?step.notes.length:3;
+  return Math.min(COURSE_QUESTION_BUDGET,MAX_QUESTIONS_PER_EXERCISE,Math.max(6,count*2));
+}
+function courseDecision(){
+  const state=currentCourseState();
+  if(!state) return null;
+  const item=state.item, step=state.step, palier=coursePalierFor(step), budget=courseQuestionBudget(step);
+  const newLabel=step.newNote&&NOTES[step.newNote]?NOTES[step.newNote].n.toUpperCase():"SOL · LA · SI";
+  return {
+    kind:"course",label:"Parcours express",n:budget,questionCap:budget,palier:palier,pool:step.notes.slice(),mode:"zen",groupN:1,
+    reason:step.newNote?"Une seule nouvelle note arrive : "+newLabel+". Le reste reste en mouvement.":"Trois repères pour démarrer : SOL, LA, SI.",
+    course:{itemId:item.id,itemLabel:item.label,stepId:step.id,stepIndex:state.index,stepTotal:item.steps.length,newNote:step.newNote||"",signature:"course-v1:"+item.id+":"+state.index}
+  };
+}
+function advanceCourseExercise(course){
+  if(!course||!DB) return null;
+  const progress=normalizeCourseProgress(DB.courseProgress), item=courseById(course.itemId);
+  if(!item) return null;
+  const max=Math.min(COURSE_MAX_EXERCISES,item.steps.length);
+  const next=Math.min(max,(progress.steps[item.id]||0)+1);
+  progress.steps[item.id]=next;
+  progress.exercises[item.id]=Math.min(max,(progress.exercises[item.id]||0)+1);
+  if(next>=item.steps.length){
+    const following=COURSES[COURSES.indexOf(item)+1];
+    if(following) progress.currentItem=following.id;
+    else progress.complete=true;
+  } else progress.currentItem=item.id;
+  DB.courseProgress=normalizeCourseProgress(progress);
+  return courseDecision();
 }
 function normalizeCurriculumProof(value){
   value=isRecord(value)?value:{};
@@ -1444,6 +1541,7 @@ function ensureStructure(db){
   db.events=Array.isArray(db.events)?db.events.slice(-500):[]; // journal d'événements local, toujours borné et normalisé
   db.kbdStats=normalizeKbdStats(db.kbdStats);
   db.profile=normalizeProfile(db.profile);
+  db.courseProgress=normalizeCourseProgress(db.courseProgress);
   db.curriculum=normalizeCurriculumState(db.curriculum);
   db.dailyProgress=normalizeDailyProgress(db.dailyProgress);
   db.validationDrafts=normalizeValidationDrafts(db.validationDrafts);
@@ -2493,7 +2591,8 @@ function openMusicProfile(){
       '<label>Intention affichée<select id="profPath">'+optionHtml(PROFILE_PATHS,p.parcours)+'</select></label>'+
       '<label>Point de départ déclaré<select id="profLevel">'+optionHtml(PROFILE_LEVELS,p.niveauDepart)+'</select></label>'+
       '<p class="src" style="margin:0">Ce point de départ place l’exploration ; il ne valide aucun acquis et ne remplace pas un diagnostic.</p>'+
-      '<label>Temps par séance<select id="profMinutes">'+optionHtml(DAILY_MINUTES,p.dailyMinutes)+'</select></label>'+
+      '<label>Temps disponible (défis)<select id="profMinutes">'+optionHtml(DAILY_MINUTES,p.dailyMinutes)+'</select></label>'+
+      '<p class="src" style="margin:0">Le parcours principal reste court : 25 questions maximum, quelle que soit cette durée.</p>'+
       '<label>Rythme hebdomadaire<select id="profDays">'+optionHtml(DAYS_PER_WEEK,p.daysPerWeek)+'</select></label>'+
       '<label>Date cible<input id="profTarget" type="date" value="'+esc(p.targetDate)+'"></label>'+
       '<label>Affinité<select id="profAffinity">'+optionHtml(PROFILE_AFFINITIES,p.affinity)+'</select></label>'+
@@ -2690,6 +2789,16 @@ function dailyFocusDomain(profile){
 }
 function dailyPlan(decision){
   const profile=normalizeProfile(DB.profile), total=profile.dailyMinutes, piece=activePieceObj();
+  if(decision&&decision.kind==="course"){
+    const c=decision.course||{}, done=(DB.dailyProgress&&DB.dailyProgress[todayStr()])||{};
+    const signature=c.signature||"course-v1";
+    const sessionDone=done.session===signature;
+    const newcomer=c.newNote&&NOTES[c.newNote]?"Nouvelle note : "+NOTES[c.newNote].n.toUpperCase()+".":"Départ : SOL · LA · SI.";
+    return {
+      isCourse:true,total:decision.n,path:"Parcours vivant",cadence:"une note nouvelle à la fois",profile:profile,signature:signature,
+      blocks:[{id:"course",questions:decision.n,title:(c.itemLabel||"Parcours")+" · étape "+((c.stepIndex||0)+1)+"/"+(c.stepTotal||COURSE_MAX_EXERCISES),note:newcomer+" Les notes déjà vues restent dans le jeu.",done:sessionDone}]
+    };
+  }
   const frag=fragileNoteIds(3), due=dueCount(), pending=(DB.repairQueue||[]).length;
   const focusDomain=dailyFocusDomain(profile), transferMission=dailyMission(focusDomain,piece);
   const firstTitle=frag.length?"Cible · "+frag.map(function(id){return NOTES[id].n.toUpperCase();}).join(" · "):"Cible · "+decision.palier.id;
@@ -2728,6 +2837,12 @@ function toggleDailyBlock(id,signature){
 }
 function runDailyBlock(){ startDailySession(); }
 function renderDailyPlan(plan){
+  if(plan.isCourse){
+    $("dailyPlan").innerHTML='<div class="dailyPlanHead"><span>Parcours du jour</span><b>'+plan.total+' questions max</b></div>'+plan.blocks.map(function(b){
+      return '<div class="dailyBlock"><span class="mins">'+b.questions+' q.</span><span><b>'+esc(b.title)+'</b><small>'+esc(b.note)+'</small></span><span class="dailyAuto'+(b.done?' done':'')+'">'+(b.done?'Fait ✓':'Inclus')+'</span></div>';
+    }).join("");
+    return;
+  }
   $("dailyPlan").innerHTML='<div class="dailyPlanHead"><span>Séance du jour · '+esc(plan.path)+'</span><b>'+plan.total+' min</b></div>'+plan.blocks.map(function(b){
     return '<div class="dailyBlock"><span class="mins">'+b.minutes+' min</span><span><b>'+esc(b.title)+'</b><small>'+esc(b.note)+'</small></span><span class="dailyAuto'+(b.done?' done':'')+'">'+(b.done?'Fait ✓':'Inclus')+'</span></div>';
   }).join("");
@@ -2770,6 +2885,17 @@ function renderCockpit(decision,plan){
   const p=decision.palier, modeLabelText=decision.kind==="repair"?"Réparation":modeLabel(decision.mode);
   const hello=plan.profile.displayName?plan.profile.displayName+", ":"";
   $("coachKicker").textContent="Coach invisible · "+plan.path;
+  if(plan.isCourse){
+    const c=decision.course||{}, newcomer=c.newNote&&NOTES[c.newNote]?"Une nouvelle note rejoint le jeu : "+NOTES[c.newNote].n.toUpperCase()+".":"Tes trois premiers repères entrent en jeu.";
+    $("coachPitch").textContent=hello+"une courte séquence de "+plan.total+" questions maximum. "+newcomer;
+    $("btnPlayNow").textContent="JOUER · "+plan.total+" QUESTIONS MAX";
+    $("cockpitMeta").innerHTML=
+      '<span><b>'+esc(c.itemLabel||p.id)+'</b><small>clé</small></span>'+
+      '<span><b>Étape '+((c.stepIndex||0)+1)+'</b><small>sur '+(c.stepTotal||COURSE_MAX_EXERCISES)+'</small></span>'+
+      '<span><b>'+plan.total+' q.</b><small>maximum</small></span>';
+    $("coachLine").textContent=decision.reason;
+    return;
+  }
   $("coachPitch").textContent=hello+"ta séance vise "+plan.total+" minutes et laisse finir la question en cours. Rappel à froid, cible, réparation puis transfert : Sezam enchaîne tout.";
   $("btnPlayNow").textContent="FAIRE MA SÉANCE · "+plan.total+" MIN";
   $("cockpitMeta").innerHTML=
@@ -2813,12 +2939,14 @@ function renderHome(){
     if(first) DB.sel=first.id;
   }
   ensureActivePiece();
-  const day=DB.days[todayStr()], nbToday=day?day.series:0, decision=coachDecision(), plan=dailyPlan(decision);
+  const day=DB.days[todayStr()], nbToday=day?day.series:0, decision=courseDecision()||coachDecision(), plan=dailyPlan(decision);
   renderCockpit(decision,plan);
   renderDailyPlan(plan);
   renderPlayerState(decision);
   const startPid=profileStartPalier(plan.profile.niveauDepart);
-  $("missionTxt").innerHTML = DB.mode==="libre"
+  $("missionTxt").innerHTML = plan.isCourse
+    ? "Parcours du jour : "+esc(decision.course.itemLabel)+" · étape "+(decision.course.stepIndex+1)+"/"+decision.course.stepTotal+" · "+(decision.course.newNote?"une nouvelle note arrive.":"trois repères pour démarrer.")
+    : DB.mode==="libre"
     ? (startPid&&DB.sel===startPid?esc(profileStartText(plan.profile.niveauDepart,startPid)):
       "Mode Libre : écoute, chante, explore chaque note avec le piano · plan de "+plan.total+" minutes.")
     : nbToday===0 ? "Mission du jour : "+esc(plan.path)+" · "+plan.total+" minutes · "+plan.profile.daysPerWeek+" jours par semaine. Précision d'abord."
@@ -2907,7 +3035,7 @@ function renderHome(){
     b.onclick=(function(pid){return function(){startStarReview(pid);};})(sdue[0].id);
     sc.appendChild(b);
   }
-  $("btnSerie").textContent="Session 10 questions · "+modeLabel(DB.mode);
+  $("btnSerie").textContent=plan.isCourse?"Exercice court · "+plan.total+" questions max":"Session 10 questions · "+modeLabel(DB.mode);
   const nd=dueCount();
   $("defiTxt").textContent = nd>0 ? ("↻ "+nd+" note"+(nd>1?"s":"")+" à revoir")
     : (day&&day.perfect ? "★ Défi parfait réussi" : "★ Défi parfait : tente une Rafale");
@@ -3102,14 +3230,52 @@ function starDuePaliers(){
   });
 }
 function starLabel(l){ return l>=5?"5 Étoiles":(l+(l>1?" Étoiles":" Étoile")); }
-function pickSeq(pool,n){
-  const first=weightedPick(pool,EX?EX.last:null);
+function baselinePromptHistory(){
+  return (EX&&Array.isArray(EX.promptHistory)?EX.promptHistory:[]).filter(function(row){
+    return row&&row.role==="baseline"&&row.phase==="cible"&&Array.isArray(row.ids);
+  });
+}
+function recentPromptIds(limit){
+  const rows=(EX&&Array.isArray(EX.promptHistory)?EX.promptHistory:[]).filter(function(row){return row&&Array.isArray(row.ids);}).slice(-(limit||2));
+  return uniq([].concat.apply([],rows.map(function(row){return row.ids;})));
+}
+function promptOccurrences(id,qtype){
+  return baselinePromptHistory().reduce(function(total,row){
+    if(qtype&&row.qtype!==qtype) return total;
+    return total+row.ids.filter(function(noteId){return noteId===id;}).length;
+  },0);
+}
+function pickDiverseId(pool,selected,qtype){
+  const source=uniq((pool||[]).filter(function(id){return NOTES[id];}));
+  if(!source.length) return null;
+  const picked=selected||[];
+  let candidates=source.filter(function(id){return picked.indexOf(id)<0;});
+  if(!candidates.length) candidates=source.slice();
+  const recent=recentPromptIds(2), away=candidates.filter(function(id){return recent.indexOf(id)<0;});
+  if(away.length) candidates=away;
+  if(qtype==="ecrit"&&EX&&Array.isArray(EX.writePromptIds)){
+    const freshWrite=candidates.filter(function(id){return EX.writePromptIds.indexOf(id)<0;});
+    if(freshWrite.length) candidates=freshWrite;
+  }
+  const low=Math.min.apply(null,candidates.map(function(id){return promptOccurrences(id,qtype); }));
+  const balanced=candidates.filter(function(id){return promptOccurrences(id,qtype)===low;});
+  return weightedPick(balanced,EX?EX.last:null);
+}
+function pickDiverseSeq(pool,n,qtype){
+  const source=uniq((pool||[]).filter(function(id){return NOTES[id];}));
+  if(!source.length) return [];
+  const first=pickDiverseId(source,[],qtype)||source[0];
   const clef=NOTES[first].clef;
-  const sub=pool.filter(function(id){return NOTES[id].clef===clef;});
+  const same=source.filter(function(id){return NOTES[id].clef===clef;});
   const seq=[first];
-  for(let i=1;i<n;i++) seq.push(weightedPick(sub,seq[i-1]));
+  while(seq.length<n){
+    const next=pickDiverseId(same.length?same:source,seq,qtype);
+    if(!next) break;
+    seq.push(next);
+  }
   return seq;
 }
+function pickSeq(pool,n){ return pickDiverseSeq(pool,n,"lect"); }
 // Notes neuves d'un palier = celles absentes du palier précédent (pour P1 : toutes)
 function newNotesOf(pid){
   const i=PALIERS.findIndex(function(p){return p.id===pid;});
@@ -3266,7 +3432,15 @@ function startDailyClock(){
   clearDailyTimer(); updateDailyClock(); dailyTimer=setInterval(updateDailyClock,500);
 }
 function startDailySession(){
-  if(EX&&!EX.done&&EX.daily) return;
+  if(EX&&!EX.done) return;
+  const course=courseDecision();
+  if(course){
+    DB.sel=course.palier.id; DB.seen[course.palier.id]=true;
+    save();
+    beginSerie({sessionMode:"course",n:course.n,questionCap:course.questionCap,palier:course.palier,pool:course.pool,mode:course.mode,groupN:1,
+      label:"Parcours · "+course.course.itemLabel,course:course.course,cold:true});
+    return;
+  }
   let d=coachDecision();
   if(d.kind==="repair"&&DB.mode!=="libre"){
     const target=coachDecision("session");
@@ -3293,7 +3467,7 @@ function startRepair(){
   beginSerie({sessionMode:"repair",n:Math.min(10,Math.max(5,pool.length)),palier:p,pool:pool,mode:"libre",groupN:1,label:"Réparation"});
 }
 function startSerie(){
-  startCoachPlay("session");
+  startDailySession();
 }
 function beginSerie(opts){
   opts=opts||{};
@@ -3303,24 +3477,29 @@ function beginSerie(opts){
   const td=mode==="libre"?null:tierDef(mode);
   const groupN=opts.groupN || (td?td.n:1), openEnded=!!opts.openEnded;
   const msNote=(opts.msNote!==undefined)?opts.msNote:(td?td.ms:null);
-  const total=openEnded?0:(opts.n||10), pool=(opts.pool&&opts.pool.length)?opts.pool:p.notes;
+  const requestedTotal=openEnded?0:Math.max(1,clampInt(opts.n,1,999,10));
+  const requestedCap=opts.questionCap!==undefined?opts.questionCap:(openEnded?MAX_QUESTIONS_PER_EXERCISE:requestedTotal*groupN);
+  const questionCap=Math.max(1,clampInt(requestedCap,1,MAX_QUESTIONS_PER_EXERCISE,MAX_QUESTIONS_PER_EXERCISE));
+  const total=openEnded?0:Math.min(requestedTotal,Math.ceil(questionCap/groupN));
+  const pool=(opts.pool&&opts.pool.length)?opts.pool:p.notes;
   const sessionMode=opts.sessionMode||"session";
-  const coldEligible=opts.cold!==false&&(sessionMode==="session"||sessionMode==="daily");
-  const coverage=(mode!=="libre"&&DB.paliers[p.id])?validationMissingIds(p.id,mode,p.notes):[];
+  const coldEligible=opts.cold!==false&&(sessionMode==="session"||sessionMode==="daily"||sessionMode==="course");
+  const coverage=opts.course?pool.slice():((mode!=="libre"&&DB.paliers[p.id])?validationMissingIds(p.id,mode,p.notes):[]);
   const coldSource=(opts.daily&&opts.daily.coldPool.length)?opts.daily.coldPool:pool;
   const coldPool=ordinaryQuestionPool(coldSource,p.notes,true), coldId=coldEligible?coldRecallId(coldPool,Date.now()):null;
   EX={kind:"serie",sessionMode:opts.sessionMode||"session",mode:mode,n:total,groupN:groupN,msNote:msNote,limit:msNote?msNote*groupN:null,
       palier:p,pool:pool,i:0,ok:0,errs:[],times:[],hist:[],last:null,waiting:false,done:false,qid:0,
       qtype:"lect",seq:[],k:0,writePos:4,segment:opts.segment||null,
       script:(opts.script&&opts.script.length)?opts.script.slice():null,scriptIdx:0,seenIds:[],testedIds:[],coverageIds:[],coverageQueue:coverage,
+      course:opts.course||null,questionCap:questionCap,promptCount:0,promptHistory:[],promptCountById:{},writePromptCount:0,writePromptIds:[],
       openEnded:openEnded,daily:opts.daily||null,stopRequested:false,currentTask:null,questionRecords:[],phaseStats:{rappel:{n:0,ok:0},cible:{n:0,ok:0},reparation:{n:0,ok:0},transfert:{n:0,ok:0}},transferReached:false,
       coldPending:coldEligible&&!!coldId,coldId:coldId,coldResult:null,questionDeadlineAt:0,pausedQuestionRemaining:null,pausedResumeNext:false,
       dailyValidationBuffer:opts.daily&&mode!=="libre"?dailyDraftRecords(p.id,mode):[]};
-  logEvent("serie_start",{palier:p.id,mode:mode,groupe:groupN,type:EX.sessionMode,n:total,segment:EX.segment?EX.segment.segmentId:null,piece:EX.segment?EX.segment.pieceId:null});
-  const label=opts.label || (EX.sessionMode==="flash"?"Flash":EX.sessionMode==="repair"?"Réparation":"Session");
+  logEvent("serie_start",{palier:p.id,mode:mode,groupe:groupN,type:EX.sessionMode,n:total,questions:questionCap,segment:EX.segment?EX.segment.segmentId:null,piece:EX.segment?EX.segment.pieceId:null});
+  const label=opts.label || (EX.sessionMode==="course"?"Parcours":(EX.sessionMode==="flash"?"Flash":EX.sessionMode==="repair"?"Réparation":"Session"));
   $("exMode").textContent=label+" · "+(EX.segment?EX.segment.segmentTitle:p.t)+(groupN>1?" · groupes de "+groupN:"");
   $("timerbar").classList.toggle("on",!!EX.limit||!!EX.daily);
-  $("btnQuit").textContent=EX.daily?"Arrêter la séance":"Abandonner la série";
+  $("btnQuit").textContent=EX.daily?"Arrêter la séance":(EX.sessionMode==="course"?"Quitter l’exercice":"Abandonner la série");
   $("btnAgain").style.display="block";
   show("scrEx"); if(EX.daily) startDailyClock(); nextQuestion();
 }
@@ -3363,7 +3542,8 @@ function showDecouverte(pid, onContinue, idsOverride){
   const neuves=((idsOverride&&idsOverride.length)?idsOverride:newNotesOf(pid)).slice(0,6);
   if(!p||!neuves.length){ if(onContinue) onContinue(); return; }
   logEvent("decouverte",{palier:pid,nb:neuves.length});
-  let body='<h3>Découverte — '+p.t+'</h3><h2>'+(neuves.length>1?"De nouvelles notes":"Une nouvelle note")+'</h2>'+
+  const course=EX&&EX.course, heading=course?"Parcours · "+course.itemLabel+" · étape "+(course.stepIndex+1)+"/"+course.stepTotal:p.t;
+  let body='<h3>Découverte — '+esc(heading)+'</h3><h2>'+(neuves.length>1?"Tes premières notes":"Une nouvelle note")+'</h2>'+
     '<p style="margin-bottom:10px">Regarde où elle se place, écoute-la, puis on la teste. Pression basse, oreille ouverte.</p>';
   body+='<div class="prepNotes">'+neuves.map(function(id){return previewNoteHtml(id,true);}).join("")+'</div>';
   $("cardBox").innerHTML=body+'<button id="btnDecGo">Je suis prêt — commencer</button>';
@@ -3376,7 +3556,7 @@ function showDecouverte(pid, onContinue, idsOverride){
 }
 function startRafale(){
   const p=PALIERS.find(function(x){return x.id===DB.sel;});
-  EX={kind:"rafale",mode:"rafale",n:Infinity,groupN:1,msNote:null,limit:null,
+  EX={kind:"rafale",mode:"rafale",n:MAX_QUESTIONS_PER_EXERCISE,groupN:1,msNote:null,limit:null,questionCap:MAX_QUESTIONS_PER_EXERCISE,promptCount:0,promptHistory:[],promptCountById:{},writePromptCount:0,writePromptIds:[],
       palier:p,i:0,ok:0,errs:[],times:[],hist:[],last:null,waiting:false,done:false,qid:0,
       qtype:"lect",seq:[],k:0,writePos:4,end:Date.now()+RAFALE_S*1000,script:null,scriptIdx:0,seenIds:[]};
   $("exMode").textContent=p.t+" · rafale "+RAFALE_S+" s";
@@ -3394,7 +3574,7 @@ function renderDots(){
   if(EX.kind!=="serie"){$("exCount").textContent=EX.ok+" justes";return;}
   if(EX.openEnded){
     EX.hist.slice(-12).forEach(function(ok){const s=document.createElement("span");s.className="dot "+(ok?"g":"b");d.appendChild(s);});
-    $("exCount").textContent=EX.i+" réponses"; return;
+    $("exCount").textContent=Number.isFinite(EX.questionCap)?EX.promptCount+"/"+EX.questionCap+" questions":EX.i+" réponses"; return;
   }
   for(let i=0;i<EX.n;i++){const s=document.createElement("span");s.className="dot";d.appendChild(s);}
   const dots=d.children;
@@ -3428,13 +3608,49 @@ function drawWriteStaff(){
     drawWriteStaff();
   });
 }
-function pickCoverageSeq(pool,n){
+function pickCoverageSeq(pool,n,qtype){
   const missing=(EX.coverageQueue||[]).filter(function(id){return pool.indexOf(id)>=0&&EX.coverageIds.indexOf(id)<0;});
-  if(!missing.length) return pickSeq(pool,n);
-  const first=missing[0], same=pool.filter(function(id){return NOTES[id].clef===NOTES[first].clef;});
+  if(!missing.length) return pickDiverseSeq(pool,n,qtype);
+  const first=pickDiverseId(missing,[],qtype)||missing[0], same=pool.filter(function(id){return NOTES[id].clef===NOTES[first].clef;});
   const seq=[first];
-  while(seq.length<n) seq.push(weightedPick(same.length?same:pool,seq[seq.length-1]));
+  while(seq.length<n){
+    const next=pickDiverseId(same.length?same:pool,seq,qtype);
+    if(!next) break;
+    seq.push(next);
+  }
   return seq;
+}
+function questionCapacityLeft(){
+  if(!EX||!Number.isFinite(EX.questionCap)) return Infinity;
+  return Math.max(0,EX.questionCap-(EX.promptCount||0));
+}
+function canAskWriteQuestion(task){
+  if(!EX||!task||task.role!=="baseline"||task.phase!=="cible") return false;
+  const pool=uniq(((task.pool&&task.pool.length)?task.pool:EX.pool||[]).filter(function(id){return NOTES[id];}));
+  if(!pool.length) return false;
+  const history=baselinePromptHistory(), readIds=uniq([].concat.apply([],history.filter(function(row){return row.qtype!=="ecrit";}).map(function(row){return row.ids;})));
+  if(readIds.length<Math.min(3,pool.length)) return false; // d'abord lire les repères, puis seulement les placer
+  if(history.slice(-3).some(function(row){return row.qtype==="ecrit";})) return false;
+  const writeLimit=Math.max(1,Math.floor((EX.questionCap||COURSE_QUESTION_BUDGET)/6));
+  if((EX.writePromptCount||0)>=writeLimit) return false;
+  const unused=pool.filter(function(id){return (EX.writePromptIds||[]).indexOf(id)<0;});
+  if(!unused.length) return false;
+  return Math.random()<ECRIT_RATIO;
+}
+function notePrompt(task){
+  if(!EX||!EX.seq||!EX.seq.length) return;
+  EX.promptCount=(EX.promptCount||0)+EX.seq.length;
+  if(!Array.isArray(EX.promptHistory)) EX.promptHistory=[];
+  const row={ids:EX.seq.slice(),qtype:EX.qtype,role:task&&task.role||"baseline",phase:task&&task.phase||"cible"};
+  EX.promptHistory.push(row);
+  if(!task||task.role!=="baseline"||task.phase!=="cible") return;
+  if(!EX.promptCountById) EX.promptCountById={};
+  EX.seq.forEach(function(id){ EX.promptCountById[id]=(EX.promptCountById[id]||0)+1; });
+  if(EX.qtype==="ecrit"){
+    EX.writePromptCount=(EX.writePromptCount||0)+1;
+    if(!Array.isArray(EX.writePromptIds)) EX.writePromptIds=[];
+    EX.seq.forEach(function(id){ if(EX.writePromptIds.indexOf(id)<0) EX.writePromptIds.push(id); });
+  }
 }
 function dailyTransferChunk(daily,n){
   if(!daily||!daily.transferScript.length) return null;
@@ -3514,7 +3730,7 @@ function questionTask(){
 }
 function freshTargetNoteIds(){
   if(!EX||EX.kind!=="serie"||EX.done) return [];
-  if(EX.sessionMode!=="session"&&EX.sessionMode!=="daily") return [];
+  if(EX.sessionMode!=="session"&&EX.sessionMode!=="daily"&&EX.sessionMode!=="course") return [];
   if(EX.review||EX.script||EX.segment) return [];
   if(EX.daily){ const ph=dailyPhaseAt(EX.daily,Date.now()); if(!ph||(ph.id!=="rappel"&&ph.id!=="cible")) return []; }
   if(!Array.isArray(EX.introducedIds)) EX.introducedIds=[];
@@ -3528,7 +3744,15 @@ function nextQuestion(){
   clearQTimers();
   if(EX.daily&&(EX.stopRequested||Date.now()>=EX.daily.endAt)) return finishSerie();
   if(EX.review==="star"&&(DB.repairQueue||[]).length&&EX.i>0) return finishSerie();
-  if(EX.kind==="serie" && !EX.openEnded && EX.i>=EX.n) return finishSerie();
+  if(EX.kind==="rafale"&&questionCapacityLeft()<=0) return finishRafale();
+  if(EX.kind==="serie"&&questionCapacityLeft()<=0){
+    if(EX.course) EX.course.finishedNaturally=true;
+    return finishSerie();
+  }
+  if(EX.kind==="serie" && !EX.openEnded && EX.i>=EX.n){
+    if(EX.course) EX.course.finishedNaturally=true;
+    return finishSerie();
+  }
   // Découverte avant interrogation : toute note jamais exposée est présentée d'abord, sans notation (H19).
   const freshIntro=freshTargetNoteIds();
   if(freshIntro.length){
@@ -3547,24 +3771,26 @@ function nextQuestion(){
   }
   const task=questionTask(); EX.currentTask=task; EX.currentQuestionTested=[];
   const ecritOk=(EX.mode==="libre"||EX.mode==="zen") && EX.kind==="serie" && !EX.script && task.role==="baseline" && task.phase!=="transfert";
-  EX.qtype=task.qtype||((ecritOk && Math.random()<ECRIT_RATIO)?"ecrit":"lect");
+  EX.qtype=task.qtype||((ecritOk && canAskWriteQuestion(task))?"ecrit":"lect");
+  const room=Math.max(1,questionCapacityLeft());
   if(task.qtype==="mission"||task.qtype==="bonus"){
     EX.seq=[];
   } else if(task.seq&&task.seq.length){
-    EX.seq=task.seq.slice();
+    EX.seq=task.seq.slice(0,room);
   } else if(task.probeId&&NOTES[task.probeId]){
     EX.seq=[task.probeId];
   } else if(EX.script){
     // Lecture de la partition dans l'ordre : chaque question est le prochain fragment réel de la pièce.
-    const from=EX.scriptIdx, chunk=EX.script.slice(from,from+EX.groupN);
+    const from=EX.scriptIdx, chunk=EX.script.slice(from,from+Math.min(EX.groupN,room));
     EX.scriptIdx=from+chunk.length;
     if(EX.scriptIdx>=EX.script.length) EX.scriptIdx=0; // si la série dépasse, on reboucle au début
-    EX.seq=chunk.length?chunk:pickSeq((EX.pool&&EX.pool.length)?EX.pool:EX.palier.notes,EX.groupN);
+    EX.seq=chunk.length?chunk:pickSeq((EX.pool&&EX.pool.length)?EX.pool:EX.palier.notes,Math.min(EX.groupN,room));
   } else {
     const pool=(task.pool&&task.pool.length)?task.pool:((EX.pool&&EX.pool.length)?EX.pool:EX.palier.notes);
-    const group=(EX.qtype==="ecrit"||task.phase==="rappel"||task.phase==="reparation")?1:EX.groupN;
-    EX.seq=(task.phase==="cible")?pickCoverageSeq(pool,group):pickSeq(pool,group);
+    const group=Math.min(room,(EX.qtype==="ecrit"||task.phase==="rappel"||task.phase==="reparation")?1:EX.groupN);
+    EX.seq=(task.phase==="cible")?pickCoverageSeq(pool,group,EX.qtype):pickDiverseSeq(pool,group,EX.qtype);
   }
+  notePrompt(task);
   EX.last=EX.seq[EX.seq.length-1];
   EX.k=0; EX.t0=Date.now(); EX.waiting=false; EX.qid++;
   $("feedback").className="feedback";
@@ -4007,12 +4233,13 @@ function finishSerie(){
   const p=EX.palier, errs=EX.errs.length, answered=EX.hist.length, isDaily=EX.sessionMode==="daily";
   if(EX.review==="star"){ markDay("revision",EX.ok); return finishStarReview(errs); }
   if(EX.review==="due"){ markDay("revision",EX.ok); return finishDueReview(errs); }
-  const isRepair=EX.sessionMode==="repair", isFlash=EX.sessionMode==="flash", isSession=EX.sessionMode==="session"||isDaily, isPiece=EX.sessionMode==="piece";
+  const isRepair=EX.sessionMode==="repair", isFlash=EX.sessionMode==="flash", isCourse=EX.sessionMode==="course", isSession=EX.sessionMode==="session"||isDaily, isPiece=EX.sessionMode==="piece";
   if(!isDaily||answered>0) markDay(isRepair?"revision":"serie",EX.ok);
   let newlyPalier=false, newlyTier=null;
   if(isSession && !isDaily && EX.mode!=="libre"){
     const td=tierDef(EX.mode), m=DB.paliers[p.id][EX.mode];
-    const minQuestions=Math.min(8,EX.n||8);
+    const targetCount=(EX.questionRecords||[]).filter(function(q){return q&&q.phase==="cible"&&(q.role==="baseline"||q.role==="cold");}).length;
+    const minQuestions=Math.min(8,Math.max(1,targetCount));
     const record=validationRecordFromQuestions(EX.questionRecords,minQuestions,EX.coldResult||null,false);
     if(record){m.series.push(record);if(record.e<=1)DB.xp+=10;}
     if(record&&!m.ok && checkValidation(m.series,p.notes)){
@@ -4020,6 +4247,17 @@ function finishSerie(){
       if(EX.mode==="rhodium") startStarSchedule(p.id); // étoiles : seulement après validation au Rhodium (axe temps, après la vitesse)
       if(tierComplete(EX.mode)){ newlyTier=EX.mode; DB.xp+=100; }
     }
+  }
+  let courseNext=null, courseAdvanced=false;
+  const courseFinished=!!(isCourse&&EX.course&&(EX.course.finishedNaturally||EX.i>=EX.n));
+  if(courseFinished&&answered>0){
+    const signature=EX.course.signature;
+    if(!DB.dailyProgress) DB.dailyProgress={};
+    const dayKey=todayStr(); if(!DB.dailyProgress[dayKey]) DB.dailyProgress[dayKey]={};
+    DB.dailyProgress[dayKey].session=signature;
+    courseNext=advanceCourseExercise(EX.course);
+    courseAdvanced=true;
+    logEvent("course_exercise_complete",{item:EX.course.itemId,step:EX.course.stepIndex,questions:EX.promptCount,errors:errs});
   }
   let segmentState=null, segPromotion=null;
   if(isPiece){
@@ -4039,18 +4277,36 @@ function finishSerie(){
     logEvent("daily_session_end",{minutes:EX.daily.totalMinutes,elapsed:activeElapsed,complete:dailyQualified,scored:dailyScoredCount(),ok:EX.ok,answered:answered,repairs:(EX.phaseStats.reparation||{}).n||0,proofs:(EX.daily.proofs||[]).length,promotions:(EX.daily.promotions||[]).length});
   }
   const errsForLog=isDaily&&answered?Math.round(errs/answered*10):errs;
-  logEvent("serie_end",{palier:p.id,mode:EX.mode,type:EX.sessionMode,ok:EX.ok,errs:errsForLog,avgMs:avgMs(),valide:newlyPalier,segment:EX.segment?EX.segment.segmentId:null,piece:EX.segment?EX.segment.pieceId:null});
+  logEvent("serie_end",{palier:p.id,mode:EX.mode,type:EX.sessionMode,ok:EX.ok,errs:errsForLog,avgMs:avgMs(),valide:newlyPalier,course:EX.course?EX.course.stepId:null,segment:EX.segment?EX.segment.segmentId:null,piece:EX.segment?EX.segment.pieceId:null});
   save(); header(); syncPush();
-  const scoreN=Math.max(1,isDaily?answered:EX.n), prec=Math.round(EX.ok/scoreN*100), label=isDaily?(dailyQualified?(transferReached?"Séance du jour":"Séance du jour · sans transfert"):"Séance partielle"):(isRepair?"Réparation":(isFlash?"Flash":(isPiece?"Partition":modeLabel(EX.mode==="rafale"?"zen":EX.mode))));
-  $("resScore").innerHTML=EX.ok+"<small>/"+(isDaily?answered:EX.n)+"</small>";
+  const scoreN=Math.max(1,isDaily?answered:(isCourse?EX.promptCount:EX.n)), prec=Math.round(EX.ok/scoreN*100), label=isDaily?(dailyQualified?(transferReached?"Séance du jour":"Séance du jour · sans transfert"):"Séance partielle"):(isCourse?"Exercice court":(isRepair?"Réparation":(isFlash?"Flash":(isPiece?"Partition":modeLabel(EX.mode==="rafale"?"zen":EX.mode)))));
+  $("resScore").innerHTML=EX.ok+"<small>/"+(isDaily?answered:(isCourse?EX.promptCount:EX.n))+"</small>";
   $("resSub").textContent=isDaily
     ? label+" · "+Math.max(1,Math.round(activeElapsed/60000))+" min actives · précision "+prec+" %"
     : "Précision "+prec+"% · "+(avgMs()/1000).toFixed(1)+" s par question · "+label;
-  $("resSolado").textContent=isDaily
-    ? (!dailyQualified?"Cette pratique est conservée, mais la séance n’est pas marquée terminée : il faut au moins 10 vraies questions musicales.":(!transferReached?"Dix vraies questions : la séance compte. Le transfert musical n’a pas été atteint aujourd’hui — il reviendra en fin de prochaine séance.":(EX.coldResult&&EX.coldResult.ok?"Rappel à froid réussi. La séance a ciblé, réparé puis transféré sans lancer de nouvelle question après l’échéance.":"Le test à froid a révélé le point utile. Les confusions restent programmées, pas oubliées.")))
-    : (isRepair
-    ? (errs?"Réparation active. Les notes fragiles reviennent avec un meilleur espacement.":"Réparation nette. La mémoire gagne en stabilité.")
-    : (isFlash ? (errs?"Flash utile. Le coach garde ces notes au chaud pour la suite.":"Flash propre. Le réflexe répond vite.") : (isPiece ? (errs?"Segment utile. Les notes du passage deviennent un exercice ciblé avant le piano.":"Segment propre. Le passage est prêt pour un vrai essai au clavier.") : jarvisMsg(EX.ok,EX.n))));
+  let resultMessage;
+  if(isDaily){
+    resultMessage=!dailyQualified
+      ? "Cette pratique est conservée, mais la séance n’est pas marquée terminée : il faut au moins 10 vraies questions musicales."
+      : (!transferReached
+        ? "Dix vraies questions : la séance compte. Le transfert musical n’a pas été atteint aujourd’hui — il reviendra en fin de prochaine séance."
+        : (EX.coldResult&&EX.coldResult.ok
+          ? "Rappel à froid réussi. La séance a ciblé, réparé puis transféré sans lancer de nouvelle question après l’échéance."
+          : "Le test à froid a révélé le point utile. Les confusions restent programmées, pas oubliées."));
+  } else if(isCourse){
+    resultMessage=courseAdvanced
+      ? (courseNext
+        ? "Étape terminée. La prochaine séance ajoute "+(courseNext.course.newNote&&NOTES[courseNext.course.newNote]?NOTES[courseNext.course.newNote].n.toUpperCase():"une nouvelle clé")+" au jeu."
+        : "Parcours des deux clés terminé. Les défis de précision sont prêts quand tu veux.")
+      : "Exercice interrompu : il ne compte pas comme une étape terminée.";
+  } else if(isRepair){
+    resultMessage=errs?"Réparation active. Les notes fragiles reviennent avec un meilleur espacement.":"Réparation nette. La mémoire gagne en stabilité.";
+  } else if(isFlash){
+    resultMessage=errs?"Flash utile. Le coach garde ces notes au chaud pour la suite.":"Flash propre. Le réflexe répond vite.";
+  } else if(isPiece){
+    resultMessage=errs?"Segment utile. Les notes du passage deviennent un exercice ciblé avant le piano.":"Segment propre. Le passage est prêt pour un vrai essai au clavier.";
+  } else resultMessage=jarvisMsg(EX.ok,EX.n);
+  $("resSolado").textContent=resultMessage;
   const eb=$("resErrs");
   if(errs){ eb.style.display="block";
     eb.innerHTML=EX.errs.map(function(id){const nt=NOTES[id];
@@ -4074,6 +4330,11 @@ function finishSerie(){
     $("resVal").innerHTML=esc(segmentChoiceLabel(PIECE_SEGMENT_FOCUSES,seg.focus||"notes"))+
       ' · '+esc(segmentChoiceLabel(PIECE_SEGMENT_HANDS,seg.hand||"lecture"))+
       (seg.instruction?'<br><small style="color:var(--dim)">'+esc(seg.instruction)+'</small>':'');
+  } else if(isCourse){
+    const c=EX.course||{};
+    $("resVal").innerHTML=courseAdvanced
+      ? (courseNext?"<b>Étape "+(c.stepIndex+1)+"/"+c.stepTotal+" terminée.</b> Prochaine : "+esc(courseNext.course.itemLabel)+" · étape "+(courseNext.course.stepIndex+1)+"/"+courseNext.course.stepTotal+".":"<b>Les deux clés sont en place.</b> Passe aux défis quand tu veux.")
+      : "Exercice non terminé : la progression reste exactement où elle était.";
   } else if(EX.mode==="libre"){
     $("resVal").textContent="Libre : exploration active, mémoire nourrie.";
   } else {
@@ -4217,7 +4478,7 @@ function finishRafale(){
     eb.innerHTML=EX.errs.map(function(id){const nt=NOTES[id];
       return '<div class="er"><b>'+nt.n+'</b> — '+nt.mn+'</div>';}).join("");
   } else eb.style.display="none";
-  $("resVal").textContent="La Rafale entraîne l'automatisme. Les sessions longues portent la validation.";
+  $("resVal").textContent="La Rafale entraîne l'automatisme. Les défis de précision portent la validation.";
   show("scrRes");
 }
 function showCard(pid){
@@ -5605,7 +5866,7 @@ function cloudDocument(){
     deviceId:syncClientId(),
     timestamp:stateTimestamp(DB)||Date.now(),
     progress:{
-      v:DB.v, mode:DB.mode, sel:DB.sel, seen:DB.seen, paliers:DB.paliers,
+      v:DB.v, mode:DB.mode, sel:DB.sel, seen:DB.seen, paliers:DB.paliers, courseProgress:DB.courseProgress||freshCourseProgress(),
       days:DB.days, dailyProgress:DB.dailyProgress||{}, pieces:cloudPieces(), pieceProgress:DB.pieceProgress||{},
       activePiece:DB.activePiece||"", pieceGoals:DB.pieceGoals||{}, questionClock:DB.questionClock||0, repairQueue:DB.repairQueue||[], validationDrafts:DB.validationDrafts||{}, easterEggs:DB.easterEggs||{}, curriculum:DB.curriculum||normalizeCurriculumState(null)
     },
@@ -5751,7 +6012,7 @@ function activateSync(){
 // Sauvegarde compacte pour le QR : on n'exporte que l'utile (niveaux vides omis) ; ensureStructure reconstruit le reste à l'import.
 function compactSave(){
   backfillCurriculumFromGame(DB);
-  const out={v:DB.v,xp:DB.xp,sound:DB.sound,soundLong:DB.soundLong,haptic:DB.haptic,mode:DB.mode,sel:DB.sel,themeMode:DB.themeMode||"classique",
+  const out={v:DB.v,xp:DB.xp,sound:DB.sound,soundLong:DB.soundLong,haptic:DB.haptic,mode:DB.mode,sel:DB.sel,themeMode:DB.themeMode||"classique",courseProgress:DB.courseProgress||freshCourseProgress(),
              _sezam:DB._sezam,days:DB.days,dailyProgress:DB.dailyProgress||{},seen:DB.seen,noteStats:{},paliers:{},pieces:DB.pieces||[],pieceProgress:DB.pieceProgress||{},
              activePiece:DB.activePiece||"",pieceGoals:DB.pieceGoals||{},profile:DB.profile,kbdStats:DB.kbdStats,curriculum:DB.curriculum||normalizeCurriculumState(null),
              questionClock:DB.questionClock||0,repairQueue:DB.repairQueue||[],validationDrafts:DB.validationDrafts||{},easterEggs:DB.easterEggs||{}};
@@ -5819,6 +6080,11 @@ $("btnQuit").onclick=function(){
       logEvent("daily_session_finish",{palier:EX.palier?EX.palier.id:null,mode:EX.mode,i:EX.i,early:!expired});
       finishSerie(); return;
     }
+  }
+  if(EX&&EX.sessionMode==="course"&&!EX.done){
+    if(typeof window.confirm==="function"&&!window.confirm("Quitter cet exercice ? Il ne sera pas compté comme terminé.")) return;
+    logEvent("course_exercise_abort",{palier:EX.palier?EX.palier.id:null,step:EX.course?EX.course.stepId:null,i:EX.i});
+    finishSerie(); return;
   }
   if(EX&&!EX.done) logEvent(EX.daily?"daily_session_abort":"abandon",{palier:EX.palier?EX.palier.id:null,mode:EX.mode,i:EX.i});
   if(rafTimer)clearInterval(rafTimer); clearQTimers(); clearDailyTimer(); if(EX)EX.done=true; save(); renderHome(); show("scrHome"); flushPendingSync();

@@ -112,7 +112,7 @@ function loadEngine(runtime) {
   const exportsList = [
     "esc", "checkValidation", "seriesCover", "recentCoveredIds", "validationMissingIds", "srs", "srsReview", "isDue", "coldRecallId", "ensureStructure", "cleanId", "isSafeId", "safeMap", "hasOwn",
     "importSave", "compactSave", "undoImport", "tierUnlocked", "tierComplete",
-    "palierPlayable", "playableInMode", "visiblePaliers", "valProgress", "PALIERS", "TIERS", "TIER_IDS", "NOTES",
+    "palierPlayable", "playableInMode", "visiblePaliers", "valProgress", "PALIERS", "TIERS", "TIER_IDS", "NOTES", "COURSES", "MAX_QUESTIONS_PER_EXERCISE", "COURSE_MAX_EXERCISES", "courseDecision", "normalizeCourseProgress", "advanceCourseExercise",
     "buildKeyboard", "pcOf", "isWhite", "pickKbdTarget", "nameOptions", "withAcc",
     "baseNoteObj", "kbdRangeFor", "freshPalierState", "SRS_DAYS", "normalizePiece", "normalizeAttachment", "normalizeSegment", "MAX_PIECE_ATTACHMENT_BYTES", "MAX_TOTAL_ATTACHMENT_BYTES", "SAFE_ATTACHMENT_TYPES", "pieceFileType",
     "normalizeQuestion", "normalizeDay", "normalizeSegmentState", "normalizeNoteStat", "normalizeConfusions", "normalizeRepairItem", "normalizeRepairQueue", "normalizeEasterEggs", "normalizeSeriesRecord", "normalizeTierProgress", "normalizeStar", "normalizeSeen", "normalizeKbdStats", "markDay", "activeDayKeys", "streak", "todayStr",
@@ -133,7 +133,7 @@ function loadEngine(runtime) {
     "segmentMeasures", "segmentScript", "segmentStateId", "segmentStateDef", "segmentStateRank", "pieceStateCounts",
     "goalDef", "pieceGoal", "setPieceGoal", "ambitionProgress", "activePieceObj", "defaultActivePieceId", "ensureActivePiece",
     "noteOccurrencesInPiece", "measureSegment", "pieceMapSVG", "mapLegendHtml", "markSegmentSeen", "toggleSegmentFlag",
-    "setSegmentFeel", "feelLabel", "beginSerie", "answer", "answerPos", "startPieceSegment", "renderResPiece", "nextQuestion", "finishSerie",
+    "setSegmentFeel", "feelLabel", "beginSerie", "answer", "answerPos", "startPieceSegment", "renderResPiece", "nextQuestion", "finishSerie", "startRafale", "finishRafale",
     "beginClavier", "nextKbd", "kbdTap", "renderKbd", "recordKbdAnswer",
     "STAFF", "staffSVG", "bonusStaffSVG", "clefSVG", "noteGlyph", "yOf", "previewNoteHtml",
     "currentRecoveryCode", "mirrorIntro", "tone", "save", "readKey", "bestLocalState", "recognizableStoredState", "utf8ByteLength", "decodedBase64Bytes", "MAX_IMPORT_TEXT_BYTES",
@@ -799,6 +799,85 @@ eq(skipEx.phaseStats.transfert.n, 0, "une mission passée ne prétend pas que le
 ok(skipEx.transferReached !== true, "une mission passée conserve l'indicateur sans transfert");
 E.clearQTimers(); E.clearDailyTimer(); E.haltEX();
 
+/* 9septies-bis) Parcours court — 3 notes, une arrivée à la fois, jamais une marée de répétitions */
+group("Parcours court — cadence, plafond et variété");
+E.COURSES.forEach(function(course){
+  ok(course.steps.length <= E.COURSE_MAX_EXERCISES && course.steps.length <= 12,
+    course.label + " ne dépasse jamais 12 exercices");
+  eq(course.steps[0].notes.length, 3, course.label + " démarre avec exactement trois notes");
+  course.steps.forEach(function(step){
+    eq(new Set(step.notes).size, step.notes.length, course.label + " ne duplique aucune note dans une étape");
+  });
+  course.steps.slice(1).forEach(function(step, index){
+    const previous=course.steps[index].notes;
+    eq(step.notes.length, previous.length + 1, course.label + " ajoute une seule note à l'étape suivante");
+    eq(step.notes.filter(function(id){return previous.indexOf(id) < 0;}).length, 1,
+      course.label + " n'introduit jamais deux notes d'un coup");
+    ok(previous.every(function(id){return step.notes.indexOf(id) >= 0;}),
+      course.label + " conserve les notes déjà jonglées");
+  });
+});
+freshDB();
+const capPalier=E.PALIERS[2]; seedSeen(capPalier.notes);
+E.beginSerie({sessionMode:"session",n:99,palier:capPalier,pool:capPalier.notes,mode:"bronze",groupN:6,cold:false});
+for(let guard=0;guard<100&&!E.getEX().done;guard++){
+  if(E.getEX().waiting) E.nextQuestion(); else answerCurrentCorrect();
+}
+const servedNotes=(E.getEX().questionRecords||[]).reduce(function(total,row){return total+(row.ids||[]).length;},0);
+ok(E.getEX().done && servedNotes <= E.MAX_QUESTIONS_PER_EXERCISE,
+  "même un exercice en groupes est plafonné à 25 notes-réponses");
+eq(E.getEX().promptCount, E.MAX_QUESTIONS_PER_EXERCISE,
+  "le plafond compte les notes réellement servies, pas seulement les cartes de groupe");
+freshDB();
+E.startRafale();
+for(let guard=0;guard<60&&!E.getEX().done;guard++){
+  if(E.getEX().waiting) E.nextQuestion(); else answerCurrentCorrect();
+}
+ok(E.getEX().done && E.getEX().promptCount === E.MAX_QUESTIONS_PER_EXERCISE,
+  "même la Rafale s'arrête au plafond de 25 questions");
+freshDB();
+E.startDailySession();
+eq(E.getEX().sessionMode, "course", "le bouton principal démarre le parcours court");
+eq(E.getEX().pool, ["sol4","la4","si4"], "le parcours commence bien avec SOL, LA, SI");
+ok(E.getEX().questionCap <= E.MAX_QUESTIONS_PER_EXERCISE, "l'exercice principal ne dépasse jamais 25 questions");
+if(E.getEX().pendingDecouverte && typeof E.getEl("btnDecGo").onclick === "function") E.getEl("btnDecGo").onclick();
+for(let guard=0;guard<60&&!E.getEX().done;guard++){
+  if(E.getEX().waiting) E.nextQuestion(); else answerCurrentCorrect();
+}
+const nextCourse=E.courseDecision();
+ok(E.getEX().done && nextCourse && nextCourse.pool.length === 4,
+  "un exercice terminé ouvre immédiatement l'étape à quatre notes");
+ok(["sol4","la4","si4"].every(function(id){return nextCourse.pool.indexOf(id)>=0;}),
+  "les trois repères initiaux restent actifs après l'arrivée de DO");
+const savedCourse=JSON.parse(E.compactSave());
+ok(!!savedCourse.courseProgress && savedCourse.courseProgress.steps.sol === 1,
+  "la progression courte suit la sauvegarde locale / QR");
+ok(E.cloudDocument().progress.courseProgress.steps.sol === 1,
+  "la progression courte suit aussi la synchro cloud");
+const oldRandom=Math.random, prompts=[];
+try{
+  Math.random=function(){return 0;};
+  freshDB(); seedSeen(["sol4","la4","si4"]);
+  E.beginSerie({sessionMode:"session",n:12,palier:E.PALIERS[0],pool:["sol4","la4","si4"],mode:"zen",groupN:1,cold:false});
+  for(let guard=0;guard<40&&!E.getEX().done;guard++){
+    const ex=E.getEX();
+    if(ex.waiting){ E.nextQuestion(); continue; }
+    prompts.push({id:ex.seq[0],qtype:ex.qtype});
+    answerCurrentCorrect(); E.nextQuestion();
+  }
+} finally {
+  Math.random=oldRandom; E.clearQTimers();
+}
+ok(prompts.every(function(prompt,index){
+  return index<2 || !prompts.slice(index-2,index).some(function(previous){return previous.id===prompt.id;});
+}), "une même note ne revient jamais dans les deux questions ordinaires suivantes");
+const writePrompts=prompts.filter(function(prompt){return prompt.qtype==="ecrit";});
+ok(writePrompts.length >= 1 && writePrompts.length <= 2,
+  "une courte séance garde l'écrit varié sans le marteler");
+eq(new Set(writePrompts.map(function(prompt){return prompt.id;})).size, writePrompts.length,
+  "la même note n'est pas redemandée à placer pendant l'exercice court");
+E.haltEX();
+
 /* 9octies) Accessibilité & PWA — verrous de la passe 4 */
 group("Accessibilité & PWA — caches historiques, carte au clavier, cibles, contraste (A1-A4)");
 const swSrcA4 = fs.readFileSync(path.join(__dirname, "..", "sw.js"), "utf8");
@@ -1229,7 +1308,7 @@ ok(E.shownTrophyDefs().every(t => t.id!=="copiste"),"le trophée secret reste in
 E.getDB().easterEggs=E.normalizeEasterEggs({byId:{"clef-fa":3},total:3});
 ok(E.shownTrophyDefs().some(t => t.id==="copiste"&&t.on),"trois clés remises révèlent le trophée secret Œil du copiste");
 ok(idx.indexOf('data-plan-action') < 0 && idx.indexOf('$("btnPlayNow").onclick=startDailySession') >= 0,
-  "un seul bouton principal lance toute la séance chronométrée");
+  "un seul bouton principal lance le parcours calibré");
 
 /* 16) Charte SEZAM — rebrand sans casse de données */
 group("Charte SEZAM — identité appliquée, données intactes");
