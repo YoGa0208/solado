@@ -569,7 +569,7 @@ function esc(s){
   });
 }
 /* ================= DONNÉES ================= */
-const APP_VERSION="v31"; // garder aligné avec CACHE_NAME de sw.js (testé)
+const APP_VERSION="v32"; // garder aligné avec CACHE_NAME de sw.js (testé)
 const NOTES = {
   do4 :{n:"do", clef:"sol", p:-2, midi:60, mn:"Le do du milieu est transpercé par sa petite ligne, rien qu'à lui."},
   re4 :{n:"ré", clef:"sol", p:-1, midi:62, mn:"Collé juste sous la portée."},
@@ -619,7 +619,7 @@ const PALIERS = [
    3 notes au départ, puis exactement une nouvelle note par exercice. */
 const MAX_QUESTIONS_PER_EXERCISE=25;
 const COURSE_MAX_EXERCISES=12;
-const COURSE_QUESTION_BUDGET=12;
+const COURSE_QUESTION_BUDGET=25;
 const COURSES=[
   {id:"sol",label:"Clé de sol",steps:[
     {id:"sol-01",notes:["sol4","la4","si4"],newNote:""},
@@ -943,8 +943,7 @@ function coursePalierFor(step){
   return PALIERS.find(function(p){ return step.notes.every(function(id){return p.notes.indexOf(id)>=0;}); })||PALIERS[0];
 }
 function courseQuestionBudget(step){
-  const count=step&&Array.isArray(step.notes)?step.notes.length:3;
-  return Math.min(COURSE_QUESTION_BUDGET,MAX_QUESTIONS_PER_EXERCISE,Math.max(6,count*2));
+  return Math.min(COURSE_QUESTION_BUDGET,MAX_QUESTIONS_PER_EXERCISE);
 }
 function courseDecision(){
   const state=currentCourseState();
@@ -2592,7 +2591,7 @@ function openMusicProfile(){
       '<label>Point de départ déclaré<select id="profLevel">'+optionHtml(PROFILE_LEVELS,p.niveauDepart)+'</select></label>'+
       '<p class="src" style="margin:0">Ce point de départ place l’exploration ; il ne valide aucun acquis et ne remplace pas un diagnostic.</p>'+
       '<label>Temps disponible (défis)<select id="profMinutes">'+optionHtml(DAILY_MINUTES,p.dailyMinutes)+'</select></label>'+
-      '<p class="src" style="margin:0">Le parcours principal reste court : 25 questions maximum, quelle que soit cette durée.</p>'+
+      '<p class="src" style="margin:0">Le parcours principal comporte exactement 25 questions par séance, quelle que soit cette durée.</p>'+
       '<label>Rythme hebdomadaire<select id="profDays">'+optionHtml(DAYS_PER_WEEK,p.daysPerWeek)+'</select></label>'+
       '<label>Date cible<input id="profTarget" type="date" value="'+esc(p.targetDate)+'"></label>'+
       '<label>Affinité<select id="profAffinity">'+optionHtml(PROFILE_AFFINITIES,p.affinity)+'</select></label>'+
@@ -2838,7 +2837,7 @@ function toggleDailyBlock(id,signature){
 function runDailyBlock(){ startDailySession(); }
 function renderDailyPlan(plan){
   if(plan.isCourse){
-    $("dailyPlan").innerHTML='<div class="dailyPlanHead"><span>Parcours du jour</span><b>'+plan.total+' questions max</b></div>'+plan.blocks.map(function(b){
+    $("dailyPlan").innerHTML='<div class="dailyPlanHead"><span>Parcours du jour</span><b>'+plan.total+' questions</b></div>'+plan.blocks.map(function(b){
       return '<div class="dailyBlock"><span class="mins">'+b.questions+' q.</span><span><b>'+esc(b.title)+'</b><small>'+esc(b.note)+'</small></span><span class="dailyAuto'+(b.done?' done':'')+'">'+(b.done?'Fait ✓':'Inclus')+'</span></div>';
     }).join("");
     return;
@@ -2887,12 +2886,12 @@ function renderCockpit(decision,plan){
   $("coachKicker").textContent="Coach invisible · "+plan.path;
   if(plan.isCourse){
     const c=decision.course||{}, newcomer=c.newNote&&NOTES[c.newNote]?"Une nouvelle note rejoint le jeu : "+NOTES[c.newNote].n.toUpperCase()+".":"Tes trois premiers repères entrent en jeu.";
-    $("coachPitch").textContent=hello+"une courte séquence de "+plan.total+" questions maximum. "+newcomer;
-    $("btnPlayNow").textContent="JOUER · "+plan.total+" QUESTIONS MAX";
+    $("coachPitch").textContent=hello+"ta séance comporte exactement "+plan.total+" questions. "+newcomer;
+    $("btnPlayNow").textContent="JOUER · "+plan.total+" QUESTIONS";
     $("cockpitMeta").innerHTML=
       '<span><b>'+esc(c.itemLabel||p.id)+'</b><small>clé</small></span>'+
       '<span><b>Étape '+((c.stepIndex||0)+1)+'</b><small>sur '+(c.stepTotal||COURSE_MAX_EXERCISES)+'</small></span>'+
-      '<span><b>'+plan.total+' q.</b><small>maximum</small></span>';
+      '<span><b>'+plan.total+' q.</b><small>par séance</small></span>';
     $("coachLine").textContent=decision.reason;
     return;
   }
@@ -3035,7 +3034,7 @@ function renderHome(){
     b.onclick=(function(pid){return function(){startStarReview(pid);};})(sdue[0].id);
     sc.appendChild(b);
   }
-  $("btnSerie").textContent=plan.isCourse?"Exercice court · "+plan.total+" questions max":"Session 10 questions · "+modeLabel(DB.mode);
+  $("btnSerie").textContent=plan.isCourse?"Exercice court · "+plan.total+" questions":"Session 10 questions · "+modeLabel(DB.mode);
   const nd=dueCount();
   $("defiTxt").textContent = nd>0 ? ("↻ "+nd+" note"+(nd>1?"s":"")+" à revoir")
     : (day&&day.perfect ? "★ Défi parfait réussi" : "★ Défi parfait : tente une Rafale");

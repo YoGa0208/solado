@@ -839,7 +839,7 @@ freshDB();
 E.startDailySession();
 eq(E.getEX().sessionMode, "course", "le bouton principal démarre le parcours court");
 eq(E.getEX().pool, ["sol4","la4","si4"], "le parcours commence bien avec SOL, LA, SI");
-ok(E.getEX().questionCap <= E.MAX_QUESTIONS_PER_EXERCISE, "l'exercice principal ne dépasse jamais 25 questions");
+eq(E.getEX().questionCap, E.MAX_QUESTIONS_PER_EXERCISE, "chaque séance du parcours comporte exactement 25 questions");
 if(E.getEX().pendingDecouverte && typeof E.getEl("btnDecGo").onclick === "function") E.getEl("btnDecGo").onclick();
 for(let guard=0;guard<60&&!E.getEX().done;guard++){
   if(E.getEX().waiting) E.nextQuestion(); else answerCurrentCorrect();
