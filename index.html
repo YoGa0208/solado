@@ -135,10 +135,12 @@
   .linkbtn{background:none;border:none;color:var(--dim);font-size:13px;text-decoration:underline;min-height:40px;padding:10px 6px}
   .defi{font-size:13px;color:var(--or-deep)}
 
-  .exhead{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--dim);margin:4px 0 8px}
+  .exhead{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:5px 8px;font-size:13px;color:var(--dim);margin:4px 0 8px}
+  #exMode{flex:1 1 100%;min-width:0;color:var(--petrole);font-weight:700;line-height:1.25}
+  #exCount{white-space:nowrap}
   .exerciseHome{align-self:flex-start;min-height:44px;margin:0 0 7px;padding:8px 14px;border:1px solid rgba(15,76,92,.25);border-radius:999px;background:var(--paper);color:var(--petrole);font-size:13px;font-weight:800}
-  .dots{display:flex;gap:5px}
-  .dot{width:9px;height:9px;border-radius:50%;background:var(--ceramique2)}
+  .dots{display:flex;flex:1 1 auto;min-width:0;gap:3px}
+  .dot{width:7px;height:7px;flex:0 0 7px;border-radius:50%;background:var(--ceramique2)}
   .dot.g{background:var(--good)} .dot.b{background:var(--bad)}
   .timerbar{height:6px;border-radius:3px;background:var(--ceramique2);overflow:hidden;margin:2px 0 8px;visibility:hidden}
   .timerbar.on{visibility:visible}
@@ -578,7 +580,7 @@ function esc(s){
   });
 }
 /* ================= DONNÉES ================= */
-const APP_VERSION="v34"; // garder aligné avec CACHE_NAME de sw.js (testé)
+const APP_VERSION="v35"; // garder aligné avec CACHE_NAME de sw.js (testé)
 const NOTES = {
   do4 :{n:"do", clef:"sol", p:-2, midi:60, mn:"Le do du milieu est transpercé par sa petite ligne, rien qu'à lui."},
   re4 :{n:"ré", clef:"sol", p:-1, midi:62, mn:"Collé juste sous la portée."},
@@ -923,6 +925,23 @@ function courseById(id){ return COURSES.find(function(course){return course.id==
 function freshCourseProgress(){
   return {version:2,currentItem:"sol",steps:{sol:0,fa:0},cycles:{sol:0,fa:0},exercises:{sol:0,fa:0},complete:false};
 }
+function freshCourseReviewState(){
+  return {version:1,steps:safeMap()};
+}
+function normalizeCourseReviewState(value){
+  const out=freshCourseReviewState(), src=isRecord(value)&&isRecord(value.steps)?value.steps:{};
+  COURSES.forEach(function(course){
+    course.steps.forEach(function(step){
+      const raw=isRecord(src[step.id])?src[step.id]:null;
+      if(!raw) return;
+      const recent=Array.isArray(raw.recent)?raw.recent.map(function(id){return cleanText(id,120,"");}).filter(Boolean).slice(0,3):[];
+      const run=clampInt(raw.run,0,999999,0);
+      const lastScript=Array.isArray(raw.lastScript)&&raw.lastScript.length===COURSE_QUESTION_BUDGET&&raw.lastScript.every(function(id){return step.notes.indexOf(id)>=0;})?raw.lastScript.slice():[];
+      if(run||recent.length||lastScript.length) out.steps[step.id]={run:run,recent:recent,lastScript:lastScript};
+    });
+  });
+  return out;
+}
 function normalizeCourseProgress(value){
   const out=freshCourseProgress(), src=isRecord(value)?value:{};
   COURSES.forEach(function(course){
@@ -1009,23 +1028,115 @@ function reviewableCourseSteps(){
   });
   return rows;
 }
+function partitionPracticeMotifs(step){
+  if(!step||!Array.isArray(step.notes)||!step.notes.length||typeof PIECES_BUILTIN==="undefined") return [];
+  const target=step.notes.filter(function(id){return !!NOTES[id];}).slice().sort(function(a,b){return NOTES[a].p-NOTES[b].p;});
+  if(!target.length) return [];
+  const clef=NOTES[target[0]].clef, out=[];
+  const sourceIds=clef==="fa"?["aclairfa","odejoiefa"]:["aclair","frere","odejoie","saints"];
+  PIECES_BUILTIN.forEach(function(piece){
+    if(sourceIds.indexOf(piece.id)<0||!piece.pd||!piece.melody||pieceClef(piece)!==clef) return;
+    const melody=pieceMelody(piece), seen=safeMap();
+    if(!melody) return;
+    const stream=[], bars=[];
+    melody.measures.forEach(function(measure,measureIndex){
+      measure.forEach(function(id){ if(NOTES[id]&&NOTES[id].clef===clef){stream.push(id);bars.push(measureIndex+1);} });
+    });
+    for(let start=0;start+4<=stream.length;start++){
+      const source=stream.slice(start,start+4), positions=source.map(function(id){return NOTES[id].p;});
+      const lo=Math.min.apply(null,positions), hi=Math.max.apply(null,positions), contour=positions.map(function(pos){return pos-lo;});
+      if(hi-lo!==2||new Set(contour).size!==3) continue;
+      const signature=contour.join(".");
+      if(seen[signature]) continue;
+      seen[signature]=1;
+      const from=bars[start],to=bars[start+3];
+      out.push({sourcePieceId:piece.id,sourceTitle:piece.titre,sourceComposer:piece.compositeur||"",bars:"mes. "+from+(to!==from?"–"+to:""),contour:contour,signature:signature});
+    }
+  });
+  return out;
+}
+function partitionPracticeHash(value){
+  const text=String(value||""); let hash=2166136261;
+  for(let i=0;i<text.length;i++){hash^=text.charCodeAt(i);hash=Math.imul(hash,16777619);}
+  return hash>>>0;
+}
+function partitionPracticeLongestRun(script){
+  return script.reduce(function(state,id){state.run=id===state.last?state.run+1:1;state.last=id;state.max=Math.max(state.max,state.run);return state;},{last:"",run:0,max:0}).max;
+}
+function partitionPracticeDistance(first,second){
+  if(!Array.isArray(first)||first.length!==COURSE_QUESTION_BUDGET) return COURSE_QUESTION_BUDGET;
+  return second.reduce(function(distance,id,index){return distance+(id!==first[index]?1:0);},0);
+}
+function partitionPracticePlan(itemId,stepIndex,run,previousScript){
+  const item=courseById(itemId), index=Number(stepIndex), step=item&&item.steps[index];
+  if(!step) return null;
+  const target=step.notes.filter(function(id){return !!NOTES[id];}).slice().sort(function(a,b){return NOTES[a].p-NOTES[b].p;}), motifs=partitionPracticeMotifs(step), groups=[];
+  if(target.length<3) return null;
+  PIECES_BUILTIN.forEach(function(piece){
+    const own=motifs.filter(function(motif){return motif.sourcePieceId===piece.id;});
+    if(own.length) groups.push({piece:piece,motifs:own});
+  });
+  if(!groups.length) return null;
+  run=clampInt(run,0,999999,0);
+  const group=groups[run%groups.length], source=group.piece, focus=step.newNote&&target.indexOf(step.newNote)>=0?step.newNote:"";
+  const anchor=focus||target[run%target.length], anchorIndex=target.indexOf(anchor), neighbor=target[anchorIndex===0?1:anchorIndex-1];
+  const maxStart=target.length-3, starts=[0,1,2,3,4].map(function(cell){return Math.round(cell*maxStart/4);});
+  const prior=Array.isArray(previousScript)&&previousScript.length===COURSE_QUESTION_BUDGET&&previousScript.every(function(id){return target.indexOf(id)>=0;})?previousScript:null;
+  for(let salt=0;salt<160;salt++){
+    const blocks=[], selected=[];
+    starts.forEach(function(start,cell){
+      const motif=group.motifs[partitionPracticeHash(step.id+"|"+run+"|"+salt+"|"+cell+"|"+source.id)%group.motifs.length];
+      blocks.push(motif.contour.map(function(offset){return target[start+offset];})); selected.push(motif);
+    });
+    const anchorCell=[anchor,anchor,anchor,neighbor,anchor], slot=partitionPracticeHash("slot|"+step.id+"|"+run+"|"+salt)%6;
+    const script=[];
+    for(let block=0;block<blocks.length;block++){
+      if(block===slot) script.push.apply(script,anchorCell);
+      script.push.apply(script,blocks[block]);
+    }
+    if(slot===blocks.length) script.push.apply(script,anchorCell);
+    const counts=safeMap(); script.forEach(function(id){counts[id]=(counts[id]||0)+1;});
+    const covered=target.every(function(id){return (counts[id]||0)>=1;});
+    const anchorOk=focus?(counts[focus]>=5&&counts[focus]<=7):target.every(function(id){return (counts[id]||0)>=5;});
+    if(script.length!==COURSE_QUESTION_BUDGET||!covered||!anchorOk||partitionPracticeLongestRun(script)>3||partitionPracticeDistance(prior,script)<10) continue;
+    const bars=uniq(selected.map(function(motif){return motif.bars;})).slice(0,5);
+    return {
+      variantId:"partition-v2-"+step.id+"-"+source.id+"-"+run+"-"+salt,
+      run:run,number:run+1,sourcePieceId:source.id,sourceTitle:source.titre,sourceComposer:source.compositeur||"",sourceType:"motif",
+      sourceLabel:"Variation pédagogique transposée d’après « "+source.titre+" » · cellule de rappel d’après « Vive le vent »",bars:bars,script:script,focusNote:focus,anchorNote:anchor,supportSourcePieceId:"ventdhiver",
+      signature:script.join("."),motifCount:5,distanceFromPrevious:partitionPracticeDistance(prior,script)
+    };
+  }
+  return null;
+}
+function claimCourseReviewPlan(stepId,plan){
+  if(!DB||!isSafeId(stepId)||!plan||!plan.variantId) return false;
+  const state=normalizeCourseReviewState(DB.courseReviewState), current=isRecord(state.steps[stepId])?state.steps[stepId]:{run:0,recent:[],lastScript:[]};
+  state.steps[stepId]={run:Math.max(current.run||0,(plan.run||0)+1),recent:[plan.variantId].concat(current.recent||[]).filter(function(id,index,list){return list.indexOf(id)===index;}).slice(0,3),lastScript:plan.script.slice()};
+  DB.courseReviewState=state;
+  return true;
+}
 function courseReviewDecision(itemId,stepIndex){
   const row=reviewableCourseSteps().find(function(entry){return entry.item.id===itemId&&entry.index===Number(stepIndex);});
   if(!row) return null;
-  const step=row.step, palier=coursePalierFor(step), budget=courseQuestionBudget(step);
+  DB.courseReviewState=normalizeCourseReviewState(DB.courseReviewState);
+  const step=row.step, palier=coursePalierFor(step), budget=courseQuestionBudget(step), stored=DB.courseReviewState.steps[step.id]||{run:0,recent:[],lastScript:[]};
+  const practice=partitionPracticePlan(row.item.id,row.index,stored.run||0,stored.lastScript||[]);
+  if(!practice) return null;
   return {
-    kind:"courseReview",label:"Entraînement libre",n:budget,questionCap:budget,palier:palier,pool:step.notes.slice(),mode:"zen",groupN:1,
-    reason:"Reprise libre d’un cycle déjà atteint : elle entraîne la mémoire sans déplacer ta progression.",
-    course:{itemId:row.item.id,itemLabel:row.item.label,stepId:step.id,stepIndex:row.index,stepTotal:row.item.steps.length,newNote:step.newNote||"",seriesIndex:-1,seriesNumber:0,seriesTotal:COURSE_SERIES_PER_STEP,phaseLabel:"Entraînement libre",review:true,signature:"course-review-v1:"+row.item.id+":"+row.index}
+    kind:"courseReview",label:"Étude de partition",n:budget,questionCap:budget,palier:palier,pool:step.notes.slice(),mode:"zen",groupN:1,script:practice.script.slice(),practice:practice,
+    reason:practice.sourceLabel+" : 25 notes en motifs, uniquement avec les repères déjà acquis. Le prochain rejeu proposera une autre variation.",
+    course:{itemId:row.item.id,itemLabel:row.item.label,stepId:step.id,stepIndex:row.index,stepTotal:row.item.steps.length,newNote:step.newNote||"",seriesIndex:-1,seriesNumber:0,seriesTotal:COURSE_SERIES_PER_STEP,phaseLabel:"Entraînement libre",review:true,practice:practice,signature:"course-review-v2:"+practice.variantId}
   };
 }
 function startCourseReview(itemId,stepIndex){
   if(EX&&!EX.done) return false;
   const review=courseReviewDecision(itemId,stepIndex);
   if(!review) return false;
+  claimCourseReviewPlan(review.course.stepId,review.practice);
   DB.sel=review.palier.id; save();
-  beginSerie({sessionMode:"courseReview",n:review.n,questionCap:review.questionCap,palier:review.palier,pool:review.pool,mode:review.mode,groupN:1,
-    label:"Entraînement libre · "+review.course.itemLabel+" · cycle "+(review.course.stepIndex+1),course:review.course,cold:true});
+  beginSerie({sessionMode:"courseReview",n:review.n,questionCap:review.questionCap,palier:review.palier,pool:review.pool,mode:review.mode,groupN:1,script:review.script,
+    label:"Partition-école "+review.practice.number+" · "+review.practice.sourceTitle,course:review.course,cold:false});
   return true;
 }
 function normalizeCurriculumProof(value){
@@ -1597,6 +1708,7 @@ function ensureStructure(db){
   db.kbdStats=normalizeKbdStats(db.kbdStats);
   db.profile=normalizeProfile(db.profile);
   db.courseProgress=normalizeCourseProgress(db.courseProgress);
+  db.courseReviewState=normalizeCourseReviewState(db.courseReviewState);
   db.curriculum=normalizeCurriculumState(db.curriculum);
   db.dailyProgress=normalizeDailyProgress(db.dailyProgress);
   db.validationDrafts=normalizeValidationDrafts(db.validationDrafts);
@@ -2908,9 +3020,10 @@ function renderCourseReview(){
   if(!rows.length){ host.innerHTML=""; return; }
   const options=rows.map(function(row,index){
     const notes=row.step.notes.map(function(id){return NOTES[id].n.toUpperCase();}).join(" · ");
-    return '<option value="'+row.item.id+':'+row.index+'"'+(index===rows.length-1?' selected':'')+'>'+esc(row.item.label)+' · cycle '+(row.index+1)+' · '+esc(notes)+'</option>';
+    const next=courseReviewDecision(row.item.id,row.index), source=next&&next.practice?" · d’après "+next.practice.sourceTitle:"";
+    return '<option value="'+row.item.id+':'+row.index+'"'+(index===rows.length-1?' selected':'')+'>'+esc(row.item.label)+' · cycle '+(row.index+1)+' · '+esc(notes+source)+'</option>';
   }).join("");
-  host.innerHTML='<section class="courseReview"><h3>↶ Revenir en arrière et s’entraîner</h3><p>Choisis n’importe quel cycle déjà atteint. Tu peux refaire autant de séries de 25 que tu veux : cet entraînement ne force aucune avancée et ne retire aucun acquis.</p><select id="courseReviewSelect" aria-label="Cycle à rejouer">'+options+'</select><button id="btnCourseReview">REJOUER CE CYCLE · 25 QUESTIONS</button></section>';
+  host.innerHTML='<section class="courseReview"><h3>↶ Revenir en arrière et s’entraîner</h3><p>Choisis un cycle déjà atteint. Chaque reprise crée une nouvelle étude de 25 notes inspirée d’une partition du domaine public, sans note future et sans déplacer ta progression.</p><select id="courseReviewSelect" aria-label="Cycle à rejouer">'+options+'</select><button id="btnCourseReview">NOUVEL EXERCICE DE PARTITION · 25 NOTES</button></section>';
   $("btnCourseReview").onclick=function(){
     const parts=String($("courseReviewSelect").value||"").split(":");
     startCourseReview(parts[0],Number(parts[1]));
@@ -3787,6 +3900,9 @@ function questionTask(){
     if(EX.coldId) return {role:"cold",phase:EX.daily?"rappel":"cible",probeId:EX.coldId,qtype:"lect",cold:true};
   }
   if(EX.sessionMode==="piece") return {role:"transfer",phase:"transfert",pool:EX.pool};
+  // Un entraînement issu d'une partition suit son script de 25 notes sans qu'une
+  // réparation, un palier plus large ou un intervalle ne puisse injecter une note future.
+  if(EX.script&&!EX.daily) return {role:"baseline",phase:"cible",pool:EX.pool};
   const dueReview=EX.review==="due";
   const mayRepair=!EX.script&&(!EX.review||dueReview)&&EX.kind==="serie"&&EX.sessionMode!=="piece";
   const scopedPool=(EX.daily||(EX.sessionMode==="repair"&&!EX.review))?null:EX.pool;
@@ -4386,7 +4502,7 @@ function finishSerie(){
   const scoreN=Math.max(1,isDaily?answered:(scoredCourse?EX.promptCount:EX.n)), prec=Math.round(EX.ok/scoreN*100), label=isDaily?(dailyQualified?(transferReached?"Séance du jour":"Séance du jour · sans transfert"):"Séance partielle"):(isCourse?"Cycle d’acquisition":(isCourseReview?"Entraînement libre":(isRepair?"Réparation":(isFlash?"Flash":(isPiece?"Partition":modeLabel(EX.mode==="rafale"?"zen":EX.mode))))));
   $("resScore").innerHTML=EX.ok+"<small>/"+(isDaily?answered:(scoredCourse?EX.promptCount:EX.n))+"</small>";
   $("btnReplayCourse").style.display=isCourse?"block":"none";
-  $("btnAgain").textContent=isCourse?"Continuer mon parcours":(isCourseReview?"Refaire cet entraînement":"Encore une série");
+  $("btnAgain").textContent=isCourse?"Continuer mon parcours":(isCourseReview?"Nouvel exercice de partition":"Encore une série");
   $("resSub").textContent=isDaily
     ? label+" · "+Math.max(1,Math.round(activeElapsed/60000))+" min actives · précision "+prec+" %"
     : "Précision "+prec+"% · "+(avgMs()/1000).toFixed(1)+" s par question · "+label;
@@ -4407,9 +4523,10 @@ function finishSerie(){
       : "Parcours des deux clés maîtrisé : chaque cycle a été validé par trois séries parfaites.";
     else resultMessage="Série "+EX.course.seriesNumber+"/"+EX.course.seriesTotal+" validée sans erreur. La prochaine série garde exactement les mêmes notes pour consolider l’acquisition.";
   } else if(isCourseReview){
+    const source=EX.course&&EX.course.practice?EX.course.practice.sourceTitle:"une partition du domaine public";
     resultMessage=errs
-      ? "Entraînement utile : les erreurs sont réparées, mais ta progression officielle reste exactement où tu l’avais choisie. Tu peux refaire ce cycle autant de fois que nécessaire."
-      : "Entraînement propre. Ce cycle reste disponible à volonté et ta progression officielle n’a pas été déplacée.";
+      ? "Étude utile d’après « "+source+" » : les erreurs sont mémorisées, sans déplacer ta progression. Le prochain exercice changera de motifs."
+      : "Étude propre d’après « "+source+" ». Le prochain exercice proposera une nouvelle variation et ta progression officielle reste inchangée.";
   } else if(isRepair){
     resultMessage=errs?"Réparation active. Les notes fragiles reviennent avec un meilleur espacement.":"Réparation nette. La mémoire gagne en stabilité.";
   } else if(isFlash){
@@ -4450,7 +4567,8 @@ function finishSerie(){
       : "<b>Les deux clés sont en place.</b> Tous les cycles d’acquisition sont maîtrisés.";
     else $("resVal").innerHTML="<b>Série "+c.seriesNumber+"/"+c.seriesTotal+" parfaite.</b> Prochaine : série "+courseNext.course.seriesNumber+"/"+courseNext.course.seriesTotal+", mêmes notes, aucune nouveauté supplémentaire.";
   } else if(isCourseReview){
-    $("resVal").innerHTML="<b>Mode entraînement :</b> aucune course en avant. Rejoue ce cycle, choisis-en un autre depuis l’accueil, ou poursuis le parcours quand tu le décides.";
+    const practice=EX.course&&EX.course.practice;
+    $("resVal").innerHTML="<b>Mode entraînement :</b> "+(practice?esc(practice.sourceLabel)+" · "+esc(practice.bars.join(" · "))+". ":"")+"Aucune course en avant : relance pour une autre étude, choisis un autre cycle depuis l’accueil, ou poursuis le parcours quand tu le décides.";
   } else if(EX.mode==="libre"){
     $("resVal").textContent="Libre : exploration active, mémoire nourrie.";
   } else {
@@ -5986,7 +6104,7 @@ function cloudDocument(){
     deviceId:syncClientId(),
     timestamp:stateTimestamp(DB)||Date.now(),
     progress:{
-      v:DB.v, mode:DB.mode, sel:DB.sel, seen:DB.seen, paliers:DB.paliers, courseProgress:DB.courseProgress||freshCourseProgress(),
+      v:DB.v, mode:DB.mode, sel:DB.sel, seen:DB.seen, paliers:DB.paliers, courseProgress:DB.courseProgress||freshCourseProgress(), courseReviewState:DB.courseReviewState||freshCourseReviewState(),
       days:DB.days, dailyProgress:DB.dailyProgress||{}, pieces:cloudPieces(), pieceProgress:DB.pieceProgress||{},
       activePiece:DB.activePiece||"", pieceGoals:DB.pieceGoals||{}, questionClock:DB.questionClock||0, repairQueue:DB.repairQueue||[], validationDrafts:DB.validationDrafts||{}, easterEggs:DB.easterEggs||{}, curriculum:DB.curriculum||normalizeCurriculumState(null)
     },
@@ -6132,7 +6250,7 @@ function activateSync(){
 // Sauvegarde compacte pour le QR : on n'exporte que l'utile (niveaux vides omis) ; ensureStructure reconstruit le reste à l'import.
 function compactSave(){
   backfillCurriculumFromGame(DB);
-  const out={v:DB.v,xp:DB.xp,sound:DB.sound,soundLong:DB.soundLong,haptic:DB.haptic,mode:DB.mode,sel:DB.sel,themeMode:DB.themeMode||"classique",courseProgress:DB.courseProgress||freshCourseProgress(),
+  const out={v:DB.v,xp:DB.xp,sound:DB.sound,soundLong:DB.soundLong,haptic:DB.haptic,mode:DB.mode,sel:DB.sel,themeMode:DB.themeMode||"classique",courseProgress:DB.courseProgress||freshCourseProgress(),courseReviewState:DB.courseReviewState||freshCourseReviewState(),
              _sezam:DB._sezam,days:DB.days,dailyProgress:DB.dailyProgress||{},seen:DB.seen,noteStats:{},paliers:{},pieces:DB.pieces||[],pieceProgress:DB.pieceProgress||{},
              activePiece:DB.activePiece||"",pieceGoals:DB.pieceGoals||{},profile:DB.profile,kbdStats:DB.kbdStats,curriculum:DB.curriculum||normalizeCurriculumState(null),
              questionClock:DB.questionClock||0,repairQueue:DB.repairQueue||[],validationDrafts:DB.validationDrafts||{},easterEggs:DB.easterEggs||{}};

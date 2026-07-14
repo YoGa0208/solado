@@ -3,7 +3,7 @@
    - documents HTML → réseau d'abord (on récupère toujours la dernière version quand on est en ligne),
      cache en secours (l'app reste utilisable hors-ligne) ;
    - autres ressources → cache d'abord, mise à jour en fond (stale-while-revalidate). */
-const CACHE_NAME = "sezam-solado-v34";
+const CACHE_NAME = "sezam-solado-v35";
 const CACHE_PREFIX = "sezam-solado-";
 const LEGACY_CACHE_NAMES = ["sezam-v12", "sezam-v21", "sezam-v23"];
 // Caches de cette application avant le rebranding (préfixes historiques). Jamais ceux d'une autre app (B12).

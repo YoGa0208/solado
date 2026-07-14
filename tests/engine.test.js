@@ -112,7 +112,7 @@ function loadEngine(runtime) {
   const exportsList = [
     "esc", "checkValidation", "seriesCover", "recentCoveredIds", "validationMissingIds", "srs", "srsReview", "isDue", "coldRecallId", "ensureStructure", "cleanId", "isSafeId", "safeMap", "hasOwn",
     "importSave", "compactSave", "undoImport", "tierUnlocked", "tierComplete",
-    "palierPlayable", "playableInMode", "visiblePaliers", "valProgress", "PALIERS", "TIERS", "TIER_IDS", "NOTES", "COURSES", "MAX_QUESTIONS_PER_EXERCISE", "COURSE_MAX_EXERCISES", "COURSE_SERIES_PER_STEP", "COURSE_NEW_NOTE_TARGET", "courseDecision", "normalizeCourseProgress", "advanceCourseExercise", "reviewableCourseSteps", "courseReviewDecision", "startCourseReview", "returnToHomeFromExercise",
+    "palierPlayable", "playableInMode", "visiblePaliers", "valProgress", "PALIERS", "TIERS", "TIER_IDS", "NOTES", "COURSES", "MAX_QUESTIONS_PER_EXERCISE", "COURSE_MAX_EXERCISES", "COURSE_SERIES_PER_STEP", "COURSE_NEW_NOTE_TARGET", "courseDecision", "normalizeCourseProgress", "advanceCourseExercise", "reviewableCourseSteps", "normalizeCourseReviewState", "partitionPracticeMotifs", "partitionPracticePlan", "claimCourseReviewPlan", "courseReviewDecision", "startCourseReview", "returnToHomeFromExercise",
     "buildKeyboard", "pcOf", "isWhite", "pickKbdTarget", "nameOptions", "withAcc",
     "baseNoteObj", "kbdRangeFor", "freshPalierState", "SRS_DAYS", "normalizePiece", "normalizeAttachment", "normalizeSegment", "MAX_PIECE_ATTACHMENT_BYTES", "MAX_TOTAL_ATTACHMENT_BYTES", "SAFE_ATTACHMENT_TYPES", "pieceFileType",
     "normalizeQuestion", "normalizeDay", "normalizeSegmentState", "normalizeNoteStat", "normalizeConfusions", "normalizeRepairItem", "normalizeRepairQueue", "normalizeEasterEggs", "normalizeSeriesRecord", "normalizeTierProgress", "normalizeStar", "normalizeSeen", "normalizeKbdStats", "markDay", "activeDayKeys", "streak", "todayStr",
@@ -899,19 +899,95 @@ ok(E.cloudDocument().progress.courseProgress.steps.sol === 1 && E.cloudDocument(
 const reviewRows=E.reviewableCourseSteps();
 eq(reviewRows.map(function(row){return row.item.id+":"+row.index;}),["sol:0","sol:1"],
   "le joueur peut choisir tous les cycles atteints, y compris revenir au précédent, jamais un cycle futur");
-ok(E.courseReviewDecision("sol",0).pool.length===3 && E.courseReviewDecision("sol",2)===null,
+const previewReviewA=E.courseReviewDecision("sol",0), previewReviewB=E.courseReviewDecision("sol",0);
+ok(previewReviewA.pool.length===3 && E.courseReviewDecision("sol",2)===null,
   "la reprise libre ouvre un acquis antérieur sans contourner le verrou du prochain cycle");
+eq(previewReviewA.practice.variantId,previewReviewB.practice.variantId,
+  "consulter l’entraînement à venir ne consomme jamais sa variante");
+ok(previewReviewA.script.length===25&&previewReviewA.script.every(function(id){return previewReviewA.pool.indexOf(id)>=0;}),
+  "la reprise prépare 25 notes strictement contenues dans le cycle choisi");
 const progressBeforeReview=JSON.stringify(E.getDB().courseProgress);
 ok(E.startCourseReview("sol",0)===true && E.getEX().sessionMode==="courseReview",
-  "un cycle antérieur peut être rejoué immédiatement en entraînement libre");
+  "un cycle antérieur peut lancer immédiatement une étude inspirée d’une partition");
+eq(E.getEX().script,previewReviewA.script,"le moteur joue exactement le script musical annoncé");
+eq(E.getDB().courseReviewState.steps["sol-01"].run,1,"le démarrage réserve exactement une variante nouvelle pour le prochain rejeu");
 for(let guard=0;guard<100&&!E.getEX().done;guard++){
   if(E.getEX().waiting) E.nextQuestion(); else answerCurrentCorrect();
 }
 eq(E.getEX().promptCount,E.MAX_QUESTIONS_PER_EXERCISE,"une série libre rejoue bien 25 questions complètes");
+eq([].concat.apply([],E.getEX().promptHistory.map(function(row){return row.ids;})),previewReviewA.script,
+  "les 25 réponses réellement servies suivent la partition-école sans injection extérieure");
 eq(JSON.stringify(E.getDB().courseProgress),progressBeforeReview,
   "refaire une série pour s’entraîner ne pousse jamais la progression officielle en avant");
-eq(E.getEl("btnAgain").textContent,"Refaire cet entraînement",
-  "le bilan d’entraînement permet de recommencer immédiatement la même série libre");
+eq(E.getEl("btnAgain").textContent,"Nouvel exercice de partition",
+  "le bilan propose explicitement une nouvelle étude plutôt que la répétition identique");
+const secondReview=E.courseReviewDecision("sol",0);
+ok(secondReview.practice.variantId!==previewReviewA.practice.variantId&&secondReview.practice.signature!==previewReviewA.practice.signature,
+  "deux replays consécutifs ont une identité et une séquence garanties différentes");
+E.getDB().repairQueue=[{id:"piege-futur",sourceId:"sol4",probeId:"re5",confusedId:"re5",stage:"retest",qtype:"lect",dueQuestion:0,createdAt:1}];
+ok(E.startCourseReview("sol",0)===true,"le bouton de bilan lance la variation suivante");
+eq(E.getEX().script,secondReview.script,"le deuxième rejeu sert bien le nouveau script annoncé");
+for(let guard=0;guard<12&&E.getEX().promptCount<7&&!E.getEX().done;guard++){
+  if(E.getEX().waiting) E.nextQuestion(); else answerCurrentCorrect();
+}
+ok([].concat.apply([],E.getEX().promptHistory.map(function(row){return row.ids;})).every(function(id){return ["sol4","la4","si4"].indexOf(id)>=0;}),
+  "même une réparation hostile ne peut injecter une note future dans l’étude scriptée");
+E.getDB().repairQueue=[];
+E.returnToHomeFromExercise();
+eq(JSON.stringify(E.getDB().courseProgress),progressBeforeReview,
+  "interrompre une étude nouvelle conserve encore exactement la progression officielle");
+ok(JSON.parse(E.compactSave()).courseReviewState.steps["sol-01"].run===2&&E.cloudDocument().progress.courseReviewState.steps["sol-01"].run===2,
+  "la rotation des études suit les sauvegardes QR et cloud");
+
+E.COURSES.forEach(function(item){
+  item.steps.forEach(function(step,stepIndex){
+    let previous=null;
+    for(let run=0;run<16;run++){
+      const plan=E.partitionPracticePlan(item.id,stepIndex,run,previous&&previous.script), source=plan&&E.PIECES_BUILTIN.find(function(piece){return piece.id===plan.sourcePieceId;});
+      ok(!!plan&&plan.script.length===25,"chaque cycle "+step.id+" produit une étude complète de 25 notes (variante "+(run+1)+")");
+      if(!plan) continue;
+      ok(!!source&&source.pd===true&&!!source.melody,"la source de "+step.id+" est une partition jouable du domaine public");
+      ok(plan.sourceType==="motif"&&/transposée d’après/.test(plan.sourceLabel),"une transposition est honnêtement présentée comme motif inspiré");
+      ok(plan.script.every(function(id){return step.notes.indexOf(id)>=0;}),"aucune note future ne fuit dans "+step.id);
+      ok(step.notes.every(function(id){return plan.script.indexOf(id)>=0;}),"toutes les notes acquises sont revues dans "+step.id);
+      const longestRepeat=plan.script.reduce(function(state,id){state.run=id===state.last?state.run+1:1;state.last=id;state.max=Math.max(state.max,state.run);return state;},{last:"",run:0,max:0}).max;
+      ok(longestRepeat<=3,"aucune même question n’est martelée plus de trois fois dans "+step.id);
+      const focus=step.newNote||null;
+      if(focus){
+        const focusCount=plan.script.filter(function(id){return id===focus;}).length;
+        ok(focusCount>=5&&focusCount<=7,"la nouveauté historique revient de cinq à sept fois dans "+step.id);
+      }
+      else ok(step.notes.every(function(id){return plan.script.filter(function(x){return x===id;}).length>=5;}),"les trois repères initiaux sont chacun solidement sollicités dans "+step.id);
+      if(previous){
+        const distance=plan.script.reduce(function(n,id,i){return n+(id!==previous.script[i]?1:0);},0);
+        ok(plan.variantId!==previous.variantId&&distance>=10,"deux études successives de "+step.id+" diffèrent sur au moins 40 % des notes");
+        ok(plan.sourcePieceId!==previous.sourcePieceId,"la partition source change au rejeu suivant pour "+step.id);
+      }
+      previous=plan;
+    }
+  });
+});
+let partitionStressOk=true;
+E.COURSES.forEach(function(item){
+  item.steps.forEach(function(step,stepIndex){
+    let previous=null;
+    for(let run=0;run<200&&partitionStressOk;run++){
+      const plan=E.partitionPracticePlan(item.id,stepIndex,run,previous&&previous.script);
+      const duplicate=E.partitionPracticePlan(item.id,stepIndex,run,previous&&previous.script);
+      const longest=plan&&plan.script.reduce(function(state,id){state.run=id===state.last?state.run+1:1;state.last=id;state.max=Math.max(state.max,state.run);return state;},{last:"",run:0,max:0}).max;
+      if(!plan||!duplicate||plan.signature!==duplicate.signature||plan.script.length!==25||plan.script.some(function(id){return step.notes.indexOf(id)<0;})||step.notes.some(function(id){return plan.script.indexOf(id)<0;})||longest>3){partitionStressOk=false;break;}
+      if(step.newNote){const count=plan.script.filter(function(id){return id===step.newNote;}).length;if(count<5||count>7){partitionStressOk=false;break;}}
+      if(previous&&plan.script.reduce(function(n,id,i){return n+(id!==previous.script[i]?1:0);},0)<10){partitionStressOk=false;break;}
+      previous=plan;
+    }
+  });
+});
+ok(partitionStressOk,"3 800 replays déterministes respectent vocabulaire, couverture, dosage, non-martèlement et nouveauté");
+const cleanedReviewState=E.normalizeCourseReviewState({steps:{"sol-01":{run:999999999,recent:["a","b","c","d"],lastScript:Array(25).fill("re5")},"cycle-inconnu":{run:5},"__proto__":{run:8}}});
+eq(cleanedReviewState.steps["sol-01"].run,999999,"la rotation importée est bornée");
+eq(cleanedReviewState.steps["sol-01"].recent,["a","b","c"],"l’historique importé reste limité aux trois dernières variantes");
+eq(cleanedReviewState.steps["sol-01"].lastScript,[],"un ancien script contenant une note future est rejeté à l’import");
+ok(!cleanedReviewState.steps["cycle-inconnu"]&&!cleanedReviewState.steps["__proto__"],"les cycles inconnus ou dangereux sont rejetés à l’import");
 
 E.startDailySession();
 if(E.getEX().pendingDecouverte && typeof E.getEl("btnDecGo").onclick === "function") E.getEl("btnDecGo").onclick();
