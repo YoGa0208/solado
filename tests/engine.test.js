@@ -212,7 +212,7 @@ function loadEngine(runtime) {
     "beginClavier", "nextKbd", "kbdTap", "renderKbd", "recordKbdAnswer",
     "STAFF", "staffSVG", "bonusStaffSVG", "clefSVG", "noteGlyph", "yOf", "previewNoteHtml",
     "currentRecoveryCode", "mirrorIntro", "tone", "save", "readKey", "bestLocalState", "recognizableStoredState", "utf8ByteLength", "decodedBase64Bytes", "MAX_IMPORT_TEXT_BYTES",
-    "MEMORY_HISTORY_SCHEMA", "memorySha256", "parseMemoryIndex", "createMemorySnapshot", "memorySnapshotList", "loadMemoryEnvelope", "validateMemoryEnvelope", "restoreMemorySnapshot", "memoryLocalIndexKey", "memoryLocalDataKey", "memoryLocalMetaKey", "memoryIndexKey", "detectMemoryOverlayType", "captureMemoryOverlayControls", "restoreMemoryOverlayControls", "manualMemorySnapshot",
+    "MEMORY_HISTORY_SCHEMA", "memorySha256", "parseMemoryIndex", "createMemorySnapshot", "memorySnapshotList", "loadMemoryEnvelope", "validateMemoryEnvelope", "restoreMemorySnapshot", "memoryLocalIndexKey", "memoryLocalDataKey", "memoryLocalMetaKey", "memoryIndexKey", "detectMemoryOverlayType", "restoredMemoryOverlayType", "restoredMemoryOverlayCanBind", "captureMemoryOverlayControls", "restoreMemoryOverlayControls", "manualMemorySnapshot", "bindStartupRecoveryDialog", "bindPlayerEditorDialog",
     "normalizePlayerRegistry", "normalizePlayerName", "activePlayerMeta", "playerMetaById", "archivedPlayerMetaById", "createPlayer", "switchPlayer", "renamePlayer", "deletePlayer", "restoreArchivedPlayer", "playerInitial", "openPlayerSwitcher", "MAX_LOCAL_PLAYERS", "MAX_ARCHIVED_PLAYERS", "PLAYER_REGISTRY_KEY", "PLAYER_FALLBACK_PREFIX",
     "syncDecision", "syncCfg", "syncSet", "syncClear", "syncEnabled", "syncPush", "syncPull", "parseRemote", "sessionTokenGet", "playerGistFile", "legacyPlayerGistFile", "GIST_CLOUD_SCHEMA", "syncStorageKey", "remoteFileName",
     "cloudDocument", "cloudSaveContent", "cloudPieces", "canonicalCloudJson", "cloudDeletePreflight", "looksLikeToken", "persistOnExit", "APP_VERSION"
@@ -1413,7 +1413,12 @@ eq(Memory.detectMemoryOverlayType('<button id="profSave">Enregistrer</button>'),
 eq(Memory.detectMemoryOverlayType('<button data-segpick="s1">Passage</button>'), "piece_goal_segment", "le second écran d’ambition est reconnu séparément");
 eq(Memory.detectMemoryOverlayType('<div id="prChoices"><button id="prNext">Suite</button></div>'), "first_look_answer", "le retour d’une réponse Premier regard ne sera pas recompté");
 eq(Memory.detectMemoryOverlayType('<button id="startupRecoveryApply">Appliquer</button>'), "startup_recovery", "le choix de reprise reste sauvegardable après retrait du code de l’URL");
+eq(Memory.restoredMemoryOverlayType({overlayType:"other",scene:{cardBox:{html:'<form id="playerAddForm"></form>'}}}), "player_add", "un ancien point classé other est remigré vers son vrai formulaire avant rebinding");
+eq(Memory.restoredMemoryOverlayType({overlayType:"other",scene:{cardBox:{html:'<form id="legacyUnknown"></form>'}}}), "other", "une ancienne fenêtre réellement inconnue reste identifiée comme non interactive");
+ok(!Memory.restoredMemoryOverlayCanBind({overlayOn:true,scene:{cardBox:{html:'<button data-goal="passage">Passage</button>'}}},"piece_goal"), "une ancienne ambition sans identifiant de pièce est fermée au lieu de devenir un modal inerte");
+ok(!Memory.restoredMemoryOverlayCanBind({overlayOn:true,scene:{cardBox:{html:'<div id="prChoices"></div>'}},pr:null},"first_look_quiz"), "un ancien Premier regard sans contexte PR est fermé au lieu de bloquer le joueur");
 ok(memoryAppSource.indexOf("ferme d’abord ce formulaire puis touche") < 0, "aucune fenêtre du jeu n’oblige désormais à être fermée avant une sauvegarde manuelle");
+ok(/function manualMemorySnapshot\(source\)\{\s*if\(memoryProtectedActionBusy\|\|memoryRestoreBusy\|\|playerOperationBusy\)/.test(memoryAppSource), "une demande manuelle ne capture jamais un verrou transitoire d’import, de restauration ou de changement de joueur");
 
 const overlayField={tagName:"INPUT",id:"draftName",value:"Brouillon exact",checked:true,disabled:false,scrollTop:7,selectionStart:3,selectionEnd:8,setSelectionRange(a,b){this.selectionStart=a;this.selectionEnd=b;}};
 const overlayDetails={tagName:"DETAILS",id:"detailsExact",disabled:false,open:true,scrollTop:11};
@@ -1423,6 +1428,22 @@ overlayField.value="modifié";overlayField.checked=false;overlayField.disabled=t
 Memory.restoreMemoryOverlayControls({overlayControls:overlayCaptured});
 eq([overlayField.value,overlayField.checked,overlayField.disabled,overlayField.scrollTop,overlayField.selectionStart,overlayField.selectionEnd],["Brouillon exact",true,false,7,3,8],"valeur, case, verrou, défilement et sélection d’un champ de fenêtre reviennent exactement");
 eq([overlayDetails.open,overlayDetails.scrollTop],[true,11],"l’ouverture et le défilement des détails d’une fenêtre reviennent exactement");
+
+const recoveryApply=Memory.getEl("startupRecoveryApply"),recoveryCancel=Memory.getEl("startupRecoveryCancel"),recoveryMsg=Memory.getEl("startupRecoveryMsg");
+recoveryApply.tagName="BUTTON";recoveryApply.id="startupRecoveryApply";recoveryApply.setAttribute("data-recovery-code","P4+");recoveryApply.disabled=true;
+recoveryCancel.tagName="BUTTON";recoveryCancel.id="startupRecoveryCancel";recoveryCancel.textContent="Garder ma progression actuelle";recoveryCancel.disabled=true;
+recoveryMsg.textContent="Création du point de sécurité…";
+overlayCard.querySelectorAll=function(){return [recoveryApply,recoveryCancel];};
+Memory.restoreMemoryOverlayControls({overlayType:"startup_recovery",scene:{cardBox:{html:'<button id="startupRecoveryApply"></button>'}},overlayControls:[{index:0,id:"startupRecoveryApply",tag:"button",disabled:true},{index:1,id:"startupRecoveryCancel",tag:"button",disabled:true}]});
+eq([recoveryApply.disabled,recoveryCancel.disabled,recoveryMsg.textContent],[false,false,"Rien ne sera modifié sans ton choix."],"un point pre_recovery rouvre toujours un choix actif au lieu de restaurer son verrou asynchrone");
+Memory.bindStartupRecoveryDialog("P4+");
+ok(typeof recoveryApply.onclick==="function"&&typeof recoveryCancel.onclick==="function", "les deux choix de reprise restaurés sont de nouveau reliés à leurs actions");
+
+const staleEditorForm=Memory.getEl("playerEditForm"),staleEditorBack=Memory.getEl("editPlayerBack"),staleEditorSave=Memory.getEl("editPlayerSave"),staleEditorDelete=Memory.getEl("editPlayerDelete"),staleEditorMsg=Memory.getEl("editPlayerMsg");
+staleEditorForm.id="playerEditForm";staleEditorBack.disabled=true;staleEditorSave.disabled=false;staleEditorDelete.disabled=false;
+Memory.bindPlayerEditorDialog("joueur-archive-introuvable");
+ok(typeof staleEditorBack.onclick==="function"&&!staleEditorBack.disabled, "l’éditeur restauré d’un joueur archivé garde toujours un bouton Retour actif");
+ok(staleEditorSave.disabled&&staleEditorDelete.disabled&&/Reviens à la liste/.test(staleEditorMsg.textContent), "les actions devenues invalides sont neutralisées sans bloquer ni toucher aux autres coffres");
 
 /* 12) Miroir musical — intro comportementale */
 group("Miroir musical — intro liée au comportement réel");

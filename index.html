@@ -2228,6 +2228,26 @@ function detectMemoryOverlayType(cardHtml){
   if(cardHtml.indexOf("onclick=")>=0&&cardHtml.indexOf("<form")<0)return "inline_only";
   return "other";
 }
+function restoredMemoryOverlayType(runtime){
+  const stored=runtime&&runtime.overlayType||"other";
+  if(stored!=="other")return stored;
+  const html=runtime&&runtime.scene&&runtime.scene.cardBox?runtime.scene.cardBox.html:"";
+  return detectMemoryOverlayType(html);
+}
+function restoredMemoryOverlayCanBind(runtime,type){
+  if(!runtime||!runtime.overlayOn||type==="other")return false;
+  if((type==="discovery"||type==="preview")&&!isRecord(runtime.ex))return false;
+  if(type==="keyboard_result"&&!isRecord(runtime.kx))return false;
+  if(type==="first_look_quiz"||type==="first_look_answer")return !!(isRecord(runtime.pr)&&isSafeId(runtime.pr.pieceId)&&pieceById(runtime.pr.pieceId));
+  const html=runtime.scene&&runtime.scene.cardBox?String(runtime.scene.cardBox.html||""):"";
+  if(type==="piece_goal"||type==="piece_goal_segment"){
+    const goal=html.match(/data-piece-goal="([^"]+)"/);return !!(goal&&isSafeId(goal[1])&&pieceById(goal[1]));
+  }
+  if(type==="first_look_self"){
+    const look=html.match(/data-pr-piece="([^"]+)"/);return !!(look&&isSafeId(look[1])&&pieceById(look[1]));
+  }
+  return true;
+}
 function memoryLevelContext(extra){
   extra=extra||{};
   const sel=PALIERS.find(function(p){return p.id===DB.sel;})||PALIERS[0],pi=Math.max(0,PALIERS.findIndex(function(p){return p.id===sel.id;}));
@@ -2396,6 +2416,14 @@ function restoreMemoryOverlayControls(runtime){
       if(Number.isInteger(row.selectionStart)&&typeof el.setSelectionRange==="function")el.setSelectionRange(row.selectionStart,Number.isInteger(row.selectionEnd)?row.selectionEnd:row.selectionStart);
     }catch(e){}
   });
+  if(restoredMemoryOverlayType(runtime)==="startup_recovery"){
+    const apply=$("startupRecoveryApply"),cancel=$("startupRecoveryCancel"),msg=$("startupRecoveryMsg");
+    const completed=!!(cancel&&String(cancel.textContent||"").trim()==="Continuer");
+    const code=apply&&apply.getAttribute("data-recovery-code")||"";
+    if(cancel)cancel.disabled=false;
+    if(apply)apply.disabled=completed||!code||!recoveryCodeInfo(code);
+    if(!completed&&msg&&/Création du point de sécurité/.test(msg.textContent||""))msg.textContent="Rien ne sera modifié sans ton choix.";
+  }
 }
 function bindRestoredExercise(){
   if(!EX)return;
@@ -2457,6 +2485,10 @@ function resumeRestoredTimers(runtime){
   if(KX){if(KX.t0)KX.t0+=shift;if(KX.advanceDeadlineAt)KX.advanceDeadlineAt+=shift;if(!KX.done&&KX.waiting&&KX.advanceDeadlineAt){const session=KX,step=KX.i;kbdAdvanceTimer=setTimeout(function(){if(KX===session&&!KX.done&&KX.i===step)nextKbd();},Math.max(0,KX.advanceDeadlineAt-Date.now()));}}
 }
 function restoreMemoryScene(runtime){
+  let sceneNotice="";
+  const savedOverlayOn=!!runtime.overlayOn,resolvedOverlayType=restoredMemoryOverlayType(runtime);
+  if(resolvedOverlayType!==runtime.overlayType)runtime=Object.assign({},runtime,{overlayType:resolvedOverlayType});
+  const overlayCanBind=restoredMemoryOverlayCanBind(runtime,runtime.overlayType);
   if(rafTimer)clearInterval(rafTimer);clearQTimers();clearDailyTimer();if(typeof clearKbdTimer==="function")clearKbdTimer();
   EX=runtime.ex||null;KX=runtime.kx||null;
   if(runtime.pr){const piece=allPieces().find(function(p){return p.id===runtime.pr.pieceId;});PR=piece?{piece:piece,i:runtime.pr.i,ok:runtime.pr.ok,segmentId:runtime.pr.segmentId||""}:null;}else PR=null;
@@ -2469,15 +2501,16 @@ function restoreMemoryScene(runtime){
   else if(screen==="scrPieces"){renderPieces();if($("pcFile"))$("pcFile").value="";["pcTitle","pcClef","pcKey","pieceMsg","segPiece","segTitle","segBars","segLevel","segHand","segFocus","segNotes","segMsg"].forEach(function(id){if(runtime.scene[id])restoreMemoryElement(id,runtime.scene[id]);});}
   else if(screen==="scrPiece"&&runtime.pieceId){renderPieceDetail(runtime.pieceId);}
   else {renderHome();show("scrHome");}
-  if(runtime.overlayOn&&runtime.scene.cardBox){
+  if(runtime.overlayOn&&runtime.scene.cardBox&&overlayCanBind){
     restoreMemoryElement("cardBox",runtime.scene.cardBox);restoreMemoryOverlayControls(runtime);
     if(runtime.overlayLabelledBy)$("cardDialog").setAttribute("aria-labelledby",runtime.overlayLabelledBy);else if(typeof $("cardDialog").removeAttribute==="function")$("cardDialog").removeAttribute("aria-labelledby");
     $("overlay").classList.add("on");bindRestoredOverlay(runtime);
     if(Number.isFinite(runtime.cardScrollTop))$("cardDialog").scrollTop=runtime.cardScrollTop;
     if(Number.isInteger(runtime.overlayFocusIndex)&&runtime.overlayFocusIndex>=0)setTimeout(function(){try{const all=$("cardBox").querySelectorAll("input,select,textarea,button,details");if(all[runtime.overlayFocusIndex])all[runtime.overlayFocusIndex].focus();}catch(e){}},0);
-  }else $("overlay").classList.remove("on");
+  }else {$("overlay").classList.remove("on");if(savedOverlayOn&&!overlayCanBind)sceneNotice="La fenêtre provenait d’une ancienne version ou son contexte n’est plus disponible ; elle a été fermée pour éviter tout blocage. La progression mémorisée reste intacte.";}
   resumeRestoredTimers(runtime);
   if(runtime.scrollY){try{window.scrollTo(0,runtime.scrollY);}catch(e){}if(screen==="scrStats"){[80,320].forEach(function(delay){setTimeout(function(){try{window.scrollTo(0,runtime.scrollY);}catch(e){}},delay);});}}
+  return sceneNotice;
 }
 function exactActivateMemorySnapshot(validated,token,cb){
   if(!memoryActionCurrent(token)){cb(false,"Le joueur actif a changé : restauration annulée sans modifier aucun profil.");return;}
@@ -2492,9 +2525,9 @@ function exactActivateMemorySnapshot(validated,token,cb){
     if(!writePlayerRegistry()){
       DB=oldDB;PLAYER_REGISTRY=normalizePlayerRegistry(JSON.parse(oldRegistryRaw));ACTIVE_PLAYER_ID=PLAYER_REGISTRY.activeId;restoreLocal();idbSave(oldRaw,token.playerId);cb(false,"Registre du joueur indisponible : restauration annulée.");return;
     }
-    try{applyTheme();header();restoreMemoryScene(runtime);}
+    let sceneNotice="";try{applyTheme();header();sceneNotice=restoreMemoryScene(runtime);}
     catch(e){DB=oldDB;PLAYER_REGISTRY=normalizePlayerRegistry(JSON.parse(oldRegistryRaw));ACTIVE_PLAYER_ID=PLAYER_REGISTRY.activeId;restoreLocal();idbSave(oldRaw,token.playerId);writePlayerRegistry();applyTheme();header();renderHome();show("scrHome");cb(false,"La scène sauvegardée n’a pas pu être rouverte : restauration annulée, état précédent intact.");return;}
-    markRestorePending("restore",validated.env.meta.number);cb(true,"");
+    markRestorePending("restore",validated.env.meta.number);cb(true,"",sceneNotice);
   });
 }
 function restoreMemorySnapshot(meta,cb){
@@ -2507,10 +2540,10 @@ function restoreMemorySnapshot(meta,cb){
     createMemorySnapshot("pre_restore",{milestone:"État conservé automatiquement avant le retour à la sauvegarde n°"+meta.number,notify:false},function(safety){
       if(!memoryActionCurrent(token)){memoryRestoreBusy=false;cb({ok:false,message:"Le joueur actif a changé : restauration annulée."});return;}
       if(!safety.ok){memoryRestoreBusy=false;const message="Restauration annulée : l’état actuel n’a pas pu être sauvegardé d’abord. Rien n’a été perdu.";memoryToast(message,true);cb({ok:false,message:message});return;}
-      exactActivateMemorySnapshot(validated,token,function(ok,error){
+      exactActivateMemorySnapshot(validated,token,function(ok,error,sceneNotice){
         memoryRestoreBusy=false;
         if(!ok){memoryToast(error,true);cb({ok:false,message:error});return;}
-        const message="Tu es revenu au Niveau "+meta.context.level+", tel que sauvegardé le "+formatMemoryDate(meta.createdAt)+". Rien n’a été perdu.";
+        const message="Tu es revenu au Niveau "+meta.context.level+", tel que sauvegardé le "+formatMemoryDate(meta.createdAt)+". Rien n’a été perdu."+(sceneNotice?(" "+sceneNotice):"");
         memoryToast(message,false);cb({ok:true,meta:meta,message:message,safety:safety.meta});
       });
     });
@@ -2539,6 +2572,7 @@ function renderMemoryHistory(){
   });
 }
 function manualMemorySnapshot(source){
+  if(memoryProtectedActionBusy||memoryRestoreBusy||playerOperationBusy){memoryToast("Protection en cours : l’état stable juste avant l’action est déjà conservé. Réessaie dès la confirmation ; rien n’est perdu.",false);return false;}
   const quick=$("btnQuickSave"),manual=$("btnManualSave"),overlay=$("btnOverlaySave");if(quick)quick.disabled=true;if(manual)manual.disabled=true;if(overlay)overlay.disabled=true;
   const pendingFile=$("pcFile");if(activeMemoryScreen()==="scrPieces"&&pendingFile&&pendingFile.files&&pendingFile.files.length){
     if(quick)quick.disabled=false;if(manual)manual.disabled=false;if(overlay)overlay.disabled=false;
@@ -3412,6 +3446,8 @@ function renderPlayerSwitchButton(){
 }
 function bindPlayerSwitcherDialog(){
   if(!$("playerAdd")||!$("playerClose"))return;
+  $("cardBox").querySelectorAll("button").forEach(function(x){x.disabled=false;});
+  if($("playerSwitchMsg")&&/Enregistrement|Restauration du joueur/.test($("playerSwitchMsg").textContent||""))$("playerSwitchMsg").textContent="Le changement est disponible depuis l’accueil, jamais au milieu d’un exercice.";
   $("cardBox").querySelectorAll("[data-player-pick]").forEach(function(btn){btn.onclick=function(){
     const id=btn.getAttribute("data-player-pick");if(id===ACTIVE_PLAYER_ID){$("overlay").classList.remove("on");return;}
     $("cardBox").querySelectorAll("button").forEach(function(x){x.disabled=true;});
@@ -3443,6 +3479,8 @@ function openPlayerSwitcher(){
 }
 function bindAddPlayerDialog(){
   if(!$("playerAddForm")||!$("newPlayerCancel"))return;
+  if($("newPlayerCreate"))$("newPlayerCreate").disabled=false;$("newPlayerCancel").disabled=false;
+  if($("newPlayerMsg")&&/Enregistrement du nouveau joueur/.test($("newPlayerMsg").textContent||""))$("newPlayerMsg").textContent="";
   $("newPlayerCancel").onclick=openPlayerSwitcher;
   $("playerAddForm").onsubmit=function(ev){
     ev.preventDefault();$("newPlayerCreate").disabled=true;$("newPlayerCancel").disabled=true;
@@ -3461,9 +3499,11 @@ function openAddPlayer(){
   setTimeout(function(){try{$("newPlayerName").focus();}catch(e){}},0);
 }
 function bindPlayerEditorDialog(id){
-  const meta=playerMetaById(id),form=$("playerEditForm");if(!meta||!form)return;
+  const form=$("playerEditForm"),back=$("editPlayerBack");if(back){back.disabled=false;back.onclick=openPlayerSwitcher;}if(!form)return;
+  const meta=playerMetaById(id);
+  if(!meta){if($("editPlayerSave"))$("editPlayerSave").disabled=true;if($("editPlayerDelete"))$("editPlayerDelete").disabled=true;if($("editPlayerMsg"))$("editPlayerMsg").textContent=archivedPlayerMetaById(id)?"Ce joueur est maintenant archivé. Reviens à la liste pour le restaurer ; son coffre et ses sauvegardes sont intacts.":"Ce joueur n’est plus disponible dans la liste active. Reviens à la liste ; aucune autre progression n’a été modifiée.";return;}
   const canArchive=id!==ACTIVE_PLAYER_ID&&PLAYER_REGISTRY.players.length>1&&(PLAYER_REGISTRY.archived||[]).length<MAX_ARCHIVED_PLAYERS;
-  if($("editPlayerBack"))$("editPlayerBack").onclick=openPlayerSwitcher;
+  if($("editPlayerSave"))$("editPlayerSave").disabled=false;if($("editPlayerDelete"))$("editPlayerDelete").disabled=!canArchive;
   form.onsubmit=function(ev){ev.preventDefault();$("cardBox").querySelectorAll("button").forEach(function(x){x.disabled=true;});renamePlayer(id,$("editPlayerName").value,function(ok,msg){if(ok)openPlayerSwitcher();else {$("editPlayerMsg").textContent=msg;$("cardBox").querySelectorAll("button").forEach(function(x){x.disabled=false;});}});};
   if(canArchive&&$("editPlayerDelete"))$("editPlayerDelete").onclick=function(){
     const question="Archiver "+meta.name+" ? Sa progression, ses sauvegardes et sa configuration cloud resteront intactes et pourront être restaurées à tout moment.";
@@ -3493,6 +3533,7 @@ function curriculumScopeHtml(){
 }
 function bindMusicProfileDialog(previousLevel){
   if(!$("profSave")||!$("profCancel"))return;
+  $("profSave").disabled=false;$("profCancel").disabled=false;
   previousLevel=previousLevel||normalizeProfile(DB.profile).niveauDepart;
   $("profCancel").onclick=function(){$("overlay").classList.remove("on");};
   $("profSave").onclick=function(){
@@ -5651,6 +5692,9 @@ function recoveryParam(){
 }
 function bindStartupRecoveryDialog(code){
   const apply=$("startupRecoveryApply"),cancel=$("startupRecoveryCancel"),msg=$("startupRecoveryMsg");if(!apply||!cancel)return;
+  const completed=String(cancel.textContent||"").trim()==="Continuer";
+  cancel.disabled=false;apply.disabled=completed||!code||!recoveryCodeInfo(code);
+  if(!completed&&msg&&/Création du point de sécurité/.test(msg.textContent||""))msg.textContent="Rien ne sera modifié sans ton choix.";
   cancel.onclick=function(){$("overlay").classList.remove("on");};
   apply.onclick=function(){
     if(!code||!recoveryCodeInfo(code)){if(msg)msg.textContent="Ce code n’est plus vérifiable. La progression actuelle reste intacte.";return;}
