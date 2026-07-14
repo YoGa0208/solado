@@ -53,13 +53,14 @@
   #app:before{top:48px}
   #app:after{bottom:-118px;border-color:rgba(127,184,194,.58);transform:translateX(-50%) rotate(9deg)}
   header,.screen,#overlay{position:relative;z-index:1}
-  header{display:flex;align-items:center;justify-content:space-between;padding:6px 2px 14px;position:relative}
+  header{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:5px;padding:6px 2px 14px;position:relative}
   header:after{content:"";position:absolute;left:2px;right:42px;bottom:3px;height:15px;border-bottom:2px solid var(--or);border-radius:0 0 55% 42%;opacity:.9}
-  header h1{font-size:15px;margin:0;font-weight:700;letter-spacing:1.6px;color:var(--petrole);font-family:var(--serif)}
-  .hstats{display:flex;gap:10px;align-items:center;font-size:13px;color:var(--dim)}
+  header h1{flex:1 1 100%;text-align:center;font-size:15px;margin:0;font-weight:700;letter-spacing:1.6px;color:var(--petrole);font-family:var(--serif)}
+  .hstats{width:100%;display:flex;gap:8px;justify-content:center;align-items:center;font-size:13px;color:var(--dim)}
   .hstats b{color:var(--ink)}
-  #btnSound{background:linear-gradient(135deg,var(--paper),var(--ceramique2));border:1px solid rgba(184,137,58,.55);color:var(--petrole);
-    border-radius:999px;padding:4px 10px;font-size:12.5px}
+  #btnSound,#btnQuickSave{background:linear-gradient(135deg,var(--paper),var(--ceramique2));border:1px solid rgba(184,137,58,.55);color:var(--petrole);
+    border-radius:999px;min-height:44px;padding:6px 11px;font-size:12.5px}
+  #btnQuickSave{min-width:44px;min-height:44px;padding:4px 8px;font-size:16px;font-weight:800}
   .screen{display:none;flex:1;flex-direction:column}
   .screen.active{display:flex}
   button{font-family:inherit;cursor:pointer}
@@ -208,12 +209,29 @@
   .savebox .row button{flex:1;padding:10px;border:none;border-radius:9px;font-weight:600;font-size:13.5px;
     background:var(--ceramique2);color:var(--petrole);border:1px solid rgba(15,76,92,.2)}
   .savemsg{font-size:12.5px;color:var(--good);margin-top:7px;min-height:16px}
+  .memoryIntro{font-size:12.5px;line-height:1.45;color:var(--dim);margin:0 0 9px;position:relative;z-index:1}
+  .memoryList{display:flex;flex-direction:column;gap:8px;margin-top:10px;position:relative;z-index:1}
+  .memoryEmpty{padding:10px;border:1px dashed rgba(15,76,92,.25);border-radius:14px;color:var(--dim);font-size:12.5px;line-height:1.4}
+  .memoryPoint{background:rgba(255,253,247,.82);border:1px solid rgba(15,76,92,.16);border-radius:17px 7px 17px 7px;padding:10px}
+  .memoryPoint h5{margin:0 0 4px;color:var(--petrole);font-size:13px;line-height:1.3}
+  .memoryPoint p{margin:0;color:var(--dim);font-size:11.5px;line-height:1.4}
+  .memoryPoint details{margin-top:6px;color:var(--dim);font-size:11.5px;line-height:1.4}
+  .memoryPoint details summary{cursor:pointer;color:var(--petrole);font-weight:700;min-height:30px;padding-top:5px}
+  .memoryPoint button{width:100%;min-height:44px;margin-top:8px;border:1px solid rgba(15,76,92,.2);border-radius:10px;background:var(--ceramique2);color:var(--petrole);font-weight:800}
+  .memoryPoint button:disabled,#btnManualSave:disabled,#btnQuickSave:disabled{opacity:.55;cursor:wait}
+  .memoryProof{background:rgba(129,157,112,.12);border:1px solid rgba(129,157,112,.28);border-radius:14px;padding:9px 10px;margin:0 0 12px;color:var(--good);font-size:12.5px;line-height:1.45;text-align:left}
+  #memoryToast{position:fixed;left:50%;bottom:max(16px,env(safe-area-inset-bottom));width:min(402px,calc(100vw - 24px));transform:translateX(-50%) translateY(18px);z-index:60;background:var(--petrole2);color:#fff;border:1px solid rgba(216,169,77,.72);border-radius:18px 8px 18px 8px;padding:11px 13px;font-size:12.5px;line-height:1.4;box-shadow:0 10px 28px rgba(8,57,71,.28);opacity:0;pointer-events:none;transition:opacity .18s,transform .18s}
+  #memoryToast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+  @media(max-width:390px){.hstats{gap:6px}.hstats>span{font-size:11px}#btnSound{padding:5px 9px;font-size:11px}header h1{font-size:13px;letter-spacing:1px}}
+  @media(max-width:600px){input,select,textarea,.segmentForm .field,.savebox textarea{font-size:16px!important}}
 
   #overlay{position:fixed;inset:0;background:rgba(15,76,92,.38);display:none;align-items:center;
     justify-content:center;padding:max(12px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));z-index:10}
   #overlay.on{display:flex}
+  .dialogTools{position:sticky;top:-20px;z-index:2;display:flex;justify-content:flex-end;margin:-20px -20px 10px;padding:8px 10px;background:linear-gradient(180deg,rgba(255,250,240,.98),rgba(255,250,240,.9) 75%,transparent)}
+  #btnOverlaySave{position:static;width:auto;margin:0;min-height:44px;padding:8px 12px;border:1px solid rgba(216,169,77,.85);border-radius:999px;background:var(--petrole2);color:#fff;font-size:12px;font-weight:800;box-shadow:0 5px 16px rgba(8,57,71,.24)}
   .card{background:linear-gradient(160deg,#fffaf0,#f4eddc 54%,#d7e9e8);border:1px solid rgba(15,76,92,.2);border-radius:28px 10px 24px 12px;
-    padding:20px;max-width:min(390px,92vw);max-height:calc(100dvh - 24px);overflow:auto;animation:pop .35s ease}
+    padding:20px;max-width:min(390px,92vw);max-height:100%;min-height:0;overflow:auto;animation:pop .35s ease}
   .card h3{margin:0 0 4px;font-size:13px;color:var(--or-deep);letter-spacing:.8px;text-transform:uppercase}
   .card h2{margin:0 0 10px;font-size:19px}
   .card p{margin:0 0 8px;font-size:14.5px;line-height:1.55;color:var(--petrole)}
@@ -402,6 +420,7 @@
     <div class="hstats">
       <span>XP <b id="hXp">0</b></span>
       <span>Jours <b id="hStreak">0</b></span>
+      <button id="btnQuickSave" aria-label="Créer maintenant une sauvegarde complète" title="Sauvegarder maintenant">💾</button>
       <button id="btnSound">♪ chant</button>
     </div>
   </header>
@@ -473,6 +492,7 @@
     <div class="valprog" id="resVal"></div>
     <div id="resPiece"></div>
     <div class="sub" id="resCode" style="margin-bottom:12px"></div>
+    <div class="memoryProof" id="resSave" style="display:none" role="status" aria-live="polite"></div>
     <button class="bigbtn" id="btnAgain">Encore une série</button>
     <button class="secbtn" id="btnReplayCourse" style="display:none">Rejouer ce cycle pour m’entraîner</button>
     <button class="secbtn" id="btnHome">Accueil</button>
@@ -485,6 +505,13 @@
       <h4>Mode couleur</h4>
       <div class="themeModes" id="themeModes"></div>
       <div class="savemsg" id="themeMsg"></div>
+    </div>
+    <div class="savebox">
+      <h4>Mémoire protégée — points de restauration</h4>
+      <p class="memoryIntro">Chaque point contient l’état complet du joueur et, si une partie est en cours, la question exacte. Les points s’ajoutent : SEZAM n’en remplace et n’en supprime aucun. Ils restent sur cet appareil tant que les données du site y sont conservées ; exporte aussi un fichier pour te protéger d’une perte ou d’un changement d’appareil.</p>
+      <div class="row"><button id="btnManualSave" style="background:var(--vert);color:var(--petrole2);font-weight:800">Créer une sauvegarde maintenant</button></div>
+      <div class="savemsg" id="memoryMsg" role="status" aria-live="polite"></div>
+      <div class="memoryList" id="memoryList"></div>
     </div>
     <div class="savebox">
       <h4 id="saveExportTitle">Sauvegarde — exporter</h4>
@@ -564,7 +591,8 @@
   </div>
 </div>
 
-<div id="overlay"><div class="card" id="cardBox" role="dialog" aria-modal="true" tabindex="-1"></div></div>
+<div id="overlay"><div class="card" id="cardDialog" role="dialog" aria-modal="true" tabindex="-1"><div class="dialogTools"><button type="button" id="btnOverlaySave" aria-label="Créer une sauvegarde complète sans fermer cette fenêtre">💾 Sauvegarder</button></div><div id="cardBox"></div></div></div>
+<div id="memoryToast" role="status" aria-live="polite" aria-atomic="true"></div>
 
 <script>/* qrcode-generator (Kazuhiko Arase, MIT) — minifié, embarqué pour le transfert QR hors-ligne */
 var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],f={},c=function(t,r){o=function(t){for(var r=new Array(t),e=0;e<t;e+=1){r[e]=new Array(t);for(var n=0;n<t;n+=1)r[e][n]=null}return r}(i=4*e+17),l(0,0),l(i-7,0),l(0,i-7),s(),h(),d(t,r),e>=7&&v(t),null==a&&(a=p(e,n,u)),w(a,r)},l=function(t,r){for(var e=-1;e<=7;e+=1)if(!(t+e<=-1||i<=t+e))for(var n=-1;n<=7;n+=1)r+n<=-1||i<=r+n||(o[t+e][r+n]=0<=e&&e<=6&&(0==n||6==n)||0<=n&&n<=6&&(0==e||6==e)||2<=e&&e<=4&&2<=n&&n<=4)},h=function(){for(var t=8;t<i-8;t+=1)null==o[t][6]&&(o[t][6]=t%2==0);for(var r=8;r<i-8;r+=1)null==o[6][r]&&(o[6][r]=r%2==0)},s=function(){for(var t=B.getPatternPosition(e),r=0;r<t.length;r+=1)for(var n=0;n<t.length;n+=1){var i=t[r],a=t[n];if(null==o[i][a])for(var u=-2;u<=2;u+=1)for(var f=-2;f<=2;f+=1)o[i+u][a+f]=-2==u||2==u||-2==f||2==f||0==u&&0==f}},v=function(t){for(var r=B.getBCHTypeNumber(e),n=0;n<18;n+=1){var a=!t&&1==(r>>n&1);o[Math.floor(n/3)][n%3+i-8-3]=a}for(n=0;n<18;n+=1){a=!t&&1==(r>>n&1);o[n%3+i-8-3][Math.floor(n/3)]=a}},d=function(t,r){for(var e=n<<3|r,a=B.getBCHTypeInfo(e),u=0;u<15;u+=1){var f=!t&&1==(a>>u&1);u<6?o[u][8]=f:u<8?o[u+1][8]=f:o[i-15+u][8]=f}for(u=0;u<15;u+=1){f=!t&&1==(a>>u&1);u<8?o[8][i-u-1]=f:u<9?o[8][15-u-1+1]=f:o[8][15-u-1]=f}o[i-8][8]=!t},w=function(t,r){for(var e=-1,n=i-1,a=7,u=0,f=B.getMaskFunction(r),c=i-1;c>0;c-=2)for(6==c&&(c-=1);;){for(var g=0;g<2;g+=1)if(null==o[n][c-g]){var l=!1;u<t.length&&(l=1==(t[u]>>>a&1)),f(n,c-g)&&(l=!l),o[n][c-g]=l,-1==(a-=1)&&(u+=1,a=7)}if((n+=e)<0||i<=n){n-=e,e=-e;break}}},p=function(t,r,e){for(var n=A.getRSBlocks(t,r),o=b(),i=0;i<e.length;i+=1){var a=e[i];o.put(a.getMode(),4),o.put(a.getLength(),B.getLengthInBits(a.getMode(),t)),a.write(o)}var u=0;for(i=0;i<n.length;i+=1)u+=n[i].dataCount;if(o.getLengthInBits()>8*u)throw"code length overflow. ("+o.getLengthInBits()+">"+8*u+")";for(o.getLengthInBits()+4<=8*u&&o.put(0,4);o.getLengthInBits()%8!=0;)o.putBit(!1);for(;!(o.getLengthInBits()>=8*u||(o.put(236,8),o.getLengthInBits()>=8*u));)o.put(17,8);return function(t,r){for(var e=0,n=0,o=0,i=new Array(r.length),a=new Array(r.length),u=0;u<r.length;u+=1){var f=r[u].dataCount,c=r[u].totalCount-f;n=Math.max(n,f),o=Math.max(o,c),i[u]=new Array(f);for(var g=0;g<i[u].length;g+=1)i[u][g]=255&t.getBuffer()[g+e];e+=f;var l=B.getErrorCorrectPolynomial(c),h=k(i[u],l.getLength()-1).mod(l);for(a[u]=new Array(l.getLength()-1),g=0;g<a[u].length;g+=1){var s=g+h.getLength()-a[u].length;a[u][g]=s>=0?h.getAt(s):0}}var v=0;for(g=0;g<r.length;g+=1)v+=r[g].totalCount;var d=new Array(v),w=0;for(g=0;g<n;g+=1)for(u=0;u<r.length;u+=1)g<i[u].length&&(d[w]=i[u][g],w+=1);for(g=0;g<o;g+=1)for(u=0;u<r.length;u+=1)g<a[u].length&&(d[w]=a[u][g],w+=1);return d}(o,n)};f.addData=function(t,r){var e=null;switch(r=r||"Byte"){case"Numeric":e=M(t);break;case"Alphanumeric":e=x(t);break;case"Byte":e=m(t);break;case"Kanji":e=L(t);break;default:throw"mode:"+r}u.push(e),a=null},f.isDark=function(t,r){if(t<0||i<=t||r<0||i<=r)throw t+","+r;return o[t][r]},f.getModuleCount=function(){return i},f.make=function(){if(e<1){for(var t=1;t<40;t++){for(var r=A.getRSBlocks(t,n),o=b(),i=0;i<u.length;i++){var a=u[i];o.put(a.getMode(),4),o.put(a.getLength(),B.getLengthInBits(a.getMode(),t)),a.write(o)}var g=0;for(i=0;i<r.length;i++)g+=r[i].dataCount;if(o.getLengthInBits()<=8*g)break}e=t}c(!1,function(){for(var t=0,r=0,e=0;e<8;e+=1){c(!0,e);var n=B.getLostPoint(f);(0==e||t>n)&&(t=n,r=e)}return r}())},f.createTableTag=function(t,r){t=t||2;var e="";e+='<table style="',e+=" border-width: 0px; border-style: none;",e+=" border-collapse: collapse;",e+=" padding: 0px; margin: "+(r=void 0===r?4*t:r)+"px;",e+='">',e+="<tbody>";for(var n=0;n<f.getModuleCount();n+=1){e+="<tr>";for(var o=0;o<f.getModuleCount();o+=1)e+='<td style="',e+=" border-width: 0px; border-style: none;",e+=" border-collapse: collapse;",e+=" padding: 0px; margin: 0px;",e+=" width: "+t+"px;",e+=" height: "+t+"px;",e+=" background-color: ",e+=f.isDark(n,o)?"#000000":"#ffffff",e+=";",e+='"/>';e+="</tr>"}return e+="</tbody>",e+="</table>"},f.createSvgTag=function(t,r,e,n){var o={};"object"==typeof arguments[0]&&(t=(o=arguments[0]).cellSize,r=o.margin,e=o.alt,n=o.title),t=t||2,r=void 0===r?4*t:r,(e="string"==typeof e?{text:e}:e||{}).text=e.text||null,e.id=e.text?e.id||"qrcode-description":null,(n="string"==typeof n?{text:n}:n||{}).text=n.text||null,n.id=n.text?n.id||"qrcode-title":null;var i,a,u,c,g=f.getModuleCount()*t+2*r,l="";for(c="l"+t+",0 0,"+t+" -"+t+",0 0,-"+t+"z ",l+='<svg version="1.1" xmlns="http://www.w3.org/2000/svg"',l+=o.scalable?"":' width="'+g+'px" height="'+g+'px"',l+=' viewBox="0 0 '+g+" "+g+'" ',l+=' preserveAspectRatio="xMinYMin meet"',l+=n.text||e.text?' role="img" aria-labelledby="'+y([n.id,e.id].join(" ").trim())+'"':"",l+=">",l+=n.text?'<title id="'+y(n.id)+'">'+y(n.text)+"</title>":"",l+=e.text?'<description id="'+y(e.id)+'">'+y(e.text)+"</description>":"",l+='<rect width="100%" height="100%" fill="white" cx="0" cy="0"/>',l+='<path d="',a=0;a<f.getModuleCount();a+=1)for(u=a*t+r,i=0;i<f.getModuleCount();i+=1)f.isDark(a,i)&&(l+="M"+(i*t+r)+","+u+c);return l+='" stroke="transparent" fill="black"/>',l+="</svg>"},f.createDataURL=function(t,r){t=t||2,r=void 0===r?4*t:r;var e=f.getModuleCount()*t+2*r,n=r,o=e-r;return I(e,e,function(r,e){if(n<=r&&r<o&&n<=e&&e<o){var i=Math.floor((r-n)/t),a=Math.floor((e-n)/t);return f.isDark(a,i)?0:1}return 1})},f.createImgTag=function(t,r,e){t=t||2,r=void 0===r?4*t:r;var n=f.getModuleCount()*t+2*r,o="";return o+="<img",o+=' src="',o+=f.createDataURL(t,r),o+='"',o+=' width="',o+=n,o+='"',o+=' height="',o+=n,o+='"',e&&(o+=' alt="',o+=y(e),o+='"'),o+="/>"};var y=function(t){for(var r="",e=0;e<t.length;e+=1){var n=t.charAt(e);switch(n){case"<":r+="&lt;";break;case">":r+="&gt;";break;case"&":r+="&amp;";break;case'"':r+="&quot;";break;default:r+=n}}return r};return f.createASCII=function(t,r){if((t=t||1)<2)return function(t){t=void 0===t?2:t;var r,e,n,o,i,a=1*f.getModuleCount()+2*t,u=t,c=a-t,g={"██":"█","█ ":"▀"," █":"▄","  ":" "},l={"██":"▀","█ ":"▀"," █":" ","  ":" "},h="";for(r=0;r<a;r+=2){for(n=Math.floor((r-u)/1),o=Math.floor((r+1-u)/1),e=0;e<a;e+=1)i="█",u<=e&&e<c&&u<=r&&r<c&&f.isDark(n,Math.floor((e-u)/1))&&(i=" "),u<=e&&e<c&&u<=r+1&&r+1<c&&f.isDark(o,Math.floor((e-u)/1))?i+=" ":i+="█",h+=t<1&&r+1>=c?l[i]:g[i];h+="\n"}return a%2&&t>0?h.substring(0,h.length-a-1)+Array(a+1).join("▀"):h.substring(0,h.length-1)}(r);t-=1,r=void 0===r?2*t:r;var e,n,o,i,a=f.getModuleCount()*t+2*r,u=r,c=a-r,g=Array(t+1).join("██"),l=Array(t+1).join("  "),h="",s="";for(e=0;e<a;e+=1){for(o=Math.floor((e-u)/t),s="",n=0;n<a;n+=1)i=1,u<=n&&n<c&&u<=e&&e<c&&f.isDark(o,Math.floor((n-u)/t))&&(i=0),s+=i?g:l;for(o=0;o<t;o+=1)h+=s+"\n"}return h.substring(0,h.length-1)},f.renderTo2dContext=function(t,r){r=r||2;for(var e=f.getModuleCount(),n=0;n<e;n++)for(var o=0;o<e;o++)t.fillStyle=f.isDark(n,o)?"black":"white",t.fillRect(o*r,n*r,r,r)},f};t.stringToBytes=(t.stringToBytesFuncs={default:function(t){for(var r=[],e=0;e<t.length;e+=1){var n=t.charCodeAt(e);r.push(255&n)}return r}}).default,t.createStringToBytes=function(t,r){var e=function(){for(var e=S(t),n=function(){var t=e.read();if(-1==t)throw"eof";return t},o=0,i={};;){var a=e.read();if(-1==a)break;var u=n(),f=n()<<8|n();i[String.fromCharCode(a<<8|u)]=f,o+=1}if(o!=r)throw o+" != "+r;return i}(),n="?".charCodeAt(0);return function(t){for(var r=[],o=0;o<t.length;o+=1){var i=t.charCodeAt(o);if(i<128)r.push(i);else{var a=e[t.charAt(o)];"number"==typeof a?(255&a)==a?r.push(a):(r.push(a>>>8),r.push(255&a)):r.push(n)}}return r}};var r,e,n,o,i,a=1,u=2,f=4,c=8,g={L:1,M:0,Q:3,H:2},l=0,h=1,s=2,v=3,d=4,w=5,p=6,y=7,B=(r=[[],[6,18],[6,22],[6,26],[6,30],[6,34],[6,22,38],[6,24,42],[6,26,46],[6,28,50],[6,30,54],[6,32,58],[6,34,62],[6,26,46,66],[6,26,48,70],[6,26,50,74],[6,30,54,78],[6,30,56,82],[6,30,58,86],[6,34,62,90],[6,28,50,72,94],[6,26,50,74,98],[6,30,54,78,102],[6,28,54,80,106],[6,32,58,84,110],[6,30,58,86,114],[6,34,62,90,118],[6,26,50,74,98,122],[6,30,54,78,102,126],[6,26,52,78,104,130],[6,30,56,82,108,134],[6,34,60,86,112,138],[6,30,58,86,114,142],[6,34,62,90,118,146],[6,30,54,78,102,126,150],[6,24,50,76,102,128,154],[6,28,54,80,106,132,158],[6,32,58,84,110,136,162],[6,26,54,82,110,138,166],[6,30,58,86,114,142,170]],e=1335,n=7973,i=function(t){for(var r=0;0!=t;)r+=1,t>>>=1;return r},(o={}).getBCHTypeInfo=function(t){for(var r=t<<10;i(r)-i(e)>=0;)r^=e<<i(r)-i(e);return 21522^(t<<10|r)},o.getBCHTypeNumber=function(t){for(var r=t<<12;i(r)-i(n)>=0;)r^=n<<i(r)-i(n);return t<<12|r},o.getPatternPosition=function(t){return r[t-1]},o.getMaskFunction=function(t){switch(t){case l:return function(t,r){return(t+r)%2==0};case h:return function(t,r){return t%2==0};case s:return function(t,r){return r%3==0};case v:return function(t,r){return(t+r)%3==0};case d:return function(t,r){return(Math.floor(t/2)+Math.floor(r/3))%2==0};case w:return function(t,r){return t*r%2+t*r%3==0};case p:return function(t,r){return(t*r%2+t*r%3)%2==0};case y:return function(t,r){return(t*r%3+(t+r)%2)%2==0};default:throw"bad maskPattern:"+t}},o.getErrorCorrectPolynomial=function(t){for(var r=k([1],0),e=0;e<t;e+=1)r=r.multiply(k([1,C.gexp(e)],0));return r},o.getLengthInBits=function(t,r){if(1<=r&&r<10)switch(t){case a:return 10;case u:return 9;case f:case c:return 8;default:throw"mode:"+t}else if(r<27)switch(t){case a:return 12;case u:return 11;case f:return 16;case c:return 10;default:throw"mode:"+t}else{if(!(r<41))throw"type:"+r;switch(t){case a:return 14;case u:return 13;case f:return 16;case c:return 12;default:throw"mode:"+t}}},o.getLostPoint=function(t){for(var r=t.getModuleCount(),e=0,n=0;n<r;n+=1)for(var o=0;o<r;o+=1){for(var i=0,a=t.isDark(n,o),u=-1;u<=1;u+=1)if(!(n+u<0||r<=n+u))for(var f=-1;f<=1;f+=1)o+f<0||r<=o+f||0==u&&0==f||a==t.isDark(n+u,o+f)&&(i+=1);i>5&&(e+=3+i-5)}for(n=0;n<r-1;n+=1)for(o=0;o<r-1;o+=1){var c=0;t.isDark(n,o)&&(c+=1),t.isDark(n+1,o)&&(c+=1),t.isDark(n,o+1)&&(c+=1),t.isDark(n+1,o+1)&&(c+=1),0!=c&&4!=c||(e+=3)}for(n=0;n<r;n+=1)for(o=0;o<r-6;o+=1)t.isDark(n,o)&&!t.isDark(n,o+1)&&t.isDark(n,o+2)&&t.isDark(n,o+3)&&t.isDark(n,o+4)&&!t.isDark(n,o+5)&&t.isDark(n,o+6)&&(e+=40);for(o=0;o<r;o+=1)for(n=0;n<r-6;n+=1)t.isDark(n,o)&&!t.isDark(n+1,o)&&t.isDark(n+2,o)&&t.isDark(n+3,o)&&t.isDark(n+4,o)&&!t.isDark(n+5,o)&&t.isDark(n+6,o)&&(e+=40);var g=0;for(o=0;o<r;o+=1)for(n=0;n<r;n+=1)t.isDark(n,o)&&(g+=1);return e+=Math.abs(100*g/r/r-50)/5*10},o),C=function(){for(var t=new Array(256),r=new Array(256),e=0;e<8;e+=1)t[e]=1<<e;for(e=8;e<256;e+=1)t[e]=t[e-4]^t[e-5]^t[e-6]^t[e-8];for(e=0;e<255;e+=1)r[t[e]]=e;var n={glog:function(t){if(t<1)throw"glog("+t+")";return r[t]},gexp:function(r){for(;r<0;)r+=255;for(;r>=256;)r-=255;return t[r]}};return n}();function k(t,r){if(void 0===t.length)throw t.length+"/"+r;var e=function(){for(var e=0;e<t.length&&0==t[e];)e+=1;for(var n=new Array(t.length-e+r),o=0;o<t.length-e;o+=1)n[o]=t[o+e];return n}(),n={getAt:function(t){return e[t]},getLength:function(){return e.length},multiply:function(t){for(var r=new Array(n.getLength()+t.getLength()-1),e=0;e<n.getLength();e+=1)for(var o=0;o<t.getLength();o+=1)r[e+o]^=C.gexp(C.glog(n.getAt(e))+C.glog(t.getAt(o)));return k(r,0)},mod:function(t){if(n.getLength()-t.getLength()<0)return n;for(var r=C.glog(n.getAt(0))-C.glog(t.getAt(0)),e=new Array(n.getLength()),o=0;o<n.getLength();o+=1)e[o]=n.getAt(o);for(o=0;o<t.getLength();o+=1)e[o]^=C.gexp(C.glog(t.getAt(o))+r);return k(e,0).mod(t)}};return n}var A=function(){var t=[[1,26,19],[1,26,16],[1,26,13],[1,26,9],[1,44,34],[1,44,28],[1,44,22],[1,44,16],[1,70,55],[1,70,44],[2,35,17],[2,35,13],[1,100,80],[2,50,32],[2,50,24],[4,25,9],[1,134,108],[2,67,43],[2,33,15,2,34,16],[2,33,11,2,34,12],[2,86,68],[4,43,27],[4,43,19],[4,43,15],[2,98,78],[4,49,31],[2,32,14,4,33,15],[4,39,13,1,40,14],[2,121,97],[2,60,38,2,61,39],[4,40,18,2,41,19],[4,40,14,2,41,15],[2,146,116],[3,58,36,2,59,37],[4,36,16,4,37,17],[4,36,12,4,37,13],[2,86,68,2,87,69],[4,69,43,1,70,44],[6,43,19,2,44,20],[6,43,15,2,44,16],[4,101,81],[1,80,50,4,81,51],[4,50,22,4,51,23],[3,36,12,8,37,13],[2,116,92,2,117,93],[6,58,36,2,59,37],[4,46,20,6,47,21],[7,42,14,4,43,15],[4,133,107],[8,59,37,1,60,38],[8,44,20,4,45,21],[12,33,11,4,34,12],[3,145,115,1,146,116],[4,64,40,5,65,41],[11,36,16,5,37,17],[11,36,12,5,37,13],[5,109,87,1,110,88],[5,65,41,5,66,42],[5,54,24,7,55,25],[11,36,12,7,37,13],[5,122,98,1,123,99],[7,73,45,3,74,46],[15,43,19,2,44,20],[3,45,15,13,46,16],[1,135,107,5,136,108],[10,74,46,1,75,47],[1,50,22,15,51,23],[2,42,14,17,43,15],[5,150,120,1,151,121],[9,69,43,4,70,44],[17,50,22,1,51,23],[2,42,14,19,43,15],[3,141,113,4,142,114],[3,70,44,11,71,45],[17,47,21,4,48,22],[9,39,13,16,40,14],[3,135,107,5,136,108],[3,67,41,13,68,42],[15,54,24,5,55,25],[15,43,15,10,44,16],[4,144,116,4,145,117],[17,68,42],[17,50,22,6,51,23],[19,46,16,6,47,17],[2,139,111,7,140,112],[17,74,46],[7,54,24,16,55,25],[34,37,13],[4,151,121,5,152,122],[4,75,47,14,76,48],[11,54,24,14,55,25],[16,45,15,14,46,16],[6,147,117,4,148,118],[6,73,45,14,74,46],[11,54,24,16,55,25],[30,46,16,2,47,17],[8,132,106,4,133,107],[8,75,47,13,76,48],[7,54,24,22,55,25],[22,45,15,13,46,16],[10,142,114,2,143,115],[19,74,46,4,75,47],[28,50,22,6,51,23],[33,46,16,4,47,17],[8,152,122,4,153,123],[22,73,45,3,74,46],[8,53,23,26,54,24],[12,45,15,28,46,16],[3,147,117,10,148,118],[3,73,45,23,74,46],[4,54,24,31,55,25],[11,45,15,31,46,16],[7,146,116,7,147,117],[21,73,45,7,74,46],[1,53,23,37,54,24],[19,45,15,26,46,16],[5,145,115,10,146,116],[19,75,47,10,76,48],[15,54,24,25,55,25],[23,45,15,25,46,16],[13,145,115,3,146,116],[2,74,46,29,75,47],[42,54,24,1,55,25],[23,45,15,28,46,16],[17,145,115],[10,74,46,23,75,47],[10,54,24,35,55,25],[19,45,15,35,46,16],[17,145,115,1,146,116],[14,74,46,21,75,47],[29,54,24,19,55,25],[11,45,15,46,46,16],[13,145,115,6,146,116],[14,74,46,23,75,47],[44,54,24,7,55,25],[59,46,16,1,47,17],[12,151,121,7,152,122],[12,75,47,26,76,48],[39,54,24,14,55,25],[22,45,15,41,46,16],[6,151,121,14,152,122],[6,75,47,34,76,48],[46,54,24,10,55,25],[2,45,15,64,46,16],[17,152,122,4,153,123],[29,74,46,14,75,47],[49,54,24,10,55,25],[24,45,15,46,46,16],[4,152,122,18,153,123],[13,74,46,32,75,47],[48,54,24,14,55,25],[42,45,15,32,46,16],[20,147,117,4,148,118],[40,75,47,7,76,48],[43,54,24,22,55,25],[10,45,15,67,46,16],[19,148,118,6,149,119],[18,75,47,31,76,48],[34,54,24,34,55,25],[20,45,15,61,46,16]],r=function(t,r){var e={};return e.totalCount=t,e.dataCount=r,e},e={};return e.getRSBlocks=function(e,n){var o=function(r,e){switch(e){case g.L:return t[4*(r-1)+0];case g.M:return t[4*(r-1)+1];case g.Q:return t[4*(r-1)+2];case g.H:return t[4*(r-1)+3];default:return}}(e,n);if(void 0===o)throw"bad rs block @ typeNumber:"+e+"/errorCorrectionLevel:"+n;for(var i=o.length/3,a=[],u=0;u<i;u+=1)for(var f=o[3*u+0],c=o[3*u+1],l=o[3*u+2],h=0;h<f;h+=1)a.push(r(c,l));return a},e}(),b=function(){var t=[],r=0,e={getBuffer:function(){return t},getAt:function(r){var e=Math.floor(r/8);return 1==(t[e]>>>7-r%8&1)},put:function(t,r){for(var n=0;n<r;n+=1)e.putBit(1==(t>>>r-n-1&1))},getLengthInBits:function(){return r},putBit:function(e){var n=Math.floor(r/8);t.length<=n&&t.push(0),e&&(t[n]|=128>>>r%8),r+=1}};return e},M=function(t){var r=a,e=t,n={getMode:function(){return r},getLength:function(t){return e.length},write:function(t){for(var r=e,n=0;n+2<r.length;)t.put(o(r.substring(n,n+3)),10),n+=3;n<r.length&&(r.length-n==1?t.put(o(r.substring(n,n+1)),4):r.length-n==2&&t.put(o(r.substring(n,n+2)),7))}},o=function(t){for(var r=0,e=0;e<t.length;e+=1)r=10*r+i(t.charAt(e));return r},i=function(t){if("0"<=t&&t<="9")return t.charCodeAt(0)-"0".charCodeAt(0);throw"illegal char :"+t};return n},x=function(t){var r=u,e=t,n={getMode:function(){return r},getLength:function(t){return e.length},write:function(t){for(var r=e,n=0;n+1<r.length;)t.put(45*o(r.charAt(n))+o(r.charAt(n+1)),11),n+=2;n<r.length&&t.put(o(r.charAt(n)),6)}},o=function(t){if("0"<=t&&t<="9")return t.charCodeAt(0)-"0".charCodeAt(0);if("A"<=t&&t<="Z")return t.charCodeAt(0)-"A".charCodeAt(0)+10;switch(t){case" ":return 36;case"$":return 37;case"%":return 38;case"*":return 39;case"+":return 40;case"-":return 41;case".":return 42;case"/":return 43;case":":return 44;default:throw"illegal char :"+t}};return n},m=function(r){var e=f,n=t.stringToBytes(r),o={getMode:function(){return e},getLength:function(t){return n.length},write:function(t){for(var r=0;r<n.length;r+=1)t.put(n[r],8)}};return o},L=function(r){var e=c,n=t.stringToBytesFuncs.SJIS;if(!n)throw"sjis not supported.";!function(){var t=n("友");if(2!=t.length||38726!=(t[0]<<8|t[1]))throw"sjis not supported."}();var o=n(r),i={getMode:function(){return e},getLength:function(t){return~~(o.length/2)},write:function(t){for(var r=o,e=0;e+1<r.length;){var n=(255&r[e])<<8|255&r[e+1];if(33088<=n&&n<=40956)n-=33088;else{if(!(57408<=n&&n<=60351))throw"illegal char at "+(e+1)+"/"+n;n-=49472}n=192*(n>>>8&255)+(255&n),t.put(n,13),e+=2}if(e<r.length)throw"illegal char at "+(e+1)}};return i},D=function(){var t=[],r={writeByte:function(r){t.push(255&r)},writeShort:function(t){r.writeByte(t),r.writeByte(t>>>8)},writeBytes:function(t,e,n){e=e||0,n=n||t.length;for(var o=0;o<n;o+=1)r.writeByte(t[o+e])},writeString:function(t){for(var e=0;e<t.length;e+=1)r.writeByte(t.charCodeAt(e))},toByteArray:function(){return t},toString:function(){var r="";r+="[";for(var e=0;e<t.length;e+=1)e>0&&(r+=","),r+=t[e];return r+="]"}};return r},S=function(t){var r=t,e=0,n=0,o=0,i={read:function(){for(;o<8;){if(e>=r.length){if(0==o)return-1;throw"unexpected end of file./"+o}var t=r.charAt(e);if(e+=1,"="==t)return o=0,-1;t.match(/^\s$/)||(n=n<<6|a(t.charCodeAt(0)),o+=6)}var i=n>>>o-8&255;return o-=8,i}},a=function(t){if(65<=t&&t<=90)return t-65;if(97<=t&&t<=122)return t-97+26;if(48<=t&&t<=57)return t-48+52;if(43==t)return 62;if(47==t)return 63;throw"c:"+t};return i},I=function(t,r,e){for(var n=function(t,r){var e=t,n=r,o=new Array(t*r),i={setPixel:function(t,r,n){o[r*e+t]=n},write:function(t){t.writeString("GIF87a"),t.writeShort(e),t.writeShort(n),t.writeByte(128),t.writeByte(0),t.writeByte(0),t.writeByte(0),t.writeByte(0),t.writeByte(0),t.writeByte(255),t.writeByte(255),t.writeByte(255),t.writeString(","),t.writeShort(0),t.writeShort(0),t.writeShort(e),t.writeShort(n),t.writeByte(0);var r=a(2);t.writeByte(2);for(var o=0;r.length-o>255;)t.writeByte(255),t.writeBytes(r,o,255),o+=255;t.writeByte(r.length-o),t.writeBytes(r,o,r.length-o),t.writeByte(0),t.writeString(";")}},a=function(t){for(var r=1<<t,e=1+(1<<t),n=t+1,i=u(),a=0;a<r;a+=1)i.add(String.fromCharCode(a));i.add(String.fromCharCode(r)),i.add(String.fromCharCode(e));var f,c,g,l=D(),h=(f=l,c=0,g=0,{write:function(t,r){if(t>>>r!=0)throw"length over";for(;c+r>=8;)f.writeByte(255&(t<<c|g)),r-=8-c,t>>>=8-c,g=0,c=0;g|=t<<c,c+=r},flush:function(){c>0&&f.writeByte(g)}});h.write(r,n);var s=0,v=String.fromCharCode(o[s]);for(s+=1;s<o.length;){var d=String.fromCharCode(o[s]);s+=1,i.contains(v+d)?v+=d:(h.write(i.indexOf(v),n),i.size()<4095&&(i.size()==1<<n&&(n+=1),i.add(v+d)),v=d)}return h.write(i.indexOf(v),n),h.write(e,n),h.flush(),l.toByteArray()},u=function(){var t={},r=0,e={add:function(n){if(e.contains(n))throw"dup key:"+n;t[n]=r,r+=1},size:function(){return r},indexOf:function(r){return t[r]},contains:function(r){return void 0!==t[r]}};return e};return i}(t,r),o=0;o<r;o+=1)for(var i=0;i<t;i+=1)n.setPixel(i,o,e(i,o));var a=D();n.write(a);for(var u=function(){var t=0,r=0,e=0,n="",o={},i=function(t){n+=String.fromCharCode(a(63&t))},a=function(t){if(t<0);else{if(t<26)return 65+t;if(t<52)return t-26+97;if(t<62)return t-52+48;if(62==t)return 43;if(63==t)return 47}throw"n:"+t};return o.writeByte=function(n){for(t=t<<8|255&n,r+=8,e+=1;r>=6;)i(t>>>r-6),r-=6},o.flush=function(){if(r>0&&(i(t<<6-r),t=0,r=0),e%3!=0)for(var o=3-e%3,a=0;a<o;a+=1)n+="="},o.toString=function(){return n},o}(),f=a.toByteArray(),c=0;c<f.length;c+=1)u.writeByte(f[c]);return u.flush(),"data:image/gif;base64,"+u};return t}();qrcode.stringToBytesFuncs["UTF-8"]=function(t){return function(t){for(var r=[],e=0;e<t.length;e++){var n=t.charCodeAt(e);n<128?r.push(n):n<2048?r.push(192|n>>6,128|63&n):n<55296||n>=57344?r.push(224|n>>12,128|n>>6&63,128|63&n):(e++,n=65536+((1023&n)<<10|1023&t.charCodeAt(e)),r.push(240|n>>18,128|n>>12&63,128|n>>6&63,128|63&n))}return r}(t)},function(t){"function"==typeof define&&define.amd?define([],t):"object"==typeof exports&&(module.exports=t())}(function(){return qrcode});
@@ -580,7 +608,7 @@ function esc(s){
   });
 }
 /* ================= DONNÉES ================= */
-const APP_VERSION="v36"; // garder aligné avec CACHE_NAME de sw.js (testé)
+const APP_VERSION="v37"; // garder aligné avec CACHE_NAME de sw.js (testé)
 const NOTES = {
   do4 :{n:"do", clef:"sol", p:-2, midi:60, mn:"Le do du milieu est transpercé par sa petite ligne, rien qu'à lui."},
   re4 :{n:"ré", clef:"sol", p:-1, midi:62, mn:"Collé juste sous la portée."},
@@ -1919,19 +1947,18 @@ function ensureStructure(db){
   return backfillCurriculumFromGame(db);
 }
 const LS_KEY="solfegeProto1", LS_MIRROR="solfegeProto1_mirror", LS_PREIMPORT="solfegeProto1_preimport", LS_CHECKPOINT="solfegeProto1_checkpoint";
-const PLAYER_REGISTRY_KEY="sezam_players_v1", PLAYER_FALLBACK_PREFIX="sezam_player_slot_", MAX_LOCAL_PLAYERS=8;
+const PLAYER_REGISTRY_KEY="sezam_players_v1", PLAYER_FALLBACK_PREFIX="sezam_player_slot_", MAX_LOCAL_PLAYERS=8, MAX_ARCHIVED_PLAYERS=32;
 let saveFailed=false, PLAYER_REGISTRY=null, ACTIVE_PLAYER_ID="", PLAYER_EPOCH=0, hadPlayerRegistryLocal=false, playerOperationBusy=false;
 function readKey(k){ try{ const s=localStorage.getItem(k); return s?JSON.parse(s):null; }catch(e){ return null; } }
 function recognizableStoredState(value){ return isRecord(value)&&isRecord(value.paliers); }
 function normalizePlayerName(value,def){ return cleanText(value,40,def===undefined?"Joueur":def); }
 function normalizePlayerRegistry(value){
-  const out={schema:1,activeId:"",players:[]}, seen=safeMap();
+  const out={schema:2,activeId:"",players:[],archived:[]}, seen=safeMap();
   if(!isRecord(value)||!Array.isArray(value.players)) return out;
-  value.players.forEach(function(raw,idx){
-    if(out.players.length>=MAX_LOCAL_PLAYERS)return;
+  const normalizedMeta=function(raw,idx){
     if(!isRecord(raw)||!isSafeId(raw.id)||seen[raw.id]) return;
     seen[raw.id]=1;
-    out.players.push({
+    return {
       id:String(raw.id),
       userId:isSafeId(raw.userId)?String(raw.userId):String(raw.id),
       name:normalizePlayerName(raw.name,"Joueur "+(idx+1)),
@@ -1940,7 +1967,15 @@ function normalizePlayerRegistry(value){
       xp:clampInt(raw.xp,0,999999999,0),
       sel:validPalierId(raw.sel,"P1"),
       legacyCloud:raw.legacyCloud===true
-    });
+    };
+  };
+  value.players.forEach(function(raw,idx){
+    if(out.players.length>=MAX_LOCAL_PLAYERS)return;
+    const meta=normalizedMeta(raw,idx);if(meta)out.players.push(meta);
+  });
+  (Array.isArray(value.archived)?value.archived:[]).forEach(function(raw,idx){
+    if(out.archived.length>=MAX_ARCHIVED_PLAYERS)return;
+    const meta=normalizedMeta(raw,out.players.length+idx);if(meta){meta.archivedAt=clampInt(raw.archivedAt,0,Number.MAX_SAFE_INTEGER,Date.now());out.archived.push(meta);}
   });
   out.activeId=out.players.some(function(p){return p.id===value.activeId;})?String(value.activeId):(out.players[0]?out.players[0].id:"");
   return out;
@@ -1950,6 +1985,9 @@ function activePlayerMeta(){
 }
 function playerMetaById(id){
   return PLAYER_REGISTRY&&PLAYER_REGISTRY.players?PLAYER_REGISTRY.players.find(function(p){return p.id===id;})||null:null;
+}
+function archivedPlayerMetaById(id){
+  return PLAYER_REGISTRY&&PLAYER_REGISTRY.archived?PLAYER_REGISTRY.archived.find(function(p){return p.id===id;})||null:null;
 }
 function playerFallbackKey(id){ return PLAYER_FALLBACK_PREFIX+(isSafeId(id)?id:"invalid"); }
 function playerPreimportKey(id){ return LS_PREIMPORT+"_"+(isSafeId(id)?id:"invalid"); }
@@ -2010,21 +2048,23 @@ function initializePlayerRegistry(){
 const IDB_NAME="soladoBackup", IDB_STORE="kv";
 let idbReady=false, idbQueuedSave=safeMap(), hadRecognizableLocal=false;
 function idbOpen(cb){
+  let settled=false,timer=null;
+  const done=function(db){if(settled)return;settled=true;if(timer)clearTimeout(timer);cb(db);};
   try{
-    if(typeof indexedDB==="undefined"){ cb(null); return; }
-    const rq=indexedDB.open(IDB_NAME,1);
+    if(typeof indexedDB==="undefined"){ done(null); return; }
+    const rq=indexedDB.open(IDB_NAME,1);timer=setTimeout(function(){done(null);},8000);
     rq.onupgradeneeded=function(){ try{ rq.result.createObjectStore(IDB_STORE); }catch(e){} };
-    rq.onsuccess=function(){ cb(rq.result); };
-    rq.onerror=function(){ cb(null); };
-  }catch(e){ cb(null); }
+    rq.onsuccess=function(){ done(rq.result); };
+    rq.onerror=function(){ done(null); };
+  }catch(e){ done(null); }
 }
 function idbPut(str,key,cb){
   if(!idbReady){idbQueuedSave[key]=str;if(cb)cb(true);return;}
   idbOpen(function(db){
     if(!db){if(cb)cb(false);return;}
     try{
-      const tx=db.transaction(IDB_STORE,"readwrite");let settled=false;
-      const done=function(ok){if(settled)return;settled=true;if(cb)cb(ok);};
+      const tx=db.transaction(IDB_STORE,"readwrite");let settled=false,timer=setTimeout(function(){try{tx.abort();}catch(e){}done(false);},8000);
+      const done=function(ok){if(settled)return;settled=true;clearTimeout(timer);if(cb)cb(ok);};
       tx.oncomplete=function(){done(true);};tx.onerror=function(){done(false);};tx.onabort=function(){done(false);};
       tx.objectStore(IDB_STORE).put(str,key);
     }catch(e){if(cb)cb(false);}
@@ -2034,9 +2074,10 @@ function idbGet(key,cb){
   idbOpen(function(db){
     if(!db){ cb(null); return; }
     try{
-      const rq=db.transaction(IDB_STORE,"readonly").objectStore(IDB_STORE).get(key);
-      rq.onsuccess=function(){ cb(rq.result||null); };
-      rq.onerror=function(){ cb(null); };
+      const rq=db.transaction(IDB_STORE,"readonly").objectStore(IDB_STORE).get(key);let settled=false,timer=setTimeout(function(){done(null);},8000);
+      const done=function(value){if(settled)return;settled=true;clearTimeout(timer);cb(value);};
+      rq.onsuccess=function(){ done(rq.result||null); };
+      rq.onerror=function(){ done(null); };
     }catch(e){ cb(null); }
   });
 }
@@ -2056,6 +2097,469 @@ function idbLoad(cb,playerId){
 }
 function idbSaveRegistry(str){ idbPut(str,"players"); }
 function idbLoadRegistry(cb){ idbGet("players",cb); }
+
+/* ========================================================================
+   MÉMOIRE PROTÉGÉE — historique append-only, séparé de l'état courant.
+   Un point contient la chaîne JSON exacte de DB et le contexte d'écran. Les
+   clés data/meta sont écrites avec add() : une collision ne remplace jamais
+   une sauvegarde existante. Aucun mécanisme de purge automatique n'existe.
+   ======================================================================== */
+const MEMORY_HISTORY_SCHEMA=1, MEMORY_INDEX_PREFIX="history:index:", MEMORY_META_PREFIX="history:meta:", MEMORY_DATA_PREFIX="history:data:", MEMORY_HEAD_PREFIX="sezam_history_head_";
+let memorySnapshotQueue=[], memorySnapshotWriting=false, memoryToastTimer=null, memoryRestoreBusy=false, memoryProtectedActionBusy=false, memorySyncChoiceRemote=null;
+function memoryActionToken(){return {playerId:ACTIVE_PLAYER_ID,epoch:PLAYER_EPOCH};}
+function memoryActionCurrent(token){return !!token&&token.playerId===ACTIVE_PLAYER_ID&&token.epoch===PLAYER_EPOCH;}
+function memoryIndexKey(playerId){return MEMORY_INDEX_PREFIX+(isSafeId(playerId)?playerId:"invalid");}
+function memoryHeadKey(playerId){return MEMORY_HEAD_PREFIX+(isSafeId(playerId)?playerId:"invalid");}
+function memoryNumberKey(prefix,playerId,number){return prefix+(isSafeId(playerId)?playerId:"invalid")+":"+String(number).padStart(12,"0");}
+function memoryLocalIndexKey(playerId){return "sezam_"+memoryIndexKey(playerId);}
+function memoryLocalDataKey(playerId,number){return "sezam_"+memoryNumberKey(MEMORY_DATA_PREFIX,playerId,number);}
+function memoryLocalMetaKey(playerId,number){return "sezam_"+memoryNumberKey(MEMORY_META_PREFIX,playerId,number);}
+function parseMemoryIndex(raw){
+  if(!raw)return [];
+  let v=null;try{v=typeof raw==="string"?JSON.parse(raw):raw;}catch(e){return null;}
+  if(!Array.isArray(v))return null;
+  const valid=v.every(function(m){
+    return isRecord(m)&&m.schema===MEMORY_HISTORY_SCHEMA&&isSafeId(m.playerId)&&Number.isInteger(m.number)&&m.number>0&&typeof m.id==="string"&&m.id.length>3&&
+      typeof m.name==="string"&&Number.isFinite(m.createdAt)&&typeof m.kind==="string"&&typeof m.kindLabel==="string"&&
+      Number.isInteger(m.stateBytes)&&m.stateBytes>=0&&Number.isInteger(m.runtimeBytes)&&m.runtimeBytes>=0&&/^[a-f0-9]{64}$/.test(m.stateSha256||"")&&/^[a-f0-9]{64}$/.test(m.runtimeSha256||"")&&
+      isRecord(m.context)&&Number.isInteger(m.context.level)&&typeof m.context.levelLabel==="string"&&Number.isFinite(m.context.xp)&&typeof m.context.summary==="string"&&
+      (m.storage==="idb"||m.storage==="local")&&typeof m.dataKey==="string"&&typeof m.metaKey==="string";
+  });
+  return valid?v:null;
+}
+function memoryHead(playerId){
+  try{const n=Number(localStorage.getItem(memoryHeadKey(playerId)));return Number.isInteger(n)&&n>0?n:0;}catch(e){return 0;}
+}
+function advanceMemoryHead(playerId,number){try{localStorage.setItem(memoryHeadKey(playerId),String(Math.max(memoryHead(playerId),number)));}catch(e){}}
+function utf8BytesForMemory(value){
+  const s=String(value==null?"":value);
+  if(typeof TextEncoder!=="undefined")try{return Array.from(new TextEncoder().encode(s));}catch(e){}
+  const out=[];
+  for(let i=0;i<s.length;i++){
+    let cp=s.charCodeAt(i);
+    if(cp>=0xD800&&cp<=0xDBFF&&i+1<s.length){const lo=s.charCodeAt(i+1);if(lo>=0xDC00&&lo<=0xDFFF){cp=0x10000+((cp-0xD800)<<10)+(lo-0xDC00);i++;}else cp=0xFFFD;}
+    else if(cp>=0xDC00&&cp<=0xDFFF)cp=0xFFFD;
+    if(cp<0x80)out.push(cp);
+    else if(cp<0x800)out.push(0xC0|(cp>>6),0x80|(cp&63));
+    else if(cp<0x10000)out.push(0xE0|(cp>>12),0x80|((cp>>6)&63),0x80|(cp&63));
+    else out.push(0xF0|(cp>>18),0x80|((cp>>12)&63),0x80|((cp>>6)&63),0x80|(cp&63));
+  }
+  return out;
+}
+function memorySha256(value){
+  const bytes=utf8BytesForMemory(value), originalLength=bytes.length;
+  const K=[0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];
+  const H=[0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19];
+  bytes.push(0x80);while(bytes.length%64!==56)bytes.push(0);
+  const high=Math.floor(originalLength/0x20000000),low=(originalLength<<3)>>>0;
+  bytes.push((high>>>24)&255,(high>>>16)&255,(high>>>8)&255,high&255,(low>>>24)&255,(low>>>16)&255,(low>>>8)&255,low&255);
+  const rotr=function(x,n){return (x>>>n)|(x<<(32-n));},w=new Array(64);
+  for(let off=0;off<bytes.length;off+=64){
+    for(let i=0;i<16;i++){const j=off+i*4;w[i]=((bytes[j]<<24)|(bytes[j+1]<<16)|(bytes[j+2]<<8)|bytes[j+3])>>>0;}
+    for(let i=16;i<64;i++){const a=w[i-15],b=w[i-2],s0=rotr(a,7)^rotr(a,18)^(a>>>3),s1=rotr(b,17)^rotr(b,19)^(b>>>10);w[i]=(w[i-16]+s0+w[i-7]+s1)>>>0;}
+    let a=H[0],b=H[1],c=H[2],d=H[3],e=H[4],f=H[5],g=H[6],h=H[7];
+    for(let i=0;i<64;i++){const S1=rotr(e,6)^rotr(e,11)^rotr(e,25),ch=(e&f)^((~e)&g),t1=(h+S1+ch+K[i]+w[i])>>>0,S0=rotr(a,2)^rotr(a,13)^rotr(a,22),maj=(a&b)^(a&c)^(b&c),t2=(S0+maj)>>>0;h=g;g=f;f=e;e=(d+t1)>>>0;d=c;c=b;b=a;a=(t1+t2)>>>0;}
+    H[0]=(H[0]+a)>>>0;H[1]=(H[1]+b)>>>0;H[2]=(H[2]+c)>>>0;H[3]=(H[3]+d)>>>0;H[4]=(H[4]+e)>>>0;H[5]=(H[5]+f)>>>0;H[6]=(H[6]+g)>>>0;H[7]=(H[7]+h)>>>0;
+  }
+  return H.map(function(n){return n.toString(16).padStart(8,"0");}).join("");
+}
+function activeMemoryScreen(){
+  try{const all=document.querySelectorAll(".screen.active");if(all&&all[0]&&all[0].id)return all[0].id;}catch(e){}
+  if(typeof KX!=="undefined"&&KX&&!KX.done)return "scrKbd";
+  if(typeof EX!=="undefined"&&EX&&!EX.done)return "scrEx";
+  return "scrHome";
+}
+const MEMORY_SCENE_IDS=["exMode","exDots","exCount","timerbar","timerfill","staffbox","feedback","answers","btnNext","btnQuit","kHead","kCount","kDots","kStaff","kFb","kKbd","kNames","resScore","resSub","resSolado","resErrs","resVal","resPiece","resCode","resSave","btnAgain","btnReplayCourse","pcTitle","pcClef","pcKey","pieceMsg","segPiece","segTitle","segBars","segLevel","segHand","segFocus","segNotes","segMsg","cardBox"];
+function captureMemoryElement(id){
+  const el=document.getElementById(id);if(!el)return null;
+  return {html:String(el.innerHTML||""),className:String(el.className||""),value:typeof el.value==="string"?el.value:null,disabled:!!el.disabled,style:{display:String(el.style&&el.style.display||""),width:String(el.style&&el.style.width||""),visibility:String(el.style&&el.style.visibility||"")}};
+}
+function captureMemoryOverlayControls(){
+  const box=$("cardBox");if(!box||typeof box.querySelectorAll!=="function")return [];
+  try{return Array.from(box.querySelectorAll("input,select,textarea,button,details")).map(function(el,index){
+    const tag=String(el.tagName||"").toLowerCase(),row={index:index,id:String(el.id||""),tag:tag,disabled:!!el.disabled};
+    if(typeof el.value==="string")row.value=el.value;
+    if(typeof el.checked==="boolean")row.checked=el.checked;
+    if(typeof el.selectedIndex==="number")row.selectedIndex=el.selectedIndex;
+    if(tag==="details")row.open=!!el.open;
+    if(typeof el.scrollTop==="number")row.scrollTop=el.scrollTop;
+    if(typeof el.selectionStart==="number"){row.selectionStart=el.selectionStart;row.selectionEnd=typeof el.selectionEnd==="number"?el.selectionEnd:el.selectionStart;}
+    return row;
+  });}catch(e){return [];}
+}
+function captureMemoryOverlayFocus(controls){
+  try{
+    const active=document.activeElement,box=$("cardBox");if(!active||!box||!box.contains(active))return -1;
+    const all=Array.from(box.querySelectorAll("input,select,textarea,button,details"));return all.indexOf(active);
+  }catch(e){return -1;}
+}
+function capturePremierRegardRuntime(){
+  try{if(typeof PR!=="undefined"&&PR&&PR.piece&&isSafeId(PR.piece.id))return {pieceId:PR.piece.id,i:clampInt(PR.i,0,9999,0),ok:clampInt(PR.ok,0,9999,0),segmentId:isSafeId(PR.segmentId)?PR.segmentId:""};}catch(e){}
+  return null;
+}
+function captureMemoryRuntime(){
+  const now=Date.now(),screen=activeMemoryScreen(),scene=safeMap();
+  MEMORY_SCENE_IDS.forEach(function(id){const v=captureMemoryElement(id);if(v)scene[id]=v;});
+  const cardHtml=scene.cardBox?scene.cardBox.html:"",overlayType=detectMemoryOverlayType(cardHtml);
+  const overlayControls=captureMemoryOverlayControls();
+  const runtime={schema:1,capturedAt:now,screen:screen,scrollY:Number(window.scrollY)||0,cardScrollTop:Number($("cardDialog")&&$("cardDialog").scrollTop)||0,pieceId:$("scrPiece")&&$("scrPiece").getAttribute("data-piece-id")||"",overlayOn:!!($("overlay")&&$("overlay").classList.contains("on")),overlayType:overlayType,overlayLabelledBy:$("cardDialog")&&$("cardDialog").getAttribute("aria-labelledby")||"",overlayControls:overlayControls,overlayFocusIndex:captureMemoryOverlayFocus(overlayControls),scene:scene,ex:null,kx:null,pr:capturePremierRegardRuntime(),syncRemote:overlayType==="sync_choice"&&memorySyncChoiceRemote?JSON.parse(JSON.stringify(memorySyncChoiceRemote)):null};
+  if(typeof EX!=="undefined"&&EX&&(screen==="scrEx"||screen==="scrRes"||runtime.overlayOn))runtime.ex=JSON.parse(JSON.stringify(EX));
+  if(typeof KX!=="undefined"&&KX&&(screen==="scrKbd"||runtime.overlayOn))runtime.kx=JSON.parse(JSON.stringify(KX));
+  return JSON.stringify(runtime);
+}
+function detectMemoryOverlayType(cardHtml){
+  cardHtml=String(cardHtml||"");
+  if(cardHtml.indexOf('id="playerDialogTitle"')>=0)return "player_switch";
+  if(cardHtml.indexOf('id="playerAddForm"')>=0)return "player_add";
+  if(cardHtml.indexOf('id="playerEditForm"')>=0)return "player_edit";
+  if(cardHtml.indexOf('id="profSave"')>=0)return "profile";
+  if(cardHtml.indexOf('id="btnDecGo"')>=0)return "discovery";
+  if(cardHtml.indexOf('id="btnPrepGo"')>=0)return "preview";
+  if(cardHtml.indexOf('id="kGo"')>=0)return "keyboard_config";
+  if(cardHtml.indexOf('id="kAgain"')>=0)return "keyboard_result";
+  if(cardHtml.indexOf('id="watchSourceBtn"')>=0)return "watch";
+  if(cardHtml.indexOf('id="startupRecoveryApply"')>=0)return "startup_recovery";
+  if(cardHtml.indexOf("data-segpick=")>=0)return "piece_goal_segment";
+  if(cardHtml.indexOf("data-goal=")>=0)return "piece_goal";
+  if(cardHtml.indexOf('id="prSelfDone"')>=0)return "first_look_self";
+  if(cardHtml.indexOf('id="prNext"')>=0)return "first_look_answer";
+  if(cardHtml.indexOf('id="prChoices"')>=0)return "first_look_quiz";
+  if(cardHtml.indexOf('id="syncKeepRestored"')>=0)return "sync_choice";
+  if(cardHtml.indexOf("onclick=")>=0&&cardHtml.indexOf("<form")<0)return "inline_only";
+  return "other";
+}
+function memoryLevelContext(extra){
+  extra=extra||{};
+  const sel=PALIERS.find(function(p){return p.id===DB.sel;})||PALIERS[0],pi=Math.max(0,PALIERS.findIndex(function(p){return p.id===sel.id;}));
+  const course=typeof EX!=="undefined"&&EX&&EX.course?EX.course:null;
+  const level=course?course.stepIndex+1:pi+1;
+  const levelLabel=course?(course.itemLabel+" · cycle "+(course.stepIndex+1)+"/"+course.stepTotal+" · série "+course.seriesNumber+"/"+course.seriesTotal):(sel.id+" · "+sel.t);
+  const noteIds=Object.keys(DB.noteStats||{}).filter(function(id){const s=DB.noteStats[id]||{};return NOTES[id]&&((s.v||0)>0||(s.box||0)>0||(s.last||0)>0);}).sort();
+  let attempts=0,errors=0;noteIds.forEach(function(id){attempts+=DB.noteStats[id].v||0;errors+=DB.noteStats[id].e||0;});
+  let validations=0;PALIERS.forEach(function(p){TIER_IDS.forEach(function(t){if(DB.paliers[p.id]&&DB.paliers[p.id][t]&&DB.paliers[p.id][t].ok)validations++;});});
+  const scene=activeMemoryScreen(),current=typeof EX!=="undefined"&&EX&&!EX.done?("question "+((EX.i||0)+1)+"/"+(EX.n||EX.questionCap||"?")):(typeof KX!=="undefined"&&KX&&!KX.done?("clavier "+((KX.i||0)+1)+"/"+KX.n):"écran "+scene);
+  const choices="mode "+DB.mode+" · thème "+(DB.themeMode||"classique")+" · parcours "+((DB.profile&&DB.profile.parcours)||"libre")+" · œuvre "+(DB.activePiece||"aucune");
+  const summary="Niveau "+level+" ("+levelLabel+") · "+(DB.xp||0)+" XP · "+noteIds.length+" notes mémorisées · "+attempts+" réponses, "+errors+" erreurs · "+validations+" validations · "+(DB.repairQueue||[]).length+" réparations en cours · "+(DB.pieces||[]).length+" partitions personnelles · "+current+" · "+choices+".";
+  return {level:level,levelLabel:levelLabel,palier:sel.id,xp:DB.xp||0,noteIds:noteIds,attempts:attempts,errors:errors,validations:validations,repairs:(DB.repairQueue||[]).length,pieces:(DB.pieces||[]).length,scene:scene,current:current,choices:choices,summary:summary,milestone:cleanText(extra.milestone,180,"")};
+}
+function memoryKindLabel(kind){return {manual:"Manuelle",level_complete:"Niveau terminé",pre_restore:"Avant restauration",pre_import:"Avant import",pre_recovery:"Avant code de reprise",pre_cloud:"Avant synchro cloud",pre_delete_cloud:"Avant suppression cloud",pre_delete:"Avant suppression",legacy_preimport:"Ancienne protection"}[kind]||"Protection automatique";}
+function formatMemoryDate(ts){try{return new Date(ts).toLocaleString("fr-FR",{dateStyle:"short",timeStyle:"medium"});}catch(e){return new Date(ts).toLocaleString("fr-FR");}}
+function finalizedMemoryMeta(record,number,storage){
+  const createdAt=record.createdAt,id=record.playerId+"-"+String(number).padStart(12,"0")+"-"+record.captureId;
+  const localSuffix=storage==="local"?(":"+record.captureId):"";
+  return {schema:MEMORY_HISTORY_SCHEMA,id:id,playerId:record.playerId,userId:record.userId,number:number,kind:record.kind,kindLabel:memoryKindLabel(record.kind),createdAt:createdAt,name:"Sauvegarde n°"+number+" — Niveau "+record.context.level+" — "+formatMemoryDate(createdAt),appVersion:APP_VERSION,dbVersion:record.dbVersion||0,stateBytes:utf8ByteLength(record.stateRaw),runtimeBytes:utf8ByteLength(record.runtimeRaw),stateSha256:memorySha256(record.stateRaw),runtimeSha256:memorySha256(record.runtimeRaw),context:record.context,storage:storage,dataKey:memoryNumberKey(MEMORY_DATA_PREFIX,record.playerId,number)+localSuffix,metaKey:memoryNumberKey(MEMORY_META_PREFIX,record.playerId,number)+localSuffix};
+}
+function scanLocalMemoryMetas(playerId){
+  const rows=[],prefix="sezam_"+MEMORY_META_PREFIX+playerId+":";
+  try{for(let i=0;i<localStorage.length;i++){const key=localStorage.key(i);if(!key||key.indexOf(prefix)!==0)continue;const raw=localStorage.getItem(key),parsed=parseMemoryIndex("["+raw+"]");if(parsed&&parsed[0]&&parsed[0].playerId===playerId)rows.push(parsed[0]);}}catch(e){}
+  return rows;
+}
+function appendMemoryLocalCore(record,cb){
+  let pid=record.playerId,indexKey=memoryLocalIndexKey(pid),index=null,number=0,meta=null,envelope="",metaRaw="",dataKey="",metaKey="",ok=false,error="";
+  try{
+    index=parseMemoryIndex(localStorage.getItem(indexKey));
+    if(index===null)error="L’index local est illisible ; aucune ancienne sauvegarde n’a été modifiée.";
+    else {
+      const seen=safeMap(),known=[];index.concat(scanLocalMemoryMetas(pid)).forEach(function(row){if(!seen[row.id]){seen[row.id]=1;known.push(row);}});index=known;
+      number=Math.max(memoryHead(pid),index.reduce(function(m,x){return Math.max(m,x.number||0);},0))+1;
+      while(localStorage.getItem(memoryLocalDataKey(pid,number))||localStorage.getItem(memoryLocalMetaKey(pid,number)))number++;
+      meta=finalizedMemoryMeta(record,number,"local");envelope=JSON.stringify({schema:MEMORY_HISTORY_SCHEMA,meta:meta,stateRaw:record.stateRaw,runtimeRaw:record.runtimeRaw});metaRaw=JSON.stringify(meta);dataKey="sezam_"+meta.dataKey;metaKey="sezam_"+meta.metaKey;
+      localStorage.setItem(dataKey,envelope);
+      localStorage.setItem(metaKey,metaRaw);
+      localStorage.setItem(indexKey,JSON.stringify(index.concat([meta])));
+      ok=true;
+    }
+  }catch(e){
+    try{if(dataKey&&localStorage.getItem(dataKey)===envelope)localStorage.removeItem(dataKey);if(metaKey&&localStorage.getItem(metaKey)===metaRaw)localStorage.removeItem(metaKey);}catch(x){}
+    error="Espace insuffisant ou stockage privé indisponible : le nouveau point n’a pas été créé. Aucun ancien point n’a été effacé.";
+  }
+  if(ok)advanceMemoryHead(pid,number);
+  cb(ok,ok?meta:null,error);
+}
+function appendMemoryLocal(record,cb){
+  if(typeof navigator!=="undefined"&&navigator.locks&&typeof navigator.locks.request==="function"){
+    let result=null;
+    navigator.locks.request("sezam-memory-"+record.playerId,{mode:"exclusive"},function(){return new Promise(function(resolve){appendMemoryLocalCore(record,function(ok,meta,error){result=[ok,meta,error];resolve();});});}).then(function(){cb.apply(null,result||[false,null,"Verrou de sauvegarde interrompu ; aucun point existant n’a été modifié."]);},function(){appendMemoryLocalCore(record,cb);});
+    return;
+  }
+  appendMemoryLocalCore(record,cb);
+}
+function appendMemoryIdb(record,cb){
+  idbOpen(function(db){
+    if(!db){appendMemoryLocal(record,cb);return;}
+    let tx,store,settled=false,resultMeta=null,watchdog=setTimeout(function(){try{if(tx)tx.abort();}catch(e){}done(false,"Le coffre a cessé de répondre : ajout annulé, historique existant intact.");},12000);
+    const done=function(ok,msg){if(settled)return;settled=true;clearTimeout(watchdog);if(ok&&resultMeta)advanceMemoryHead(record.playerId,resultMeta.number);cb(ok,resultMeta,msg||"");};
+    try{
+      tx=db.transaction(IDB_STORE,"readwrite");store=tx.objectStore(IDB_STORE);
+      tx.oncomplete=function(){done(true,"");};
+      tx.onerror=function(){done(false,"La sauvegarde complète n’a pas pu être ajoutée. Aucun point existant n’a été remplacé.");};
+      tx.onabort=function(){done(false,"La sauvegarde complète a été annulée sans modifier l’historique existant.");};
+      const rq=store.get(memoryIndexKey(record.playerId));
+      rq.onerror=function(){try{tx.abort();}catch(e){done(false,"Index de sauvegardes inaccessible.");}};
+      rq.onsuccess=function(){
+        const index=parseMemoryIndex(rq.result);if(index===null){try{tx.abort();}catch(e){done(false,"Index de sauvegardes illisible.");}return;}
+        const number=Math.max(memoryHead(record.playerId),index.reduce(function(m,x){return Math.max(m,x.number||0);},0))+1;
+        resultMeta=finalizedMemoryMeta(record,number,"idb");
+        const envelope=JSON.stringify({schema:MEMORY_HISTORY_SCHEMA,meta:resultMeta,stateRaw:record.stateRaw,runtimeRaw:record.runtimeRaw});
+        try{
+          store.add(envelope,resultMeta.dataKey);
+          store.add(JSON.stringify(resultMeta),resultMeta.metaKey);
+          store.put(JSON.stringify(index.concat([resultMeta])),memoryIndexKey(record.playerId));
+        }catch(e){try{tx.abort();}catch(x){done(false,"Collision refusée : aucun point existant n’a été écrasé.");}}
+      };
+    }catch(e){appendMemoryLocal(record,cb);}
+  });
+}
+function appendMemoryRecord(record,cb){
+  if(typeof indexedDB!=="undefined")appendMemoryIdb(record,cb);else appendMemoryLocal(record,cb);
+}
+function memoryToast(message,bad){
+  const box=$("memoryToast");if(!box)return;
+  box.textContent=message;box.style.background=bad?"#7a1d24":"";box.classList.add("on");
+  if(memoryToastTimer)clearTimeout(memoryToastTimer);
+  memoryToastTimer=setTimeout(function(){box.classList.remove("on");memoryToastTimer=null;},bad?6500:5200);
+}
+function checkMemoryStoragePressure(){
+  if(!navigator.storage||typeof navigator.storage.estimate!=="function")return;
+  try{navigator.storage.estimate().then(function(info){
+    const usage=Number(info&&info.usage)||0,quota=Number(info&&info.quota)||0;if(!quota||usage/quota<.75)return;
+    const pct=Math.round(usage/quota*100),msg="Stockage de ce navigateur utilisé à "+pct+" %. Exporte un fichier de sauvegarde. Aucun ancien point n’a été supprimé.";
+    memoryToast(msg,true);if($("memoryMsg"))$("memoryMsg").textContent=msg;
+  }).catch(function(){});}catch(e){}
+}
+function pumpMemorySnapshots(){
+  if(memorySnapshotWriting||!memorySnapshotQueue.length)return;
+  memorySnapshotWriting=true;const job=memorySnapshotQueue.shift();
+  try{appendMemoryRecord(job.record,function(ok,meta,error){
+    memorySnapshotWriting=false;
+    const result={ok:!!ok,meta:meta||null,message:ok?(meta.name+" créée. "+meta.context.summary):(error||"Sauvegarde impossible. Rien n’a été effacé.")};
+    if(job.notify!==false)memoryToast(ok?(meta.name+" créée. Mémoire protégée."):result.message,!ok);
+    if(ok)checkMemoryStoragePressure();
+    try{if(typeof job.cb==="function")job.cb(result);}finally{pumpMemorySnapshots();}
+  });}catch(e){memorySnapshotWriting=false;const result={ok:false,meta:null,message:"Sauvegarde interrompue sans effacer aucun ancien point."};try{if(job.cb)job.cb(result);}finally{pumpMemorySnapshots();}}
+}
+function createMemorySnapshot(kind,options,cb){
+  options=options||{};let stateRaw="",runtimeRaw="",context=null;
+  try{stateRaw=JSON.stringify(DB);runtimeRaw=captureMemoryRuntime();context=memoryLevelContext(options);}catch(e){const r={ok:false,meta:null,message:"Sauvegarde impossible : l’état complet n’a pas pu être sérialisé. Rien n’a été modifié."};memoryToast(r.message,true);if(cb)cb(r);return false;}
+  const sezam=DB&&isRecord(DB._sezam)?DB._sezam:{};
+  if(!stateRaw||!recognizableStoredState(DB)||sezam.playerId!==ACTIVE_PLAYER_ID){const r={ok:false,meta:null,message:"Sauvegarde refusée : l’identité du joueur actif n’est pas vérifiable. Rien n’a été modifié."};memoryToast(r.message,true);if(cb)cb(r);return false;}
+  let parsedVersion=0;try{parsedVersion=JSON.parse(stateRaw).v||0;}catch(e){}
+  const createdAt=Date.now(),captureId=createdAt.toString(36)+Math.random().toString(36).slice(2,9);
+  memorySnapshotQueue.push({record:{playerId:ACTIVE_PLAYER_ID,userId:sezam.userId||ACTIVE_PLAYER_ID,kind:kind||"manual",createdAt:createdAt,captureId:captureId,dbVersion:parsedVersion,stateRaw:stateRaw,runtimeRaw:runtimeRaw,context:context},notify:options.notify!==false,cb:cb});pumpMemorySnapshots();return true;
+}
+function memorySnapshotList(cb){
+  const pid=ACTIVE_PLAYER_ID,epoch=PLAYER_EPOCH,local=(parseMemoryIndex((function(){try{return localStorage.getItem(memoryLocalIndexKey(pid));}catch(e){return null;}})())||[]).concat(scanLocalMemoryMetas(pid));
+  const finish=function(idbRaw){
+    if(pid!==ACTIVE_PLAYER_ID||epoch!==PLAYER_EPOCH)return;
+    const remote=parseMemoryIndex(idbRaw)||[],seen=safeMap(),all=[];
+    remote.concat(local).forEach(function(m){if(m.playerId===pid&&!seen[m.id]){seen[m.id]=1;all.push(m);}});
+    all.sort(function(a,b){return b.number-a.number;});cb(all);
+  };
+  if(typeof indexedDB!=="undefined")idbGet(memoryIndexKey(pid),finish);else finish(null);
+}
+function loadMemoryEnvelope(meta,cb){
+  const localKey="sezam_"+meta.dataKey,legacyKey=memoryLocalDataKey(meta.playerId,meta.number);
+  const fromLocal=function(){let raw=null;try{raw=localStorage.getItem(localKey)||localStorage.getItem(legacyKey);}catch(e){}cb(raw);};
+  if(meta.storage==="local"){fromLocal();return;}
+  idbGet(meta.dataKey,function(raw){if(raw)cb(raw);else fromLocal();});
+}
+function validateMemoryEnvelope(raw,meta){
+  let env=null,state=null,runtime=null;try{env=JSON.parse(String(raw||""));}catch(e){return {ok:false,message:"Point illisible : restauration annulée, état actuel intact."};}
+  if(!isRecord(env)||env.schema!==MEMORY_HISTORY_SCHEMA||!isRecord(env.meta)||env.meta.id!==meta.id||env.meta.number!==meta.number||env.meta.playerId!==ACTIVE_PLAYER_ID||meta.playerId!==ACTIVE_PLAYER_ID)return {ok:false,message:"Ce point n’appartient pas au joueur actif. Rien n’a été modifié."};
+  if(env.meta.stateSha256!==meta.stateSha256||env.meta.runtimeSha256!==meta.runtimeSha256||env.meta.stateBytes!==meta.stateBytes||env.meta.runtimeBytes!==meta.runtimeBytes||typeof env.stateRaw!=="string"||typeof env.runtimeRaw!=="string"||utf8ByteLength(env.stateRaw)!==meta.stateBytes||memorySha256(env.stateRaw)!==meta.stateSha256||utf8ByteLength(env.runtimeRaw)!==meta.runtimeBytes||memorySha256(env.runtimeRaw)!==meta.runtimeSha256)return {ok:false,message:"Contrôle d’intégrité refusé : le point a changé ou est incomplet. État actuel intact."};
+  try{state=JSON.parse(env.stateRaw);runtime=JSON.parse(env.runtimeRaw);}catch(e){return {ok:false,message:"Contenu incomplet : restauration annulée."};}
+  if(!recognizableStoredState(state)||!isRecord(state._sezam)||state._sezam.playerId!==ACTIVE_PLAYER_ID)return {ok:false,message:"Identité de sauvegarde incohérente : restauration annulée."};
+  const validScreens={scrHome:1,scrEx:1,scrKbd:1,scrRes:1,scrStats:1,scrPieces:1,scrPiece:1};
+  const validOverlays={other:1,inline_only:1,player_switch:1,player_add:1,player_edit:1,profile:1,discovery:1,preview:1,keyboard_config:1,keyboard_result:1,watch:1,startup_recovery:1,piece_goal:1,piece_goal_segment:1,first_look_self:1,first_look_quiz:1,first_look_answer:1,sync_choice:1};
+  const controlsOk=runtime&&(!hasOwn(runtime,"overlayControls")||(Array.isArray(runtime.overlayControls)&&runtime.overlayControls.length<=400&&runtime.overlayControls.every(function(row,index){return isRecord(row)&&row.index===index&&typeof row.id==="string"&&row.id.length<=120&&typeof row.tag==="string";})));
+  const prOk=runtime&&(!runtime.pr||(isRecord(runtime.pr)&&isSafeId(runtime.pr.pieceId)&&Number.isInteger(runtime.pr.i)&&runtime.pr.i>=0&&Number.isInteger(runtime.pr.ok)&&runtime.pr.ok>=0&&(!runtime.pr.segmentId||isSafeId(runtime.pr.segmentId))));
+  const syncOk=!!runtime&&(runtime.overlayType!=="sync_choice"||runtime.syncRemote===null||recognizableStoredState(runtime.syncRemote));
+  if(!isRecord(runtime)||runtime.schema!==1||!isRecord(runtime.scene)||!validScreens[runtime.screen]||!Number.isFinite(runtime.capturedAt)||!validOverlays[runtime.overlayType||"other"]||!controlsOk||!prOk||!syncOk||((runtime.screen==="scrEx"||runtime.screen==="scrRes")&&!isRecord(runtime.ex))||(runtime.screen==="scrKbd"&&!isRecord(runtime.kx))||(runtime.screen==="scrPiece"&&(!isSafeId(runtime.pieceId)||!runtime.pieceId)))return {ok:false,message:"Contexte de scène illisible : restauration annulée, état actuel intact."};
+  return {ok:true,env:env,state:state,runtime:runtime};
+}
+function restoreMemoryElement(id,data){
+  const el=$(id);if(!el||!data)return;el.innerHTML=data.html||"";el.className=id==="cardBox"?"":(data.className||"");if(data.value!==null&&typeof el.value==="string")el.value=data.value;el.disabled=!!data.disabled;
+  if(el.style&&data.style){el.style.display=data.style.display||"";el.style.width=data.style.width||"";el.style.visibility=data.style.visibility||"";}
+}
+function restoreMemoryOverlayControls(runtime){
+  const rows=runtime&&Array.isArray(runtime.overlayControls)?runtime.overlayControls:[],box=$("cardBox");if(!rows.length||!box||typeof box.querySelectorAll!=="function")return;
+  const all=Array.from(box.querySelectorAll("input,select,textarea,button,details"));
+  rows.forEach(function(row){
+    const el=all[row.index];if(!el||(row.id&&el.id!==row.id))return;
+    try{
+      if(typeof row.value==="string"&&typeof el.value==="string")el.value=row.value;
+      if(typeof row.checked==="boolean"&&typeof el.checked==="boolean")el.checked=row.checked;
+      if(Number.isInteger(row.selectedIndex)&&typeof el.selectedIndex==="number")el.selectedIndex=row.selectedIndex;
+      if(typeof row.open==="boolean")el.open=row.open;
+      if(Number.isFinite(row.scrollTop))el.scrollTop=row.scrollTop;
+      el.disabled=!!row.disabled;
+      if(Number.isInteger(row.selectionStart)&&typeof el.setSelectionRange==="function")el.setSelectionRange(row.selectionStart,Number.isInteger(row.selectionEnd)?row.selectionEnd:row.selectionStart);
+    }catch(e){}
+  });
+}
+function bindRestoredExercise(){
+  if(!EX)return;
+  const buttons=$("answers").querySelectorAll("button");
+  if(EX.qtype==="lect"&&!EX.waiting)buttons.forEach(function(b,i){if(NAMES[i])b.onclick=function(){answer(NAMES[i]);};});
+  else if(EX.qtype==="ecrit"&&!EX.waiting){if(buttons[0])buttons[0].onclick=function(){EX.writePos=Math.max(-3,EX.writePos-1);drawWriteStaff();};if(buttons[1])buttons[1].onclick=function(){EX.writePos=Math.min(11,EX.writePos+1);drawWriteStaff();};if(buttons[2])buttons[2].onclick=function(){answerPos(EX.writePos);};}
+  else if(EX.qtype==="mission"&&!EX.waiting){if(buttons[0])buttons[0].onclick=function(){completeMission(true);};if(buttons[1])buttons[1].onclick=function(){completeMission(false);};}
+  else if(EX.qtype==="bonus"&&!EX.waiting){if(buttons[0])buttons[0].onclick=function(){nextQuestion();};const target=$("bonusTarget");if(target){target.onclick=solveBonusEgg;target.onkeydown=function(ev){if(ev.key==="Enter"||ev.key===" "){ev.preventDefault();solveBonusEgg();}};}}
+  if(EX.qtype==="ecrit"&&!EX.waiting){const svg=$("staffsvg");if(svg)svg.addEventListener("click",function(ev){if(EX.waiting||EX.done)return;const r=svg.getBoundingClientRect();if(r.height){EX.writePos=pOfY((ev.clientY-r.top)/r.height*STAFF.H);drawWriteStaff();}});}
+}
+function bindRestoredKeyboard(){
+  if(!KX||KX.waiting||KX.done)return;
+  if(KX.dir==="read")$("kKbd").querySelectorAll("[data-midi]").forEach(function(b){b.onclick=function(ev){if(ev&&ev.stopPropagation)ev.stopPropagation();kbdTap(Number(b.getAttribute("data-midi")));};});
+  else {const opts=nameOptions(KX.cur.midi);$("kNames").querySelectorAll("button").forEach(function(b){const opt=opts.find(function(o){return o.label===b.textContent;});if(opt)b.onclick=function(){kbdName(opt);};});}
+}
+function bindRestoredOverlay(runtime){
+  if(!runtime||!runtime.overlayOn)return;
+  if(runtime.overlayType==="player_switch")bindPlayerSwitcherDialog();
+  else if(runtime.overlayType==="player_add")bindAddPlayerDialog();
+  else if(runtime.overlayType==="player_edit")bindPlayerEditorDialog($("playerEditForm")&&$("playerEditForm").getAttribute("data-player-id"));
+  else if(runtime.overlayType==="profile")bindMusicProfileDialog(normalizeProfile(DB.profile).niveauDepart);
+  else if(runtime.overlayType==="startup_recovery")bindStartupRecoveryDialog($("startupRecoveryApply")&&$("startupRecoveryApply").getAttribute("data-recovery-code")||"");
+  else if(runtime.overlayType==="piece_goal"||runtime.overlayType==="piece_goal_segment"){const goalCtx=$("cardBox").querySelector("[data-piece-goal]");bindPieceGoalDialog(goalCtx&&goalCtx.getAttribute("data-piece-goal"),runtime.overlayType==="piece_goal_segment");}
+  else if(runtime.overlayType==="first_look_self"){const self=$("prSelfDone");bindFirstLookSelfDialog(self&&self.getAttribute("data-pr-piece"),self&&self.getAttribute("data-pr-segment")||"");}
+  else if(runtime.overlayType==="first_look_quiz"||runtime.overlayType==="first_look_answer")bindPremierRegardRestored(runtime.overlayType);
+  else if(runtime.overlayType==="sync_choice")bindSyncChoiceDialog(runtime.syncRemote||null,true);
+  else if(runtime.overlayType==="discovery"&&EX){
+    const go=$("btnDecGo"),home=$("btnDecHome");
+    if(go)go.onclick=function(){DB.seen[EX.palier.id]=true;save();$("overlay").classList.remove("on");EX.pendingDecouverte=false;nextQuestion();};
+    if(home)home.onclick=function(){$("overlay").classList.remove("on");returnToHomeFromExercise();};
+  } else if(runtime.overlayType==="preview"&&EX){
+    const go=$("btnPrepGo"),home=$("btnPrepHome");
+    if(go)go.onclick=function(){$("overlay").classList.remove("on");logEvent("serie_preview",{palier:EX.palier&&EX.palier.id,mode:DB.mode,notes:EX.palier&&EX.palier.notes?EX.palier.notes.length:0});nextQuestion();};
+    if(home)home.onclick=function(){$("overlay").classList.remove("on");returnToHomeFromExercise();};
+  } else if(runtime.overlayType==="keyboard_config"){
+    $("cardBox").querySelectorAll(".seg button").forEach(function(btn){btn.onclick=function(){const group=btn.parentNode;if(group)group.querySelectorAll("button").forEach(function(x){x.classList.toggle("on",x===btn);});};});
+    const go=$("kGo");if(go)go.onclick=function(){const cfg={clef:"sol",dir:"read",acc:false};$("cardBox").querySelectorAll(".seg").forEach(function(seg){const on=seg.querySelector("button.on");if(!on)return;let value=on.getAttribute("data-val");if(value==="true")value=true;else if(value==="false")value=false;cfg[seg.getAttribute("data-key")]=value;});$("overlay").classList.remove("on");beginClavier(cfg);};
+  } else if(runtime.overlayType==="keyboard_result"&&KX){
+    const again=$("kAgain"),home=$("kHomeBtn");if(again)again.onclick=function(){$("overlay").classList.remove("on");beginClavier(KX.cfg);};if(home)home.onclick=function(){$("overlay").classList.remove("on");KX=null;renderHome();show("scrHome");};
+  } else if(runtime.overlayType==="watch"){
+    const source=$("watchSourceBtn");if(source)source.onclick=function(){const url=source.getAttribute("data-url")||"";if(/^https?:\/\//i.test(url))try{window.open(url,"_blank","noopener");}catch(e){}};
+  }
+}
+function resumeRestoredTimers(runtime){
+  const now=Date.now(),shift=Math.max(0,now-(runtime.capturedAt||now));
+  if(EX){
+    let resumedFromPause=false;
+    ["t0","questionDeadlineAt","advanceDeadlineAt","end"].forEach(function(k){if(EX[k])EX[k]+=shift;});
+    if(EX.daily){["startAt","endAt","pausedAt"].forEach(function(k){if(EX.daily[k])EX.daily[k]+=shift;});(EX.daily.blocks||[]).forEach(function(b){if(b.startAt)b.startAt+=shift;if(b.endAt)b.endAt+=shift;});}
+    if(!EX.done&&EX.kind==="rafale"&&EX.end){rafTimer=setInterval(function(){const left=EX.end-Date.now();$("timerfill").style.width=Math.max(0,left/(RAFALE_S*1000)*100)+"%";if(left<=0)finishRafale();},100);}
+    if(!EX.done&&EX.daily){if(EX.daily.pausedAt&&document.visibilityState!=="hidden")resumedFromPause=resumeDailySession(Date.now());if(!resumedFromPause)startDailyClock();}
+    if(!resumedFromPause&&!EX.done&&!EX.waiting&&EX.questionDeadlineAt){
+      const qid=EX.qid,left=Math.max(0,EX.questionDeadlineAt-Date.now());qTo=setTimeout(function(){timeUp(qid);},left);
+      if(EX.limit&&!EX.daily)qInt=setInterval(function(){const rem=EX.questionDeadlineAt-Date.now();$("timerfill").style.width=Math.max(0,rem/EX.limit*100)+"%";},80);
+    } else if(!resumedFromPause&&!EX.done&&EX.waiting&&EX.advanceDeadlineAt){
+      const session=EX,qid=EX.qid;advanceTimer=setTimeout(function(){if(EX===session&&!EX.done&&EX.qid===qid)nextQuestion();},Math.max(0,EX.advanceDeadlineAt-Date.now()));
+    }
+  }
+  if(KX){if(KX.t0)KX.t0+=shift;if(KX.advanceDeadlineAt)KX.advanceDeadlineAt+=shift;if(!KX.done&&KX.waiting&&KX.advanceDeadlineAt){const session=KX,step=KX.i;kbdAdvanceTimer=setTimeout(function(){if(KX===session&&!KX.done&&KX.i===step)nextKbd();},Math.max(0,KX.advanceDeadlineAt-Date.now()));}}
+}
+function restoreMemoryScene(runtime){
+  if(rafTimer)clearInterval(rafTimer);clearQTimers();clearDailyTimer();if(typeof clearKbdTimer==="function")clearKbdTimer();
+  EX=runtime.ex||null;KX=runtime.kx||null;
+  if(runtime.pr){const piece=allPieces().find(function(p){return p.id===runtime.pr.pieceId;});PR=piece?{piece:piece,i:runtime.pr.i,ok:runtime.pr.ok,segmentId:runtime.pr.segmentId||""}:null;}else PR=null;
+  memorySyncChoiceRemote=runtime.overlayType==="sync_choice"&&runtime.syncRemote?runtime.syncRemote:null;
+  const screen=runtime.screen;
+  if(screen==="scrEx"&&EX){show("scrEx");MEMORY_SCENE_IDS.forEach(function(id){if(runtime.scene[id])restoreMemoryElement(id,runtime.scene[id]);});bindRestoredExercise();}
+  else if(screen==="scrKbd"&&KX){show("scrKbd");MEMORY_SCENE_IDS.forEach(function(id){if(runtime.scene[id])restoreMemoryElement(id,runtime.scene[id]);});bindRestoredKeyboard();}
+  else if(screen==="scrRes"&&EX){show("scrRes");["resScore","resSub","resSolado","resErrs","resVal","resPiece","resCode","resSave","btnAgain","btnReplayCourse"].forEach(function(id){if(runtime.scene[id])restoreMemoryElement(id,runtime.scene[id]);});const resultPiece=pieceById(EX.segment&&EX.segment.pieceId||DB.activePiece);if($("resPiece").innerHTML&&resultPiece)bindResPiece(resultPiece,EX.segment||null);}
+  else if(screen==="scrStats"){renderStats();}
+  else if(screen==="scrPieces"){renderPieces();if($("pcFile"))$("pcFile").value="";["pcTitle","pcClef","pcKey","pieceMsg","segPiece","segTitle","segBars","segLevel","segHand","segFocus","segNotes","segMsg"].forEach(function(id){if(runtime.scene[id])restoreMemoryElement(id,runtime.scene[id]);});}
+  else if(screen==="scrPiece"&&runtime.pieceId){renderPieceDetail(runtime.pieceId);}
+  else {renderHome();show("scrHome");}
+  if(runtime.overlayOn&&runtime.scene.cardBox){
+    restoreMemoryElement("cardBox",runtime.scene.cardBox);restoreMemoryOverlayControls(runtime);
+    if(runtime.overlayLabelledBy)$("cardDialog").setAttribute("aria-labelledby",runtime.overlayLabelledBy);else if(typeof $("cardDialog").removeAttribute==="function")$("cardDialog").removeAttribute("aria-labelledby");
+    $("overlay").classList.add("on");bindRestoredOverlay(runtime);
+    if(Number.isFinite(runtime.cardScrollTop))$("cardDialog").scrollTop=runtime.cardScrollTop;
+    if(Number.isInteger(runtime.overlayFocusIndex)&&runtime.overlayFocusIndex>=0)setTimeout(function(){try{const all=$("cardBox").querySelectorAll("input,select,textarea,button,details");if(all[runtime.overlayFocusIndex])all[runtime.overlayFocusIndex].focus();}catch(e){}},0);
+  }else $("overlay").classList.remove("on");
+  resumeRestoredTimers(runtime);
+  if(runtime.scrollY){try{window.scrollTo(0,runtime.scrollY);}catch(e){}if(screen==="scrStats"){[80,320].forEach(function(delay){setTimeout(function(){try{window.scrollTo(0,runtime.scrollY);}catch(e){}},delay);});}}
+}
+function exactActivateMemorySnapshot(validated,token,cb){
+  if(!memoryActionCurrent(token)){cb(false,"Le joueur actif a changé : restauration annulée sans modifier aucun profil.");return;}
+  const raw=validated.env.stateRaw,target=validated.state,runtime=validated.runtime,oldRaw=JSON.stringify(DB),oldDB=DB,oldRegistryRaw=JSON.stringify(PLAYER_REGISTRY);
+  const oldPrimary=(function(){try{return localStorage.getItem(LS_KEY);}catch(e){return null;}})(),oldMirror=(function(){try{return localStorage.getItem(LS_MIRROR);}catch(e){return null;}})(),oldCheckpoint=(function(){try{return localStorage.getItem(LS_CHECKPOINT);}catch(e){return null;}})();
+  const restoreLocal=function(){try{if(oldPrimary===null)localStorage.removeItem(LS_KEY);else localStorage.setItem(LS_KEY,oldPrimary);if(oldMirror===null)localStorage.removeItem(LS_MIRROR);else localStorage.setItem(LS_MIRROR,oldMirror);if(oldCheckpoint===null)localStorage.removeItem(LS_CHECKPOINT);else localStorage.setItem(LS_CHECKPOINT,oldCheckpoint);}catch(e){}};
+  try{localStorage.setItem(LS_KEY,raw);localStorage.setItem(LS_MIRROR,raw);localStorage.setItem(LS_CHECKPOINT,raw);}catch(e){restoreLocal();cb(false,"Stockage actif indisponible : restauration annulée, état actuel intact.");return;}
+  idbSave(raw,token.playerId,function(ok){
+    if(!memoryActionCurrent(token)){restoreLocal();idbSave(oldRaw,token.playerId);cb(false,"Le joueur actif a changé : restauration annulée.");return;}
+    if(!ok){restoreLocal();idbSave(oldRaw,token.playerId);cb(false,"Coffre actif indisponible : restauration annulée.");return;}
+    DB=target;updateActivePlayerMeta(false);
+    if(!writePlayerRegistry()){
+      DB=oldDB;PLAYER_REGISTRY=normalizePlayerRegistry(JSON.parse(oldRegistryRaw));ACTIVE_PLAYER_ID=PLAYER_REGISTRY.activeId;restoreLocal();idbSave(oldRaw,token.playerId);cb(false,"Registre du joueur indisponible : restauration annulée.");return;
+    }
+    try{applyTheme();header();restoreMemoryScene(runtime);}
+    catch(e){DB=oldDB;PLAYER_REGISTRY=normalizePlayerRegistry(JSON.parse(oldRegistryRaw));ACTIVE_PLAYER_ID=PLAYER_REGISTRY.activeId;restoreLocal();idbSave(oldRaw,token.playerId);writePlayerRegistry();applyTheme();header();renderHome();show("scrHome");cb(false,"La scène sauvegardée n’a pas pu être rouverte : restauration annulée, état précédent intact.");return;}
+    markRestorePending("restore",validated.env.meta.number);cb(true,"");
+  });
+}
+function restoreMemorySnapshot(meta,cb){
+  if(memoryRestoreBusy||memoryProtectedActionBusy){cb({ok:false,message:"Une autre opération protégée est déjà en cours."});return;}
+  const token=memoryActionToken();memoryRestoreBusy=true;
+  loadMemoryEnvelope(meta,function(raw){
+    if(!memoryActionCurrent(token)){memoryRestoreBusy=false;cb({ok:false,message:"Le joueur actif a changé : restauration annulée."});return;}
+    const validated=validateMemoryEnvelope(raw,meta);
+    if(!validated.ok){memoryRestoreBusy=false;memoryToast(validated.message,true);cb(validated);return;}
+    createMemorySnapshot("pre_restore",{milestone:"État conservé automatiquement avant le retour à la sauvegarde n°"+meta.number,notify:false},function(safety){
+      if(!memoryActionCurrent(token)){memoryRestoreBusy=false;cb({ok:false,message:"Le joueur actif a changé : restauration annulée."});return;}
+      if(!safety.ok){memoryRestoreBusy=false;const message="Restauration annulée : l’état actuel n’a pas pu être sauvegardé d’abord. Rien n’a été perdu.";memoryToast(message,true);cb({ok:false,message:message});return;}
+      exactActivateMemorySnapshot(validated,token,function(ok,error){
+        memoryRestoreBusy=false;
+        if(!ok){memoryToast(error,true);cb({ok:false,message:error});return;}
+        const message="Tu es revenu au Niveau "+meta.context.level+", tel que sauvegardé le "+formatMemoryDate(meta.createdAt)+". Rien n’a été perdu.";
+        memoryToast(message,false);cb({ok:true,meta:meta,message:message,safety:safety.meta});
+      });
+    });
+  });
+}
+function renderMemoryHistory(){
+  const token=memoryActionToken(),box=$("memoryList");if(!box)return;box.innerHTML='<div class="memoryEmpty">Lecture des points protégés…</div>';
+  memorySnapshotList(function(rows){
+    if(!memoryActionCurrent(token))return;
+    if(!rows.length){box.innerHTML='<div class="memoryEmpty">Aucun point numéroté pour le moment. Le premier sera créé ici ou automatiquement à la fin d’un niveau.</div>';return;}
+    let limit=20;
+    const paint=function(){
+      const shown=rows.slice(0,limit);
+      box.innerHTML=shown.map(function(m){return '<article class="memoryPoint"><h5>'+esc(m.name)+'</h5><p>'+esc(m.kindLabel)+' · '+esc(m.context.levelLabel)+' · '+m.context.xp+' XP'+(m.context.milestone?'<br>'+esc(m.context.milestone):'')+'</p><details><summary>État exact enregistré</summary><p>'+esc(m.context.summary)+'</p><p>Contrôle : SHA-256 '+esc(m.stateSha256.slice(0,16))+'… · '+m.stateBytes+' octets d’état + '+m.runtimeBytes+' octets de scène.</p></details><button type="button" data-memory-restore="'+esc(m.id)+'">Revenir à cette sauvegarde</button></article>';}).join("")+(limit<rows.length?'<button type="button" class="secbtn" data-memory-more="1">Afficher 20 sauvegardes de plus ('+(rows.length-limit)+' restantes)</button>':'');
+    };
+    paint();
+    box.onclick=function(ev){
+      const more=ev.target&&ev.target.closest?ev.target.closest("[data-memory-more]"):null;if(more){const previousLimit=limit;limit=Math.min(rows.length,limit+20);paint();const restoreButtons=box.querySelectorAll("[data-memory-restore]");if(restoreButtons[previousLimit])restoreButtons[previousLimit].focus();return;}
+      const btn=ev.target&&ev.target.closest?ev.target.closest("[data-memory-restore]"):null;if(!btn||!box.contains(btn))return;
+      const meta=rows.find(function(m){return m.id===btn.getAttribute("data-memory-restore");});if(!meta)return;
+      const ask="Revenir à « "+meta.name+" » ? L’état actuel sera d’abord ajouté comme nouvelle sauvegarde ; rien ne sera effacé.";
+      if(typeof window.confirm==="function"&&!window.confirm(ask))return;
+      btn.disabled=true;$("memoryMsg").textContent="Sauvegarde de l’état actuel, puis restauration contrôlée…";
+      restoreMemorySnapshot(meta,function(res){if(!res.ok){btn.disabled=false;$("memoryMsg").textContent=res.message;}});
+    };
+  });
+}
+function manualMemorySnapshot(source){
+  const quick=$("btnQuickSave"),manual=$("btnManualSave"),overlay=$("btnOverlaySave");if(quick)quick.disabled=true;if(manual)manual.disabled=true;if(overlay)overlay.disabled=true;
+  const pendingFile=$("pcFile");if(activeMemoryScreen()==="scrPieces"&&pendingFile&&pendingFile.files&&pendingFile.files.length){
+    if(quick)quick.disabled=false;if(manual)manual.disabled=false;if(overlay)overlay.disabled=false;
+    memoryToast("Ajoute d’abord le fichier à la partition, ou retire-le : le navigateur interdit de restaurer un fichier encore seulement sélectionné. Rien n’a été modifié.",true);return false;
+  }
+  const sourceLabel=source==="header"?"Demandée pendant le jeu":(source==="overlay"?"Demandée sans fermer la scène en cours":"Demandée depuis l’historique");
+  createMemorySnapshot("manual",{milestone:sourceLabel},function(res){
+    if(quick)quick.disabled=false;if(manual)manual.disabled=false;if(overlay)overlay.disabled=false;
+    if($("memoryMsg"))$("memoryMsg").textContent=res.message;
+    if(res.ok&&$("memoryList"))renderMemoryHistory();
+  });
+}
+function protectMemoryAction(milestone,action,onFail){
+  if(memoryProtectedActionBusy||memoryRestoreBusy){if(onFail)onFail("Une autre protection est déjà en cours.");return false;}
+  const token=memoryActionToken();memoryProtectedActionBusy=true;
+  return createMemorySnapshot("pre_delete",{milestone:milestone,notify:false},function(safety){
+    if(!memoryActionCurrent(token)){memoryProtectedActionBusy=false;const msg="Le joueur actif a changé : action annulée.";if(onFail)onFail(msg);return;}
+    if(!safety.ok){memoryProtectedActionBusy=false;const msg="Action annulée : l’état complet n’a pas pu être protégé d’abord. Rien n’a été supprimé.";memoryToast(msg,true);if(onFail)onFail(msg);return;}
+    try{action(safety.meta);}finally{memoryProtectedActionBusy=false;}
+  });
+}
 function idbDeletePlayer(playerId){
   if(!isSafeId(playerId)) return;
   try{localStorage.removeItem(playerFallbackKey(playerId));localStorage.removeItem(playerPreimportKey(playerId));}catch(e){}
@@ -2205,6 +2709,7 @@ function activatePlayerState(id,state){
 function switchPlayer(id,cb){
   cb=typeof cb==="function"?cb:function(){};
   if(!idbReady){cb(false,"Les profils finissent de se charger. Réessaie dans un instant.");return false;}
+  if(memoryRestoreBusy||memoryProtectedActionBusy){cb(false,"Une sauvegarde protégée est en cours. Le changement de joueur attend sa confirmation.");return false;}
   if(playerOperationBusy){cb(false,"Un changement de joueur est déjà en cours.");return false;}
   if(!isSafeId(id)||!playerMetaById(id)){cb(false,"Joueur introuvable.");return false;}
   if(id===ACTIVE_PLAYER_ID){cb(true,"");return true;}
@@ -2230,6 +2735,7 @@ function switchPlayer(id,cb){
 function createPlayer(name,cb){
   cb=typeof cb==="function"?cb:function(){};
   if(!idbReady){cb(false,"Les profils finissent de se charger. Réessaie dans un instant.");return false;}
+  if(memoryRestoreBusy||memoryProtectedActionBusy){cb(false,"Une sauvegarde protégée est en cours. Réessaie dès sa confirmation.");return false;}
   if(playerOperationBusy){cb(false,"Une opération sur les joueurs est déjà en cours.");return false;}
   name=normalizePlayerName(name,"");
   if(!name){cb(false,"Entre un prénom ou un nom d’usage.");return false;}
@@ -2242,18 +2748,20 @@ function createPlayer(name,cb){
   const currentId=ACTIVE_PLAYER_ID,currentStr=JSON.stringify(DB);
   idbSave(currentStr,currentId,function(currentStored){
     if(!currentStored){playerOperationBusy=false;cb(false,"La progression actuelle n’a pas pu être mise à l’abri.");return;}
-    let id=cleanId(makeLocalId("player"),"player");while(playerMetaById(id))id=cleanId(makeLocalId("player"),"player");
+    let id=cleanId(makeLocalId("player"),"player");while(playerMetaById(id)||archivedPlayerMetaById(id))id=cleanId(makeLocalId("player"),"player");
     const state=freshPlayerState(id,name),str=JSON.stringify(state);
     idbSave(str,id,function(stored){
     if(!stored){playerOperationBusy=false;cb(false,"Impossible de créer un enregistrement séparé sur cet appareil.");return;}
-    const previous=JSON.stringify(PLAYER_REGISTRY);
+    const previous=JSON.stringify(PLAYER_REGISTRY),previousDB=DB,previousId=ACTIVE_PLAYER_ID;
     PLAYER_REGISTRY.players.push({id:id,userId:id,name:name,createdAt:Date.now(),lastPlayedAt:Date.now(),xp:0,sel:"P1",legacyCloud:false});
-    PLAYER_REGISTRY.activeId=id;ACTIVE_PLAYER_ID=id;
+    PLAYER_REGISTRY.activeId=previousId;
     if(!writePlayerRegistry()){
       PLAYER_REGISTRY=normalizePlayerRegistry(JSON.parse(previous));ACTIVE_PLAYER_ID=PLAYER_REGISTRY.activeId;idbDeletePlayer(id);
       playerOperationBusy=false;cb(false,"Création annulée : stockage indisponible.");return;
     }
-    const ok=activatePlayerState(id,state);if(ok)logEvent("player_created",{playerId:id});save({cloud:false});
+    const ok=activatePlayerState(id,state);
+    if(ok){logEvent("player_created",{playerId:id});save({cloud:false});}
+    else {ACTIVE_PLAYER_ID=previousId;DB=previousDB;PLAYER_REGISTRY=normalizePlayerRegistry(JSON.parse(previous));applyTheme();writePlayerRegistry();idbDeletePlayer(id);}
     playerOperationBusy=false;cb(ok,ok?"Bienvenue "+name+" !":"Création impossible.");
     });
   });
@@ -2262,6 +2770,7 @@ function createPlayer(name,cb){
 function renamePlayer(id,name,cb){
   cb=typeof cb==="function"?cb:function(){};name=normalizePlayerName(name,"");
   if(!idbReady){cb(false,"Les profils finissent de se charger.");return false;}
+  if(memoryRestoreBusy||memoryProtectedActionBusy){cb(false,"Une sauvegarde protégée est en cours.");return false;}
   if(playerOperationBusy){cb(false,"Une opération sur les joueurs est déjà en cours.");return false;}
   const meta=playerMetaById(id);
   if(!meta||!name){cb(false,"Nom invalide.");return false;}
@@ -2286,13 +2795,29 @@ function renamePlayer(id,name,cb){
   return true;
 }
 function deletePlayer(id){
-  if(playerOperationBusy||!idbReady||!isSafeId(id)||!playerMetaById(id)||id===ACTIVE_PLAYER_ID||PLAYER_REGISTRY.players.length<=1)return false;
+  if(playerOperationBusy||memoryRestoreBusy||memoryProtectedActionBusy||!idbReady||!isSafeId(id)||!playerMetaById(id)||id===ACTIVE_PLAYER_ID||PLAYER_REGISTRY.players.length<=1||(PLAYER_REGISTRY.archived||[]).length>=MAX_ARCHIVED_PLAYERS)return false;
   playerOperationBusy=true;
   const previous=JSON.stringify(PLAYER_REGISTRY);
+  const meta=playerMetaById(id);
   PLAYER_REGISTRY.players=PLAYER_REGISTRY.players.filter(function(p){return p.id!==id;});
+  PLAYER_REGISTRY.archived=(PLAYER_REGISTRY.archived||[]).concat([Object.assign({},meta,{archivedAt:Date.now()})]);
   if(!writePlayerRegistry()){PLAYER_REGISTRY=normalizePlayerRegistry(JSON.parse(previous));ACTIVE_PLAYER_ID=PLAYER_REGISTRY.activeId;playerOperationBusy=false;return false;}
-  idbDeletePlayer(id);if(typeof removePlayerSyncLocal==="function")removePlayerSyncLocal(id);
   playerOperationBusy=false;return true;
+}
+function restoreArchivedPlayer(id,cb){
+  cb=typeof cb==="function"?cb:function(){};
+  if(playerOperationBusy||memoryRestoreBusy||memoryProtectedActionBusy||!idbReady||PLAYER_REGISTRY.players.length>=MAX_LOCAL_PLAYERS){cb(false,"Restauration momentanément indisponible.");return false;}
+  const meta=archivedPlayerMetaById(id);if(!meta){cb(false,"Joueur archivé introuvable.");return false;}
+  playerOperationBusy=true;
+  idbLoad(function(str){
+    let state=null;try{state=str?JSON.parse(str):null;}catch(e){}
+    if(!recognizableStoredState(state)||!stateBelongsToPlayer(state,id)){playerOperationBusy=false;cb(false,"Le coffre de ce joueur est inaccessible ; l’archive reste intacte.");return;}
+    const previous=JSON.stringify(PLAYER_REGISTRY),restored=Object.assign({},meta);delete restored.archivedAt;
+    PLAYER_REGISTRY.archived=PLAYER_REGISTRY.archived.filter(function(p){return p.id!==id;});PLAYER_REGISTRY.players.push(restored);
+    if(!writePlayerRegistry()){PLAYER_REGISTRY=normalizePlayerRegistry(JSON.parse(previous));ACTIVE_PLAYER_ID=PLAYER_REGISTRY.activeId;playerOperationBusy=false;cb(false,"Restauration annulée : le registre n’a pas pu être enregistré. L’archive reste intacte.");return;}
+    playerOperationBusy=false;cb(true,restored.name+" est de nouveau disponible, avec toute sa progression.");
+  },id);
+  return true;
 }
 function themeModeLabel(id){
   const t=THEME_MODES.find(function(x){return x.id===id;});
@@ -2777,10 +3302,10 @@ if(typeof MutationObserver!=="undefined"){
   const overlayObserver=new MutationObserver(function(){
     const open=$("overlay").classList.contains("on");
     if(open){
-      const labelled=$("cardBox").getAttribute("aria-labelledby");
-      if(labelled&&!document.getElementById(labelled))$("cardBox").removeAttribute("aria-labelledby");
+      const labelled=$("cardDialog").getAttribute("aria-labelledby");
+      if(labelled&&!document.getElementById(labelled))$("cardDialog").removeAttribute("aria-labelledby");
       if(document.activeElement&&document.activeElement!==document.body) overlayReturnFocus=document.activeElement;
-      try{$("cardBox").focus();}catch(e){}
+      try{$("cardDialog").focus();}catch(e){}
     } else if(overlayReturnFocus){
       try{if(document.documentElement.contains(overlayReturnFocus)) overlayReturnFocus.focus();}catch(e){}
       overlayReturnFocus=null;
@@ -2792,8 +3317,8 @@ document.addEventListener("keydown",function(ev){
   if(!$("overlay").classList.contains("on"))return;
   if(ev.key==="Escape"){ev.preventDefault();$("overlay").classList.remove("on");return;}
   if(ev.key!=="Tab")return;
-  const focusable=Array.from($("cardBox").querySelectorAll('button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])'));
-  if(!focusable.length){ev.preventDefault();$("cardBox").focus();return;}
+  const focusable=Array.from($("cardDialog").querySelectorAll('button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])'));
+  if(!focusable.length){ev.preventDefault();$("cardDialog").focus();return;}
   const first=focusable[0],last=focusable[focusable.length-1];
   if(ev.shiftKey&&document.activeElement===first){ev.preventDefault();last.focus();}
   else if(!ev.shiftKey&&document.activeElement===last){ev.preventDefault();first.focus();}
@@ -2885,6 +3410,18 @@ function renderPlayerSwitchButton(){
   $("playerAvatar").textContent=playerInitial(meta.name);$("currentPlayerName").textContent=meta.name;
   $("btnPlayerSwitch").setAttribute("aria-label","Joueur actuel : "+meta.name+". Changer de joueur");
 }
+function bindPlayerSwitcherDialog(){
+  if(!$("playerAdd")||!$("playerClose"))return;
+  $("cardBox").querySelectorAll("[data-player-pick]").forEach(function(btn){btn.onclick=function(){
+    const id=btn.getAttribute("data-player-pick");if(id===ACTIVE_PLAYER_ID){$("overlay").classList.remove("on");return;}
+    $("cardBox").querySelectorAll("button").forEach(function(x){x.disabled=true;});
+    $("playerSwitchMsg").textContent="Enregistrement puis ouverture de la progression…";
+    switchPlayer(id,function(ok,msg){if(ok)$("overlay").classList.remove("on");else {$("playerSwitchMsg").textContent=msg;$("cardBox").querySelectorAll("button").forEach(function(x){x.disabled=false;});}});
+  };});
+  $("cardBox").querySelectorAll("[data-player-edit]").forEach(function(btn){btn.onclick=function(){openPlayerEditor(btn.getAttribute("data-player-edit"));};});
+  $("cardBox").querySelectorAll("[data-player-restore]").forEach(function(btn){btn.onclick=function(){btn.disabled=true;$("playerSwitchMsg").textContent="Restauration du joueur archivé…";restoreArchivedPlayer(btn.getAttribute("data-player-restore"),function(ok,msg){if(ok)openPlayerSwitcher();else {$("playerSwitchMsg").textContent=msg;btn.disabled=false;}});};});
+  $("playerAdd").onclick=openAddPlayer;$("playerClose").onclick=function(){$("cardDialog").removeAttribute("aria-labelledby");$("overlay").classList.remove("on");};
+}
 function openPlayerSwitcher(){
   const rows=PLAYER_REGISTRY.players.map(function(p){
     const active=p.id===ACTIVE_PLAYER_ID;
@@ -2893,61 +3430,92 @@ function openPlayerSwitcher(){
       '<span class="playerCheck" aria-hidden="true">'+(active?'✓':'›')+'</span></button>'+
       '<button type="button" class="playerEdit" data-player-edit="'+esc(p.id)+'" aria-label="Modifier '+esc(p.name)+'">✎</button></div>';
   }).join("");
-  $("cardBox").setAttribute("aria-labelledby","playerDialogTitle");
+  const archived=(PLAYER_REGISTRY.archived||[]).map(function(p){return '<div class="playerRow"><div class="playerPick" style="cursor:default"><span class="playerAvatar" aria-hidden="true">'+esc(playerInitial(p.name))+'</span><span><b>'+esc(p.name)+'</b><small>Archivé le '+esc(formatMemoryDate(p.archivedAt))+' · progression intacte</small></span></div><button type="button" class="playerEdit" data-player-restore="'+esc(p.id)+'" aria-label="Restaurer '+esc(p.name)+'">↺</button></div>';}).join("");
+  $("cardDialog").setAttribute("aria-labelledby","playerDialogTitle");
   $("cardBox").innerHTML='<h3>Joueurs sur cet appareil</h3><h2 id="playerDialogTitle">Qui joue ?</h2>'+
     '<p>Chaque joueur garde ses XP, ses paliers, ses erreurs, ses réglages et ses partitions.</p><div class="playerRows">'+rows+'</div>'+
+    (archived?'<details><summary>Joueurs archivés ('+(PLAYER_REGISTRY.archived||[]).length+')</summary><p class="src">Une archive n’est jamais effacée : elle peut revenir dans la liste à tout moment.</p><div class="playerRows">'+archived+'</div></details>':'')+
     '<p class="src" id="playerSwitchMsg" role="status" aria-live="polite">Le changement est disponible depuis l’accueil, jamais au milieu d’un exercice.</p>'+
     '<button type="button" id="playerAdd">+ Ajouter un joueur</button><button type="button" id="playerClose" style="margin-top:8px;background:var(--panel2);color:var(--ink)">Fermer</button>';
   $("overlay").classList.add("on");
-  $("cardBox").querySelectorAll("[data-player-pick]").forEach(function(btn){btn.onclick=function(){
-    const id=btn.getAttribute("data-player-pick");if(id===ACTIVE_PLAYER_ID){$("overlay").classList.remove("on");return;}
-    $("cardBox").querySelectorAll("button").forEach(function(x){x.disabled=true;});
-    $("playerSwitchMsg").textContent="Enregistrement puis ouverture de la progression…";
-    switchPlayer(id,function(ok,msg){if(ok)$("overlay").classList.remove("on");else {$("playerSwitchMsg").textContent=msg;$("cardBox").querySelectorAll("button").forEach(function(x){x.disabled=false;});}});
-  };});
-  $("cardBox").querySelectorAll("[data-player-edit]").forEach(function(btn){btn.onclick=function(){openPlayerEditor(btn.getAttribute("data-player-edit"));};});
-  $("playerAdd").onclick=openAddPlayer;$("playerClose").onclick=function(){$("cardBox").removeAttribute("aria-labelledby");$("overlay").classList.remove("on");};
+  bindPlayerSwitcherDialog();
   setTimeout(function(){try{$("cardBox").focus();}catch(e){}},0);
 }
-function openAddPlayer(){
-  $("cardBox").setAttribute("aria-labelledby","playerAddTitle");
-  $("cardBox").innerHTML='<h3>Nouveau joueur</h3><h2 id="playerAddTitle">Créer une progression séparée</h2>'+
-    '<p>Le nouveau joueur commencera à P1 avec 0 XP. Ta progression actuelle restera intacte.</p><form id="playerAddForm">'+
-    '<div class="profileGrid"><label>Nom affiché<input id="newPlayerName" maxlength="40" autocomplete="nickname" placeholder="Ex. Paul"></label></div>'+
-    '<p class="src" id="newPlayerMsg" role="status" aria-live="polite"></p><button type="submit" id="newPlayerCreate">Créer et jouer</button>'+
-    '<button type="button" id="newPlayerCancel" style="margin-top:8px;background:var(--panel2);color:var(--ink)">Annuler</button></form>';
+function bindAddPlayerDialog(){
+  if(!$("playerAddForm")||!$("newPlayerCancel"))return;
   $("newPlayerCancel").onclick=openPlayerSwitcher;
   $("playerAddForm").onsubmit=function(ev){
     ev.preventDefault();$("newPlayerCreate").disabled=true;$("newPlayerCancel").disabled=true;
     $("newPlayerMsg").textContent="Enregistrement du nouveau joueur…";
     createPlayer($("newPlayerName").value,function(ok,msg){if(ok){$("overlay").classList.remove("on");}else {$("newPlayerMsg").textContent=msg;$("newPlayerCreate").disabled=false;$("newPlayerCancel").disabled=false;}});
   };
+}
+function openAddPlayer(){
+  $("cardDialog").setAttribute("aria-labelledby","playerAddTitle");
+  $("cardBox").innerHTML='<h3>Nouveau joueur</h3><h2 id="playerAddTitle">Créer une progression séparée</h2>'+
+    '<p>Le nouveau joueur commencera à P1 avec 0 XP. Ta progression actuelle restera intacte.</p><form id="playerAddForm">'+
+    '<div class="profileGrid"><label>Nom affiché<input id="newPlayerName" maxlength="40" autocomplete="nickname" placeholder="Ex. Paul"></label></div>'+
+    '<p class="src" id="newPlayerMsg" role="status" aria-live="polite"></p><button type="submit" id="newPlayerCreate">Créer et jouer</button>'+
+    '<button type="button" id="newPlayerCancel" style="margin-top:8px;background:var(--panel2);color:var(--ink)">Annuler</button></form>';
+  bindAddPlayerDialog();
   setTimeout(function(){try{$("newPlayerName").focus();}catch(e){}},0);
+}
+function bindPlayerEditorDialog(id){
+  const meta=playerMetaById(id),form=$("playerEditForm");if(!meta||!form)return;
+  const canArchive=id!==ACTIVE_PLAYER_ID&&PLAYER_REGISTRY.players.length>1&&(PLAYER_REGISTRY.archived||[]).length<MAX_ARCHIVED_PLAYERS;
+  if($("editPlayerBack"))$("editPlayerBack").onclick=openPlayerSwitcher;
+  form.onsubmit=function(ev){ev.preventDefault();$("cardBox").querySelectorAll("button").forEach(function(x){x.disabled=true;});renamePlayer(id,$("editPlayerName").value,function(ok,msg){if(ok)openPlayerSwitcher();else {$("editPlayerMsg").textContent=msg;$("cardBox").querySelectorAll("button").forEach(function(x){x.disabled=false;});}});};
+  if(canArchive&&$("editPlayerDelete"))$("editPlayerDelete").onclick=function(){
+    const question="Archiver "+meta.name+" ? Sa progression, ses sauvegardes et sa configuration cloud resteront intactes et pourront être restaurées à tout moment.";
+    if(typeof window.confirm==="function"&&!window.confirm(question))return;
+    if(deletePlayer(id))openPlayerSwitcher();else $("editPlayerMsg").textContent="Archivage impossible ; le joueur est resté intact.";
+  };
 }
 function openPlayerEditor(id){
   const meta=playerMetaById(id);if(!meta){openPlayerSwitcher();return;}
-  const canDelete=id!==ACTIVE_PLAYER_ID&&PLAYER_REGISTRY.players.length>1;
-  const activeHelp=id===ACTIVE_PLAYER_ID?(PLAYER_REGISTRY.players.length===1?'Il faut conserver au moins un joueur. Crée-en un autre avant de supprimer celui-ci.':'C’est le joueur actif. Passe d’abord sur un autre joueur pour le supprimer.'):'Tu peux le renommer sans perdre sa progression.';
-  $("cardBox").setAttribute("aria-labelledby","playerEditTitle");
-  $("cardBox").innerHTML='<h3>Joueur</h3><h2 id="playerEditTitle">Modifier '+esc(meta.name)+'</h2><form id="playerEditForm">'+
+  const archiveFull=(PLAYER_REGISTRY.archived||[]).length>=MAX_ARCHIVED_PLAYERS;
+  const canDelete=id!==ACTIVE_PLAYER_ID&&PLAYER_REGISTRY.players.length>1&&!archiveFull;
+  const activeHelp=archiveFull?'Le coffre d’archives est plein : ce joueur reste intact. Restaure un joueur archivé avant d’en archiver un autre.':(id===ACTIVE_PLAYER_ID?(PLAYER_REGISTRY.players.length===1?'Il faut conserver au moins un joueur. Crée-en un autre avant d’archiver celui-ci.':'C’est le joueur actif. Passe d’abord sur un autre joueur pour l’archiver.'):'Tu peux le renommer ou l’archiver sans perdre sa progression.');
+  $("cardDialog").setAttribute("aria-labelledby","playerEditTitle");
+  $("cardBox").innerHTML='<h3>Joueur</h3><h2 id="playerEditTitle">Modifier '+esc(meta.name)+'</h2><form id="playerEditForm" data-player-id="'+esc(id)+'">'+
     '<div class="profileGrid"><label>Nom affiché<input id="editPlayerName" maxlength="40" autocomplete="nickname" value="'+esc(meta.name)+'"></label></div>'+
     '<p class="src" id="editPlayerMsg" role="status" aria-live="polite">'+activeHelp+'</p>'+
     '<button type="submit" id="editPlayerSave">Renommer</button>'+
-    (canDelete?'<button type="button" class="playerDanger" id="editPlayerDelete" style="margin-top:8px">Supprimer ce joueur de cet appareil</button>':'')+
+    (canDelete?'<button type="button" class="playerDanger" id="editPlayerDelete" style="margin-top:8px">Archiver ce joueur</button>':'')+
     '<button type="button" id="editPlayerBack" style="margin-top:8px;background:var(--panel2);color:var(--ink)">Retour</button></form>';
-  $("editPlayerBack").onclick=openPlayerSwitcher;
-  $("playerEditForm").onsubmit=function(ev){ev.preventDefault();$("cardBox").querySelectorAll("button").forEach(function(x){x.disabled=true;});renamePlayer(id,$("editPlayerName").value,function(ok,msg){if(ok)openPlayerSwitcher();else {$("editPlayerMsg").textContent=msg;$("cardBox").querySelectorAll("button").forEach(function(x){x.disabled=false;});}});};
-  if(canDelete)$("editPlayerDelete").onclick=function(){
-    const question="Supprimer "+meta.name+" et toute sa progression sur cet appareil ? Une éventuelle sauvegarde GitHub ne sera pas supprimée.";
-    if(typeof window.confirm==="function"&&!window.confirm(question))return;
-    if(deletePlayer(id))openPlayerSwitcher();else $("editPlayerMsg").textContent="Suppression impossible.";
-  };
+  bindPlayerEditorDialog(id);
   setTimeout(function(){try{$("editPlayerName").focus();$("editPlayerName").select();}catch(e){}},0);
 }
 function curriculumScopeHtml(){
   if(!CURRICULUM_CATALOG) return '<p>Le référentiel détaillé se charge. SEZAM évalue actuellement la lecture des notes ; il ne délivre aucune certification de cycle.</p>';
   const rows=CURRICULUM_CATALOG.cycles.map(function(c){return '<li><b>'+esc(c.label)+'</b> — '+esc(c.appSummary||"Aucune validation annoncée.")+'</li>';}).join("");
   return '<ol>'+rows+'</ol><p>'+esc(CURRICULUM_CATALOG.positioning&&CURRICULUM_CATALOG.positioning.statement||"")+'</p>';
+}
+function bindMusicProfileDialog(previousLevel){
+  if(!$("profSave")||!$("profCancel"))return;
+  previousLevel=previousLevel||normalizeProfile(DB.profile).niveauDepart;
+  $("profCancel").onclick=function(){$("overlay").classList.remove("on");};
+  $("profSave").onclick=function(){
+    const domains=[];
+    $("profDomains").querySelectorAll('input[name="profDomain"]:checked').forEach(function(el){domains.push(el.value);});
+    if(!domains.length){$("profMsg").textContent="Choisis au moins un domaine à travailler.";return;}
+    DB.profile=normalizeProfile(Object.assign({},DB.profile||{}, {
+      displayName:$("profName").value,
+      instrument:$("profInstrument").value,
+      parcours:$("profPath").value,
+      niveauDepart:$("profLevel").value,
+      dailyMinutes:Number($("profMinutes").value),
+      daysPerWeek:Number($("profDays").value),
+      targetDate:$("profTarget").value,
+      affinity:$("profAffinity").value,
+      aspiration:$("profAspiration").value,
+      domains:domains
+    }));
+    const startPid=profileStartPalier(DB.profile.niveauDepart);
+    if(startPid&&(DB.profile.niveauDepart!==previousLevel||!DB.seen||!DB.seen[startPid]))
+      applyProfileStartPlacement(DB.profile.niveauDepart);
+    ensureStructure(DB);save();$("overlay").classList.remove("on");renderHome();
+  };
 }
 function openMusicProfile(){
   const p=normalizeProfile(DB.profile), selected={};
@@ -2974,32 +3542,7 @@ function openMusicProfile(){
     '<p class="src">Seule la lecture produit aujourd’hui des preuves objectives. Les autres choix guident la séance sans valider une compétence.</p>'+
     '<p class="src" id="profMsg"></p><button id="profSave">Enregistrer mon parcours</button><button id="profCancel" style="margin-top:8px;background:var(--panel2);color:var(--ink)">Annuler</button>';
   $("overlay").classList.add("on");
-  $("profCancel").onclick=function(){$("overlay").classList.remove("on");};
-  $("profSave").onclick=function(){
-    const domains=[];
-    $("profDomains").querySelectorAll('input[name="profDomain"]:checked').forEach(function(el){domains.push(el.value);});
-    if(!domains.length){$("profMsg").textContent="Choisis au moins un domaine à travailler.";return;}
-    const previousLevel=p.niveauDepart;
-    DB.profile=normalizeProfile(Object.assign({},DB.profile||{}, {
-      displayName:$("profName").value,
-      instrument:$("profInstrument").value,
-      parcours:$("profPath").value,
-      niveauDepart:$("profLevel").value,
-      dailyMinutes:Number($("profMinutes").value),
-      daysPerWeek:Number($("profDays").value),
-      targetDate:$("profTarget").value,
-      affinity:$("profAffinity").value,
-      aspiration:$("profAspiration").value,
-      domains:domains
-    }));
-    // Un niveau déclaré sert seulement de point d'entrée exploratoire : aucun
-    // palier n'est validé sans preuve. On ne replace le joueur que lorsqu'il
-    // vient réellement de changer ce réglage.
-    const startPid=profileStartPalier(DB.profile.niveauDepart);
-    if(startPid&&(DB.profile.niveauDepart!==previousLevel||!DB.seen||!DB.seen[startPid]))
-      applyProfileStartPlacement(DB.profile.niveauDepart);
-    ensureStructure(DB); save(); $("overlay").classList.remove("on"); renderHome();
-  };
+  bindMusicProfileDialog(p.niveauDepart);
 }
 
 let WATCH_FEED=null;
@@ -3043,7 +3586,7 @@ function openWatchItem(item){
   $("cardBox").innerHTML='<h2>'+esc(item.title)+'</h2>'+
     '<p>'+esc(watchBrief(item.brief))+'</p>'+
     report.filter(Boolean).map(function(p){return '<p>'+esc(p)+'</p>';}).join("")+
-    (item.url?'<button id="watchSourceBtn">Lire l’article</button>':'')+
+    (item.url?'<button id="watchSourceBtn" data-url="'+esc(item.url)+'">Lire l’article</button>':'')+
     '<button style="margin-top:8px;background:var(--panel2);color:var(--ink)" onclick="document.getElementById(\'overlay\').classList.remove(\'on\')">Fermer</button>';
   $("overlay").classList.add("on");
   const sourceBtn=$("watchSourceBtn");
@@ -3438,7 +3981,7 @@ function clearQTimers(){
   if(qInt!==null){clearInterval(qInt);qInt=null;}
   if(qTo!==null){clearTimeout(qTo);qTo=null;}
   if(advanceTimer!==null){clearTimeout(advanceTimer);advanceTimer=null;}
-  if(EX) EX.questionDeadlineAt=0;
+  if(EX){EX.questionDeadlineAt=0;EX.advanceDeadlineAt=0;}
 }
 function clearDailyTimer(){ if(dailyTimer!==null){clearInterval(dailyTimer);dailyTimer=null;} }
 /* ===== SRS — répétition espacée (Leitner 5 boîtes) ===== */
@@ -3738,6 +4281,8 @@ function recordDailyTargetEvidence(questionRecord){
     if(tierComplete(mode)){tierWon=true;DB.xp+=100;}
     if(!EX.daily.promotions) EX.daily.promotions=[];
     EX.daily.promotions.push({pid:pid,mode:mode,tierWon:tierWon});
+    if(!Array.isArray(EX.pendingMemoryMilestones))EX.pendingMemoryMilestones=[];
+    EX.pendingMemoryMilestones.push("Palier "+pid+" · "+mode+" validé pendant la séance"+(tierWon?" · grade terminé":""));
     logEvent("daily_palier_validated",{palier:pid,mode:mode,tier:tierWon});
   }
   storeDailyDraft(pid,mode,promoted?[]:EX.dailyValidationBuffer);
@@ -3816,6 +4361,41 @@ function resumeDailySession(now){
     advanceTimer=setTimeout(function(){if(EX===session&&!EX.done&&EX.qid===qid){advanceTimer=null;nextQuestion();}},60);
   }
   startDailyClock(); return true;
+}
+function pauseForegroundSession(now){
+  now=Number.isFinite(Number(now))?Number(now):Date.now();
+  if(EX&&EX.daily)return pauseDailySession(now);
+  let paused=false;
+  if(EX&&!EX.done&&!EX.backgroundPausedAt){
+    EX.backgroundPausedAt=now;
+    EX.backgroundQuestionRemaining=EX.questionDeadlineAt?Math.max(0,EX.questionDeadlineAt-now):null;
+    EX.backgroundAdvanceRemaining=EX.advanceDeadlineAt?Math.max(0,EX.advanceDeadlineAt-now):null;
+    EX.backgroundRafaleRemaining=EX.kind==="rafale"&&EX.end?Math.max(0,EX.end-now):null;
+    if(rafTimer!==null){clearInterval(rafTimer);rafTimer=null;}clearQTimers();paused=true;
+  }
+  if(KX&&!KX.done&&!KX.backgroundPausedAt){
+    KX.backgroundPausedAt=now;KX.backgroundAdvanceRemaining=KX.advanceDeadlineAt?Math.max(0,KX.advanceDeadlineAt-now):null;
+    if(typeof clearKbdTimer==="function")clearKbdTimer();paused=true;
+  }
+  return paused;
+}
+function resumeForegroundSession(now){
+  now=Number.isFinite(Number(now))?Number(now):Date.now();
+  if(EX&&EX.daily)return resumeDailySession(now);
+  let resumed=false;
+  if(EX&&!EX.done&&EX.backgroundPausedAt){
+    const delta=Math.max(0,now-EX.backgroundPausedAt),session=EX,qid=EX.qid,qrem=EX.backgroundQuestionRemaining,arem=EX.backgroundAdvanceRemaining,rrem=EX.backgroundRafaleRemaining;
+    EX.backgroundPausedAt=0;EX.backgroundQuestionRemaining=null;EX.backgroundAdvanceRemaining=null;EX.backgroundRafaleRemaining=null;if(EX.t0)EX.t0+=delta;
+    if(EX.kind==="rafale"&&rrem!==null){EX.end=now+rrem;rafTimer=setInterval(function(){if(EX!==session||EX.done){clearInterval(rafTimer);rafTimer=null;return;}const left=EX.end-Date.now();$("timerfill").style.width=Math.max(0,left/(RAFALE_S*1000)*100)+"%";if(left<=0)finishRafale();},100);}
+    if(qrem!==null&&!EX.waiting){EX.questionDeadlineAt=now+qrem;qTo=setTimeout(function(){if(EX===session&&!EX.done&&EX.qid===qid)timeUp(qid);},qrem);if(EX.limit)qInt=setInterval(function(){if(EX!==session||EX.done||EX.waiting){clearInterval(qInt);qInt=null;return;}const left=EX.questionDeadlineAt-Date.now();$("timerfill").style.width=Math.max(0,left/EX.limit*100)+"%";},80);}
+    else if(arem!==null&&EX.waiting){EX.advanceDeadlineAt=now+arem;advanceTimer=setTimeout(function(){if(EX===session&&!EX.done&&EX.qid===qid){advanceTimer=null;nextQuestion();}},arem);}
+    resumed=true;
+  }
+  if(KX&&!KX.done&&KX.backgroundPausedAt){
+    const session=KX,step=KX.i,arem=KX.backgroundAdvanceRemaining;KX.backgroundPausedAt=0;KX.backgroundAdvanceRemaining=null;
+    if(arem!==null&&KX.waiting){KX.advanceDeadlineAt=now+arem;kbdAdvanceTimer=setTimeout(function(){if(KX===session&&!KX.done&&KX.i===step)nextKbd();},arem);}resumed=true;
+  }
+  return resumed;
 }
 function updateDailyClock(){
   if(!EX||EX.done||!EX.daily){clearDailyTimer();return;}
@@ -4375,7 +4955,7 @@ function completeMission(done){
   EX.waiting=true; $("feedback").className="feedback "+(done?"good":"");
   $("feedback").textContent=done?(spacing?"✓ Pulsation faite — la mémoire a eu son intervalle.":"✓ Transfert hors écran intégré à la séance.")
     :(spacing?"Intervalle compté — poursuis calmement.":"Mission passée — elle pourra revenir un autre jour.");
-  renderDots(); save(); qTo=setTimeout(function(){if(EX&&!EX.done)nextQuestion();},250);
+  renderDots(); save(); EX.advanceDeadlineAt=Date.now()+250; qTo=setTimeout(function(){if(EX&&!EX.done)nextQuestion();},250);
 }
 function noteStat(id){ DB.noteStats[id]=normalizeNoteStat(DB.noteStats[id]); return DB.noteStats[id]; }
 function trackTestedId(id){
@@ -4470,8 +5050,9 @@ function afterGood(){
   EX.waiting=true;
   const adv=EX.currentPracticeCard?Math.max(1100,practiceCardPlaybackMs(EX.currentPracticeCard)+260):((EX.mode==="libre"&&DB.soundLong)?1300:(EX.seq.length>1?700:380));
   const session=EX, qid=EX.qid;
+  EX.advanceDeadlineAt=Date.now()+adv;
   advanceTimer=setTimeout(function(){ if(EX===session&&!EX.done&&EX.qid===qid){ advanceTimer=null; nextQuestion(); } }, adv);
-  renderDots(); save();
+  renderDots(); save(); flushPendingMemoryMilestones();
 }
 function afterWrong(failId,msg,response){
   noteSessionIds();
@@ -4492,9 +5073,17 @@ function afterWrong(failId,msg,response){
   } else {
     EX.waiting=true;
     const session=EX, qid=EX.qid;
+    EX.advanceDeadlineAt=Date.now()+900;
     advanceTimer=setTimeout(function(){ if(EX===session&&!EX.done&&EX.qid===qid){ advanceTimer=null; nextQuestion(); } }, 900);
   }
-  renderDots(); save();
+  renderDots(); save(); flushPendingMemoryMilestones();
+}
+function flushPendingMemoryMilestones(){
+  if(!EX||!Array.isArray(EX.pendingMemoryMilestones)||!EX.pendingMemoryMilestones.length)return false;
+  const session=EX,milestones=EX.pendingMemoryMilestones.slice();EX.pendingMemoryMilestones=[];
+  return createMemorySnapshot("level_complete",{milestone:milestones.join(" · ")},function(res){
+    if(!res.ok&&EX===session&&!EX.done)EX.pendingMemoryMilestones=milestones.concat(EX.pendingMemoryMilestones||[]);
+  });
 }
 function timeUp(qid){
   if(!EX||EX.done||EX.waiting||EX.qid!==qid) return;
@@ -4826,6 +5415,17 @@ function finishSerie(){
   }
   show("scrRes");
   const resultSession=EX;
+  const memoryMilestones=[];
+  if(courseStepAdvanced)memoryMilestones.push(courseNext?("Cycle "+(EX.course.stepIndex+1)+" maîtrisé · prochaine note débloquée"):("Parcours complet maîtrisé"));
+  if(newlyPalier)memoryMilestones.push("Palier "+p.id+" validé au niveau "+modeLabel(EX.mode));
+  if(newlyTier)memoryMilestones.push("Grade "+modeLabel(newlyTier)+" terminé");
+  if(segPromotion)memoryMilestones.push("Passage de partition "+(segPromotion==="maitrise"?"maîtrisé":"validé"));
+  if(memoryMilestones.length){
+    $("resSave").style.display="block";$("resSave").textContent="Protection de la progression complète en cours…";
+    createMemorySnapshot("level_complete",{milestone:memoryMilestones.join(" · ")},function(res){
+      if(EX===resultSession){$("resSave").style.display="block";$("resSave").textContent=res.ok?("✓ "+res.meta.name+" · rien ne sera écrasé par la prochaine sauvegarde."):res.message;}
+    });
+  } else {$("resSave").style.display="none";$("resSave").textContent="";}
   if(newlyTier){ sfxWin(); const t=newlyTier; setTimeout(function(){if(EX===resultSession&&$("scrRes").classList.contains("active"))showTierCard(t);},600); }
   else if(newlyPalier){
     sfxWin();
@@ -4865,7 +5465,7 @@ function finishDueReview(errs){
   } else eb.style.display="none";
   const left=dueCount();
   $("resVal").innerHTML = left ? "Encore <b>"+left+"</b> note"+(left>1?"s":"")+" à revoir aujourd'hui." : "<b>Révisions du jour terminées.</b>";
-  show("scrRes");
+  $("resSave").style.display="none";$("resSave").textContent="";show("scrRes");
 }
 function representativeNoteSample(ids,limit){
   const source=uniq((ids||[]).filter(function(id){return NOTES[id];}));
@@ -4939,6 +5539,10 @@ function finishStarReview(errs){
     : "Étoiles actuelles : "+(s.level?starLabel(s.level):"départ prêt")+
       (!coverageOk?" · couverture à compléter":(!repairsClear?" · réparation prioritaire":""));
   show("scrRes");
+  if(advanced){
+    $("resSave").style.display="block";$("resSave").textContent="Protection de l’étoile acquise en cours…";
+    createMemorySnapshot("level_complete",{milestone:"Étoile "+s.level+" obtenue sur "+EX.palier.t},function(res){$("resSave").style.display="block";$("resSave").textContent=res.ok?("✓ "+res.meta.name+" · étoile protégée."):res.message;});
+  } else {$("resSave").style.display="none";$("resSave").textContent="";}
   if(advanced) sfxWin();
 }
 function finishRafale(){
@@ -4964,7 +5568,7 @@ function finishRafale(){
       return '<div class="er"><b>'+nt.n+'</b> — '+nt.mn+'</div>';}).join("");
   } else eb.style.display="none";
   $("resVal").textContent="La Rafale entraîne l'automatisme. Les défis de précision portent la validation.";
-  show("scrRes");
+  $("resSave").style.display="none";$("resSave").textContent="";show("scrRes");
 }
 function showCard(pid){
   const c=CARDS[pid]; if(!c) return;
@@ -4999,10 +5603,12 @@ function recoveryCodeInfo(txt){
   if(idx<0) return null;
   return {code:m[1],idx:idx,complete:!!m[2]};
 }
-function applyRecoveryCode(txt){
+function applyRecoveryCode(txt,protectedAlready){
   const info=recoveryCodeInfo(txt);
   if(!info) return null;
-  stashPreimport();
+  if(!protectedAlready&&!stashPreimport())return "Reprise annulée : l’état actuel n’a pas pu être mis à l’abri. Rien n’a été modifié.";
+  const previous=DB,previousRaw=JSON.stringify(DB);
+  try{DB=JSON.parse(previousRaw);}catch(e){return "Reprise annulée : l’état actuel n’a pas pu être copié. Rien n’a été modifié.";}
   for(let i=0;i<info.idx;i++){
     const st=DB.paliers[PALIERS[i].id].zen;
     st.ok=true;
@@ -5025,7 +5631,10 @@ function applyRecoveryCode(txt){
   DB.xp=Math.max(DB.xp||0, 80 + info.idx*35 + (info.complete?40:0));
   markDay("serie",10);
   logEvent("recovery_code",{code:txt,sel:DB.sel,complete:info.complete});
-  save();
+  if(!save()){
+    DB=previous;applyTheme();save({touch:false,cloud:false});
+    return "Reprise annulée : le stockage est insuffisant ou indisponible. L’état précédent est intact.";
+  }
   return "Reprise appliquée : "+(info.complete?info.code+" validé, palier suivant ouvert.":info.code+" restauré avec une série parfaite comptée.");
 }
 function recoveryParam(){
@@ -5040,17 +5649,24 @@ function recoveryParam(){
   }catch(e){}
   return v;
 }
+function bindStartupRecoveryDialog(code){
+  const apply=$("startupRecoveryApply"),cancel=$("startupRecoveryCancel"),msg=$("startupRecoveryMsg");if(!apply||!cancel)return;
+  cancel.onclick=function(){$("overlay").classList.remove("on");};
+  apply.onclick=function(){
+    if(!code||!recoveryCodeInfo(code)){if(msg)msg.textContent="Ce code n’est plus vérifiable. La progression actuelle reste intacte.";return;}
+    apply.disabled=true;cancel.disabled=true;if(msg)msg.textContent="Création du point de sécurité…";
+    protectedImportSave(code,function(result){renderHome();header();if(msg)msg.textContent=result;cancel.disabled=false;cancel.textContent="Continuer";},{confirmed:true});
+  };
+}
 function applyStartupRecovery(){
   const code=recoveryParam();
-  if(!code) return;
-  const msg=applyRecoveryCode(code);
-  if(!msg) return;
+  if(!code||!recoveryCodeInfo(code)) return;
   try{ history.replaceState(null,"",location.pathname); }catch(e){}
   setTimeout(function(){
-    $("cardBox").innerHTML='<h3>Progression restaurée</h3><h2>On ne recommence pas à zéro.</h2><p>'+esc(msg)+'</p>'+
-      '<p class="src">Si ce n\'est pas le bon niveau, va dans Stats & sauvegarde → Annuler l\'import.</p>'+
-      '<button onclick="document.getElementById(\'overlay\').classList.remove(\'on\')">Continuer</button>';
+    $("cardBox").innerHTML='<h3>Code de reprise détecté</h3><h2>Ta mémoire actuelle reste prioritaire</h2><p>Le code <b>'+esc(code.toUpperCase())+'</b> peut modifier le niveau affiché. SEZAM créera d’abord un point complet, daté et numéroté.</p>'+
+      '<p class="src" id="startupRecoveryMsg" role="status">Rien ne sera modifié sans ton choix.</p><button id="startupRecoveryApply" data-recovery-code="'+esc(code)+'">Sauvegarder puis appliquer le code</button><button id="startupRecoveryCancel" style="background:var(--panel2);color:var(--ink)">Garder ma progression actuelle</button>';
     $("overlay").classList.add("on");
+    bindStartupRecoveryDialog(code);
   },200);
 }
 function utf8ByteLength(value,stopAfter){
@@ -5065,14 +5681,14 @@ function utf8ByteLength(value,stopAfter){
   }
   return bytes;
 }
-function importSave(txt){
+function importSave(txt,protectedAlready){
   txt=String(txt==null?"":txt);
   if(txt.length>MAX_IMPORT_TEXT_BYTES||utf8ByteLength(txt,MAX_IMPORT_TEXT_BYTES)>MAX_IMPORT_TEXT_BYTES)
     return "Sauvegarde trop volumineuse : limite 4 Mo. Rien n'a été modifié.";
   txt=txt.trim();
   if(!txt) return "Rien à charger.";
-  const recovered=applyRecoveryCode(txt);
-  if(recovered) return recovered+" Ancien état conservé — « Annuler l'import » pour revenir.";
+  const recovered=applyRecoveryCode(txt,protectedAlready);
+  if(recovered) return recovered.indexOf("Reprise appliquée")===0?recovered+" Ancien état conservé — « Annuler l'import » pour revenir.":recovered;
   let obj;
   try{ obj=JSON.parse(txt); }
   catch(e){ return "Code invalide : ni JSON de sauvegarde, ni code palier (ex. P4, P4+, B2). Rien n'a été modifié."; }
@@ -5082,7 +5698,7 @@ function importSave(txt){
   try{ candidate=ensureStructure(obj); }
   catch(e){ return "JSON invalide : structure de progression illisible. Rien n'a été modifié."; }
   if(!recognizableStoredState(candidate)) return "JSON invalide : progression incomplète. Rien n'a été modifié.";
-  if(!stashPreimport()) return "Import impossible : l'état actuel n'a pas pu être mis à l'abri. Rien n'a été modifié.";
+  if(!protectedAlready&&!stashPreimport()) return "Import impossible : l'état actuel n'a pas pu être mis à l'abri. Rien n'a été modifié.";
   const previous=DB;
   const identityUserId=DB._sezam.userId,identityCreatedAt=DB._sezam.createdAt,identityName=activePlayerMeta()?activePlayerMeta().name:"";
   candidate._sezam.playerId=ACTIVE_PLAYER_ID;candidate._sezam.userId=identityUserId;candidate._sezam.createdAt=identityCreatedAt;
@@ -5097,9 +5713,46 @@ function importSave(txt){
 function undoImport(){
   const key=playerPreimportKey(ACTIVE_PLAYER_ID), prev=readKey(key);
   if(!prev) return "Aucun import récent à annuler.";
-  DB=ensureStructure(prev); DB._sezam.playerId=ACTIVE_PLAYER_ID; applyTheme(); save();
+  const previous=DB;DB=ensureStructure(prev); DB._sezam.playerId=ACTIVE_PLAYER_ID; applyTheme();
+  if(!save()){DB=previous;applyTheme();save({touch:false,cloud:false});return "Annulation impossible : stockage indisponible. L’état importé et le point antérieur restent intacts.";}
   try{ localStorage.removeItem(key); }catch(e){}
   return "Import annulé : l'état précédent a été restauré.";
+}
+function importPreflight(txt){
+  txt=String(txt==null?"":txt);
+  if(txt.length>MAX_IMPORT_TEXT_BYTES||utf8ByteLength(txt,MAX_IMPORT_TEXT_BYTES)>MAX_IMPORT_TEXT_BYTES)return {ok:false,message:"Sauvegarde trop volumineuse : limite 4 Mo. Rien n'a été modifié."};
+  txt=txt.trim();if(!txt)return {ok:false,message:"Rien à charger."};
+  if(recoveryCodeInfo(txt))return {ok:true,kind:"pre_recovery",milestone:"Avant application du code de reprise "+txt.toUpperCase(),preview:"Le code "+txt.toUpperCase()+" repositionne seulement le niveau et crée des validations de reprise. Il ne reconstitue ni les anciennes statistiques, ni les erreurs, ni les partitions."};
+  let obj=null;try{obj=JSON.parse(txt);}catch(e){return {ok:false,message:"Code invalide : ni JSON de sauvegarde, ni code palier. Rien n'a été modifié."};}
+  if(!isRecord(obj)||!isRecord(obj.paliers))return {ok:false,message:"JSON invalide : progression non reconnaissable. Rien n'a été modifié."};
+  let candidate=null;try{candidate=ensureStructure(obj);if(!recognizableStoredState(candidate))return {ok:false,message:"JSON invalide : progression incomplète. Rien n'a été modifié."};}catch(e){return {ok:false,message:"JSON invalide : structure illisible. Rien n'a été modifié."};}
+  return {ok:true,kind:"pre_import",milestone:"Avant remplacement par une sauvegarde externe",preview:"État actuel : "+(DB.sel||"P1")+" · "+(DB.xp||0)+" XP · "+(DB.pieces||[]).length+" partitions. Sauvegarde choisie : "+(candidate.sel||"P1")+" · "+(candidate.xp||0)+" XP · "+(candidate.pieces||[]).length+" partitions. Le nom du joueur restera inchangé."};
+}
+let lastImportMemoryMeta=null;
+function lastImportMemoryKey(){return "sezam_last_import_snapshot_"+ACTIVE_PLAYER_ID;}
+function protectedImportSave(txt,cb,options){
+  options=options||{};
+  if(memoryProtectedActionBusy||memoryRestoreBusy){cb("Une autre opération protégée est déjà en cours.");return false;}
+  const check=importPreflight(txt);if(!check.ok){cb(check.message);return false;}
+  if(!options.confirmed&&typeof window.confirm==="function"&&!window.confirm(check.preview+"\n\nContinuer ? SEZAM créera d’abord un point complet, daté et numéroté.")){cb("Import annulé. Rien n’a été modifié.");return false;}
+  const token=memoryActionToken();memoryProtectedActionBusy=true;
+  createMemorySnapshot(check.kind,{milestone:check.milestone,notify:false},function(safety){
+    if(!memoryActionCurrent(token)){memoryProtectedActionBusy=false;cb("Le joueur actif a changé : import annulé.");return;}
+    if(!safety.ok){memoryProtectedActionBusy=false;cb("Import annulé : l’état actuel n’a pas pu être ajouté à l’historique protégé. Rien n’a été modifié.");return;}
+    let msg="",applied=false;try{msg=importSave(txt,true);applied=/^(Sauvegarde chargée|Reprise appliquée)/.test(msg);if(applied){lastImportMemoryMeta=safety.meta;try{localStorage.setItem(lastImportMemoryKey(),JSON.stringify(safety.meta));}catch(e){}markRestorePending("import",safety.meta.number);}}catch(e){memoryProtectedActionBusy=false;cb("Import interrompu sans perte : "+safety.meta.name+" conserve l’état précédent.");return;}
+    memoryProtectedActionBusy=false;cb(msg+" Point préalable conservé : "+safety.meta.name+"."+(applied?" Tu peux l’annuler ici ou depuis l’historique.":""));
+  });
+  return true;
+}
+function protectedUndoImport(cb){
+  let meta=lastImportMemoryMeta;try{if(!meta)meta=JSON.parse(localStorage.getItem(lastImportMemoryKey())||"null");}catch(e){}
+  if(meta&&isRecord(meta)&&meta.playerId===ACTIVE_PLAYER_ID){
+    restoreMemorySnapshot(meta,function(res){if(res.ok){lastImportMemoryMeta=null;try{localStorage.removeItem(lastImportMemoryKey());}catch(e){}}cb(res.ok?("Import annulé par retour à "+meta.name+". L’état importé vient aussi d’être sauvegardé avant le retour."):res.message);});return true;
+  }
+  if(!readKey(playerPreimportKey(ACTIVE_PLAYER_ID))){cb("Aucun import récent à annuler.");return false;}
+  if(memoryProtectedActionBusy||memoryRestoreBusy){cb("Une autre opération protégée est déjà en cours.");return false;}
+  const token=memoryActionToken();memoryProtectedActionBusy=true;
+  createMemorySnapshot("pre_restore",{milestone:"Avant annulation d’un ancien import",notify:false},function(safety){if(!memoryActionCurrent(token)){memoryProtectedActionBusy=false;cb("Le joueur actif a changé : annulation interrompue.");return;}if(!safety.ok){memoryProtectedActionBusy=false;cb("Annulation bloquée : l’état actuel n’a pas pu être protégé. Rien n’a été modifié.");return;}const msg=undoImport();memoryProtectedActionBusy=false;cb(msg+" L’état quitté reste disponible dans "+safety.meta.name+".");});return true;
 }
 function renderStats(){
   backfillCurriculumFromGame(DB);
@@ -5143,8 +5796,9 @@ function renderStats(){
   $("saveRestoreTitle").textContent="Restaurer la progression de "+playerName;
   $("syncTitle").textContent="Synchro cloud de "+playerName;
   $("impArea").value=""; $("saveMsg").textContent="";
+  $("memoryMsg").textContent="Ta progression ne repart jamais de zéro contre ton gré.";
   $("syncState").textContent=syncStateText(); $("syncMsg").textContent="";
-  show("scrStats");
+  show("scrStats");renderMemoryHistory();
 }
 
 /* ================= MES PARTITIONS — Premier regard ================= */
@@ -5382,6 +6036,7 @@ function ambitionProgress(piece){
     g.doneAt=Date.now();
     logEvent("ambition_atteinte",{piece:piece.id,goal:g.id});
     save({touch:false,cloud:false}); // la réussite survit au rechargement, sans bruit de synchro
+    createMemorySnapshot("level_complete",{milestone:"Ambition « "+goalDef(g.id).label+" » atteinte sur "+piece.titre});
   }
   return {goal:g,def:goalDef(g.id),pct:Math.round(pct*100),txt:txt,done:done};
 }
@@ -5728,18 +6383,26 @@ function removePieceAttachment(pid){
   const idx=userPieceIndex(pid);
   if(idx<0){ $("pieceMsg").textContent="Seules les partitions perso peuvent être modifiées."; return; }
   if(!DB.pieces[idx].attachment){ $("pieceMsg").textContent="Cette partition n'a pas de fichier attaché."; return; }
-  delete DB.pieces[idx].attachment;
-  save(); renderPieces();
-  $("pieceMsg").textContent="Pièce jointe retirée.";
+  const title=DB.pieces[idx].titre||"cette partition";
+  if(typeof window.confirm==="function"&&!window.confirm("Retirer la pièce jointe de « "+title+" » ? Une sauvegarde complète sera créée avant."))return;
+  $("pieceMsg").textContent="Protection avant retrait…";
+  protectMemoryAction("Avant retrait de la pièce jointe de "+title,function(meta){
+    const current=userPieceIndex(pid);if(current<0)return;const previous=DB.pieces[current].attachment;delete DB.pieces[current].attachment;
+    if(!save()){DB.pieces[current].attachment=previous;save({cloud:false});$("pieceMsg").textContent="Retrait annulé : stockage indisponible.";return;}
+    renderPieces();$("pieceMsg").textContent="Pièce jointe retirée à ta demande. État précédent : "+meta.name+".";
+  },function(msg){$("pieceMsg").textContent=msg;});
 }
 function deleteUserPiece(pid){
   const idx=userPieceIndex(pid);
   if(idx<0){ $("pieceMsg").textContent="Seules les partitions perso peuvent être supprimées."; return; }
   const title=DB.pieces[idx].titre||"cette partition";
-  if(!window.confirm("Supprimer "+title+" ?")) return;
-  DB.pieces.splice(idx,1);
-  save(); renderPieces();
-  $("pieceMsg").textContent="Partition supprimée : "+title+".";
+  if(!window.confirm("Supprimer « "+title+" » de la bibliothèque ? Une sauvegarde complète sera créée avant ; aucun ancien point ne sera effacé.")) return;
+  $("pieceMsg").textContent="Protection avant suppression…";
+  protectMemoryAction("Avant suppression explicite de la partition "+title,function(meta){
+    const current=userPieceIndex(pid);if(current<0)return;const removed=DB.pieces.splice(current,1)[0];
+    if(!save()){DB.pieces.splice(current,0,removed);save({cloud:false});$("pieceMsg").textContent="Suppression annulée : stockage indisponible.";return;}
+    renderPieces();$("pieceMsg").textContent="Partition supprimée à ta demande : "+title+". État précédent : "+meta.name+".";
+  },function(msg){$("pieceMsg").textContent=msg;});
 }
 function deletePieceSegment(pid,sid){
   const idx=userPieceIndex(pid);
@@ -5747,11 +6410,14 @@ function deletePieceSegment(pid,sid){
   const p=DB.pieces[idx];
   const segs=Array.isArray(p.segments)?p.segments:[];
   const before=segs.length;
-  p.segments=segs.filter(function(s){return s.id!==sid;});
-  if(p.segments.length===before){ $("pieceMsg").textContent="Segment introuvable."; return; }
-  if(!p.segments.length) delete p.segments;
-  save(); renderPieces();
-  $("pieceMsg").textContent="Segment retiré.";
+  const target=segs.find(function(s){return s.id===sid;});if(!target){$("pieceMsg").textContent="Segment introuvable.";return;}
+  if(typeof window.confirm==="function"&&!window.confirm("Retirer le passage « "+target.title+" » ? Une sauvegarde complète sera créée avant."))return;
+  $("pieceMsg").textContent="Protection avant retrait…";
+  protectMemoryAction("Avant retrait explicite du passage "+target.title,function(meta){
+    const current=userPieceIndex(pid);if(current<0)return;const piece=DB.pieces[current],old=(piece.segments||[]).slice();piece.segments=old.filter(function(s){return s.id!==sid;});if(!piece.segments.length)delete piece.segments;
+    if(!save()){piece.segments=old;save({cloud:false});$("pieceMsg").textContent="Retrait annulé : stockage indisponible.";return;}
+    renderPieces();$("pieceMsg").textContent="Segment retiré à ta demande. État précédent : "+meta.name+".";
+  },function(msg){$("pieceMsg").textContent=msg;});
 }
 function startPieceSegment(pid,sid){
   const piece=allPieces().find(function(x){return x.id===pid;});
@@ -5866,41 +6532,45 @@ function renderPieces(){
   show("scrPieces");
 }
 /* ---- Fiche d'une pièce : carte, ambition, passages, actions du joueur ---- */
+function renderPieceGoalSegmentDialog(pid){
+  const piece=pieceById(pid);if(!piece)return;
+  const segs=pieceSegments(piece).filter(function(s){return s.mesFrom;});
+  $("cardBox").innerHTML='<h3 data-piece-goal="'+esc(pid)+'">Ambition — passage précis</h3><h2>Choisis ton passage</h2><div class="goalPick">'+
+    segs.map(function(s){return '<button data-segpick="'+esc(s.id)+'">'+esc(s.title)+(s.bars?'<br><small style="color:var(--dim)">'+esc(s.bars)+'</small>':'')+'</button>';}).join("")+
+    '</div><button class="secbtn" id="goalCancel" style="margin-top:10px">Annuler</button>';
+  bindPieceGoalDialog(pid,true);
+}
+function bindPieceGoalDialog(pid,segmentMode){
+  const piece=pieceById(pid);if(!piece)return;
+  if(segmentMode){
+    $("cardBox").querySelectorAll("[data-segpick]").forEach(function(sb){sb.onclick=function(){setPieceGoal(pid,"passage",sb.getAttribute("data-segpick"));$("overlay").classList.remove("on");renderPieceDetail(pid);};});
+    if($("goalCancel"))$("goalCancel").onclick=function(){$("overlay").classList.remove("on");};
+    return;
+  }
+  $("cardBox").querySelectorAll("[data-goal]").forEach(function(b){b.onclick=function(){
+    const gid=b.getAttribute("data-goal");if(gid==="passage"){renderPieceGoalSegmentDialog(pid);return;}
+    setPieceGoal(pid,gid);$("overlay").classList.remove("on");renderPieceDetail(pid);
+  };});
+  if($("goalClear"))$("goalClear").onclick=function(){
+    if(typeof window.confirm==="function"&&!window.confirm("Retirer cette ambition ? Une sauvegarde complète sera créée avant."))return;
+    $("goalClear").disabled=true;
+    protectMemoryAction("Avant retrait explicite de l’ambition de partition",function(){setPieceGoal(pid,null);$("overlay").classList.remove("on");renderPieceDetail(pid);},function(msg){const el=$("goalClear");if(el)el.disabled=false;memoryToast(msg,true);});
+  };
+  if($("goalCancel"))$("goalCancel").onclick=function(){$("overlay").classList.remove("on");};
+}
 function choosePieceGoal(pid){
-  const piece=pieceById(pid); if(!piece) return;
+  const piece=pieceById(pid);if(!piece)return;
   const cur=pieceGoal(pid);
-  let body='<h3>Ambition — '+esc(piece.titre)+'</h3><h2>Nomme ta réussite</h2>'+
+  $("cardBox").innerHTML='<h3 data-piece-goal="'+esc(pid)+'">Ambition — '+esc(piece.titre)+'</h3><h2>Nomme ta réussite</h2>'+
     '<p>SEZAM traduit ton ambition en passages concrets, puis mesure ta conquête.</p>'+
-    '<div class="goalPick">'+PIECE_AMBITIONS.map(function(g){
-      return '<button data-goal="'+g.id+'" class="'+(cur&&cur.id===g.id?'on':'')+'">'+esc(g.label)+'<br><small style="color:var(--dim)">'+esc(g.hint)+'</small></button>';
-    }).join("")+'</div>'+
+    '<div class="goalPick">'+PIECE_AMBITIONS.map(function(g){return '<button data-goal="'+g.id+'" class="'+(cur&&cur.id===g.id?'on':'')+'">'+esc(g.label)+'<br><small style="color:var(--dim)">'+esc(g.hint)+'</small></button>';}).join("")+'</div>'+
     (cur?'<button class="secbtn" id="goalClear" style="margin-top:10px">Retirer l\'ambition</button>':'')+
     '<button class="secbtn" id="goalCancel" style="margin-top:6px">Fermer</button>';
-  $("cardBox").innerHTML=body;
-  $("overlay").classList.add("on");
-  $("cardBox").querySelectorAll("[data-goal]").forEach(function(b){
-    b.onclick=function(){
-      const gid=b.getAttribute("data-goal");
-      if(gid==="passage"){
-        // choisir le passage cible
-        const segs=pieceSegments(piece).filter(function(s){return s.mesFrom;});
-        $("cardBox").innerHTML='<h3>Ambition — passage précis</h3><h2>Choisis ton passage</h2><div class="goalPick">'+
-          segs.map(function(s){return '<button data-segpick="'+esc(s.id)+'">'+esc(s.title)+(s.bars?'<br><small style="color:var(--dim)">'+esc(s.bars)+'</small>':'')+'</button>';}).join("")+
-          '</div><button class="secbtn" id="goalCancel" style="margin-top:10px">Annuler</button>';
-        $("cardBox").querySelectorAll("[data-segpick]").forEach(function(sb){
-          sb.onclick=function(){ setPieceGoal(pid,"passage",sb.getAttribute("data-segpick")); $("overlay").classList.remove("on"); renderPieceDetail(pid); };
-        });
-        $("goalCancel").onclick=function(){ $("overlay").classList.remove("on"); };
-        return;
-      }
-      setPieceGoal(pid,gid); $("overlay").classList.remove("on"); renderPieceDetail(pid);
-    };
-  });
-  if($("goalClear")) $("goalClear").onclick=function(){ setPieceGoal(pid,null); $("overlay").classList.remove("on"); renderPieceDetail(pid); };
-  $("goalCancel").onclick=function(){ $("overlay").classList.remove("on"); };
+  $("overlay").classList.add("on");bindPieceGoalDialog(pid,false);
 }
 function renderPieceDetail(pid){
   const piece=pieceById(pid); if(!piece){ renderPieces(); return; }
+  $("scrPiece").setAttribute("data-piece-id",piece.id);
   const box=$("pieceDetail");
   const mel=pieceMelody(piece), amb=ambitionProgress(piece), isActive=DB.activePiece===piece.id;
   const next=nextSegmentForPiece(piece);
@@ -5956,6 +6626,20 @@ function renderPieceDetail(pid){
   show("scrPiece");
 }
 let PR=null;
+function bindFirstLookSelfDialog(pid,segmentId){
+  const p=pieceById(pid);if(!p||!$("prSelfDone"))return;
+  if(p.attachment&&$("prOpenAttachment"))$("prOpenAttachment").onclick=function(){openPieceAttachment(p.id);};
+  $("prSelfDone").onclick=function(){if(segmentId)markSegmentSeen(p.id,segmentId);$("overlay").classList.remove("on");};
+}
+function bindPremierRegardRestored(type){
+  if(!PR||!PR.piece)return;
+  if(type==="first_look_answer"){
+    const next=$("prNext");if(next)next.onclick=function(){PR.i++;if(PR.i<PR.piece.q.length)renderPRQuestion();else finishPR();};
+    return;
+  }
+  const box=$("prChoices");if(!box)return;
+  box.querySelectorAll("button").forEach(function(button,index){button.onclick=function(){prAnswer(index);};});
+}
 function startPremierRegard(pid,segmentId){
   const p=allPieces().find(function(x){return x.id===pid;});
   if(!p) return;
@@ -5964,13 +6648,9 @@ function startPremierRegard(pid,segmentId){
       '<p>Ouvre ta partition et repère, dans l\'ordre : la <b>clé</b>, l\'<b>armure</b> (dièses/bémols), le <b>chiffrage de mesure</b>, le <b>tempo</b>, le <b>caractère</b>. C\'est le réflexe n°1 du lecteur.</p>'+
       '<p class="src">'+esc(p.info||'Partition perso.')+'</p>'+
       (p.attachment?'<button id="prOpenAttachment">Ouvrir la pièce jointe</button>':'')+
-      '<button id="prSelfDone">C\'est fait</button>';
+      '<button id="prSelfDone" data-pr-piece="'+esc(p.id)+'" data-pr-segment="'+esc(segmentId||"")+'">C\'est fait</button>';
     $("overlay").classList.add("on");
-    if(p.attachment && $("prOpenAttachment")) $("prOpenAttachment").onclick=function(){ openPieceAttachment(p.id); };
-    $("prSelfDone").onclick=function(){
-      if(segmentId) markSegmentSeen(p.id,segmentId);
-      $("overlay").classList.remove("on");
-    };
+    bindFirstLookSelfDialog(p.id,segmentId||"");
     return;
   }
   PR={piece:p,i:0,ok:0,segmentId:segmentId||""};
@@ -6051,7 +6731,7 @@ function addSegment(){
 /* ================= CLAVIER — module d'entraînement (libre) ================= */
 // Isolé : état KX dédié, écran scrKbd dédié. Ne touche NI EX, NI la validation des paliers (sauvegardes protégées).
 let KX=null, kbdAdvanceTimer=null;
-function clearKbdTimer(){ if(kbdAdvanceTimer!==null){clearTimeout(kbdAdvanceTimer);kbdAdvanceTimer=null;} }
+function clearKbdTimer(){ if(kbdAdvanceTimer!==null){clearTimeout(kbdAdvanceTimer);kbdAdvanceTimer=null;} if(KX)KX.advanceDeadlineAt=0; }
 function renderKbd(target,interactive,marks){
   marks=marks||{};
   const r=kbdRangeFor(KX.clef), keys=buildKeyboard(r[0],r[1]);
@@ -6166,7 +6846,8 @@ function finishKbdAnswer(correct,marks,msg){
   logEvent("clavier_answer",{dir:KX.dir,midi:KX.cur.midi,acc:!!KX.cur.acc,correct:correct,ms:Date.now()-KX.t0});
   kbdDots(); save();
   const session=KX, step=KX.i;
-  kbdAdvanceTimer=setTimeout(function(){ if(KX===session&&!KX.done&&KX.i===step){kbdAdvanceTimer=null;nextKbd();} }, correct?750:1300);
+  const delay=correct?750:1300;KX.advanceDeadlineAt=Date.now()+delay;
+  kbdAdvanceTimer=setTimeout(function(){ if(KX===session&&!KX.done&&KX.i===step){kbdAdvanceTimer=null;nextKbd();} }, delay);
 }
 function kbdTap(midi){
   if(!KX||KX.waiting||KX.done||KX.dir!=="read") return;
@@ -6376,6 +7057,22 @@ function cloudDocument(){
   };
 }
 function cloudSaveContent(){ return JSON.stringify(cloudDocument()); }
+function canonicalCloudJson(value){
+  if(value===null||typeof value!=="object")return JSON.stringify(value);
+  if(Array.isArray(value))return "["+value.map(canonicalCloudJson).join(",")+"]";
+  return "{"+Object.keys(value).sort().map(function(key){return JSON.stringify(key)+":"+canonicalCloudJson(value[key]);}).join(",")+"}";
+}
+function cloudDeletePreflight(g){
+  const file=remoteFile(g),remote=parseRemote(g);
+  if(!g||!file||!remote||file.truncated||!file.content)return {ok:false,message:"La copie distante est absente ou illisible."};
+  let remoteDoc=null,currentDoc=null;try{remoteDoc=JSON.parse(file.content);currentDoc=cloudDocument();}catch(e){}
+  if(!remoteDoc||!currentDoc||canonicalCloudJson(remoteDoc)!==canonicalCloudJson(currentDoc))return {ok:false,message:"La version GitHub diffère de cet appareil."};
+  const allNames=Object.keys(g.files||{}),targetMap=safeMap();
+  [playerGistFile(ACTIVE_PLAYER_ID),legacyPlayerGistFile(ACTIVE_PLAYER_ID)].concat(legacyGistAllowed()?[GIST_FILE,GIST_FILE_LEGACY]:[]).forEach(function(name){if(g.files&&g.files[name])targetMap[name]=1;});
+  const targets=Object.keys(targetMap),others=allNames.filter(function(name){return !targetMap[name];});
+  if(!targets.length)return {ok:false,message:"Aucun fichier cloud de ce joueur n’a été trouvé."};
+  return {ok:true,targets:targets,others:others,method:others.length?"PATCH":"DELETE"};
+}
 // Trouve (ou crée) le gist de sauvegarde ; un token suffit sur un nouvel appareil.
 function syncEnsure(cb){
   const c=syncCfg();
@@ -6392,26 +7089,34 @@ function syncEnsure(cb){
   });
 }
 let syncPendingRemote=null;
+function restorePendingKey(){return "sezam_restore_pending_"+ACTIVE_PLAYER_ID;}
+function restorePending(){try{return !!localStorage.getItem(restorePendingKey());}catch(e){return false;}}
+function markRestorePending(kind,snapshot){try{localStorage.setItem(restorePendingKey(),JSON.stringify({at:Date.now(),kind:kind||"restore",snapshot:snapshot||0}));}catch(e){}}
+function clearRestorePending(){try{localStorage.removeItem(restorePendingKey());}catch(e){}}
 function syncAdopt(remote){
   if((EX&&!EX.done)||(KX&&!KX.done)){
     syncPendingRemote=remote;
     syncStatus("Progression distante trouvée : elle attend la fin de la séance pour éviter toute perte.");
     return false;
   }
-  stashPreimport();
-  const before=DB.xp||0;
-  DB=ensureStructure(remote);
-  DB._sezam.playerId=ACTIVE_PLAYER_ID;
-  applyTheme();
-  logEvent("sync_pull",{xp:DB.xp,ts:stateTimestamp(DB)});
-  save({touch:false,cloud:false});
-  syncSet({lastSync:Date.now(),lastRemoteTs:stateTimestamp(DB)});
-  renderHome(); header();
-  $("cardBox").innerHTML='<h3>Synchro</h3><h2>Progression récupérée</h2>'+
-    '<p>SEZAM a chargé la version cloud la plus récente ('+(DB.xp||0)+' XP contre '+before+' ici).</p>'+
-    '<p class="src">Pas d\'accord ? Stats & sauvegarde → Annuler l\'import.</p>'+
-    '<button onclick="document.getElementById(\'overlay\').classList.remove(\'on\')">Continuer</button>';
-  $("overlay").classList.add("on");
+  if(memoryProtectedActionBusy||memoryRestoreBusy){syncStatus("Une autre opération protégée est en cours. La version cloud n’a pas été appliquée.");return false;}
+  const token=memoryActionToken();memoryProtectedActionBusy=true;
+  syncStatus("Mise à l’abri complète avant récupération du cloud…");
+  createMemorySnapshot("pre_cloud",{milestone:"Avant adoption de la progression cloud",notify:false},function(safety){
+    if(!memoryActionCurrent(token)){memoryProtectedActionBusy=false;syncStatus("Le joueur actif a changé : récupération cloud annulée.");return;}
+    if(!safety.ok){memoryProtectedActionBusy=false;syncStatus("Récupération cloud annulée : l’état local n’a pas pu être ajouté à l’historique. Rien n’a été remplacé.");return;}
+    const before=DB.xp||0,previous=DB,attachments=safeMap();
+    (previous.pieces||[]).forEach(function(piece){if(piece&&piece.id&&piece.attachment)attachments[piece.id]=piece.attachment;});
+    DB=ensureStructure(remote);DB._sezam.playerId=ACTIVE_PLAYER_ID;
+    (DB.pieces||[]).forEach(function(piece){if(piece&&piece.id&&!piece.attachment&&attachments[piece.id])piece.attachment=attachments[piece.id];});
+    applyTheme();
+    logEvent("sync_pull",{xp:DB.xp,ts:stateTimestamp(DB)});
+    if(!save({touch:false,cloud:false})){DB=previous;applyTheme();save({touch:false,cloud:false});memoryProtectedActionBusy=false;syncStatus("Récupération cloud annulée : stockage actif indisponible. L’état local est intact.");return;}
+    clearRestorePending();syncSet({lastSync:Date.now(),lastRemoteTs:stateTimestamp(DB)});renderHome();header();
+    $("cardBox").innerHTML='<h3>Synchro protégée</h3><h2>Progression récupérée</h2><p>SEZAM a chargé la version cloud ('+(DB.xp||0)+' XP contre '+before+' ici).</p><p class="src">L’état quitté est intact dans '+esc(safety.meta.name)+'. Tu peux le restaurer depuis Stats & sauvegarde.</p><button onclick="document.getElementById(\'overlay\').classList.remove(\'on\')">Continuer</button>';
+    $("overlay").classList.add("on");
+    memoryProtectedActionBusy=false;
+  });
   return true;
 }
 function flushPendingSync(){
@@ -6423,8 +7128,9 @@ function flushPendingSync(){
   if(decision==="conflict"){syncConflictStatus();return false;}
   return true;
 }
-function syncPush(force){
+function syncPush(force,forceLocal){
   if(!syncEnabled()) return;
+  if(restorePending()&&!force){syncStatus("Une restauration locale est active. La synchro automatique est suspendue pour ne pas l’annuler ; utilise « Synchroniser maintenant » pour décider explicitement.");return;}
   if(!canSyncNow()){ syncStatus("Hors ligne : sauvegarde locale active, synchro au retour du réseau."); return; }
   if(!force && Date.now()-syncLastPush<12000) return;
   if(syncBusy) return; syncBusy=true;
@@ -6433,20 +7139,25 @@ function syncPush(force){
     const remote=parseRemote(g);
     if(g&&remoteFile(g)&&!remote){syncBusy=false;syncStatus("Sauvegarde distante illisible : aucun envoi effectué. Exporte tes données puis vérifie le Gist GitHub.");return;}
     const decision=remote?syncTransferDecision(DB,remote):"push";
-    if(decision==="conflict"){syncBusy=false;syncConflictStatus();return;}
-    if(remote && decision==="pull"){ syncBusy=false; syncAdopt(remote); return; }
+    if(!forceLocal&&decision==="conflict"){syncBusy=false;syncConflictStatus();return;}
+    if(!forceLocal&&remote && decision==="pull"){ syncBusy=false; syncAdopt(remote); return; }
     // Écrit toujours le fichier v2. L'ancien fichier reste dans le Gist pour
     // qu'une v28 encore ouverte ne puisse pas effacer les nouveaux champs.
-    const files={},fileName=playerGistFile(ACTIVE_PLAYER_ID); files[fileName]={content:cloudSaveContent()};
+    const files={},fileName=playerGistFile(ACTIVE_PLAYER_ID),sentContent=cloudSaveContent(),sentTs=stateTimestamp(DB);files[fileName]={content:sentContent};
     gistApi("PATCH","/gists/"+syncCfg().gistId,{files:files},function(res){
       syncBusy=false;
-      if(res){ syncLastPush=Date.now(); syncSet({lastSync:Date.now(),lastRemoteTs:stateTimestamp(DB)}); syncStatus("Synchronisé ✓"); }
+      if(res){
+        syncLastPush=Date.now();syncSet({lastSync:Date.now(),lastRemoteTs:sentTs});
+        if(stateTimestamp(DB)!==sentTs){syncStatus("La version envoyée est protégée, mais le jeu a encore changé pendant l’envoi. Une nouvelle synchronisation est nécessaire.");if(!restorePending())queueCloudSync(300);}
+        else {if(force)clearRestorePending();syncStatus("Synchronisé ✓");}
+      }
       else syncStatus("Synchro reportée : GitHub ou le réseau ne répond pas.");
     });
   });
 }
-function syncPull(){
+function syncPull(force){
   if(!syncEnabled()) return;
+  if(restorePending()&&!force){syncStatus("Restauration locale protégée : aucune version cloud ne sera reprise automatiquement. Touche « Synchroniser maintenant » si tu veux comparer volontairement.");return;}
   if(!canSyncNow()){ syncStatus("Hors ligne : SEZAM synchronisera au retour du réseau."); return; }
   gistApi("GET","/gists/"+syncCfg().gistId,null,function(g){
     if(!g){syncStatus("Synchro reportée : impossible de lire la sauvegarde distante.");return;}
@@ -6460,7 +7171,37 @@ function syncPull(){
     else if(dec==="push") syncPush(true);
     else if(dec==="conflict") syncConflictStatus();
     else if(remoteFileName(g)!==playerGistFile(ACTIVE_PLAYER_ID)) syncPush(true); // migration non destructive vers le fichier v2
-    else { syncSet({lastSync:Date.now(),lastRemoteTs:stateTimestamp(DB)}); syncStatus("À jour ✓"); }
+    else { if(force)clearRestorePending();syncSet({lastSync:Date.now(),lastRemoteTs:stateTimestamp(DB)}); syncStatus("À jour ✓"); }
+  });
+}
+function bindSyncChoiceDialog(remote,restoredSnapshot){
+  const token=memoryActionToken(),cancel=$("syncChoiceCancel"),keep=$("syncKeepRestored"),use=$("syncUseCloud");if(!cancel||!keep)return;
+  cancel.onclick=function(){memorySyncChoiceRemote=null;$("overlay").classList.remove("on");syncStatus("Aucun changement. La restauration locale reste protégée.");};
+  keep.onclick=function(){if(!memoryActionCurrent(token))return;memorySyncChoiceRemote=null;$("overlay").classList.remove("on");syncStatus("Envoi volontaire de la restauration locale…");syncPush(true,true);};
+  if(remote&&use)use.onclick=function(){
+    if(!memoryActionCurrent(token))return;
+    memorySyncChoiceRemote=null;$("overlay").classList.remove("on");
+    if(!restoredSnapshot){syncAdopt(remote);return;}
+    syncStatus("Relecture de la version cloud actuelle avant toute récupération…");
+    gistApi("GET","/gists/"+syncCfg().gistId,null,function(g){
+      if(!memoryActionCurrent(token))return;
+      const latest=g&&parseRemote(g);if(!latest){syncStatus("Version cloud actuelle illisible ou inaccessible. La restauration locale reste intacte.");return;}
+      syncAdopt(latest);
+    });
+  };
+}
+function syncRestorationChoice(){
+  if(!syncEnabled()){syncStatus("Active d’abord la synchro.");return;}
+  if(!canSyncNow()){syncStatus("Hors ligne : le choix cloud attendra le retour du réseau.");return;}
+  const token=memoryActionToken();
+  syncStatus("Lecture des deux versions, sans remplacement…");
+  gistApi("GET","/gists/"+syncCfg().gistId,null,function(g){
+    if(!memoryActionCurrent(token))return;
+    if(!g){syncStatus("Comparaison impossible pour le moment. La restauration locale reste protégée.");return;}
+    const remote=parseRemote(g),remoteXp=remote&&remote.xp||0,localXp=DB.xp||0;memorySyncChoiceRemote=remote||null;
+    $("cardBox").innerHTML='<h3>Restauration et cloud</h3><h2>Choisis la version à conserver</h2><p><b>Sur cet appareil :</b> '+localXp+' XP · '+esc(DB.sel||"P1")+'.<br><b>Dans le cloud :</b> '+(remote?(remoteXp+' XP · '+esc(remote.sel||"P1")):'aucune progression lisible')+'.</p><p class="src">Aucun choix n’est automatique après une restauration. Reprendre le cloud crée d’abord un point local. Garder la version locale l’envoie volontairement au Gist, dont GitHub conserve l’historique de versions.</p><button id="syncKeepRestored">Garder cette restauration et l’envoyer au cloud</button>'+(remote?'<button id="syncUseCloud" style="background:var(--ceramique);color:var(--petrole2)">Reprendre la version du cloud</button>':'')+'<button id="syncChoiceCancel" style="background:var(--panel2);color:var(--ink)">Ne rien changer</button>';
+    $("overlay").classList.add("on");
+    bindSyncChoiceDialog(remote,false);
   });
 }
 function syncOnline(){
@@ -6620,6 +7361,9 @@ $("btnReplayCourse").onclick=function(){
   if(EX&&EX.course) startCourseReview(EX.course.itemId,EX.course.stepIndex);
 };
 $("btnHome").onclick=function(){ renderHome(); show("scrHome"); flushPendingSync(); };
+$("btnQuickSave").onclick=function(){manualMemorySnapshot("header");};
+$("btnManualSave").onclick=function(){manualMemorySnapshot("stats");};
+$("btnOverlaySave").onclick=function(){manualMemorySnapshot("overlay");};
 $("btnSound").onclick=function(){
   if(DB.sound&&DB.soundLong){DB.soundLong=false;}
   else if(DB.sound){DB.sound=false;}
@@ -6639,19 +7383,19 @@ $("btnCopy").onclick=async function(){
   $("saveMsg").textContent= ok?"Sauvegarde copiée. Colle-la dans une note pour la garder.":"Sélectionne le texte et copie-le manuellement.";
 };
 $("btnImport").onclick=function(){
-  const msg=importSave($("impArea").value);
-  renderStats(); $("saveMsg").textContent=msg; header();
+  const value=$("impArea").value;$("btnImport").disabled=true;$("saveMsg").textContent="Vérification puis création du point de sécurité…";
+  protectedImportSave(value,function(msg){renderStats();$("saveMsg").textContent=msg;$("btnImport").disabled=false;header();});
 };
 $("btnUndoImport").onclick=function(){
-  const msg=undoImport();
-  renderStats(); $("saveMsg").textContent=msg; header();
+  $("btnUndoImport").disabled=true;$("saveMsg").textContent="Protection de l’état actuel…";
+  protectedUndoImport(function(msg){renderStats();$("saveMsg").textContent=msg;$("btnUndoImport").disabled=false;header();});
 };
 $("btnImportFile").onclick=function(){ $("fileInput").click(); };
 $("fileInput").onchange=function(e){
   const f=e.target.files&&e.target.files[0]; if(!f) return;
   if(f.size>MAX_IMPORT_TEXT_BYTES){ $("saveMsg").textContent="Fichier trop volumineux : limite 4 Mo."; e.target.value=""; return; }
   const r=new FileReader();
-  r.onload=function(){ const msg=importSave(String(r.result)); renderStats(); $("saveMsg").textContent=msg; header(); e.target.value=""; };
+  r.onload=function(){ const value=String(r.result);$("saveMsg").textContent="Vérification puis création du point de sécurité…";protectedImportSave(value,function(msg){renderStats();$("saveMsg").textContent=msg;header();e.target.value="";}); };
   r.onerror=function(){ $("saveMsg").textContent="Lecture du fichier impossible."; };
   r.readAsText(f);
 };
@@ -6669,7 +7413,8 @@ $("btnSyncHelp").onclick=function(){
 $("btnSyncOn").onclick=activateSync;
 $("btnSyncNow").onclick=function(){
   if(!syncEnabled()){ syncStatus("Active d'abord la synchro : jeton GitHub à coller ci-dessus."); return; }
-  syncStatus("Vérification…"); syncPull();
+  if(restorePending()){syncRestorationChoice();return;}
+  syncStatus("Vérification volontaire des deux versions…"); syncPull(true);
 };
 $("btnOpenGist").onclick=function(){
   const id=syncCfg().gistId;
@@ -6680,11 +7425,29 @@ $("btnDeleteGist").onclick=function(){
   const c=syncCfg();
   if(!c.gistId){syncStatus("Aucune sauvegarde cloud à supprimer.");return;}
   if(!c.token){syncStatus("Recolle d'abord ton token de session pour autoriser la suppression.");return;}
-  if(!window.confirm("Supprimer définitivement la sauvegarde GitHub et son historique ? La progression locale reste sur cet appareil.")) return;
-  syncStatus("Suppression de la sauvegarde GitHub…");
-  gistApi("DELETE","/gists/"+c.gistId,null,function(res){
-    if(!res){syncStatus("Suppression impossible. Vérifie le token et réessaie.");return;}
-    syncClear(); $("syncState").textContent=syncStateText(); syncStatus("Sauvegarde GitHub supprimée. La progression locale est conservée.");
+  if(memoryProtectedActionBusy||memoryRestoreBusy){syncStatus("Une autre opération protégée est déjà en cours.");return;}
+  const token=memoryActionToken();memoryProtectedActionBusy=true;
+  syncStatus("Vérification de la copie distante, sans rien supprimer…");
+  gistApi("GET","/gists/"+c.gistId,null,function(g){
+    if(!memoryActionCurrent(token)){memoryProtectedActionBusy=false;return;}
+    const plan=cloudDeletePreflight(g);
+    if(!plan.ok){memoryProtectedActionBusy=false;syncStatus("Suppression bloquée : "+plan.message+" Rien n’a été supprimé. Utilise d’abord « Synchroniser maintenant » si les versions diffèrent.");return;}
+    const targets=plan.targets,others=plan.others;
+    const detail=others.length?"Seuls les fichiers de ce joueur seront retirés ; les "+others.length+" autre(s) fichier(s) du Gist resteront intacts.":"Ce Gist ne contient que les fichiers de ce joueur et sera supprimé.";
+    if(!window.confirm("Supprimer définitivement la copie GitHub vérifiée et son historique ? "+detail+" SEZAM créera d’abord une sauvegarde locale numérotée.")){memoryProtectedActionBusy=false;syncStatus("Suppression annulée. Rien n’a été modifié.");return;}
+    syncStatus("Création obligatoire du point local avant suppression…");
+    createMemorySnapshot("pre_delete_cloud",{milestone:"Avant suppression explicite de la copie GitHub vérifiée",notify:false},function(safety){
+      if(!memoryActionCurrent(token)){memoryProtectedActionBusy=false;syncStatus("Le joueur actif a changé : suppression annulée.");return;}
+      if(!safety.ok){memoryProtectedActionBusy=false;syncStatus("Suppression annulée : la copie locale préalable n’a pas pu être créée. Rien n’a été supprimé.");return;}
+      const method=plan.method,body=others.length?{files:(function(){const files={};targets.forEach(function(name){files[name]=null;});return files;})()}:null;
+      syncStatus("Point local créé : "+safety.meta.name+". Suppression de la seule copie vérifiée…");
+      gistApi(method,"/gists/"+c.gistId,body,function(res){
+        if(!memoryActionCurrent(token)){memoryProtectedActionBusy=false;syncStatus("Le joueur actif a changé ; vérifie la copie GitHub avant toute nouvelle action.");return;}
+        if(!res){memoryProtectedActionBusy=false;syncStatus("Suppression impossible. Le point local reste conservé ; vérifie le token et réessaie.");return;}
+        syncClear(); $("syncState").textContent=syncStateText(); syncStatus("Copie GitHub de ce joueur supprimée à ta demande. "+safety.meta.name+" reste intacte sur cet appareil."+(others.length?" Les autres fichiers du Gist n’ont pas été touchés.":""));
+        memoryProtectedActionBusy=false;
+      });
+    });
   });
 };
 $("btnSyncOff").onclick=function(){
@@ -6714,11 +7477,12 @@ idbRescue(function(){
 window.addEventListener("error",function(){ try{ save({touch:false,cloud:false}); }catch(e){} });
 window.addEventListener("unhandledrejection",function(){ try{ save({touch:false,cloud:false}); }catch(e){} });
 // Sauvegarde de dernière chance quand l'app passe en arrière-plan ou se ferme (mobile surtout).
-function persistOnExit(){try{save({touch:false,cloud:false});}catch(e){}}
+function persistOnExit(){try{pauseForegroundSession();save({touch:false,cloud:false});}catch(e){}}
 window.addEventListener("pagehide",persistOnExit);
+window.addEventListener("pageshow",function(){try{resumeForegroundSession();}catch(e){}});
 document.addEventListener("visibilitychange",function(){
-  if(document.visibilityState==="hidden"){ pauseDailySession(); persistOnExit(); }
-  else resumeDailySession();
+  if(document.visibilityState==="hidden"){ pauseForegroundSession(); persistOnExit(); }
+  else resumeForegroundSession();
 });
 window.addEventListener("online",function(){ try{ $("syncState").textContent=syncStateText(); syncOnline(); }catch(e){} });
 window.addEventListener("offline",function(){ try{ $("syncState").textContent=syncStateText(); syncStatus("Hors ligne : toutes les sauvegardes locales restent actives."); }catch(e){} });

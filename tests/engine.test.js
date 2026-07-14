@@ -65,20 +65,95 @@ function makeFakeIndexedDB(seed) {
   const store = seed instanceof Map ? seed : new Map(Object.entries(seed || {}));
   const db = {
     createObjectStore() {},
-    transaction() {
-      const tx = { oncomplete: null, onerror: null, onabort: null };
-      tx.objectStore = function() {
-        return {
-          put(value, key) { store.set(key, value); if (tx.oncomplete) tx.oncomplete(); },
-          get(key) {
-            const rq = { result: store.has(key) ? store.get(key) : undefined };
-            Object.defineProperty(rq, "onsuccess", { set(fn) { fn(); } });
-            Object.defineProperty(rq, "onerror", { set() {} });
-            return rq;
-          },
-          delete(key) { store.delete(key); }
-        };
+    transaction(_name, mode) {
+      const before = new Map(store);
+      let depth = 0, completed = false, failed = false, aborted = false;
+      let completeHandler = null, errorHandler = null, abortHandler = null;
+      const tx = { mode: mode || "readonly", error: null };
+      function eventFor(target) {
+        return { target, preventDefault() {}, stopPropagation() {} };
+      }
+      function rollback() {
+        store.clear(); before.forEach((value, key) => store.set(key, value));
+      }
+      function emitFailure() {
+        if (depth || (!failed && !aborted)) return;
+        rollback();
+        if (failed && errorHandler) errorHandler(eventFor(tx));
+        if (abortHandler) abortHandler(eventFor(tx));
+      }
+      function complete() {
+        if (depth || failed || aborted || completed) return;
+        completed = true;
+        if (completeHandler) completeHandler(eventFor(tx));
+      }
+      function fail(error) {
+        if (failed || aborted) return;
+        failed = true; tx.error = error;
+        emitFailure();
+      }
+      function request(result, error) {
+        const rq = { result, error: error || null };
+        let successHandler = null, requestErrorHandler = null;
+        function dispatch(fn) {
+          if (typeof fn !== "function") return;
+          depth++;
+          try { fn(eventFor(rq)); } finally {
+            depth--;
+            if (failed || aborted) emitFailure(); else complete();
+          }
+        }
+        Object.defineProperty(rq, "onsuccess", {
+          get() { return successHandler; },
+          set(fn) { successHandler = fn; if (!error) dispatch(fn); }
+        });
+        Object.defineProperty(rq, "onerror", {
+          get() { return requestErrorHandler; },
+          set(fn) { requestErrorHandler = fn; if (error) dispatch(fn); }
+        });
+        return rq;
+      }
+      const objectStore = {
+        put(value, key) {
+          if (!failed && !aborted) store.set(key, value);
+          const rq = request(key, null); complete(); return rq;
+        },
+        add(value, key) {
+          if (store.has(key)) {
+            const error = new Error("Key already exists: " + key);
+            error.name = "ConstraintError";
+            const rq = request(undefined, error); fail(error); return rq;
+          }
+          if (!failed && !aborted) store.set(key, value);
+          const rq = request(key, null); complete(); return rq;
+        },
+        get(key) {
+          return request(store.has(key) ? store.get(key) : undefined, null);
+        },
+        delete(key) {
+          if (!failed && !aborted) store.delete(key);
+          const rq = request(undefined, null); complete(); return rq;
+        }
       };
+      Object.defineProperties(tx, {
+        oncomplete: {
+          get() { return completeHandler; },
+          set(fn) { completeHandler = fn; if (completed && fn) fn(eventFor(tx)); }
+        },
+        onerror: {
+          get() { return errorHandler; },
+          set(fn) { errorHandler = fn; if (failed && !depth && fn) fn(eventFor(tx)); }
+        },
+        onabort: {
+          get() { return abortHandler; },
+          set(fn) { abortHandler = fn; if ((failed || aborted) && !depth && fn) fn(eventFor(tx)); }
+        }
+      });
+      tx.abort = function() {
+        if (failed || aborted) return;
+        aborted = true; tx.error = new Error("Transaction aborted"); emitFailure();
+      };
+      tx.objectStore = function() { return objectStore; };
       return tx;
     }
   };
@@ -123,7 +198,7 @@ function loadEngine(runtime) {
     "CURRICULUM_CATALOG_VERSION", "CURRICULUM_SCOPE", "CURRICULUM_EVIDENCE_TYPES", "CURRICULUM_PROGRESS_STATUSES", "normalizeCurriculumProof", "normalizeCurriculumState", "validCurriculumCatalog", "curriculumCompetency", "curriculumStatusFromProofs", "setCurriculumCatalog", "backfillCurriculumFromGame", "curriculumScopeHtml",
     "profileStartPalier", "applyProfileStartPlacement", "profileStartText", "coachPalier", "coachDecision", "repairPool", "fragileNoteIds", "globalPrecision", "sessionCountToday",
     "dailyPlan", "splitPlanMinutes", "targetCadence", "dailyMission", "dailyFocusDomain", "DAILY_BLOCK_IDS", "runDailyBlock",
-    "buildDailySession", "dailyPhaseAt", "dailyPhasePool", "dailyPhaseLabel", "dailyTransferReadyForBonus", "dailyBonusTask", "startDailySession", "dailyDraftRecords", "storeDailyDraft", "nextCampaignTarget", "configureDailyCampaignTarget", "advanceDailyCampaignTarget", "recordDailyTargetEvidence", "dailyActiveElapsed", "pauseDailySession", "resumeDailySession", "dailyScoredCount", "dailySessionQualified",
+    "buildDailySession", "dailyPhaseAt", "dailyPhasePool", "dailyPhaseLabel", "dailyTransferReadyForBonus", "dailyBonusTask", "startDailySession", "dailyDraftRecords", "storeDailyDraft", "nextCampaignTarget", "configureDailyCampaignTarget", "advanceDailyCampaignTarget", "recordDailyTargetEvidence", "dailyActiveElapsed", "pauseDailySession", "resumeDailySession", "pauseForegroundSession", "resumeForegroundSession", "dailyScoredCount", "dailySessionQualified",
     "pendingRepairIds", "responseKey", "confusedNoteId", "recordConfusion", "scheduleRepair", "dueRepairForSession", "repairBlockedIds", "ordinaryQuestionPool", "nearTransferId", "advanceRepair",
     "validationRecordFromQuestions", "questionTask", "completeMission", "solveBonusEgg", "startRevision", "representativeNoteSample", "starReviewSample", "starReviewCoverage", "starReviewRepairsClear", "startStarReview", "timeUp", "updateDailyClock", "clearQTimers", "clearDailyTimer",
     "recentErrorsCount", "longPauseSignal", "timeSinceLastSession", "lastPracticeAt", "LONG_BREAK_MS",
@@ -137,9 +212,10 @@ function loadEngine(runtime) {
     "beginClavier", "nextKbd", "kbdTap", "renderKbd", "recordKbdAnswer",
     "STAFF", "staffSVG", "bonusStaffSVG", "clefSVG", "noteGlyph", "yOf", "previewNoteHtml",
     "currentRecoveryCode", "mirrorIntro", "tone", "save", "readKey", "bestLocalState", "recognizableStoredState", "utf8ByteLength", "decodedBase64Bytes", "MAX_IMPORT_TEXT_BYTES",
-    "normalizePlayerRegistry", "normalizePlayerName", "activePlayerMeta", "playerMetaById", "createPlayer", "switchPlayer", "renamePlayer", "deletePlayer", "playerInitial", "openPlayerSwitcher", "MAX_LOCAL_PLAYERS", "PLAYER_REGISTRY_KEY", "PLAYER_FALLBACK_PREFIX",
+    "MEMORY_HISTORY_SCHEMA", "memorySha256", "parseMemoryIndex", "createMemorySnapshot", "memorySnapshotList", "loadMemoryEnvelope", "validateMemoryEnvelope", "restoreMemorySnapshot", "memoryLocalIndexKey", "memoryLocalDataKey", "memoryLocalMetaKey", "memoryIndexKey", "detectMemoryOverlayType", "captureMemoryOverlayControls", "restoreMemoryOverlayControls", "manualMemorySnapshot",
+    "normalizePlayerRegistry", "normalizePlayerName", "activePlayerMeta", "playerMetaById", "archivedPlayerMetaById", "createPlayer", "switchPlayer", "renamePlayer", "deletePlayer", "restoreArchivedPlayer", "playerInitial", "openPlayerSwitcher", "MAX_LOCAL_PLAYERS", "MAX_ARCHIVED_PLAYERS", "PLAYER_REGISTRY_KEY", "PLAYER_FALLBACK_PREFIX",
     "syncDecision", "syncCfg", "syncSet", "syncClear", "syncEnabled", "syncPush", "syncPull", "parseRemote", "sessionTokenGet", "playerGistFile", "legacyPlayerGistFile", "GIST_CLOUD_SCHEMA", "syncStorageKey", "remoteFileName",
-    "cloudDocument", "cloudSaveContent", "cloudPieces", "looksLikeToken", "persistOnExit", "APP_VERSION"
+    "cloudDocument", "cloudSaveContent", "cloudPieces", "canonicalCloudJson", "cloudDeletePreflight", "looksLikeToken", "persistOnExit", "APP_VERSION"
   ];
   const footer = "\n;return {" + exportsList.map(n => n + ":(typeof " + n + "!=='undefined'?" + n + ":undefined)").join(",") +
     ",getDB:function(){return DB;},setDB:function(x){DB=x;},getPlayerRegistry:function(){return JSON.parse(JSON.stringify(PLAYER_REGISTRY));},getActivePlayerId:function(){return ACTIVE_PLAYER_ID;},isIdbReady:function(){return idbReady;},getKX:function(){return KX;},getEX:function(){return EX;},getEl:function(id){return document.getElementById(id);},haltEX:function(){if(EX)EX.done=true;}};";
@@ -1194,6 +1270,160 @@ eq(E.bestLocalState().pieces.length, 0, "une suppression volontaire de partition
 threw = null; try { E.tone(60); } catch (e) { threw = e; }
 ok(threw === null, "tone() sans AudioContext (environnement de test) ne lève aucune exception");
 
+group("Mémoire protégée — historique exact, immuable et isolé");
+eq(E.MEMORY_HISTORY_SCHEMA, 1, "le format d'historique est explicitement versionné");
+eq(E.memorySha256("abc"), "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+  "SHA-256 : vecteur de référence « abc » exact");
+
+const collisionIdb = makeFakeIndexedDB({ immutable: "première valeur" });
+const collisionTx = collisionIdb.indexedDB.open().result.transaction("kv", "readwrite");
+let collisionRejected = false, collisionCompleted = false;
+collisionTx.onerror = function() { collisionRejected = true; };
+collisionTx.oncomplete = function() { collisionCompleted = true; };
+collisionTx.objectStore("kv").add("valeur interdite", "immutable");
+ok(collisionRejected && !collisionCompleted, "IndexedDB simulé : add() refuse une clé déjà utilisée");
+eq(collisionIdb.store.get("immutable"), "première valeur", "la collision add() laisse la première valeur intacte");
+
+const memoryIdb = makeFakeIndexedDB(), memoryLocal = makeLocalStorage();
+const Memory = loadEngine({ localStorage: memoryLocal, indexedDB: memoryIdb.indexedDB });
+const memoryPlayer = Memory.getActivePlayerId();
+eq(Memory.memoryIndexKey(memoryPlayer), "history:index:" + memoryPlayer, "index historique séparé par joueur");
+eq(Memory.memoryLocalIndexKey(memoryPlayer), "sezam_history:index:" + memoryPlayer, "clé d'index de repli local stable");
+eq(Memory.memoryLocalDataKey(memoryPlayer, 7), "sezam_history:data:" + memoryPlayer + ":000000000007", "clé locale de contenu numérotée sans ambiguïté");
+eq(Memory.memoryLocalMetaKey(memoryPlayer, 7), "sezam_history:meta:" + memoryPlayer + ":000000000007", "clé locale de métadonnées numérotée sans ambiguïté");
+
+const memoryAttachment = {
+  name: "Prélude été 🎼.pdf", type: "application/pdf", size: 3,
+  dataUrl: "data:application/pdf;base64,QUJD"
+};
+const memoryPiece = Memory.normalizePiece({
+  id: "memoire-exacte", titre: "À la claire fontaine — étude n°1",
+  compositeur: "Élève 🪶", clef: "sol", attachment: memoryAttachment
+});
+memoryPiece.futureNotation = { version: 41, glyph: "𝄞", flags: ["lié", "à venir"] };
+Memory.getDB().pieces = [memoryPiece];
+Memory.getDB().xp = 314;
+Memory.getDB().futureField = { schema: 99, texte: "Été, déjà — 東京 🎵", nested: { keep: true } };
+const memoryRaw1 = JSON.stringify(Memory.getDB());
+let memoryCreate1 = null;
+ok(Memory.createMemorySnapshot("manual", { milestone: "Premier point Unicode", notify: false }, function(result) { memoryCreate1 = result; }) === true,
+  "la première sauvegarde manuelle est acceptée");
+ok(memoryCreate1 && memoryCreate1.ok, "la première sauvegarde manuelle est écrite");
+eq(memoryCreate1.meta.number, 1, "la première sauvegarde porte le numéro 1");
+eq(memoryCreate1.meta.kind, "manual", "la nature manuelle du premier point est conservée");
+ok(Memory.parseMemoryIndex(JSON.stringify([memoryCreate1.meta,{broken:true}]))===null,
+  "une entrée corrompue invalide tout l’index au lieu de rendre silencieusement un ancien point orphelin");
+ok(memoryIdb.store.has(memoryCreate1.meta.dataKey) && memoryIdb.store.has(memoryCreate1.meta.metaKey),
+  "contenu et métadonnées sont deux entrées IndexedDB append-only");
+
+let memoryEnvelopeRaw1 = null;
+Memory.loadMemoryEnvelope(memoryCreate1.meta, function(raw) { memoryEnvelopeRaw1 = raw; });
+const memoryEnvelope1 = JSON.parse(memoryEnvelopeRaw1);
+eq(memoryEnvelope1.schema, Memory.MEMORY_HISTORY_SCHEMA, "l'enveloppe reprend le schéma d'historique");
+ok(Memory.validateMemoryEnvelope(memoryEnvelopeRaw1, memoryCreate1.meta).ok, "l'enveloppe intacte franchit la validation publique");
+eq(memoryEnvelope1.stateRaw, memoryRaw1, "le premier point contient la chaîne JSON exacte, octet pour octet");
+eq(JSON.parse(memoryEnvelope1.stateRaw).pieces[0].attachment, memoryAttachment, "la pièce jointe complète survit dans le point exact");
+eq(JSON.parse(memoryEnvelope1.stateRaw).futureField, Memory.getDB().futureField, "un champ d'une version future est conservé sans normalisation destructive");
+eq(memoryCreate1.meta.stateSha256, Memory.memorySha256(memoryRaw1), "le hash publié correspond au JSON exact du premier point");
+const frozenMemoryPayload1 = memoryIdb.store.get(memoryCreate1.meta.dataKey);
+
+Memory.getDB().xp = 2718;
+Memory.getDB().pieces[0].attachment.name = "Prélude révisé 🎹.pdf";
+Memory.getDB().futureField.nested.keep = false;
+Memory.getDB().futureField.addedLater = "nouveau mais séparé";
+const memoryRaw2 = JSON.stringify(Memory.getDB());
+let memoryCreate2 = null;
+Memory.createMemorySnapshot("manual", { milestone: "Deuxième point", notify: false }, function(result) { memoryCreate2 = result; });
+ok(memoryCreate2 && memoryCreate2.ok, "la deuxième sauvegarde manuelle est écrite");
+eq(memoryCreate2.meta.number, 2, "la deuxième sauvegarde porte le numéro 2");
+eq(memoryIdb.store.get(memoryCreate1.meta.dataKey), frozenMemoryPayload1, "créer le point n°2 ne réécrit jamais le contenu du point n°1");
+let memoryEnvelopeRaw2 = null;
+Memory.loadMemoryEnvelope(memoryCreate2.meta, function(raw) { memoryEnvelopeRaw2 = raw; });
+eq(JSON.parse(memoryEnvelopeRaw2).stateRaw, memoryRaw2, "le deuxième point contient lui aussi son JSON exact");
+
+let memoryRows = null;
+Memory.memorySnapshotList(function(rows) { memoryRows = rows; });
+eq(memoryRows.map(function(row) { return row.number; }), [2, 1], "la liste est rendue du point le plus récent au plus ancien");
+ok(memoryRows.every(function(row) { return row.playerId === memoryPlayer; }), "la liste ne contient que le joueur actif");
+
+let memoryRestore1 = null;
+Memory.restoreMemorySnapshot(memoryCreate1.meta, function(result) { memoryRestore1 = result; });
+ok(memoryRestore1 && memoryRestore1.ok, "restaurer le point n°1 réussit après contrôle d'intégrité");
+ok(memoryRestore1.safety && memoryRestore1.safety.kind === "pre_restore", "la restauration crée d'abord un point automatique pre_restore");
+eq(memoryRestore1.safety.number, 3, "le filet pre_restore est le nouveau point n°3, sans remplacer 1 ou 2");
+eq(JSON.stringify(Memory.getDB()), memoryRaw1, "la restauration redonne exactement le JSON du point n°1");
+eq(memoryLocal.getItem("solfegeProto1"), memoryRaw1, "la copie active locale reçoit exactement le JSON restauré");
+eq(memoryIdb.store.get("save:" + memoryPlayer), memoryRaw1, "le coffre actif IndexedDB reçoit exactement le JSON restauré");
+let memorySafetyRaw = null;
+Memory.loadMemoryEnvelope(memoryRestore1.safety, function(raw) { memorySafetyRaw = raw; });
+eq(JSON.parse(memorySafetyRaw).stateRaw, memoryRaw2, "pre_restore conserve exactement l'état qui précédait le retour en arrière");
+eq(memoryIdb.store.get(memoryCreate1.meta.dataKey), frozenMemoryPayload1, "restaurer n'altère pas davantage le point historique n°1");
+Memory.memorySnapshotList(function(rows) { memoryRows = rows; });
+eq(memoryRows.map(function(row) { return [row.number, row.kind]; }), [[3, "pre_restore"], [2, "manual"], [1, "manual"]],
+  "après restauration, l'historique descendant expose le filet puis les deux points manuels");
+
+const corruptedEnvelope = JSON.parse(memoryIdb.store.get(memoryCreate2.meta.dataKey));
+const corruptedState = JSON.parse(corruptedEnvelope.stateRaw);
+corruptedState.xp = 999999;
+corruptedEnvelope.stateRaw = JSON.stringify(corruptedState);
+memoryIdb.store.set(memoryCreate2.meta.dataKey, JSON.stringify(corruptedEnvelope));
+const beforeRejectedDb = JSON.stringify(Memory.getDB());
+const beforeRejectedLocal = memoryLocal.getItem("solfegeProto1");
+const beforeRejectedIdb = memoryIdb.store.get("save:" + memoryPlayer);
+const beforeRejectedIndex = memoryIdb.store.get(Memory.memoryIndexKey(memoryPlayer));
+let rejectedRestore = null;
+Memory.restoreMemorySnapshot(memoryCreate2.meta, function(result) { rejectedRestore = result; });
+ok(rejectedRestore && !rejectedRestore.ok && /intégrité/.test(rejectedRestore.message), "un contenu dont le hash a changé est refusé explicitement");
+eq(JSON.stringify(Memory.getDB()), beforeRejectedDb, "un hash corrompu ne modifie pas l'état en mémoire");
+eq(memoryLocal.getItem("solfegeProto1"), beforeRejectedLocal, "un hash corrompu ne modifie pas la copie active locale");
+eq(memoryIdb.store.get("save:" + memoryPlayer), beforeRejectedIdb, "un hash corrompu ne modifie pas le coffre actif IndexedDB");
+eq(memoryIdb.store.get(Memory.memoryIndexKey(memoryPlayer)), beforeRejectedIndex, "un refus d'intégrité n'ajoute même pas de pre_restore");
+
+let memoryChildCreated = false;
+Memory.createPlayer("Enfant mémoire", function(created) { memoryChildCreated = created; });
+ok(memoryChildCreated, "un second joueur peut être créé pour vérifier l'isolation de l'historique");
+const memoryChild = Memory.getActivePlayerId();
+Memory.getDB().xp = 88;
+Memory.getDB().futureField = { owner: "enfant", texte: "do ré mi 🎶" };
+let childSnapshot = null;
+Memory.createMemorySnapshot("manual", { milestone: "Point enfant", notify: false }, function(result) { childSnapshot = result; });
+ok(childSnapshot && childSnapshot.ok && childSnapshot.meta.number === 1, "le second joueur commence sa propre numérotation à 1");
+ok(childSnapshot.meta.playerId === memoryChild && childSnapshot.meta.dataKey !== memoryCreate1.meta.dataKey,
+  "les contenus historiques des deux joueurs utilisent des clés distinctes");
+let childRows = null;
+Memory.memorySnapshotList(function(rows) { childRows = rows; });
+eq(childRows.map(function(row) { return [row.playerId, row.number]; }), [[memoryChild, 1]], "la liste du second joueur ne révèle aucun point du premier");
+const childBeforeForeignRestore = JSON.stringify(Memory.getDB());
+let foreignRestore = null;
+Memory.restoreMemorySnapshot(memoryCreate1.meta, function(result) { foreignRestore = result; });
+ok(foreignRestore && !foreignRestore.ok, "le second joueur ne peut pas restaurer un point du premier");
+eq(JSON.stringify(Memory.getDB()), childBeforeForeignRestore, "un essai de restauration croisée laisse le joueur actif intact");
+let switchedBack = false;
+Memory.switchPlayer(memoryPlayer, function(switched) { switchedBack = switched; });
+ok(switchedBack, "retour au premier joueur après le test d'isolation");
+Memory.memorySnapshotList(function(rows) { memoryRows = rows; });
+eq(memoryRows.map(function(row) { return row.number; }), [3, 2, 1], "le premier joueur retrouve exclusivement ses trois points historiques");
+
+const memoryAppSource = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
+ok(!/\b(?:delete|remove|clear|purge)MemorySnapshot\b/.test(memoryAppSource), "aucune API de suppression d'un point historique n'existe");
+ok(memoryAppSource.indexOf("data-memory-delete") < 0 && memoryAppSource.indexOf("btnDeleteMemory") < 0,
+  "l'interface n'expose aucun bouton de suppression d'une sauvegarde historique");
+eq(Memory.detectMemoryOverlayType('<form id="playerAddForm"></form>'), "player_add", "la fenêtre de création d’un joueur est reconnue et restaurable");
+eq(Memory.detectMemoryOverlayType('<button id="profSave">Enregistrer</button>'), "profile", "le brouillon du profil musical est reconnu et restaurable");
+eq(Memory.detectMemoryOverlayType('<button data-segpick="s1">Passage</button>'), "piece_goal_segment", "le second écran d’ambition est reconnu séparément");
+eq(Memory.detectMemoryOverlayType('<div id="prChoices"><button id="prNext">Suite</button></div>'), "first_look_answer", "le retour d’une réponse Premier regard ne sera pas recompté");
+eq(Memory.detectMemoryOverlayType('<button id="startupRecoveryApply">Appliquer</button>'), "startup_recovery", "le choix de reprise reste sauvegardable après retrait du code de l’URL");
+ok(memoryAppSource.indexOf("ferme d’abord ce formulaire puis touche") < 0, "aucune fenêtre du jeu n’oblige désormais à être fermée avant une sauvegarde manuelle");
+
+const overlayField={tagName:"INPUT",id:"draftName",value:"Brouillon exact",checked:true,disabled:false,scrollTop:7,selectionStart:3,selectionEnd:8,setSelectionRange(a,b){this.selectionStart=a;this.selectionEnd=b;}};
+const overlayDetails={tagName:"DETAILS",id:"detailsExact",disabled:false,open:true,scrollTop:11};
+const overlayCard=Memory.getEl("cardBox");overlayCard.querySelectorAll=function(){return [overlayField,overlayDetails];};
+const overlayCaptured=Memory.captureMemoryOverlayControls();
+overlayField.value="modifié";overlayField.checked=false;overlayField.disabled=true;overlayField.scrollTop=0;overlayDetails.open=false;overlayDetails.scrollTop=0;
+Memory.restoreMemoryOverlayControls({overlayControls:overlayCaptured});
+eq([overlayField.value,overlayField.checked,overlayField.disabled,overlayField.scrollTop,overlayField.selectionStart,overlayField.selectionEnd],["Brouillon exact",true,false,7,3,8],"valeur, case, verrou, défilement et sélection d’un champ de fenêtre reviennent exactement");
+eq([overlayDetails.open,overlayDetails.scrollTop],[true,11],"l’ouverture et le défilement des détails d’une fenêtre reviennent exactement");
+
 /* 12) Miroir musical — intro comportementale */
 group("Miroir musical — intro liée au comportement réel");
 freshDB();
@@ -1290,6 +1520,21 @@ E.getDB().events=[{t:1,type:"test",detail:"local"}];
 const safeCloud = E.cloudDocument();
 ok(JSON.stringify(safeCloud).indexOf("data:image/png") < 0, "les pièces jointes restent locales et ne partent pas dans le Gist");
 eq(safeCloud.history.events, [], "le journal détaillé reste local et n'alourdit pas le Gist");
+const deletionName=E.playerGistFile(E.getActivePlayerId()),exactDeletionGist={files:{}};
+exactDeletionGist.files[deletionName]={content:JSON.stringify(E.cloudDocument())};
+let deletionPlan=E.cloudDeletePreflight(exactDeletionGist);
+ok(deletionPlan.ok&&deletionPlan.method==="DELETE","la suppression cloud n’est permise que pour une copie strictement identique et isolée");
+const sharedDeletionGist=JSON.parse(JSON.stringify(exactDeletionGist));sharedDeletionGist.files["notes-personnelles.txt"]={content:"garder"};
+deletionPlan=E.cloudDeletePreflight(sharedDeletionGist);
+ok(deletionPlan.ok&&deletionPlan.method==="PATCH"&&deletionPlan.others[0]==="notes-personnelles.txt",
+  "un Gist partagé ne peut retirer que le fichier du joueur, jamais les autres fichiers");
+const divergentDeletionDoc=E.cloudDocument();divergentDeletionDoc.timestamp+=1000;divergentDeletionDoc.scores.xp+=1;
+const divergentDeletionGist={files:{}};divergentDeletionGist.files[deletionName]={content:JSON.stringify(divergentDeletionDoc)};
+ok(!E.cloudDeletePreflight(divergentDeletionGist).ok,"une progression distante divergente bloque toute suppression cloud");
+const brokenDeletionGist={files:{}};brokenDeletionGist.files[deletionName]={content:"{cassé"};
+ok(!E.cloudDeletePreflight(brokenDeletionGist).ok,"un fichier distant illisible bloque toute suppression cloud");
+const truncatedDeletionGist={files:{}};truncatedDeletionGist.files[deletionName]={content:JSON.stringify(E.cloudDocument()),truncated:true};
+ok(!E.cloudDeletePreflight(truncatedDeletionGist).ok,"un fichier distant tronqué bloque toute suppression cloud");
 ok(E.parseRemote({ files: { "sezam-progress.json": { content: JSON.stringify(cloud) } } }).xp === cloud.scores.xp, "parseRemote lit le nouveau fichier gist SEZAM");
 const v2File=E.playerGistFile(E.getActivePlayerId()),v1File=E.legacyPlayerGistFile(E.getActivePlayerId());
 ok(v2File !== v1File && v2File.indexOf("sezam-progress-v2-") === 0, "le fichier cloud v2 est séparé du fichier v28 pour empêcher un ancien onglet d'effacer le cursus");
@@ -1494,6 +1739,16 @@ ok(E.pauseDailySession(pauseAt)===true&&E.resumeDailySession(pauseAt+5000)===tru
 eq(draftDaily.endAt,oldEnd+5000,"le temps passé en arrière-plan ne consomme pas le chrono pédagogique");
 ok(E.dailyActiveElapsed(draftDaily,pauseAt+5000)<1000,"le temps actif exclut la pause en arrière-plan");
 E.clearQTimers(); E.clearDailyTimer(); E.haltEX();
+freshDB();
+E.getDB().mode="bronze";
+E.PALIERS[0].notes.forEach(function(id){E.getDB().noteStats[id]=E.normalizeNoteStat({v:1,e:0,last:Date.now()-1000});});
+E.beginSerie({sessionMode:"session",n:1,palier:E.PALIERS[0],pool:E.PALIERS[0].notes,mode:"bronze",groupN:1,cold:false});
+const timedPauseAt=Date.now(),timedDeadline=E.getEX().questionDeadlineAt;
+ok(timedDeadline>timedPauseAt&&E.pauseForegroundSession(timedPauseAt)===true,
+  "une série chronométrée se met en pause quand l’iPhone passe en arrière-plan");
+ok(E.resumeForegroundSession(timedPauseAt+5000)===true,"la série chronométrée reprend volontairement au retour");
+eq(E.getEX().questionDeadlineAt,timedDeadline+5000,"une notification ne consomme pas le temps de réponse pédagogique");
+E.clearQTimers();E.haltEX();
 freshDB();
 const completeStart=Date.now(), completeDaily=E.buildDailySession(E.coachDecision(),completeStart);
 E.beginSerie({sessionMode:"daily",palier:E.PALIERS[0],pool:E.PALIERS[0].notes,mode:"zen",groupN:1,openEnded:true,daily:completeDaily,cold:false});
@@ -1910,6 +2165,18 @@ ok(quotaReload.deletePlayer(quotaPlayerId) === false, "une suppression est annul
 eq(quotaReload.getPlayerRegistry().players.length, 2, "le joueur reste inscrit après l'échec transactionnel de suppression");
 ok(!!quotaReload.readKey(quotaReload.PLAYER_FALLBACK_PREFIX + quotaPlayerId), "son coffre local n'est pas effacé avant la réussite du registre");
 
+const failedCreateLocal=makeLocalStorage(),failedCreateIdb=makeFakeIndexedDB();
+const FailedCreate=loadEngine({localStorage:failedCreateLocal,indexedDB:failedCreateIdb.indexedDB});
+const failedCreateParent=FailedCreate.getActivePlayerId(),failedCreateRaw=JSON.stringify(FailedCreate.getDB());
+failedCreateLocal.failAfter("solfegeProto1",2);
+let failedCreateResult=null;FailedCreate.createPlayer("Profil interrompu",function(yes,msg){failedCreateResult={yes,msg};});
+ok(failedCreateResult&&failedCreateResult.yes===false,"un échec d’activation annule proprement la création d’un joueur");
+eq(FailedCreate.getActivePlayerId(),failedCreateParent,"l’échec de création conserve le joueur parent actif");
+eq(FailedCreate.getDB()._sezam.playerId,failedCreateParent,"l’état du parent n’est jamais réétiqueté comme celui de l’enfant");
+eq(FailedCreate.getPlayerRegistry().players.length,1,"le profil partiel est retiré du registre après rollback");
+ok(JSON.stringify(FailedCreate.getDB()).indexOf("Profil interrompu")<0&&failedCreateRaw.indexOf(failedCreateParent)>=0,
+  "aucune donnée du profil interrompu ne fuit dans la mémoire du parent");
+
 const legacy = E.ensureStructure({ xp: 777, sel: "P10", profile: { displayName: "Ancien P10" }, paliers: {} });
 E.PALIERS.slice(0, 9).forEach(p => { legacy.paliers[p.id].zen.ok = true; });
 delete legacy._sezam.playerId;
@@ -1950,21 +2217,31 @@ const I1 = loadEngine({ localStorage: familyLocal, indexedDB: fakeIdb.indexedDB 
 const iParent = I1.getActivePlayerId();
 I1.renamePlayer(iParent, "Parent IDB", () => {}); I1.getDB().xp = 111; I1.getDB().sel = "P4";
 I1.PALIERS.slice(0, 3).forEach(p => { I1.getDB().paliers[p.id].zen.ok = true; }); I1.save({ cloud: false });
-I1.createPlayer("Enfant IDB", () => {}); const iChild = I1.getActivePlayerId(); I1.getDB().xp = 22; I1.getDB().sel = "P2"; I1.save({ cloud: false });
+I1.createPlayer("Enfant IDB", () => {}); const iChild = I1.getActivePlayerId(); I1.getDB().xp = 22; I1.getDB().paliers.P1.zen.ok=true; I1.getDB().sel = "P2"; I1.save({ cloud: false });
 ok(fakeIdb.store.has("players"), "IndexedDB conserve aussi le registre familial");
 ok(fakeIdb.store.has("save:" + iParent) && fakeIdb.store.has("save:" + iChild), "IndexedDB possède un coffre distinct pour chaque joueur");
+eq(JSON.parse(fakeIdb.store.get("save:" + iChild)).sel,"P2","le coffre enfant enregistre le palier choisi avant toute purge locale");
 const purgedLocal = makeLocalStorage();
 const I2 = loadEngine({ localStorage: purgedLocal, indexedDB: fakeIdb.indexedDB });
 eq(I2.getActivePlayerId(), iChild, "après purge locale, IndexedDB restaure le dernier joueur actif");
 eq(I2.getDB().xp, 22, "après purge locale, le score de l'enfant est restauré");
+eq(I2.getDB().sel, "P2", "après purge locale, le palier de l'enfant est restauré");
 I2.switchPlayer(iParent, () => {});
 eq(I2.getDB().xp, 111, "après restauration familiale, le parent retrouve son propre coffre");
 eq(I2.getDB().sel, "P4", "le palier du parent est restauré depuis IndexedDB");
-ok(I2.deletePlayer(iChild) === true, "supprimer un joueur inactif retire son entrée de façon contrôlée");
-ok(!fakeIdb.store.has("save:" + iChild), "le coffre IndexedDB supprimé ne peut pas ressusciter");
+ok(I2.deletePlayer(iChild) === true, "archiver un joueur inactif le retire de la liste active de façon contrôlée");
+ok(fakeIdb.store.has("save:" + iChild), "l’archivage conserve intégralement le coffre IndexedDB");
+ok(I2.getPlayerRegistry().archived.some(function(p){return p.id===iChild;}), "le registre rend le joueur archivé explicitement retrouvable");
+let restoredArchive=null;I2.restoreArchivedPlayer(iChild,function(yes,msg){restoredArchive={yes,msg};});
+ok(restoredArchive&&restoredArchive.yes===true, "un joueur archivé peut être restauré dans la liste active");
+I2.switchPlayer(iChild, function(){});
+eq(I2.getDB().xp, 22, "restaurer l’archive redonne exactement les XP de l’enfant");
+eq(I2.getDB().sel, "P2", "restaurer l’archive redonne exactement son palier");
+I2.switchPlayer(iParent,function(){});I2.deletePlayer(iChild);
 const I3 = loadEngine({ localStorage: makeLocalStorage(), indexedDB: fakeIdb.indexedDB });
-eq(I3.getPlayerRegistry().players.length, 1, "un rechargement après suppression ne recrée pas le joueur effacé");
-eq(I3.getDB().xp, 111, "le joueur restant demeure intact après suppression et restauration");
+eq(I3.getPlayerRegistry().players.length, 1, "un rechargement après archivage ne réactive pas le joueur sans demande");
+ok(I3.getPlayerRegistry().archived.some(function(p){return p.id===iChild;}), "un rechargement conserve l’archive retrouvable");
+eq(I3.getDB().xp, 111, "le joueur restant demeure intact après archivage et restauration");
 
 /* ---------- bilan ---------- */
 console.log("\n──────────────────────────────");
