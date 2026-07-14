@@ -112,7 +112,7 @@ function loadEngine(runtime) {
   const exportsList = [
     "esc", "checkValidation", "seriesCover", "recentCoveredIds", "validationMissingIds", "srs", "srsReview", "isDue", "coldRecallId", "ensureStructure", "cleanId", "isSafeId", "safeMap", "hasOwn",
     "importSave", "compactSave", "undoImport", "tierUnlocked", "tierComplete",
-    "palierPlayable", "playableInMode", "visiblePaliers", "valProgress", "PALIERS", "TIERS", "TIER_IDS", "NOTES", "COURSES", "MAX_QUESTIONS_PER_EXERCISE", "COURSE_MAX_EXERCISES", "COURSE_SERIES_PER_STEP", "COURSE_NEW_NOTE_TARGET", "courseDecision", "normalizeCourseProgress", "advanceCourseExercise",
+    "palierPlayable", "playableInMode", "visiblePaliers", "valProgress", "PALIERS", "TIERS", "TIER_IDS", "NOTES", "COURSES", "MAX_QUESTIONS_PER_EXERCISE", "COURSE_MAX_EXERCISES", "COURSE_SERIES_PER_STEP", "COURSE_NEW_NOTE_TARGET", "courseDecision", "normalizeCourseProgress", "advanceCourseExercise", "reviewableCourseSteps", "courseReviewDecision", "startCourseReview", "returnToHomeFromExercise",
     "buildKeyboard", "pcOf", "isWhite", "pickKbdTarget", "nameOptions", "withAcc",
     "baseNoteObj", "kbdRangeFor", "freshPalierState", "SRS_DAYS", "normalizePiece", "normalizeAttachment", "normalizeSegment", "MAX_PIECE_ATTACHMENT_BYTES", "MAX_TOTAL_ATTACHMENT_BYTES", "SAFE_ATTACHMENT_TYPES", "pieceFileType",
     "normalizeQuestion", "normalizeDay", "normalizeSegmentState", "normalizeNoteStat", "normalizeConfusions", "normalizeRepairItem", "normalizeRepairQueue", "normalizeEasterEggs", "normalizeSeriesRecord", "normalizeTierProgress", "normalizeStar", "normalizeSeen", "normalizeKbdStats", "markDay", "activeDayKeys", "streak", "todayStr",
@@ -886,6 +886,8 @@ playCourseAttempt(false);
 const nextCourse=E.courseDecision();
 ok(nextCourse && nextCourse.pool.length === 4 && nextCourse.course.seriesNumber === 1,
   "seules trois séries parfaites ouvrent le cycle suivant à quatre notes");
+ok(E.getEl("btnReplayCourse").style.display==="block",
+  "le bilan officiel propose explicitement de rejouer le cycle terminé sans repartir en avant");
 ok(["sol4","la4","si4"].every(function(id){return nextCourse.pool.indexOf(id)>=0;}),
   "les trois repères initiaux restent actifs après l'arrivée de DO");
 const savedCourse=JSON.parse(E.compactSave());
@@ -893,6 +895,35 @@ ok(!!savedCourse.courseProgress && savedCourse.courseProgress.steps.sol === 1 &&
   "le cycle d’acquisition suit la sauvegarde locale / QR");
 ok(E.cloudDocument().progress.courseProgress.steps.sol === 1 && E.cloudDocument().progress.courseProgress.cycles.sol === 0,
   "le cycle d’acquisition suit aussi la synchro cloud");
+
+const reviewRows=E.reviewableCourseSteps();
+eq(reviewRows.map(function(row){return row.item.id+":"+row.index;}),["sol:0","sol:1"],
+  "le joueur peut choisir tous les cycles atteints, y compris revenir au précédent, jamais un cycle futur");
+ok(E.courseReviewDecision("sol",0).pool.length===3 && E.courseReviewDecision("sol",2)===null,
+  "la reprise libre ouvre un acquis antérieur sans contourner le verrou du prochain cycle");
+const progressBeforeReview=JSON.stringify(E.getDB().courseProgress);
+ok(E.startCourseReview("sol",0)===true && E.getEX().sessionMode==="courseReview",
+  "un cycle antérieur peut être rejoué immédiatement en entraînement libre");
+for(let guard=0;guard<100&&!E.getEX().done;guard++){
+  if(E.getEX().waiting) E.nextQuestion(); else answerCurrentCorrect();
+}
+eq(E.getEX().promptCount,E.MAX_QUESTIONS_PER_EXERCISE,"une série libre rejoue bien 25 questions complètes");
+eq(JSON.stringify(E.getDB().courseProgress),progressBeforeReview,
+  "refaire une série pour s’entraîner ne pousse jamais la progression officielle en avant");
+eq(E.getEl("btnAgain").textContent,"Refaire cet entraînement",
+  "le bilan d’entraînement permet de recommencer immédiatement la même série libre");
+
+E.startDailySession();
+if(E.getEX().pendingDecouverte && typeof E.getEl("btnDecGo").onclick === "function") E.getEl("btnDecGo").onclick();
+answerCurrentCorrect();
+const progressBeforeHome=JSON.stringify(E.getDB().courseProgress);
+E.returnToHomeFromExercise();
+ok(E.getEX().done===true && E.getEl("scrHome").classList.contains("active"),
+  "Accueil interrompt immédiatement une partie en cours et ramène réellement à l’écran d’accueil");
+eq(JSON.stringify(E.getDB().courseProgress),progressBeforeHome,
+  "le retour Accueil en pleine série ne valide ni ne déplace le cycle");
+eq(E.courseDecision().course.seriesNumber,1,
+  "après un retour Accueil, le joueur retrouve exactement la série officielle qu’il avait quittée");
 
 freshDB();
 const lastFaIndex=E.COURSES[1].steps.length-1;
@@ -942,6 +973,12 @@ const appSrcA4 = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8
 ok(appSrcA4.indexOf("g.onkeydown") >= 0, "Entrée/Espace ouvrent un passage de la carte (A2)");
 ok(/\.linkbtn\{[^}]*min-height:40px/.test(appSrcA4), "les boutons-liens du volet options atteignent la taille tactile minimale (A3)");
 ok(appSrcA4.indexOf("--dim:#5e777b") < 0 && appSrcA4.indexOf("--dim:#566e72") >= 0, "le texte d'aide atteint au moins 4,5:1 sur les thèmes clairs (A4)");
+ok(appSrcA4.indexOf('id="btnExerciseHome"')>=0 && appSrcA4.indexOf('$("btnExerciseHome").onclick=returnToHomeFromExercise')>=0,
+  "un bouton Accueil explicite reste disponible pendant chaque jeu");
+ok(appSrcA4.indexOf('id="courseReviewSelect"')>=0 && appSrcA4.indexOf('id="btnReplayCourse"')>=0,
+  "le retour aux cycles antérieurs et la répétition depuis le bilan sont visibles dans l’interface");
+ok(appSrcA4.indexOf('id="btnDecHome"')>=0,
+  "même l’écran de découverte laisse revenir à l’accueil sans fermer l’application");
 
 /* 9nonies) Finition — le trophée dit ce qu'il mesure (grille J24) */
 group("Partition — le libellé Maîtrisé précise sa portée réelle (J24)");

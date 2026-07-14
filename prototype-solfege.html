@@ -136,6 +136,7 @@
   .defi{font-size:13px;color:var(--or-deep)}
 
   .exhead{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--dim);margin:4px 0 8px}
+  .exerciseHome{align-self:flex-start;min-height:44px;margin:0 0 7px;padding:8px 14px;border:1px solid rgba(15,76,92,.25);border-radius:999px;background:var(--paper);color:var(--petrole);font-size:13px;font-weight:800}
   .dots{display:flex;gap:5px}
   .dot{width:9px;height:9px;border-radius:50%;background:var(--ceramique2)}
   .dot.g{background:var(--good)} .dot.b{background:var(--bad)}
@@ -308,6 +309,11 @@
   .dailyPlanHead{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;color:var(--petrole)}
   .dailyPlanHead span{font-family:var(--serif);font-size:12px;font-weight:700;letter-spacing:.65px;text-transform:uppercase}
   .dailyPlanHead b{font-size:13px;color:var(--or-deep)}
+  .courseReview{background:linear-gradient(145deg,rgba(255,253,247,.98),rgba(216,169,77,.13));border:1px solid rgba(184,137,58,.35);border-radius:20px 8px 20px 8px;padding:12px;margin:-2px 0 12px}
+  .courseReview h3{margin:0;color:var(--petrole);font-family:var(--serif);font-size:15px}
+  .courseReview p{margin:5px 0 9px;color:var(--dim);font-size:12.5px;line-height:1.35}
+  .courseReview select{width:100%;min-height:44px;border:1px solid rgba(15,76,92,.22);border-radius:12px;background:var(--paper);color:var(--petrole);padding:9px;font-size:14px}
+  .courseReview button{width:100%;min-height:44px;margin-top:8px;border:0;border-radius:999px;background:var(--petrole);color:#fff;font-weight:800;font-size:14px}
   .dailyBlock{display:grid;grid-template-columns:32px 1fr auto;align-items:center;gap:8px;padding:7px 0;border-top:1px solid rgba(15,76,92,.09)}
   .dailyBlock:first-of-type{border-top:0}
   .dailyBlock .mins{font-size:12px;font-weight:800;color:var(--or-deep)}
@@ -412,6 +418,7 @@
       <button class="profileQuick" id="btnProfileQuick">Mon parcours · lecture musicale</button>
     </section>
     <div class="dailyPlan" id="dailyPlan"></div>
+    <div id="courseReview"></div>
     <div class="playerState" id="playerState"></div>
     <div class="watch" id="watchBox"></div>
     <details class="homeOptions" id="homeOptions">
@@ -446,6 +453,7 @@
   </div>
 
   <div class="screen" id="scrEx">
+    <button class="exerciseHome" id="btnExerciseHome" aria-label="Revenir immédiatement à l’accueil">← Accueil</button>
     <div class="exhead"><span id="exMode"></span><div class="dots" id="exDots"></div><span id="exCount"></span></div>
     <div class="timerbar" id="timerbar"><div id="timerfill"></div></div>
     <div class="staffbox" id="staffbox"></div>
@@ -464,6 +472,7 @@
     <div id="resPiece"></div>
     <div class="sub" id="resCode" style="margin-bottom:12px"></div>
     <button class="bigbtn" id="btnAgain">Encore une série</button>
+    <button class="secbtn" id="btnReplayCourse" style="display:none">Rejouer ce cycle pour m’entraîner</button>
     <button class="secbtn" id="btnHome">Accueil</button>
   </div>
 
@@ -569,7 +578,7 @@ function esc(s){
   });
 }
 /* ================= DONNÉES ================= */
-const APP_VERSION="v33"; // garder aligné avec CACHE_NAME de sw.js (testé)
+const APP_VERSION="v34"; // garder aligné avec CACHE_NAME de sw.js (testé)
 const NOTES = {
   do4 :{n:"do", clef:"sol", p:-2, midi:60, mn:"Le do du milieu est transpercé par sa petite ligne, rien qu'à lui."},
   re4 :{n:"ré", clef:"sol", p:-1, midi:62, mn:"Collé juste sous la portée."},
@@ -987,6 +996,37 @@ function advanceCourseExercise(course,perfect){
   } else progress.currentItem=item.id;
   DB.courseProgress=normalizeCourseProgress(progress);
   return courseDecision();
+}
+function reviewableCourseSteps(){
+  if(!DB) return [];
+  const progress=normalizeCourseProgress(DB.courseProgress), rows=[];
+  COURSES.forEach(function(item,itemIndex){
+    let count=0;
+    if(itemIndex===0) count=Math.min(item.steps.length,(progress.steps[item.id]||0)+1);
+    else if((progress.steps[COURSES[0].id]||0)>=COURSES[0].steps.length) count=Math.min(item.steps.length,(progress.steps[item.id]||0)+1);
+    if(progress.complete) count=item.steps.length;
+    for(let index=0;index<count;index++) rows.push({item:item,index:index,step:item.steps[index]});
+  });
+  return rows;
+}
+function courseReviewDecision(itemId,stepIndex){
+  const row=reviewableCourseSteps().find(function(entry){return entry.item.id===itemId&&entry.index===Number(stepIndex);});
+  if(!row) return null;
+  const step=row.step, palier=coursePalierFor(step), budget=courseQuestionBudget(step);
+  return {
+    kind:"courseReview",label:"Entraînement libre",n:budget,questionCap:budget,palier:palier,pool:step.notes.slice(),mode:"zen",groupN:1,
+    reason:"Reprise libre d’un cycle déjà atteint : elle entraîne la mémoire sans déplacer ta progression.",
+    course:{itemId:row.item.id,itemLabel:row.item.label,stepId:step.id,stepIndex:row.index,stepTotal:row.item.steps.length,newNote:step.newNote||"",seriesIndex:-1,seriesNumber:0,seriesTotal:COURSE_SERIES_PER_STEP,phaseLabel:"Entraînement libre",review:true,signature:"course-review-v1:"+row.item.id+":"+row.index}
+  };
+}
+function startCourseReview(itemId,stepIndex){
+  if(EX&&!EX.done) return false;
+  const review=courseReviewDecision(itemId,stepIndex);
+  if(!review) return false;
+  DB.sel=review.palier.id; save();
+  beginSerie({sessionMode:"courseReview",n:review.n,questionCap:review.questionCap,palier:review.palier,pool:review.pool,mode:review.mode,groupN:1,
+    label:"Entraînement libre · "+review.course.itemLabel+" · cycle "+(review.course.stepIndex+1),course:review.course,cold:true});
+  return true;
 }
 function normalizeCurriculumProof(value){
   value=isRecord(value)?value:{};
@@ -2862,6 +2902,20 @@ function renderDailyPlan(plan){
     return '<div class="dailyBlock"><span class="mins">'+b.minutes+' min</span><span><b>'+esc(b.title)+'</b><small>'+esc(b.note)+'</small></span><span class="dailyAuto'+(b.done?' done':'')+'">'+(b.done?'Fait ✓':'Inclus')+'</span></div>';
   }).join("");
 }
+function renderCourseReview(){
+  const host=$("courseReview"), rows=reviewableCourseSteps();
+  if(!host) return;
+  if(!rows.length){ host.innerHTML=""; return; }
+  const options=rows.map(function(row,index){
+    const notes=row.step.notes.map(function(id){return NOTES[id].n.toUpperCase();}).join(" · ");
+    return '<option value="'+row.item.id+':'+row.index+'"'+(index===rows.length-1?' selected':'')+'>'+esc(row.item.label)+' · cycle '+(row.index+1)+' · '+esc(notes)+'</option>';
+  }).join("");
+  host.innerHTML='<section class="courseReview"><h3>↶ Revenir en arrière et s’entraîner</h3><p>Choisis n’importe quel cycle déjà atteint. Tu peux refaire autant de séries de 25 que tu veux : cet entraînement ne force aucune avancée et ne retire aucun acquis.</p><select id="courseReviewSelect" aria-label="Cycle à rejouer">'+options+'</select><button id="btnCourseReview">REJOUER CE CYCLE · 25 QUESTIONS</button></section>';
+  $("btnCourseReview").onclick=function(){
+    const parts=String($("courseReviewSelect").value||"").split(":");
+    startCourseReview(parts[0],Number(parts[1]));
+  };
+}
 function coachPalier(mode){
   const current=PALIERS.find(function(x){return x.id===DB.sel;})||PALIERS[0];
   if(mode==="libre") return current;
@@ -2960,6 +3014,7 @@ function renderHome(){
   const day=DB.days[todayStr()], nbToday=day?day.series:0, decision=courseDecision()||coachDecision(), plan=dailyPlan(decision);
   renderCockpit(decision,plan);
   renderDailyPlan(plan);
+  renderCourseReview();
   renderPlayerState(decision);
   const startPid=profileStartPalier(plan.profile.niveauDepart);
   $("missionTxt").innerHTML = plan.isCourse
@@ -3513,7 +3568,7 @@ function beginSerie(opts){
   const total=openEnded?0:Math.min(requestedTotal,Math.ceil(questionCap/groupN));
   const pool=(opts.pool&&opts.pool.length)?opts.pool:p.notes;
   const sessionMode=opts.sessionMode||"session";
-  const coldEligible=opts.cold!==false&&(sessionMode==="session"||sessionMode==="daily"||sessionMode==="course");
+  const coldEligible=opts.cold!==false&&(sessionMode==="session"||sessionMode==="daily"||sessionMode==="course"||sessionMode==="courseReview");
   const coverage=opts.course?pool.slice():((mode!=="libre"&&DB.paliers[p.id])?validationMissingIds(p.id,mode,p.notes):[]);
   const coldSource=(opts.daily&&opts.daily.coldPool.length)?opts.daily.coldPool:pool;
   const coldPool=ordinaryQuestionPool(coldSource,p.notes,true), coldId=coldEligible?coldRecallId(coldPool,Date.now()):null;
@@ -3526,10 +3581,10 @@ function beginSerie(opts){
       coldPending:coldEligible&&!!coldId,coldId:coldId,coldResult:null,questionDeadlineAt:0,pausedQuestionRemaining:null,pausedResumeNext:false,
       dailyValidationBuffer:opts.daily&&mode!=="libre"?dailyDraftRecords(p.id,mode):[]};
   logEvent("serie_start",{palier:p.id,mode:mode,groupe:groupN,type:EX.sessionMode,n:total,questions:questionCap,segment:EX.segment?EX.segment.segmentId:null,piece:EX.segment?EX.segment.pieceId:null});
-  const label=opts.label || (EX.sessionMode==="course"?"Cycle d’acquisition":(EX.sessionMode==="flash"?"Flash":EX.sessionMode==="repair"?"Réparation":"Session"));
+  const label=opts.label || (EX.sessionMode==="course"?"Cycle d’acquisition":(EX.sessionMode==="courseReview"?"Entraînement libre":(EX.sessionMode==="flash"?"Flash":EX.sessionMode==="repair"?"Réparation":"Session")));
   $("exMode").textContent=label+" · "+(EX.segment?EX.segment.segmentTitle:p.t)+(groupN>1?" · groupes de "+groupN:"");
   $("timerbar").classList.toggle("on",!!EX.limit||!!EX.daily);
-  $("btnQuit").textContent=EX.daily?"Arrêter la séance":(EX.sessionMode==="course"?"Quitter la série":"Abandonner la série");
+  $("btnQuit").textContent=EX.daily?"Arrêter la séance":(EX.sessionMode==="course"?"Quitter la série":(EX.sessionMode==="courseReview"?"Terminer l’entraînement":"Abandonner la série"));
   $("btnAgain").style.display="block";
   show("scrEx"); if(EX.daily) startDailyClock(); nextQuestion();
 }
@@ -3558,13 +3613,14 @@ function showSeriePreview(pid,onContinue){
     '<p class="src">Phase d\'observation. Regarde chaque note, écoute-la, chante-la ; la série commence avec le bouton.</p>';
   if(sol.length) body+='<p style="margin-top:10px"><b>Clé de sol</b></p><div class="prepNotes">'+sol.map(function(id){return previewNoteHtml(id,true);}).join("")+'</div>';
   if(fa.length) body+='<p style="margin-top:10px"><b>Clé de fa</b></p><div class="prepNotes">'+fa.map(function(id){return previewNoteHtml(id,true);}).join("")+'</div>';
-  $("cardBox").innerHTML=body+'<button id="btnPrepGo">Commencer la série</button>';
+  $("cardBox").innerHTML=body+'<button id="btnPrepGo">Commencer la série</button><button id="btnPrepHome">← Accueil</button>';
   $("overlay").classList.add("on");
   $("btnPrepGo").onclick=function(){
     $("overlay").classList.remove("on");
     logEvent("serie_preview",{palier:pid,mode:DB.mode,notes:notes.length});
     if(onContinue) onContinue();
   };
+  $("btnPrepHome").onclick=function(){ $("overlay").classList.remove("on"); returnToHomeFromExercise(); };
 }
 // Écran Découverte : je montre la/les note(s) neuve(s) avant de tester (I-do → You-do)
 function showDecouverte(pid, onContinue, idsOverride){
@@ -3572,17 +3628,20 @@ function showDecouverte(pid, onContinue, idsOverride){
   const neuves=((idsOverride&&idsOverride.length)?idsOverride:newNotesOf(pid)).slice(0,6);
   if(!p||!neuves.length){ if(onContinue) onContinue(); return; }
   logEvent("decouverte",{palier:pid,nb:neuves.length});
-  const course=EX&&EX.course, heading=course?"Parcours · "+course.itemLabel+" · cycle "+(course.stepIndex+1)+"/"+course.stepTotal+" · série "+course.seriesNumber+"/"+course.seriesTotal:p.t;
+  const course=EX&&EX.course, heading=course
+    ? (course.review?"Entraînement libre · "+course.itemLabel+" · cycle "+(course.stepIndex+1):"Parcours · "+course.itemLabel+" · cycle "+(course.stepIndex+1)+"/"+course.stepTotal+" · série "+course.seriesNumber+"/"+course.seriesTotal)
+    : p.t;
   let body='<h3>Découverte — '+esc(heading)+'</h3><h2>'+(neuves.length>1?"Tes premières notes":"Une nouvelle note")+'</h2>'+
     '<p style="margin-bottom:10px">Regarde où elle se place, écoute-la, puis on la teste. Pression basse, oreille ouverte.</p>';
   body+='<div class="prepNotes">'+neuves.map(function(id){return previewNoteHtml(id,true);}).join("")+'</div>';
-  $("cardBox").innerHTML=body+'<button id="btnDecGo">Je suis prêt — commencer</button>';
+  $("cardBox").innerHTML=body+'<button id="btnDecGo">Je suis prêt — commencer</button><button id="btnDecHome">← Accueil</button>';
   $("overlay").classList.add("on");
   $("btnDecGo").onclick=function(){
     DB.seen[pid]=true; save();
     $("overlay").classList.remove("on");
     if(onContinue) onContinue();
   };
+  $("btnDecHome").onclick=function(){ $("overlay").classList.remove("on"); returnToHomeFromExercise(); };
 }
 function startRafale(){
   const p=PALIERS.find(function(x){return x.id===DB.sel;});
@@ -3770,7 +3829,7 @@ function questionTask(){
 }
 function freshTargetNoteIds(){
   if(!EX||EX.kind!=="serie"||EX.done) return [];
-  if(EX.sessionMode!=="session"&&EX.sessionMode!=="daily"&&EX.sessionMode!=="course") return [];
+  if(EX.sessionMode!=="session"&&EX.sessionMode!=="daily"&&EX.sessionMode!=="course"&&EX.sessionMode!=="courseReview") return [];
   if(EX.review||EX.script||EX.segment) return [];
   if(EX.daily){ const ph=dailyPhaseAt(EX.daily,Date.now()); if(!ph||(ph.id!=="rappel"&&ph.id!=="cible")) return []; }
   if(!Array.isArray(EX.introducedIds)) EX.introducedIds=[];
@@ -4273,7 +4332,7 @@ function finishSerie(){
   const p=EX.palier, errs=EX.errs.length, answered=EX.hist.length, isDaily=EX.sessionMode==="daily";
   if(EX.review==="star"){ markDay("revision",EX.ok); return finishStarReview(errs); }
   if(EX.review==="due"){ markDay("revision",EX.ok); return finishDueReview(errs); }
-  const isRepair=EX.sessionMode==="repair", isFlash=EX.sessionMode==="flash", isCourse=EX.sessionMode==="course", isSession=EX.sessionMode==="session"||isDaily, isPiece=EX.sessionMode==="piece";
+  const isRepair=EX.sessionMode==="repair", isFlash=EX.sessionMode==="flash", isCourse=EX.sessionMode==="course", isCourseReview=EX.sessionMode==="courseReview", isSession=EX.sessionMode==="session"||isDaily, isPiece=EX.sessionMode==="piece";
   if(!isDaily||answered>0) markDay(isRepair?"revision":"serie",EX.ok);
   let newlyPalier=false, newlyTier=null;
   if(isSession && !isDaily && EX.mode!=="libre"){
@@ -4323,8 +4382,11 @@ function finishSerie(){
   const errsForLog=isDaily&&answered?Math.round(errs/answered*10):errs;
   logEvent("serie_end",{palier:p.id,mode:EX.mode,type:EX.sessionMode,ok:EX.ok,errs:errsForLog,avgMs:avgMs(),valide:newlyPalier,course:EX.course?EX.course.stepId:null,segment:EX.segment?EX.segment.segmentId:null,piece:EX.segment?EX.segment.pieceId:null});
   save(); header(); syncPush();
-  const scoreN=Math.max(1,isDaily?answered:(isCourse?EX.promptCount:EX.n)), prec=Math.round(EX.ok/scoreN*100), label=isDaily?(dailyQualified?(transferReached?"Séance du jour":"Séance du jour · sans transfert"):"Séance partielle"):(isCourse?"Cycle d’acquisition":(isRepair?"Réparation":(isFlash?"Flash":(isPiece?"Partition":modeLabel(EX.mode==="rafale"?"zen":EX.mode)))));
-  $("resScore").innerHTML=EX.ok+"<small>/"+(isDaily?answered:(isCourse?EX.promptCount:EX.n))+"</small>";
+  const scoredCourse=isCourse||isCourseReview;
+  const scoreN=Math.max(1,isDaily?answered:(scoredCourse?EX.promptCount:EX.n)), prec=Math.round(EX.ok/scoreN*100), label=isDaily?(dailyQualified?(transferReached?"Séance du jour":"Séance du jour · sans transfert"):"Séance partielle"):(isCourse?"Cycle d’acquisition":(isCourseReview?"Entraînement libre":(isRepair?"Réparation":(isFlash?"Flash":(isPiece?"Partition":modeLabel(EX.mode==="rafale"?"zen":EX.mode))))));
+  $("resScore").innerHTML=EX.ok+"<small>/"+(isDaily?answered:(scoredCourse?EX.promptCount:EX.n))+"</small>";
+  $("btnReplayCourse").style.display=isCourse?"block":"none";
+  $("btnAgain").textContent=isCourse?"Continuer mon parcours":(isCourseReview?"Refaire cet entraînement":"Encore une série");
   $("resSub").textContent=isDaily
     ? label+" · "+Math.max(1,Math.round(activeElapsed/60000))+" min actives · précision "+prec+" %"
     : "Précision "+prec+"% · "+(avgMs()/1000).toFixed(1)+" s par question · "+label;
@@ -4344,6 +4406,10 @@ function finishSerie(){
       ? "Cycle maîtrisé : 3 séries de 25 sans erreur. La prochaine séance ajoute "+(courseNext.course.newNote&&NOTES[courseNext.course.newNote]?NOTES[courseNext.course.newNote].n.toUpperCase():"une nouvelle clé")+" au jeu."
       : "Parcours des deux clés maîtrisé : chaque cycle a été validé par trois séries parfaites.";
     else resultMessage="Série "+EX.course.seriesNumber+"/"+EX.course.seriesTotal+" validée sans erreur. La prochaine série garde exactement les mêmes notes pour consolider l’acquisition.";
+  } else if(isCourseReview){
+    resultMessage=errs
+      ? "Entraînement utile : les erreurs sont réparées, mais ta progression officielle reste exactement où tu l’avais choisie. Tu peux refaire ce cycle autant de fois que nécessaire."
+      : "Entraînement propre. Ce cycle reste disponible à volonté et ta progression officielle n’a pas été déplacée.";
   } else if(isRepair){
     resultMessage=errs?"Réparation active. Les notes fragiles reviennent avec un meilleur espacement.":"Réparation nette. La mémoire gagne en stabilité.";
   } else if(isFlash){
@@ -4383,6 +4449,8 @@ function finishSerie(){
       ? "<b>Cycle "+(c.stepIndex+1)+"/"+c.stepTotal+" maîtrisé.</b> Prochaine : "+esc(courseNext.course.itemLabel)+" · cycle "+(courseNext.course.stepIndex+1)+"/"+courseNext.course.stepTotal+" · série 1/3."
       : "<b>Les deux clés sont en place.</b> Tous les cycles d’acquisition sont maîtrisés.";
     else $("resVal").innerHTML="<b>Série "+c.seriesNumber+"/"+c.seriesTotal+" parfaite.</b> Prochaine : série "+courseNext.course.seriesNumber+"/"+courseNext.course.seriesTotal+", mêmes notes, aucune nouveauté supplémentaire.";
+  } else if(isCourseReview){
+    $("resVal").innerHTML="<b>Mode entraînement :</b> aucune course en avant. Rejoue ce cycle, choisis-en un autre depuis l’accueil, ou poursuis le parcours quand tu le décides.";
   } else if(EX.mode==="libre"){
     $("resVal").textContent="Libre : exploration active, mémoire nourrie.";
   } else {
@@ -4419,6 +4487,7 @@ function finishDueReview(errs){
   // aucun second versement en fin de révision, sinon une révision due paierait double (H17).
   logEvent("due_review_end",{ok:EX.ok,errs:errs});
   save(); header(); syncPush();
+  $("btnReplayCourse").style.display="none"; $("btnAgain").textContent="Encore une série";
   $("resScore").innerHTML=EX.ok+"<small>/10</small>";
   $("resSub").textContent="Révision du jour · rappel espacé";
   $("resSolado").textContent= errs===0
@@ -4487,6 +4556,7 @@ function finishStarReview(errs){
   }
   logEvent("star_review_end",{palier:pid,ok:EX.ok,errs:errs,coverage:coverageOk,repairsClear:repairsClear,level:s.level,advanced:advanced});
   save(); header(); syncPush();
+  $("btnReplayCourse").style.display="none"; $("btnAgain").textContent="Encore une série";
   $("resScore").innerHTML=EX.ok+"<small>/"+EX.hist.length+"</small>";
   $("resSub").textContent="Révision d'étoile · "+EX.palier.t;
   $("resSolado").textContent= advanced
@@ -4518,6 +4588,7 @@ function finishRafale(){
   if(prec>=90 && EX.ok>DB.paliers[EX.palier.id].bestRafale) DB.paliers[EX.palier.id].bestRafale=EX.ok;
   logEvent("rafale_end",{palier:EX.palier.id,ok:EX.ok,errs:EX.errs.length,prec:prec,star:star});
   save(); header(); syncPush();
+  $("btnReplayCourse").style.display="none"; $("btnAgain").textContent="Encore une série";
   $("resScore").innerHTML=EX.ok+"<small> justes en "+RAFALE_S+" s</small>";
   $("resSub").textContent="Précision "+prec+"% (record : "+DB.paliers[EX.palier.id].bestRafale+")"+(prec<90?" — le record exige ≥ 90 %":"");
   $("resSolado").textContent= star ? "★ Défi parfait réussi : 10 sur 10 propres. C'est ça, la lecture automatique."
@@ -6095,6 +6166,15 @@ function showSaveQR(){
   }
   $("overlay").classList.add("on");
 }
+function returnToHomeFromExercise(){
+  if(EX&&!EX.done) logEvent("exercise_home",{type:EX.sessionMode||EX.kind||"serie",palier:EX.palier?EX.palier.id:null,step:EX.course?EX.course.stepId:null,questions:EX.promptCount||EX.i||0});
+  if(rafTimer) clearInterval(rafTimer);
+  clearQTimers(); clearDailyTimer();
+  if(EX) EX.done=true;
+  $("overlay").classList.remove("on");
+  save(); renderHome(); show("scrHome"); flushPendingSync();
+  return true;
+}
 
 /* ================= LIAISONS ================= */
 $("btnPlayNow").onclick=startDailySession;
@@ -6115,6 +6195,7 @@ $("btnAddPiece").onclick=addPiece;
 $("btnClearPieceFile").onclick=function(){ $("pcFile").value=""; $("pieceMsg").textContent="Fichier choisi retiré."; };
 $("btnAddSegment").onclick=addSegment;
 $("btnQR").onclick=showSaveQR;
+$("btnExerciseHome").onclick=returnToHomeFromExercise;
 $("btnNext").onclick=function(){
   if(EX&&EX.waiting&&!EX.done){
     logEvent("correction_lue",{palier:EX.palier?EX.palier.id:null,mode:EX.mode,question:EX.i});
@@ -6144,6 +6225,7 @@ $("btnAgain").onclick=function(){
   if(EX.review==="due"){ if(unlockedNoteIds().filter(isDue).length){ startRevision(); } else { renderHome(); show("scrHome"); } return; }
   if(EX.review==="star"){ renderHome(); show("scrHome"); return; }
   if(EX.kind==="rafale") startRafale();
+  else if(EX.sessionMode==="courseReview"&&EX.course) startCourseReview(EX.course.itemId,EX.course.stepIndex);
   else if(EX.sessionMode==="piece"&&EX.segment&&EX.segment.pieceId){
     // rester dans la pièce : le coach de partition enchaîne sur le passage le plus utile
     const piece=pieceById(EX.segment.pieceId);
@@ -6153,6 +6235,9 @@ $("btnAgain").onclick=function(){
   else if(EX.sessionMode==="repair") startRepair();
   else if(EX.sessionMode==="flash") startCoachPlay();
   else startSerie();
+};
+$("btnReplayCourse").onclick=function(){
+  if(EX&&EX.course) startCourseReview(EX.course.itemId,EX.course.stepIndex);
 };
 $("btnHome").onclick=function(){ renderHome(); show("scrHome"); flushPendingSync(); };
 $("btnSound").onclick=function(){
