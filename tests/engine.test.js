@@ -112,7 +112,7 @@ function loadEngine(runtime) {
   const exportsList = [
     "esc", "checkValidation", "seriesCover", "recentCoveredIds", "validationMissingIds", "srs", "srsReview", "isDue", "coldRecallId", "ensureStructure", "cleanId", "isSafeId", "safeMap", "hasOwn",
     "importSave", "compactSave", "undoImport", "tierUnlocked", "tierComplete",
-    "palierPlayable", "playableInMode", "visiblePaliers", "valProgress", "PALIERS", "TIERS", "TIER_IDS", "NOTES", "COURSES", "MAX_QUESTIONS_PER_EXERCISE", "COURSE_MAX_EXERCISES", "COURSE_SERIES_PER_STEP", "COURSE_NEW_NOTE_TARGET", "courseDecision", "normalizeCourseProgress", "advanceCourseExercise", "reviewableCourseSteps", "normalizeCourseReviewState", "partitionPracticeMotifs", "partitionPracticePlan", "claimCourseReviewPlan", "courseReviewDecision", "startCourseReview", "returnToHomeFromExercise",
+    "palierPlayable", "playableInMode", "visiblePaliers", "valProgress", "PALIERS", "TIERS", "TIER_IDS", "NOTES", "COURSES", "MAX_QUESTIONS_PER_EXERCISE", "COURSE_MAX_EXERCISES", "COURSE_SERIES_PER_STEP", "COURSE_NEW_NOTE_TARGET", "courseDecision", "normalizeCourseProgress", "courseProgressFloorFromPaliers", "reconcileCourseProgressWithPaliers", "advanceCourseExercise", "reviewableCourseSteps", "normalizeCourseReviewState", "partitionPracticeMotifs", "partitionPracticePredictability", "partitionPracticeMaxTrigram", "partitionPracticeTargets", "partitionPracticeCards", "partitionPracticePlan", "claimCourseReviewPlan", "claimCoursePracticePlan", "practiceCardTransposition", "practiceCardCreditHtml", "practiceCardPlaybackEvents", "practiceCardPlaybackMs", "drawPracticeCard", "courseReviewDecision", "startCourseReview", "returnToHomeFromExercise",
     "buildKeyboard", "pcOf", "isWhite", "pickKbdTarget", "nameOptions", "withAcc",
     "baseNoteObj", "kbdRangeFor", "freshPalierState", "SRS_DAYS", "normalizePiece", "normalizeAttachment", "normalizeSegment", "MAX_PIECE_ATTACHMENT_BYTES", "MAX_TOTAL_ATTACHMENT_BYTES", "SAFE_ATTACHMENT_TYPES", "pieceFileType",
     "normalizeQuestion", "normalizeDay", "normalizeSegmentState", "normalizeNoteStat", "normalizeConfusions", "normalizeRepairItem", "normalizeRepairQueue", "normalizeEasterEggs", "normalizeSeriesRecord", "normalizeTierProgress", "normalizeStar", "normalizeSeen", "normalizeKbdStats", "markDay", "activeDayKeys", "streak", "todayStr",
@@ -843,9 +843,27 @@ ok(E.getEX().done && E.getEX().promptCount === E.MAX_QUESTIONS_PER_EXERCISE,
   "même la Rafale s'arrête au plafond de 25 questions");
 
 const migratedCourse=E.normalizeCourseProgress({version:1,currentItem:"sol",steps:{sol:2,fa:0},exercises:{sol:2,fa:0}});
-eq(migratedCourse.version,2,"l’ancien parcours migre vers les cycles d’acquisition");
+eq(migratedCourse.version,3,"l’ancien parcours migre vers les cycles d’acquisition actuels");
 eq(migratedCourse.steps.sol,2,"la migration conserve le vocabulaire déjà atteint");
 eq(migratedCourse.cycles.sol,0,"la compétence courante repart au premier jalon sans perdre les notes acquises");
+
+const legacyP7Paliers={};
+["P1","P2","P3","P4","P5","P6"].forEach(function(id){
+  legacyP7Paliers[id]=E.freshPalierState(); legacyP7Paliers[id].zen.ok=true;
+});
+const migratedP7=E.ensureStructure({v:12,sel:"P7",courseProgress:{version:2,currentItem:"sol",steps:{sol:0,fa:0},cycles:{sol:0,fa:0},exercises:{sol:0,fa:0}},paliers:legacyP7Paliers});
+eq(migratedP7.courseProgress.currentItem,"fa","un joueur arrivé à P7 n’est plus renvoyé silencieusement en clé de sol");
+eq(migratedP7.courseProgress.steps.sol,E.COURSES[0].steps.length,"les acquis P1 à P5 ferment correctement le parcours de clé de sol");
+eq(migratedP7.courseProgress.steps.fa,1,"P6 validé place P7 sur fa-02, là où SI rejoint FA–SOL–LA");
+E.setDB(migratedP7);
+const migratedP7Decision=E.courseDecision();
+eq(migratedP7Decision.palier.id,"P7","la série réellement lancée et le palier P7 affiché sont désormais cohérents");
+eq(migratedP7Decision.pool,["fa3","sol3","la3","si3"],"P7 sert FA–SOL–LA–SI, jamais SOL–LA–SI de P1");
+seedSeen(migratedP7Decision.pool); E.startDailySession();
+eq(E.getEX().palier.id,"P7","le bouton principal ouvre effectivement P7 après migration");
+ok(E.getEX().currentPracticeCard&&E.getEX().currentPracticeCard.clef==="fa"&&/note dorée/.test(E.getEl("feedback").innerHTML),
+  "P7 demande une vraie lecture contextualisée en clé de fa dès la première question");
+E.haltEX();
 
 freshDB();
 seedSeen(["sol4","la4","si4"]);
@@ -908,8 +926,12 @@ ok(previewReviewA.script.length===25&&previewReviewA.script.every(function(id){r
   "la reprise prépare 25 notes strictement contenues dans le cycle choisi");
 const progressBeforeReview=JSON.stringify(E.getDB().courseProgress);
 ok(E.startCourseReview("sol",0)===true && E.getEX().sessionMode==="courseReview",
-  "un cycle antérieur peut lancer immédiatement une étude inspirée d’une partition");
+  "un cycle antérieur peut lancer immédiatement une lecture dans de vrais fragments");
 eq(E.getEX().script,previewReviewA.script,"le moteur joue exactement le script musical annoncé");
+ok(E.getEX().practice&&E.getEX().practice.variantId===previewReviewA.practice.variantId&&E.getEX().currentPracticeCard&&E.getEX().currentPracticeCard.notes.length>=2,
+  "chaque question place sa cible dans un fragment de partition visible");
+ok(/note dorée/.test(E.getEl("feedback").innerHTML)&&((E.getEl("staffbox").innerHTML.match(/<ellipse/g)||[]).length>=2),
+  "l’écran demande de lire la note dorée au milieu de plusieurs notes, pas de deviner le prochain bouton");
 eq(E.getDB().courseReviewState.steps["sol-01"].run,1,"le démarrage réserve exactement une variante nouvelle pour le prochain rejeu");
 for(let guard=0;guard<100&&!E.getEX().done;guard++){
   if(E.getEX().waiting) E.nextQuestion(); else answerCurrentCorrect();
@@ -919,13 +941,14 @@ eq([].concat.apply([],E.getEX().promptHistory.map(function(row){return row.ids;}
   "les 25 réponses réellement servies suivent la partition-école sans injection extérieure");
 eq(JSON.stringify(E.getDB().courseProgress),progressBeforeReview,
   "refaire une série pour s’entraîner ne pousse jamais la progression officielle en avant");
-eq(E.getEl("btnAgain").textContent,"Nouvel exercice de partition",
+eq(E.getEl("btnAgain").textContent,"25 nouvelles lectures sur partitions",
   "le bilan propose explicitement une nouvelle étude plutôt que la répétition identique");
 const secondReview=E.courseReviewDecision("sol",0);
 ok(secondReview.practice.variantId!==previewReviewA.practice.variantId&&secondReview.practice.signature!==previewReviewA.practice.signature,
   "deux replays consécutifs ont une identité et une séquence garanties différentes");
 E.getDB().repairQueue=[{id:"piege-futur",sourceId:"sol4",probeId:"re5",confusedId:"re5",stage:"retest",qtype:"lect",dueQuestion:0,createdAt:1}];
-ok(E.startCourseReview("sol",0)===true,"le bouton de bilan lance la variation suivante");
+E.getEl("btnAgain").onclick();
+ok(E.getEX().sessionMode==="courseReview"&&!E.getEX().done,"le vrai bouton de bilan lance la nouvelle lecture suivante");
 eq(E.getEX().script,secondReview.script,"le deuxième rejeu sert bien le nouveau script annoncé");
 for(let guard=0;guard<12&&E.getEX().promptCount<7&&!E.getEX().done;guard++){
   if(E.getEX().waiting) E.nextQuestion(); else answerCurrentCorrect();
@@ -939,29 +962,69 @@ eq(JSON.stringify(E.getDB().courseProgress),progressBeforeReview,
 ok(JSON.parse(E.compactSave()).courseReviewState.steps["sol-01"].run===2&&E.cloudDocument().progress.courseReviewState.steps["sol-01"].run===2,
   "la rotation des études suit les sauvegardes QR et cloud");
 
+const rhythmicSources={
+  aclaire:E.pieceMelody(E.PIECES_BUILTIN.find(function(piece){return piece.id==="aclair";})),
+  frere:E.pieceMelody(E.PIECES_BUILTIN.find(function(piece){return piece.id==="frere";})),
+  ode:E.pieceMelody(E.PIECES_BUILTIN.find(function(piece){return piece.id==="odejoie";})),
+  jingle:E.pieceMelody(E.PIECES_BUILTIN.find(function(piece){return piece.id==="ventdhiver";}))
+};
+eq(rhythmicSources.aclaire.time,"2/4","Au clair emploie le découpage métrique réellement encodé");
+eq(rhythmicSources.aclaire.beats.slice(0,4),[[.5,.5,.5,.5],[1,1],[.5,.5,.5,.5],[2]],"Au clair conserve les brèves puis les tenues de l’air");
+eq(rhythmicSources.frere.beats[4],[.5,.5,.5,.5,1,1],"Frère Jacques accélère réellement sur le carillon");
+eq(rhythmicSources.ode.beats[3],[1.5,.5,2],"Ode à la joie garde son rythme pointé à la cadence");
+eq(rhythmicSources.jingle.measures[5],["fa4","mi4","mi4","mi4","mi4"],"Vive le vent conserve les deux croches MI de la mesure 6");
+eq(rhythmicSources.jingle.beats[5],[1,1,1,.5,.5],"Vive le vent rejoue les deux croches au lieu de les fusionner");
+const rhythmSvgCard={notes:["sol4","la4","si4"],beats:[4,.5,1.5],targetIndex:1,clef:"sol"};
+E.drawPracticeCard(rhythmSvgCard,"");
+ok(/data-beats="4"/.test(E.getEl("staffbox").innerHTML)&&/data-beats="0.5"/.test(E.getEl("staffbox").innerHTML)&&/data-beats="1.5"/.test(E.getEl("staffbox").innerHTML)&&/fill="#fffdf8"/.test(E.getEl("staffbox").innerHTML),
+  "la portée montre aussi blanche/ronde, croche et durée pointée au lieu d’aplatir le rythme");
+
 E.COURSES.forEach(function(item){
   item.steps.forEach(function(step,stepIndex){
     let previous=null;
-    for(let run=0;run<16;run++){
-      const plan=E.partitionPracticePlan(item.id,stepIndex,run,previous&&previous.script), source=plan&&E.PIECES_BUILTIN.find(function(piece){return piece.id===plan.sourcePieceId;});
+    for(let run=0;run<8;run++){
+      const plan=E.partitionPracticePlan(item.id,stepIndex,run,previous&&previous.script,"review");
       ok(!!plan&&plan.script.length===25,"chaque cycle "+step.id+" produit une étude complète de 25 notes (variante "+(run+1)+")");
       if(!plan) continue;
-      ok(!!source&&source.pd===true&&!!source.melody,"la source de "+step.id+" est une partition jouable du domaine public");
-      ok(plan.sourceType==="motif"&&/transposée d’après/.test(plan.sourceLabel),"une transposition est honnêtement présentée comme motif inspiré");
+      ok(plan.sourceType==="exact-target-cards"&&/Mélodie et rythme sont conservés/.test(plan.sourceLabel)&&!/d’après/.test(plan.sourceLabel),
+        "l’exercice annonce honnêtement des extraits rythmiques, jamais un faux air recomposé");
+      ok(plan.cards.length===25&&plan.cards.every(function(card,index){return card.targetId===plan.script[index]&&card.notes[card.targetIndex]===card.targetId;}),
+        "chaque réponse cible une position réelle dans son fragment");
+      ok(plan.sources.length>=3,"plusieurs partitions sont entremêlées pour empêcher la mémorisation d’un seul air");
+      plan.cards.forEach(function(card){
+        const source=E.PIECES_BUILTIN.find(function(piece){return piece.id===card.sourcePieceId;}), melody=source&&E.pieceMelody(source);
+        const stream=melody?[].concat.apply([],melody.measures):[], beatStream=melody?[].concat.apply([],melody.beats):[];
+        const contiguous=card.sourceNotes.every(function(id,offset){return stream[card.sourceStart+offset]===id;});
+        ok(!!source&&source.pd===true&&contiguous,"chaque fragment cité est une sous-séquence contiguë de la partition source");
+        ok(card.notes.every(function(id,index){return E.NOTES[id].midi-E.NOTES[card.sourceNotes[index]].midi===card.shiftSemitones;}),
+          "la transposition conserve exactement le même intervalle sur toutes les notes du fragment");
+        eq(card.beats,card.sourceBeats,"une transposition ne change jamais le rythme de la source");
+        eq(card.sourceBeats,beatStream.slice(card.sourceStart,card.sourceStart+card.sourceNotes.length),
+          "les durées de chaque carte sont la tranche rythmique exacte de l’arrangement intégré");
+        const events=E.practiceCardPlaybackEvents(card);
+        ok(events.length===card.notes.length&&events.every(function(event,index){
+          if(event.id!==card.notes[index]||event.beats!==card.beats[index]||event.duration<=0) return false;
+          if(index===0) return event.delay===0;
+          const previous=events[index-1];
+          return Math.abs(event.delay-(previous.delay+previous.beats*60/card.bpm))<1e-9;
+        })&&E.practiceCardPlaybackMs(card)>0,"le moteur sonore espace réellement les notes selon le rythme et le tempo");
+      });
       ok(plan.script.every(function(id){return step.notes.indexOf(id)>=0;}),"aucune note future ne fuit dans "+step.id);
       ok(step.notes.every(function(id){return plan.script.indexOf(id)>=0;}),"toutes les notes acquises sont revues dans "+step.id);
       const longestRepeat=plan.script.reduce(function(state,id){state.run=id===state.last?state.run+1:1;state.last=id;state.max=Math.max(state.max,state.run);return state;},{last:"",run:0,max:0}).max;
-      ok(longestRepeat<=3,"aucune même question n’est martelée plus de trois fois dans "+step.id);
+      ok(longestRepeat===1,"aucune même cible n’est servie deux fois de suite dans "+step.id);
+      ok(E.partitionPracticePredictability(plan.script)<=.64&&E.partitionPracticeMaxTrigram(plan.script)<=3,
+        "l’ordre des cibles de "+step.id+" ne permet pas d’apprendre le prochain bouton");
       const focus=step.newNote||null;
       if(focus){
         const focusCount=plan.script.filter(function(id){return id===focus;}).length;
-        ok(focusCount>=5&&focusCount<=7,"la nouveauté historique revient de cinq à sept fois dans "+step.id);
+        eq(focusCount,5,"la nouveauté historique revient exactement cinq fois dans "+step.id);
       }
-      else ok(step.notes.every(function(id){return plan.script.filter(function(x){return x===id;}).length>=5;}),"les trois repères initiaux sont chacun solidement sollicités dans "+step.id);
+      const support=step.notes.filter(function(id){return id!==focus;}).map(function(id){return plan.script.filter(function(x){return x===id;}).length;});
+      ok(Math.max.apply(null,support)-Math.min.apply(null,support)<=1,"les notes d’appui restent équilibrées dans "+step.id);
       if(previous){
         const distance=plan.script.reduce(function(n,id,i){return n+(id!==previous.script[i]?1:0);},0);
-        ok(plan.variantId!==previous.variantId&&distance>=10,"deux études successives de "+step.id+" diffèrent sur au moins 40 % des notes");
-        ok(plan.sourcePieceId!==previous.sourcePieceId,"la partition source change au rejeu suivant pour "+step.id);
+        ok(plan.variantId!==previous.variantId&&distance>=15,"deux études successives de "+step.id+" changent au moins 15 cibles sur 25");
       }
       previous=plan;
     }
@@ -971,18 +1034,24 @@ let partitionStressOk=true;
 E.COURSES.forEach(function(item){
   item.steps.forEach(function(step,stepIndex){
     let previous=null;
-    for(let run=0;run<200&&partitionStressOk;run++){
-      const plan=E.partitionPracticePlan(item.id,stepIndex,run,previous&&previous.script);
-      const duplicate=E.partitionPracticePlan(item.id,stepIndex,run,previous&&previous.script);
+    for(let run=0;run<50&&partitionStressOk;run++){
+      const plan=E.partitionPracticePlan(item.id,stepIndex,run,previous&&previous.script,"review");
+      const duplicate=E.partitionPracticePlan(item.id,stepIndex,run,previous&&previous.script,"review");
       const longest=plan&&plan.script.reduce(function(state,id){state.run=id===state.last?state.run+1:1;state.last=id;state.max=Math.max(state.max,state.run);return state;},{last:"",run:0,max:0}).max;
-      if(!plan||!duplicate||plan.signature!==duplicate.signature||plan.script.length!==25||plan.script.some(function(id){return step.notes.indexOf(id)<0;})||step.notes.some(function(id){return plan.script.indexOf(id)<0;})||longest>3){partitionStressOk=false;break;}
-      if(step.newNote){const count=plan.script.filter(function(id){return id===step.newNote;}).length;if(count<5||count>7){partitionStressOk=false;break;}}
-      if(previous&&plan.script.reduce(function(n,id,i){return n+(id!==previous.script[i]?1:0);},0)<10){partitionStressOk=false;break;}
+      if(!plan||!duplicate||plan.signature!==duplicate.signature||plan.script.length!==25||plan.cards.length!==25||plan.script.some(function(id){return step.notes.indexOf(id)<0;})||step.notes.some(function(id){return plan.script.indexOf(id)<0;})||longest>1||E.partitionPracticePredictability(plan.script)>.64){partitionStressOk=false;break;}
+      if(step.newNote&&plan.script.filter(function(id){return id===step.newNote;}).length!==5){partitionStressOk=false;break;}
+      if(previous&&plan.script.reduce(function(n,id,i){return n+(id!==previous.script[i]?1:0);},0)<15){partitionStressOk=false;break;}
       previous=plan;
     }
   });
 });
-ok(partitionStressOk,"3 800 replays déterministes respectent vocabulaire, couverture, dosage, non-martèlement et nouveauté");
+ok(partitionStressOk,"950 séries déterministes respectent fidélité, vocabulaire, équilibre, anti-boucle et renouvellement");
+const p7SiPlan=E.partitionPracticePlan("fa",1,0,[],"p7-test"), p7DoPlan=E.partitionPracticePlan("fa",2,0,[],"p7-test");
+eq(p7SiPlan.script.filter(function(id){return id==="si3";}).length,5,"P7 travaille SI cinq fois sans écraser FA, SOL et LA");
+ok(p7SiPlan.script.every(function(id){return ["fa3","sol3","la3","si3"].indexOf(id)>=0;}),"la première moitié de P7 reste intégralement en clé de fa");
+eq(p7DoPlan.script.filter(function(id){return id==="do4f";}).length,5,"la seconde moitié de P7 ajoute réellement le do médian cinq fois");
+ok(p7DoPlan.cards.every(function(card){return card.exact&&card.notes.every(function(id,index){return E.NOTES[id].midi-E.NOTES[card.sourceNotes[index]].midi===card.shiftSemitones;});}),
+  "P7 ne porte plus le nom d’une œuvre si ses fragments n’en respectent pas exactement les notes");
 const cleanedReviewState=E.normalizeCourseReviewState({steps:{"sol-01":{run:999999999,recent:["a","b","c","d"],lastScript:Array(25).fill("re5")},"cycle-inconnu":{run:5},"__proto__":{run:8}}});
 eq(cleanedReviewState.steps["sol-01"].run,999999,"la rotation importée est bornée");
 eq(cleanedReviewState.steps["sol-01"].recent,["a","b","c"],"l’historique importé reste limité aux trois dernières variantes");
@@ -1005,7 +1074,7 @@ freshDB();
 const lastFaIndex=E.COURSES[1].steps.length-1;
 E.getDB().courseProgress=E.normalizeCourseProgress({version:2,currentItem:"fa",steps:{sol:E.COURSES[0].steps.length,fa:lastFaIndex},cycles:{sol:0,fa:0},exercises:{sol:E.COURSES[0].steps.length,fa:lastFaIndex}});
 const wideCourse=E.courseDecision(); seedSeen(wideCourse.pool);
-E.beginSerie({sessionMode:"course",n:wideCourse.n,questionCap:wideCourse.questionCap,palier:wideCourse.palier,pool:wideCourse.pool,mode:"zen",groupN:1,course:wideCourse.course,cold:false});
+E.beginSerie({sessionMode:"course",n:wideCourse.n,questionCap:wideCourse.questionCap,palier:wideCourse.palier,pool:wideCourse.pool,mode:"zen",groupN:1,course:wideCourse.course,script:wideCourse.script,practice:wideCourse.practice,cold:false});
 for(let guard=0;guard<100&&!E.getEX().done;guard++){
   if(E.getEX().waiting) E.nextQuestion(); else answerCurrentCorrect();
 }

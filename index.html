@@ -580,7 +580,7 @@ function esc(s){
   });
 }
 /* ================= DONNÉES ================= */
-const APP_VERSION="v35"; // garder aligné avec CACHE_NAME de sw.js (testé)
+const APP_VERSION="v36"; // garder aligné avec CACHE_NAME de sw.js (testé)
 const NOTES = {
   do4 :{n:"do", clef:"sol", p:-2, midi:60, mn:"Le do du milieu est transpercé par sa petite ligne, rien qu'à lui."},
   re4 :{n:"ré", clef:"sol", p:-1, midi:62, mn:"Collé juste sous la portée."},
@@ -923,10 +923,10 @@ function normalizeProfile(p){
 }
 function courseById(id){ return COURSES.find(function(course){return course.id===id;})||null; }
 function freshCourseProgress(){
-  return {version:2,currentItem:"sol",steps:{sol:0,fa:0},cycles:{sol:0,fa:0},exercises:{sol:0,fa:0},complete:false};
+  return {version:3,currentItem:"sol",steps:{sol:0,fa:0},cycles:{sol:0,fa:0},exercises:{sol:0,fa:0},complete:false};
 }
 function freshCourseReviewState(){
-  return {version:1,steps:safeMap()};
+  return {version:2,steps:safeMap()};
 }
 function normalizeCourseReviewState(value){
   const out=freshCourseReviewState(), src=isRecord(value)&&isRecord(value.steps)?value.steps:{};
@@ -936,11 +936,39 @@ function normalizeCourseReviewState(value){
       if(!raw) return;
       const recent=Array.isArray(raw.recent)?raw.recent.map(function(id){return cleanText(id,120,"");}).filter(Boolean).slice(0,3):[];
       const run=clampInt(raw.run,0,999999,0);
+      const courseRun=clampInt(raw.courseRun,0,999999,0);
       const lastScript=Array.isArray(raw.lastScript)&&raw.lastScript.length===COURSE_QUESTION_BUDGET&&raw.lastScript.every(function(id){return step.notes.indexOf(id)>=0;})?raw.lastScript.slice():[];
-      if(run||recent.length||lastScript.length) out.steps[step.id]={run:run,recent:recent,lastScript:lastScript};
+      const lastCourseScript=Array.isArray(raw.lastCourseScript)&&raw.lastCourseScript.length===COURSE_QUESTION_BUDGET&&raw.lastCourseScript.every(function(id){return step.notes.indexOf(id)>=0;})?raw.lastCourseScript.slice():[];
+      if(run||courseRun||recent.length||lastScript.length||lastCourseScript.length) out.steps[step.id]={run:run,courseRun:courseRun,recent:recent,lastScript:lastScript,lastCourseScript:lastCourseScript};
     });
   });
   return out;
+}
+function courseProgressFloorFromPaliers(paliers){
+  const floor=freshCourseProgress(), ids=["P1","P2","P3","P4","P5","P6","P7","P8","P9","P10"];
+  let last=-1;
+  for(let i=0;i<ids.length;i++){
+    const state=paliers&&paliers[ids[i]]&&paliers[ids[i]].zen;
+    if(!state||state.ok!==true) break;
+    last=i;
+  }
+  const solSteps=[0,1,3,5,7,COURSES[0].steps.length];
+  if(last<0) return floor;
+  if(last<=4){ floor.steps.sol=solSteps[last+1]; floor.exercises.sol=floor.steps.sol; return normalizeCourseProgress(floor); }
+  floor.steps.sol=COURSES[0].steps.length; floor.exercises.sol=floor.steps.sol; floor.currentItem="fa";
+  const faSteps=[1,3,5,7,COURSES[1].steps.length];
+  floor.steps.fa=faSteps[Math.min(4,last-5)]; floor.exercises.fa=floor.steps.fa;
+  return normalizeCourseProgress(floor);
+}
+function reconcileCourseProgressWithPaliers(progress,paliers){
+  const current=normalizeCourseProgress(progress), floor=courseProgressFloorFromPaliers(paliers);
+  COURSES.forEach(function(course){
+    const id=course.id, before=current.steps[id]||0, minimum=floor.steps[id]||0;
+    if(minimum>before){ current.steps[id]=minimum; current.cycles[id]=0; }
+    current.exercises[id]=Math.max(current.exercises[id]||0,current.steps[id]||0,floor.exercises[id]||0);
+  });
+  current.version=3;
+  return normalizeCourseProgress(current);
 }
 function normalizeCourseProgress(value){
   const out=freshCourseProgress(), src=isRecord(value)?value:{};
@@ -982,10 +1010,14 @@ function courseDecision(){
   const item=state.item, step=state.step, palier=coursePalierFor(step), budget=courseQuestionBudget(step);
   const newLabel=step.newNote&&NOTES[step.newNote]?NOTES[step.newNote].n.toUpperCase():"SOL · LA · SI";
   const seriesNumber=state.seriesIndex+1, phaseLabels=["Découverte active","Consolidation","Validation"];
+  DB.courseReviewState=normalizeCourseReviewState(DB.courseReviewState);
+  const stored=DB.courseReviewState.steps[step.id]||{run:0,courseRun:0,recent:[],lastScript:[],lastCourseScript:[]};
+  const practice=partitionPracticePlan(item.id,state.index,stored.courseRun||0,stored.lastCourseScript||[],"course-"+state.seriesIndex);
   return {
     kind:"course",label:"Cycle d’acquisition",n:budget,questionCap:budget,palier:palier,pool:step.notes.slice(),mode:"zen",groupN:1,
-    reason:(step.newNote?"Nouveauté du cycle : "+newLabel+".":"Trois repères pour démarrer : SOL, LA, SI.")+" Série "+seriesNumber+"/"+COURSE_SERIES_PER_STEP+" : 25 réponses justes et aucune erreur pour la valider.",
-    course:{itemId:item.id,itemLabel:item.label,stepId:step.id,stepIndex:state.index,stepTotal:item.steps.length,newNote:step.newNote||"",seriesIndex:state.seriesIndex,seriesNumber:seriesNumber,seriesTotal:COURSE_SERIES_PER_STEP,phaseLabel:phaseLabels[state.seriesIndex]||"Acquisition",signature:"course-v2:"+item.id+":"+state.index+":"+state.seriesIndex}
+    script:practice?practice.script.slice():null,practice:practice,
+    reason:(step.newNote?"Nouveauté du cycle : "+newLabel+".":"Trois repères pour démarrer : SOL, LA, SI.")+" Série "+seriesNumber+"/"+COURSE_SERIES_PER_STEP+" : 25 notes dorées dans de vrais fragments, sans ordre de boutons mémorisable.",
+    course:{itemId:item.id,itemLabel:item.label,stepId:step.id,stepIndex:state.index,stepTotal:item.steps.length,newNote:step.newNote||"",seriesIndex:state.seriesIndex,seriesNumber:seriesNumber,seriesTotal:COURSE_SERIES_PER_STEP,phaseLabel:phaseLabels[state.seriesIndex]||"Acquisition",practice:practice,signature:"course-v3:"+item.id+":"+state.index+":"+state.seriesIndex}
   };
 }
 function advanceCourseExercise(course,perfect){
@@ -1028,31 +1060,53 @@ function reviewableCourseSteps(){
   });
   return rows;
 }
+const PARTITION_PRACTICE_CARD_CACHE=safeMap();
 function partitionPracticeMotifs(step){
   if(!step||!Array.isArray(step.notes)||!step.notes.length||typeof PIECES_BUILTIN==="undefined") return [];
-  const target=step.notes.filter(function(id){return !!NOTES[id];}).slice().sort(function(a,b){return NOTES[a].p-NOTES[b].p;});
+  const cacheKey=step.id+"|"+step.notes.join(".");
+  if(PARTITION_PRACTICE_CARD_CACHE[cacheKey]) return PARTITION_PRACTICE_CARD_CACHE[cacheKey];
+  const target=step.notes.filter(function(id){return !!NOTES[id];}).slice().sort(function(a,b){return NOTES[a].midi-NOTES[b].midi;});
   if(!target.length) return [];
-  const clef=NOTES[target[0]].clef, out=[];
-  const sourceIds=clef==="fa"?["aclairfa","odejoiefa"]:["aclair","frere","odejoie","saints"];
+  const clef=NOTES[target[0]].clef, out=[], seen=safeMap(), byMidi=safeMap();
+  target.forEach(function(id){byMidi[String(NOTES[id].midi)]=id;});
+  // Une seule version canonique par œuvre. Les cartes en clé de fa sont de
+  // vraies transpositions constantes, jamais un contour recollé ou réinventé.
+  const sourceIds=["aclair","frere","odejoie","ventdhiver"];
   PIECES_BUILTIN.forEach(function(piece){
-    if(sourceIds.indexOf(piece.id)<0||!piece.pd||!piece.melody||pieceClef(piece)!==clef) return;
-    const melody=pieceMelody(piece), seen=safeMap();
+    if(sourceIds.indexOf(piece.id)<0||!piece.pd||!piece.melody) return;
+    const melody=pieceMelody(piece);
     if(!melody) return;
-    const stream=[], bars=[];
+    const stream=[], durations=[], bars=[];
     melody.measures.forEach(function(measure,measureIndex){
-      measure.forEach(function(id){ if(NOTES[id]&&NOTES[id].clef===clef){stream.push(id);bars.push(measureIndex+1);} });
+      measure.forEach(function(id,noteIndex){
+        if(!NOTES[id]) return;
+        stream.push(id); bars.push(measureIndex+1);
+        durations.push((melody.beats[measureIndex]&&melody.beats[measureIndex][noteIndex])||1);
+      });
     });
-    for(let start=0;start+4<=stream.length;start++){
-      const source=stream.slice(start,start+4), positions=source.map(function(id){return NOTES[id].p;});
-      const lo=Math.min.apply(null,positions), hi=Math.max.apply(null,positions), contour=positions.map(function(pos){return pos-lo;});
-      if(hi-lo!==2||new Set(contour).size!==3) continue;
-      const signature=contour.join(".");
-      if(seen[signature]) continue;
-      seen[signature]=1;
-      const from=bars[start],to=bars[start+3];
-      out.push({sourcePieceId:piece.id,sourceTitle:piece.titre,sourceComposer:piece.compositeur||"",bars:"mes. "+from+(to!==from?"–"+to:""),contour:contour,signature:signature});
+    for(let length=6;length>=2;length--){
+      for(let start=0;start+length<=stream.length;start++){
+        const sourceNotes=stream.slice(start,start+length);
+        if(new Set(sourceNotes).size<2) continue;
+        for(let shift=-48;shift<=24;shift++){
+          const mapped=sourceNotes.map(function(id){return byMidi[String(NOTES[id].midi+shift)]||"";});
+          if(mapped.some(function(id){return !id||NOTES[id].clef!==clef;})) continue;
+          const sourceBeats=durations.slice(start,start+length), from=bars[start],to=bars[start+length-1], phraseKey=piece.id+":"+start+":"+length+":"+shift;
+          for(let targetIndex=0;targetIndex<mapped.length;targetIndex++){
+            const key=phraseKey+":"+targetIndex;
+            if(seen[key]) continue;
+            seen[key]=1;
+            out.push({
+              sourcePieceId:piece.id,sourceTitle:piece.titre,sourceComposer:piece.compositeur||"",bars:"mes. "+from+(to!==from?"–"+to:""),
+              sourceNotes:sourceNotes.slice(),sourceBeats:sourceBeats.slice(),notes:mapped.slice(),beats:sourceBeats.slice(),targetId:mapped[targetIndex],targetIndex:targetIndex,
+              shiftSemitones:shift,exact:true,rhythmExact:true,bpm:melody.bpm,sourceStart:start,phraseKey:phraseKey,cardKey:key,length:length,clef:clef,sourceClef:NOTES[sourceNotes[0]].clef
+            });
+          }
+        }
+      }
     }
   });
+  PARTITION_PRACTICE_CARD_CACHE[cacheKey]=out;
   return out;
 }
 function partitionPracticeHash(value){
@@ -1067,52 +1121,145 @@ function partitionPracticeDistance(first,second){
   if(!Array.isArray(first)||first.length!==COURSE_QUESTION_BUDGET) return COURSE_QUESTION_BUDGET;
   return second.reduce(function(distance,id,index){return distance+(id!==first[index]?1:0);},0);
 }
-function partitionPracticePlan(itemId,stepIndex,run,previousScript){
+function partitionPracticePredictability(script){
+  if(!Array.isArray(script)||script.length<2) return 1;
+  const rows=safeMap();
+  for(let i=1;i<script.length;i++){
+    const prev=script[i-1], next=script[i];
+    if(!rows[prev]) rows[prev]=safeMap();
+    rows[prev][next]=(rows[prev][next]||0)+1;
+  }
+  let predictable=0;
+  Object.keys(rows).forEach(function(prev){
+    predictable+=Math.max.apply(null,Object.keys(rows[prev]).map(function(next){return rows[prev][next];}));
+  });
+  return predictable/(script.length-1);
+}
+function partitionPracticeMaxTrigram(script){
+  const seen=safeMap(); let max=0;
+  for(let i=2;i<script.length;i++){
+    const key=script.slice(i-2,i+1).join("|");
+    seen[key]=(seen[key]||0)+1; max=Math.max(max,seen[key]);
+  }
+  return max;
+}
+function partitionPracticeShuffle(list,seed){
+  const out=list.slice(); let state=(seed||1)>>>0;
+  function rnd(){state^=state<<13;state^=state>>>17;state^=state<<5;return (state>>>0)/4294967296;}
+  for(let i=out.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1)),v=out[i];out[i]=out[j];out[j]=v;}
+  return out;
+}
+function partitionPracticeTargets(target,focus,run,salt,channel){
+  const counts=safeMap(), total=COURSE_QUESTION_BUDGET, others=target.filter(function(id){return id!==focus;});
+  target.forEach(function(id){counts[id]=0;});
+  if(focus&&others.length){
+    counts[focus]=COURSE_NEW_NOTE_TARGET;
+    const left=total-counts[focus], base=Math.floor(left/others.length), extra=left%others.length;
+    others.forEach(function(id,index){counts[id]=base+(((index+run)%others.length)<extra?1:0);});
+  } else {
+    const base=Math.floor(total/target.length), extra=total%target.length;
+    target.forEach(function(id,index){counts[id]=base+(((index+run)%target.length)<extra?1:0);});
+  }
+  const remaining=Object.assign(safeMap(),counts), transitions=safeMap(), trigrams=safeMap(), out=[];
+  const seed=stepSafe(channel)+"|"+run+"|"+salt;
+  while(out.length<total){
+    const last=out[out.length-1]||"", before=out[out.length-2]||"";
+    const choices=target.filter(function(id){return remaining[id]>0;});
+    choices.sort(function(a,b){
+      function score(id){
+        const transition=last&&transitions[last]?transitions[last][id]||0:0;
+        const tri=before&&last?trigrams[before+"|"+last+"|"+id]||0:0;
+        return (id===last?1000000:0)+tri*3000+transition*300-remaining[id]*20+(partitionPracticeHash(seed+"|"+out.length+"|"+id)%1000)/1000;
+      }
+      return score(a)-score(b);
+    });
+    const chosen=choices[0];
+    if(!chosen) break;
+    if(last){
+      if(!transitions[last]) transitions[last]=safeMap();
+      transitions[last][chosen]=(transitions[last][chosen]||0)+1;
+    }
+    if(before&&last){const key=before+"|"+last+"|"+chosen;trigrams[key]=(trigrams[key]||0)+1;}
+    out.push(chosen); remaining[chosen]--;
+  }
+  return out;
+}
+function stepSafe(value){return String(value||"practice").replace(/[^a-z0-9_-]+/gi,"-").slice(0,40)||"practice";}
+function partitionPracticeCards(candidates,script,seed){
+  const cards=[], usedCard=safeMap(), usedPhrase=safeMap(), byTarget=safeMap(); let previous=null;
+  candidates.forEach(function(card){
+    if(!byTarget[card.targetId]) byTarget[card.targetId]=[];
+    byTarget[card.targetId].push(card);
+  });
+  for(let index=0;index<script.length;index++){
+    const targetId=script[index], choices=byTarget[targetId]||[];
+    if(!choices.length) return null;
+    let chosen=null, best=Infinity;
+    choices.forEach(function(card){
+      const score=(usedCard[card.cardKey]||0)*100000+(usedPhrase[card.phraseKey]||0)*3000+
+        (previous&&previous.sourcePieceId===card.sourcePieceId?500:0)+(previous&&previous.targetIndex===card.targetIndex?120:0)+
+        (6-card.length)*30+(partitionPracticeHash(seed+"|"+index+"|"+card.cardKey)%1000)/1000;
+      if(score<best){best=score;chosen=card;}
+    });
+    cards.push(Object.assign({},chosen,{notes:chosen.notes.slice(),beats:chosen.beats.slice(),sourceNotes:chosen.sourceNotes.slice(),sourceBeats:chosen.sourceBeats.slice()}));
+    usedCard[chosen.cardKey]=(usedCard[chosen.cardKey]||0)+1;
+    usedPhrase[chosen.phraseKey]=(usedPhrase[chosen.phraseKey]||0)+1;
+    previous=chosen;
+  }
+  return cards;
+}
+function partitionPracticePlan(itemId,stepIndex,run,previousScript,channel){
   const item=courseById(itemId), index=Number(stepIndex), step=item&&item.steps[index];
   if(!step) return null;
-  const target=step.notes.filter(function(id){return !!NOTES[id];}).slice().sort(function(a,b){return NOTES[a].p-NOTES[b].p;}), motifs=partitionPracticeMotifs(step), groups=[];
+  const target=step.notes.filter(function(id){return !!NOTES[id];}).slice().sort(function(a,b){return NOTES[a].midi-NOTES[b].midi;}), motifs=partitionPracticeMotifs(step);
   if(target.length<3) return null;
-  PIECES_BUILTIN.forEach(function(piece){
-    const own=motifs.filter(function(motif){return motif.sourcePieceId===piece.id;});
-    if(own.length) groups.push({piece:piece,motifs:own});
-  });
-  if(!groups.length) return null;
+  if(!motifs.length||target.some(function(id){return !motifs.some(function(card){return card.targetId===id;});})) return null;
   run=clampInt(run,0,999999,0);
-  const group=groups[run%groups.length], source=group.piece, focus=step.newNote&&target.indexOf(step.newNote)>=0?step.newNote:"";
-  const anchor=focus||target[run%target.length], anchorIndex=target.indexOf(anchor), neighbor=target[anchorIndex===0?1:anchorIndex-1];
-  const maxStart=target.length-3, starts=[0,1,2,3,4].map(function(cell){return Math.round(cell*maxStart/4);});
+  channel=stepSafe(channel||"review");
+  const focus=step.newNote&&target.indexOf(step.newNote)>=0?step.newNote:"";
   const prior=Array.isArray(previousScript)&&previousScript.length===COURSE_QUESTION_BUDGET&&previousScript.every(function(id){return target.indexOf(id)>=0;})?previousScript:null;
-  for(let salt=0;salt<160;salt++){
-    const blocks=[], selected=[];
-    starts.forEach(function(start,cell){
-      const motif=group.motifs[partitionPracticeHash(step.id+"|"+run+"|"+salt+"|"+cell+"|"+source.id)%group.motifs.length];
-      blocks.push(motif.contour.map(function(offset){return target[start+offset];})); selected.push(motif);
-    });
-    const anchorCell=[anchor,anchor,anchor,neighbor,anchor], slot=partitionPracticeHash("slot|"+step.id+"|"+run+"|"+salt)%6;
-    const script=[];
-    for(let block=0;block<blocks.length;block++){
-      if(block===slot) script.push.apply(script,anchorCell);
-      script.push.apply(script,blocks[block]);
-    }
-    if(slot===blocks.length) script.push.apply(script,anchorCell);
+  for(let salt=0;salt<800;salt++){
+    const script=partitionPracticeTargets(target,focus,run,salt,step.id+"|"+channel);
     const counts=safeMap(); script.forEach(function(id){counts[id]=(counts[id]||0)+1;});
     const covered=target.every(function(id){return (counts[id]||0)>=1;});
-    const anchorOk=focus?(counts[focus]>=5&&counts[focus]<=7):target.every(function(id){return (counts[id]||0)>=5;});
-    if(script.length!==COURSE_QUESTION_BUDGET||!covered||!anchorOk||partitionPracticeLongestRun(script)>3||partitionPracticeDistance(prior,script)<10) continue;
-    const bars=uniq(selected.map(function(motif){return motif.bars;})).slice(0,5);
+    const focusOk=focus?counts[focus]===COURSE_NEW_NOTE_TARGET:true;
+    if(script.length!==COURSE_QUESTION_BUDGET||!covered||!focusOk||partitionPracticeLongestRun(script)>1||partitionPracticePredictability(script)>.64||partitionPracticeMaxTrigram(script)>3||partitionPracticeDistance(prior,script)<15) continue;
+    const cards=partitionPracticeCards(motifs,script,step.id+"|"+channel+"|"+run+"|"+salt);
+    if(!cards||cards.length!==COURSE_QUESTION_BUDGET) continue;
+    const sources=uniq(cards.map(function(card){return card.sourcePieceId;})).map(function(id){
+      const card=cards.find(function(row){return row.sourcePieceId===id;});
+      return {id:id,title:card.sourceTitle,composer:card.sourceComposer};
+    });
+    const bars=uniq(cards.map(function(card){return "« "+card.sourceTitle+" » "+card.bars;})).slice(0,6);
+    const signature=script.join(".")+"|"+cards.map(function(card){return card.cardKey;}).join(".");
     return {
-      variantId:"partition-v2-"+step.id+"-"+source.id+"-"+run+"-"+salt,
-      run:run,number:run+1,sourcePieceId:source.id,sourceTitle:source.titre,sourceComposer:source.compositeur||"",sourceType:"motif",
-      sourceLabel:"Variation pédagogique transposée d’après « "+source.titre+" » · cellule de rappel d’après « Vive le vent »",bars:bars,script:script,focusNote:focus,anchorNote:anchor,supportSourcePieceId:"ventdhiver",
-      signature:script.join("."),motifCount:5,distanceFromPrevious:partitionPracticeDistance(prior,script)
+      variantId:"partition-v3-"+channel+"-"+step.id+"-"+run+"-"+salt,
+      run:run,number:run+1,sourcePieceId:"multi",sourceTitle:"Extraits rythmiques de partitions",sourceComposer:"",sourceType:"exact-target-cards",
+      sourceLabel:"25 notes dorées à lire dans des extraits continus d’arrangements pédagogiques du domaine public. Mélodie et rythme sont conservés ; seule une transposition constante est autorisée.",
+      bars:bars,sources:sources,script:script,cards:cards,focusNote:focus,anchorNote:focus||target[0],
+      signature:signature,motifCount:cards.length,distanceFromPrevious:partitionPracticeDistance(prior,script),predictability:partitionPracticePredictability(script)
     };
   }
   return null;
 }
 function claimCourseReviewPlan(stepId,plan){
   if(!DB||!isSafeId(stepId)||!plan||!plan.variantId) return false;
-  const state=normalizeCourseReviewState(DB.courseReviewState), current=isRecord(state.steps[stepId])?state.steps[stepId]:{run:0,recent:[],lastScript:[]};
-  state.steps[stepId]={run:Math.max(current.run||0,(plan.run||0)+1),recent:[plan.variantId].concat(current.recent||[]).filter(function(id,index,list){return list.indexOf(id)===index;}).slice(0,3),lastScript:plan.script.slice()};
+  const state=normalizeCourseReviewState(DB.courseReviewState), current=isRecord(state.steps[stepId])?state.steps[stepId]:{run:0,courseRun:0,recent:[],lastScript:[],lastCourseScript:[]};
+  state.steps[stepId]={
+    run:Math.max(current.run||0,(plan.run||0)+1),courseRun:current.courseRun||0,
+    recent:[plan.variantId].concat(current.recent||[]).filter(function(id,index,list){return list.indexOf(id)===index;}).slice(0,3),
+    lastScript:plan.script.slice(),lastCourseScript:(current.lastCourseScript||[]).slice()
+  };
+  DB.courseReviewState=state;
+  return true;
+}
+function claimCoursePracticePlan(stepId,plan){
+  if(!DB||!isSafeId(stepId)||!plan||!plan.variantId) return false;
+  const state=normalizeCourseReviewState(DB.courseReviewState), current=isRecord(state.steps[stepId])?state.steps[stepId]:{run:0,courseRun:0,recent:[],lastScript:[],lastCourseScript:[]};
+  state.steps[stepId]={
+    run:current.run||0,courseRun:Math.max(current.courseRun||0,(plan.run||0)+1),recent:(current.recent||[]).slice(0,3),
+    lastScript:(current.lastScript||[]).slice(),lastCourseScript:plan.script.slice()
+  };
   DB.courseReviewState=state;
   return true;
 }
@@ -1120,13 +1267,13 @@ function courseReviewDecision(itemId,stepIndex){
   const row=reviewableCourseSteps().find(function(entry){return entry.item.id===itemId&&entry.index===Number(stepIndex);});
   if(!row) return null;
   DB.courseReviewState=normalizeCourseReviewState(DB.courseReviewState);
-  const step=row.step, palier=coursePalierFor(step), budget=courseQuestionBudget(step), stored=DB.courseReviewState.steps[step.id]||{run:0,recent:[],lastScript:[]};
-  const practice=partitionPracticePlan(row.item.id,row.index,stored.run||0,stored.lastScript||[]);
+  const step=row.step, palier=coursePalierFor(step), budget=courseQuestionBudget(step), stored=DB.courseReviewState.steps[step.id]||{run:0,courseRun:0,recent:[],lastScript:[],lastCourseScript:[]};
+  const practice=partitionPracticePlan(row.item.id,row.index,stored.run||0,stored.lastScript||[],"review");
   if(!practice) return null;
   return {
     kind:"courseReview",label:"Étude de partition",n:budget,questionCap:budget,palier:palier,pool:step.notes.slice(),mode:"zen",groupN:1,script:practice.script.slice(),practice:practice,
-    reason:practice.sourceLabel+" : 25 notes en motifs, uniquement avec les repères déjà acquis. Le prochain rejeu proposera une autre variation.",
-    course:{itemId:row.item.id,itemLabel:row.item.label,stepId:step.id,stepIndex:row.index,stepTotal:row.item.steps.length,newNote:step.newNote||"",seriesIndex:-1,seriesNumber:0,seriesTotal:COURSE_SERIES_PER_STEP,phaseLabel:"Entraînement libre",review:true,practice:practice,signature:"course-review-v2:"+practice.variantId}
+    reason:practice.sourceLabel+" Le prochain rejeu changera les fragments et les positions ciblées.",
+    course:{itemId:row.item.id,itemLabel:row.item.label,stepId:step.id,stepIndex:row.index,stepTotal:row.item.steps.length,newNote:step.newNote||"",seriesIndex:-1,seriesNumber:0,seriesTotal:COURSE_SERIES_PER_STEP,phaseLabel:"Entraînement libre",review:true,practice:practice,signature:"course-review-v3:"+practice.variantId}
   };
 }
 function startCourseReview(itemId,stepIndex){
@@ -1136,7 +1283,7 @@ function startCourseReview(itemId,stepIndex){
   claimCourseReviewPlan(review.course.stepId,review.practice);
   DB.sel=review.palier.id; save();
   beginSerie({sessionMode:"courseReview",n:review.n,questionCap:review.questionCap,palier:review.palier,pool:review.pool,mode:review.mode,groupN:1,script:review.script,
-    label:"Partition-école "+review.practice.number+" · "+review.practice.sourceTitle,course:review.course,cold:false});
+    label:"Lecture sur partitions · étude "+review.practice.number,course:review.course,practice:review.practice,cold:false});
   return true;
 }
 function normalizeCurriculumProof(value){
@@ -1349,18 +1496,29 @@ function normalizeSegment(s,idx,piece){
   if(mf&&mt&&mf<=mt){ out.mesFrom=mf; out.mesTo=mt; }
   return out;
 }
-/* Mélodie d'une partition : mesures de notes du dictionnaire (le vrai texte musical du jeu). */
+/* Mélodie d'une partition : hauteurs et durées (en noires) du vrai texte musical du jeu. */
 function normalizeMelody(m){
   if(!m||typeof m!=="object"||!Array.isArray(m.measures)) return null;
-  const measures=m.measures.slice(0,64).map(function(mes){
-    if(!Array.isArray(mes)) return null;
-    return mes.slice(0,12).map(function(id){ id=String(id||"").trim(); return NOTES[id]?id:null; }).filter(Boolean);
-  }).filter(function(mes){ return mes&&mes.length; });
+  const measures=[], beats=[], rawBeats=Array.isArray(m.beats)?m.beats:[];
+  m.measures.slice(0,64).forEach(function(mes,measureIndex){
+    if(!Array.isArray(mes)) return;
+    const notes=[], durations=[], row=Array.isArray(rawBeats[measureIndex])?rawBeats[measureIndex]:[];
+    mes.slice(0,12).forEach(function(value,noteIndex){
+      const id=String(value||"").trim();
+      if(!NOTES[id]) return;
+      const duration=Number(row[noteIndex]);
+      notes.push(id);
+      durations.push(Number.isFinite(duration)&&duration>=0.125&&duration<=16?duration:1);
+    });
+    if(notes.length){ measures.push(notes); beats.push(durations); }
+  });
   if(!measures.length) return null;
   return {
     time:cleanText(m.time,12,""),
     tempo:cleanText(m.tempo,40,""),
-    measures:measures
+    bpm:clampInt(m.bpm,40,220,96),
+    measures:measures,
+    beats:beats
   };
 }
 function normalizePiece(p,idx){
@@ -1665,6 +1823,7 @@ function ensureStructure(db){
   else db=Object.assign(safeMap(),db);
   DANGEROUS_MAP_KEYS.forEach(function(key){ if(hasOwn(db,key)) delete db[key]; });
   const previousVersion=clampInt(db.v,0,99,0);
+  const previousCourseVersion=isRecord(db.courseProgress)?clampInt(db.courseProgress.version,0,99,0):0;
   ensureMeta(db);
   db.sound=typeof db.sound==="boolean"?db.sound:true;
   db.soundLong=typeof db.soundLong==="boolean"?db.soundLong:true;
@@ -1747,6 +1906,10 @@ function ensureStructure(db){
     paliers[p.id]=normalized;
   });
   db.paliers=paliers;
+  // v36 : le parcours de 25 questions ne doit jamais repartir derrière les
+  // paliers déjà réellement validés. Exemple : P6 acquis place P7 sur fa-02,
+  // et non plus sur sol-01 (SOL–LA–SI).
+  if(previousCourseVersion<3) db.courseProgress=reconcileCourseProgressWithPaliers(db.courseProgress,db.paliers);
   const modeMap={hors:"libre",debutant:"zen",bronze:"bronze",argent:"argent",or:"or",rhodium:"rhodium"};
   if(db.v && db.v<4 && modeMap[db.mode]) db.mode=modeMap[db.mode];
   if(!db.mode||(db.mode!=="libre"&&TIER_IDS.indexOf(db.mode)<0)) db.mode="zen";
@@ -2439,6 +2602,26 @@ function tone(midi,dur,delay){
 }
 function sfxGood(m){tone(m);}
 function sfxMelody(seq){ seq.forEach(function(id,i){ tone(NOTES[id].midi,0.58,i*0.22); }); }
+function practiceCardPlaybackEvents(card){
+  if(!card||!Array.isArray(card.notes)||!card.notes.length) return [];
+  const bpm=clampInt(card.bpm,40,220,96), secondsPerBeat=60/bpm;
+  let cursor=0;
+  return card.notes.map(function(id,index){
+    const raw=card.beats&&Number(card.beats[index]), beats=Number.isFinite(raw)&&raw>=0.125&&raw<=16?raw:1;
+    const event={id:id,beats:beats,delay:cursor,duration:Math.max(.14,beats*secondsPerBeat*.88)};
+    cursor+=beats*secondsPerBeat;
+    return event;
+  });
+}
+function practiceCardPlaybackMs(card){
+  const events=practiceCardPlaybackEvents(card), last=events[events.length-1];
+  return last?Math.round((last.delay+last.duration)*1000):0;
+}
+function sfxPracticeCard(card){
+  practiceCardPlaybackEvents(card).forEach(function(event){
+    if(NOTES[event.id]) tone(NOTES[event.id].midi,event.duration,event.delay);
+  });
+}
 function sfxBad(){tone(38,0.22);}
 function vibrate(pat){ try{ if(DB.haptic && navigator.vibrate) navigator.vibrate(pat); }catch(e){} }
 function sfxWin(){tone(72,0.3,0);tone(76,0.3,0.12);tone(79,0.5,0.24);}
@@ -2482,17 +2665,28 @@ function clefSVG(clef,top,half,opts){
     '</g>';
 }
 // big : 0/absent = note de groupe · 1 = grande note (question note seule) · 2 = grande note + halo doré (découverte/préparation)
-function noteGlyph(x,p,color,acc,big){
+// beats : durée en noires pour restituer aussi le rythme des fragments de partition.
+function noteGlyph(x,p,color,acc,big,beats){
   const y=yOf(p);
   const rx=big?13.5:10, ry=big?9.4:7.1, led=big?25:17, stem=big?46:36, sw=big?2.8:2.1;
+  const duration=Number.isFinite(Number(beats))?Number(beats):1, hollow=duration>=2, whole=duration>=4;
   let s="";
   for(let q=10;q<=p;q+=2) s+='<line x1="'+(x-led)+'" y1="'+yOf(q)+'" x2="'+(x+led)+'" y2="'+yOf(q)+'" stroke="#4a4337" stroke-width="'+(big?2.2:1.8)+'"/>';
   for(let q=-2;q>=p;q-=2) s+='<line x1="'+(x-led)+'" y1="'+yOf(q)+'" x2="'+(x+led)+'" y2="'+yOf(q)+'" stroke="#4a4337" stroke-width="'+(big?2.2:1.8)+'"/>';
   if(acc) s+='<text x="'+(x-(big?27:19))+'" y="'+(y+(big?10:8))+'" text-anchor="middle" font-size="'+(big?36:28)+'" font-weight="700" font-family="serif" fill="'+color+'">'+acc+'</text>';
   if(big===2) s+='<ellipse cx="'+x+'" cy="'+y+'" rx="'+(rx+5.5)+'" ry="'+(ry+4)+'" transform="rotate(-14 '+x+' '+y+')" fill="rgba(184,137,58,.55)"/>';
-  s+='<ellipse cx="'+x+'" cy="'+y+'" rx="'+rx+'" ry="'+ry+'" transform="rotate(-14 '+x+' '+y+')" fill="'+color+'"/>';
-  if(p<4) s+='<line x1="'+(x+rx*.9)+'" y1="'+y+'" x2="'+(x+rx*.9)+'" y2="'+(y-stem)+'" stroke="'+color+'" stroke-width="'+sw+'"/>';
-  else    s+='<line x1="'+(x-rx*.9)+'" y1="'+y+'" x2="'+(x-rx*.9)+'" y2="'+(y+stem)+'" stroke="'+color+'" stroke-width="'+sw+'"/>';
+  s+='<ellipse class="note-head" data-beats="'+duration+'" cx="'+x+'" cy="'+y+'" rx="'+rx+'" ry="'+ry+'" transform="rotate(-14 '+x+' '+y+')" fill="'+(hollow?'#fffdf8':color)+'" stroke="'+color+'" stroke-width="'+(hollow?sw:0)+'"/>';
+  if(!whole){
+    const stemX=p<4?x+rx*.9:x-rx*.9, stemY=p<4?y-stem:y+stem;
+    s+='<line x1="'+stemX+'" y1="'+y+'" x2="'+stemX+'" y2="'+stemY+'" stroke="'+color+'" stroke-width="'+sw+'"/>';
+    if(duration<=.5){
+      const dir=p<4?1:-1, flagY=stemY+(p<4?0:0);
+      s+='<path d="M '+stemX+' '+flagY+' q '+(14*dir)+' '+(7*dir)+' '+(8*dir)+' '+(22*dir)+'" fill="none" stroke="'+color+'" stroke-width="'+sw+'" stroke-linecap="round"/>';
+      if(duration<=.25) s+='<path d="M '+stemX+' '+(flagY+(p<4?7:-7))+' q '+(12*dir)+' '+(7*dir)+' '+(7*dir)+' '+(19*dir)+'" fill="none" stroke="'+color+'" stroke-width="'+sw+'" stroke-linecap="round"/>';
+    }
+  }
+  if(Math.abs(duration-1.5)<.01||Math.abs(duration-3)<.01||Math.abs(duration-.75)<.01)
+    s+='<circle cx="'+(x+rx+6)+'" cy="'+y+'" r="'+(big?3.2:2.5)+'" fill="'+color+'"/>';
   return s;
 }
 function chunkXs(n){
@@ -2510,11 +2704,23 @@ function staffPositionLabel(p){
   };
   return labels[String(clampInt(p,-3,11,0))]||"sur la portée";
 }
+function staffDurationLabel(beats){
+  const value=Number(beats);
+  if(value===.25) return "double croche";
+  if(value===.5) return "croche";
+  if(value===.75) return "croche pointée";
+  if(value===1.5) return "noire pointée";
+  if(value===2) return "blanche";
+  if(value===3) return "blanche pointée";
+  if(value>=4) return "ronde";
+  return value===1?"noire":"";
+}
 function staffAriaLabel(clef,notes){
   const name="Portée en clé de "+(clef==="sol"?"sol":"fa"), list=notes||[];
   if(!list.length) return name+".";
-  if(list.length===1) return name+". Une note à identifier "+staffPositionLabel(list[0].p)+".";
-  return name+". "+list.length+" notes à identifier, de gauche à droite : "+list.map(function(n){return staffPositionLabel(n.p);}).join(", ")+".";
+  function describe(note){const rhythm=staffDurationLabel(note.beats);return staffPositionLabel(note.p)+(rhythm?", "+rhythm:"");}
+  if(list.length===1) return name+". Une note à identifier "+describe(list[0])+".";
+  return name+". "+list.length+" notes à identifier, de gauche à droite : "+list.map(describe).join(", ")+".";
 }
 function staffSVG(clef,notes,caretX){ // notes=[{p,color,x,acc,big,mark}]
   const W=STAFF.W, H=STAFF.H;
@@ -2523,7 +2729,7 @@ function staffSVG(clef,notes,caretX){ // notes=[{p,color,x,acc,big,mark}]
     s+='<line x1="14" y1="'+y+'" x2="'+(W-14)+'" y2="'+y+'" stroke="#4a4337" stroke-width="1.6"/>';}
   s+=clefSVG(clef,STAFF.top,STAFF.half,{x:clef==="sol"?20:18});
   (notes||[]).forEach(function(nx){
-    s+=noteGlyph(nx.x,nx.p,nx.color||"#15171c",nx.acc,nx.big===2?2:(nx.big?1:0));
+    s+=noteGlyph(nx.x,nx.p,nx.color||"#15171c",nx.acc,nx.big===2?2:(nx.big?1:0),nx.beats);
     if(nx.mark){ // 2e canal : forme/texte, lisible sans la couleur (daltonisme)
       let my=yOf(nx.p)-26; if(my<18) my=yOf(nx.p)+34; // près du bord haut : marque sous la note
       const ok=nx.mark==="good";
@@ -3020,10 +3226,9 @@ function renderCourseReview(){
   if(!rows.length){ host.innerHTML=""; return; }
   const options=rows.map(function(row,index){
     const notes=row.step.notes.map(function(id){return NOTES[id].n.toUpperCase();}).join(" · ");
-    const next=courseReviewDecision(row.item.id,row.index), source=next&&next.practice?" · d’après "+next.practice.sourceTitle:"";
-    return '<option value="'+row.item.id+':'+row.index+'"'+(index===rows.length-1?' selected':'')+'>'+esc(row.item.label)+' · cycle '+(row.index+1)+' · '+esc(notes+source)+'</option>';
+    return '<option value="'+row.item.id+':'+row.index+'"'+(index===rows.length-1?' selected':'')+'>'+esc(row.item.label)+' · cycle '+(row.index+1)+' · '+esc(notes)+' · vrais fragments</option>';
   }).join("");
-  host.innerHTML='<section class="courseReview"><h3>↶ Revenir en arrière et s’entraîner</h3><p>Choisis un cycle déjà atteint. Chaque reprise crée une nouvelle étude de 25 notes inspirée d’une partition du domaine public, sans note future et sans déplacer ta progression.</p><select id="courseReviewSelect" aria-label="Cycle à rejouer">'+options+'</select><button id="btnCourseReview">NOUVEL EXERCICE DE PARTITION · 25 NOTES</button></section>';
+  host.innerHTML='<section class="courseReview"><h3>↶ Revenir en arrière et s’entraîner</h3><p>Choisis un cycle déjà atteint. Chaque question place une note dorée dans un vrai fragment continu de partition. Les cibles changent d’ordre : il faut lire, pas mémoriser les boutons.</p><select id="courseReviewSelect" aria-label="Cycle à rejouer">'+options+'</select><button id="btnCourseReview">25 NOUVELLES LECTURES SUR PARTITIONS</button></section>';
   $("btnCourseReview").onclick=function(){
     const parts=String($("courseReviewSelect").value||"").split(":");
     startCourseReview(parts[0],Number(parts[1]));
@@ -3633,10 +3838,12 @@ function startDailySession(){
   if(EX&&!EX.done) return;
   const course=courseDecision();
   if(course){
+    if(course.practice) claimCoursePracticePlan(course.course.stepId,course.practice);
     DB.sel=course.palier.id; DB.seen[course.palier.id]=true;
     save();
     beginSerie({sessionMode:"course",n:course.n,questionCap:course.questionCap,palier:course.palier,pool:course.pool,mode:course.mode,groupN:1,
-      label:"Parcours · "+course.course.itemLabel+" · série "+course.course.seriesNumber+"/"+course.course.seriesTotal,course:course.course,cold:true});
+      label:"Parcours · "+course.course.itemLabel+" · série "+course.course.seriesNumber+"/"+course.course.seriesTotal,
+      course:course.course,script:course.script,practice:course.practice,cold:false});
     return;
   }
   let d=coachDecision();
@@ -3689,7 +3896,7 @@ function beginSerie(opts){
       palier:p,pool:pool,i:0,ok:0,errs:[],times:[],hist:[],last:null,waiting:false,done:false,qid:0,
       qtype:"lect",seq:[],k:0,writePos:4,segment:opts.segment||null,
       script:(opts.script&&opts.script.length)?opts.script.slice():null,scriptIdx:0,seenIds:[],testedIds:[],coverageIds:[],coverageQueue:coverage,
-      course:opts.course||null,questionCap:questionCap,promptCount:0,promptHistory:[],promptCountById:{},writePromptCount:0,writePromptIds:[],
+      course:opts.course||null,practice:opts.practice||null,currentPracticeCard:null,questionCap:questionCap,promptCount:0,promptHistory:[],promptCountById:{},writePromptCount:0,writePromptIds:[],
       openEnded:openEnded,daily:opts.daily||null,stopRequested:false,currentTask:null,questionRecords:[],phaseStats:{rappel:{n:0,ok:0},cible:{n:0,ok:0},reparation:{n:0,ok:0},transfert:{n:0,ok:0}},transferReached:false,
       coldPending:coldEligible&&!!coldId,coldId:coldId,coldResult:null,questionDeadlineAt:0,pausedQuestionRemaining:null,pausedResumeNext:false,
       dailyValidationBuffer:opts.daily&&mode!=="libre"?dailyDraftRecords(p.id,mode):[]};
@@ -3789,7 +3996,36 @@ function ecritLabel(nt,targetId){
   if(!twin) return nt.n.toUpperCase();
   return nt.n.toUpperCase()+(nt.p>NOTES[twin].p?" (l'aigu)":" (le grave)");
 }
+function practiceCardTransposition(card){
+  if(!card) return "";
+  const shift=Number(card.shiftSemitones)||0, clefChanged=card.sourceClef&&card.sourceClef!==card.clef;
+  let text;
+  if(!shift) text="hauteurs originales";
+  else if(Math.abs(shift)%12===0){
+    const oct=Math.abs(shift)/12;
+    text=oct+" octave"+(oct>1?"s":"")+" vers "+(shift<0?"le grave":"l’aigu");
+  } else text="transposition constante de "+Math.abs(shift)+" demi-ton"+(Math.abs(shift)>1?"s":"")+" vers "+(shift<0?"le grave":"l’aigu");
+  if(clefChanged) text+=" · réécrit en clé de "+(card.clef==="fa"?"fa":"sol");
+  return text;
+}
+function practiceCardCreditHtml(card){
+  if(!card) return "";
+  return '<br><span class="src">Extrait continu · mélodie et rythme conservés · « '+esc(card.sourceTitle)+' » · '+esc(card.bars)+' · '+esc(practiceCardTransposition(card))+'</span>';
+}
+function drawPracticeCard(card,state){
+  if(!card||!Array.isArray(card.notes)||!card.notes.length) return false;
+  const xs=chunkXs(card.notes.length), targetIndex=clampInt(card.targetIndex,0,card.notes.length-1,0);
+  const notes=card.notes.map(function(id,index){
+    let color=index===targetIndex?"#b8893a":"#718184", mark;
+    if(index===targetIndex&&state==="good"){color="#5e6e51";mark="good";}
+    if(index===targetIndex&&state==="bad"){color="#a8472a";mark="bad";}
+    return {p:NOTES[id].p,color:color,x:xs[index],big:0,mark:mark,beats:card.beats&&card.beats[index]};
+  });
+  $("staffbox").innerHTML=staffSVG(card.clef,notes,state?null:xs[targetIndex]);
+  return true;
+}
 function drawChunk(){
+  if(EX.currentPracticeCard&&EX.seq.length===1&&drawPracticeCard(EX.currentPracticeCard,"")) return;
   const clef=NOTES[EX.seq[0]].clef, xs=chunkXs(EX.seq.length), single=EX.seq.length===1;
   const notes=EX.seq.map(function(id,i){
     let color="#15171c";
@@ -3985,6 +4221,7 @@ function nextQuestion(){
     return;
   }
   const task=questionTask(); EX.currentTask=task; EX.currentQuestionTested=[];
+  EX.currentPracticeCard=null;
   const ecritOk=(EX.mode==="libre"||EX.mode==="zen") && EX.kind==="serie" && !EX.script && task.role==="baseline" && task.phase!=="transfert";
   EX.qtype=task.qtype||((ecritOk && canAskWriteQuestion(task))?"ecrit":"lect");
   const room=Math.max(1,questionCapacityLeft());
@@ -3995,10 +4232,12 @@ function nextQuestion(){
   } else if(task.probeId&&NOTES[task.probeId]){
     EX.seq=[task.probeId];
   } else if(EX.script){
-    // Lecture de la partition dans l'ordre : chaque question est le prochain fragment réel de la pièce.
+    // Une étude de parcours sert 25 cibles imprévisibles. Chacune reste toutefois
+    // placée dans un extrait continu dont la mélodie et le rythme sont conservés.
     const from=EX.scriptIdx, chunk=EX.script.slice(from,from+Math.min(EX.groupN,room));
+    if(EX.practice&&Array.isArray(EX.practice.cards)&&chunk.length===1) EX.currentPracticeCard=EX.practice.cards[from]||null;
     EX.scriptIdx=from+chunk.length;
-    if(EX.scriptIdx>=EX.script.length) EX.scriptIdx=0; // si la série dépasse, on reboucle au début
+    if(EX.scriptIdx>EX.script.length) EX.scriptIdx=EX.script.length;
     EX.seq=chunk.length?chunk:pickSeq((EX.pool&&EX.pool.length)?EX.pool:EX.palier.notes,Math.min(EX.groupN,room));
   } else {
     const pool=(task.pool&&task.pool.length)?task.pool:((EX.pool&&EX.pool.length)?EX.pool:EX.palier.notes);
@@ -4019,7 +4258,9 @@ function nextQuestion(){
     renderMissionControls();
   } else if(EX.qtype==="lect"){
     drawChunk();
-    let prompt=EX.seq.length>1?"Lis le groupe, dans l'ordre.":"Quelle est cette note ?";
+    let prompt=EX.currentPracticeCard
+      ? "Lis réellement la portée : quelle est la note dorée ?<br><span class='src'>Après ta réponse, écoute le fragment avec son vrai rythme.</span>"
+      : (EX.seq.length>1?"Lis le groupe, dans l'ordre.":"Quelle est cette note ?");
     if(task.role==="cold") prompt="Test à froid · "+prompt;
     else if(task.role==="retest") prompt="Réparation active · retrouve la note corrigée.";
     else if(task.role==="transfer"&&task.repairId) prompt="Contraste · reconnais la note voisine sans aide.";
@@ -4219,13 +4460,15 @@ function afterGood(){
   completeQuestionMeta(true,null,null);
   EX.ok++; DB.xp++; EX.hist.push(true); EX.i++;
   EX.times.push(Date.now()-EX.t0);
-  if(EX.seq.length>1) sfxMelody(EX.seq); else sfxGood(NOTES[EX.seq[0]].midi);
+  if(EX.currentPracticeCard) sfxPracticeCard(EX.currentPracticeCard);
+  else if(EX.seq.length>1) sfxMelody(EX.seq); else sfxGood(NOTES[EX.seq[0]].midi);
   vibrate(15);
   $("feedback").className="feedback good";
   $("feedback").innerHTML='<span class="big">✓ '+EX.seq.map(function(id){return NOTES[id].n;}).join(" · ")+'</span>'+
+    practiceCardCreditHtml(EX.currentPracticeCard)+
     (EX.mode==="libre"&&DB.soundLong?'<br>Chante pendant que ça sonne.':'');
   EX.waiting=true;
-  const adv=(EX.mode==="libre"&&DB.soundLong)?1300:(EX.seq.length>1?700:380);
+  const adv=EX.currentPracticeCard?Math.max(1100,practiceCardPlaybackMs(EX.currentPracticeCard)+260):((EX.mode==="libre"&&DB.soundLong)?1300:(EX.seq.length>1?700:380));
   const session=EX, qid=EX.qid;
   advanceTimer=setTimeout(function(){ if(EX===session&&!EX.done&&EX.qid===qid){ advanceTimer=null; nextQuestion(); } }, adv);
   renderDots(); save();
@@ -4239,7 +4482,7 @@ function afterWrong(failId,msg,response){
   sfxBad(); vibrate([40,30,40]);
   const nt=NOTES[failId];
   $("feedback").className="feedback bad";
-  $("feedback").innerHTML=correctionHtml(failId,msg,response)+hearHtml(failId);
+  $("feedback").innerHTML=correctionHtml(failId,msg,response)+practiceCardCreditHtml(EX.currentPracticeCard)+hearHtml(failId);
   tone(nt.midi,undefined,0.4);
   if(EX.kind==="serie"){
     EX.waiting=true;
@@ -4263,6 +4506,8 @@ function timeUp(qid){
   if(EX.qtype==="ecrit"){
     const nt=NOTES[failId];
     $("staffbox").innerHTML=staffSVG(nt.clef,[{p:nt.p,color:"#15171c",mark:"good",x:STAFF.W*0.62,big:1}]);
+  } else if(EX.currentPracticeCard){
+    drawPracticeCard(EX.currentPracticeCard,"bad");
   } else if(EX.seq.length>1){
     const xs=chunkXs(EX.seq.length);
     $("staffbox").innerHTML=staffSVG(NOTES[EX.seq[0]].clef,EX.seq.map(function(id,i){
@@ -4278,12 +4523,15 @@ function answer(nm){
   if(nm===nt.n){
     srsReview(id,true,Date.now(),questionAllowsSrsAdvance());
     EX.k++;
-    if(EX.k>=EX.seq.length){ clearQTimers(); if(EX.seq.length>1) drawChunk(); afterGood(); }
+    if(EX.k>=EX.seq.length){ clearQTimers(); if(EX.currentPracticeCard) drawPracticeCard(EX.currentPracticeCard,"good"); else if(EX.seq.length>1) drawChunk(); afterGood(); }
     else drawChunk();
   } else {
     srsReview(id,false);
     clearQTimers();
-    if(EX.seq.length>1){
+    if(EX.currentPracticeCard){
+      drawPracticeCard(EX.currentPracticeCard,"bad");
+      afterWrong(id,"✕ La note dorée était "+nt.n.toUpperCase(),{kind:"name",value:nm});
+    } else if(EX.seq.length>1){
       const xs=chunkXs(EX.seq.length);
       $("staffbox").innerHTML=staffSVG(nt.clef,EX.seq.map(function(sid,i){
         return {p:NOTES[sid].p,color:i<EX.k?"#5e6e51":(i===EX.k?"#a8472a":"#15171c"),mark:i===EX.k?"bad":undefined,x:xs[i]};}),null);
@@ -4502,7 +4750,7 @@ function finishSerie(){
   const scoreN=Math.max(1,isDaily?answered:(scoredCourse?EX.promptCount:EX.n)), prec=Math.round(EX.ok/scoreN*100), label=isDaily?(dailyQualified?(transferReached?"Séance du jour":"Séance du jour · sans transfert"):"Séance partielle"):(isCourse?"Cycle d’acquisition":(isCourseReview?"Entraînement libre":(isRepair?"Réparation":(isFlash?"Flash":(isPiece?"Partition":modeLabel(EX.mode==="rafale"?"zen":EX.mode))))));
   $("resScore").innerHTML=EX.ok+"<small>/"+(isDaily?answered:(scoredCourse?EX.promptCount:EX.n))+"</small>";
   $("btnReplayCourse").style.display=isCourse?"block":"none";
-  $("btnAgain").textContent=isCourse?"Continuer mon parcours":(isCourseReview?"Nouvel exercice de partition":"Encore une série");
+  $("btnAgain").textContent=isCourse?"Continuer mon parcours":(isCourseReview?"25 nouvelles lectures sur partitions":"Encore une série");
   $("resSub").textContent=isDaily
     ? label+" · "+Math.max(1,Math.round(activeElapsed/60000))+" min actives · précision "+prec+" %"
     : "Précision "+prec+"% · "+(avgMs()/1000).toFixed(1)+" s par question · "+label;
@@ -4523,10 +4771,9 @@ function finishSerie(){
       : "Parcours des deux clés maîtrisé : chaque cycle a été validé par trois séries parfaites.";
     else resultMessage="Série "+EX.course.seriesNumber+"/"+EX.course.seriesTotal+" validée sans erreur. La prochaine série garde exactement les mêmes notes pour consolider l’acquisition.";
   } else if(isCourseReview){
-    const source=EX.course&&EX.course.practice?EX.course.practice.sourceTitle:"une partition du domaine public";
     resultMessage=errs
-      ? "Étude utile d’après « "+source+" » : les erreurs sont mémorisées, sans déplacer ta progression. Le prochain exercice changera de motifs."
-      : "Étude propre d’après « "+source+" ». Le prochain exercice proposera une nouvelle variation et ta progression officielle reste inchangée.";
+      ? "Lecture utile : les erreurs sont mémorisées, sans déplacer ta progression. Le prochain exercice changera les fragments et les notes dorées."
+      : "Lecture propre sur de vrais fragments. Le prochain exercice changera les sources et les positions ciblées ; ta progression officielle reste inchangée.";
   } else if(isRepair){
     resultMessage=errs?"Réparation active. Les notes fragiles reviennent avec un meilleur espacement.":"Réparation nette. La mémoire gagne en stabilité.";
   } else if(isFlash){
@@ -4906,22 +5153,26 @@ const PIECES_BUILTIN=[
  /* ---- Bibliothèque jouable : mélodies réelles du domaine public, notées mesure par mesure.
         La partition est le terrain de jeu : chaque passage se joue, se répare, se conquiert. ---- */
  {id:"aclair", titre:"Au clair de la lune", compositeur:"Traditionnel français", pd:true,
-  info:"Domaine public. Trois notes seulement — sol, la, si — et déjà une vraie pièce. La mélodie parfaite pour tes premières lectures en clé de sol.",
-  melody:{time:"4/4",tempo:"Andante",measures:[
+  info:"Domaine public. Cet extrait d’étude reprend les huit premières mesures avec trois notes — sol, la, si. Une vraie phrase musicale pour tes premières lectures en clé de sol.",
+  melody:{time:"2/4",tempo:"Andante",bpm:92,measures:[
     ["sol4","sol4","sol4","la4"],["si4","la4"],["sol4","si4","la4","la4"],["sol4"],
-    ["sol4","sol4","sol4","la4"],["si4","la4"],["sol4","si4","la4","la4"],["sol4"]]},
+    ["sol4","sol4","sol4","la4"],["si4","la4"],["sol4","si4","la4","la4"],["sol4"]],beats:[
+    [.5,.5,.5,.5],[1,1],[.5,.5,.5,.5],[2],
+    [.5,.5,.5,.5],[1,1],[.5,.5,.5,.5],[2]]},
   segments:[
     {id:"aclair_p1",title:"Phrase 1",bars:"mes. 1-2",mesFrom:1,mesTo:2,level:"P1",focus:"notes"},
     {id:"aclair_p2",title:"Phrase 2",bars:"mes. 3-4",mesFrom:3,mesTo:4,level:"P1",focus:"notes"},
     {id:"aclair_p3",title:"La reprise",bars:"mes. 5-8",mesFrom:5,mesTo:8,level:"P1",focus:"memoire"},
-    {id:"aclair_tout",title:"Toute la pièce",bars:"mes. 1-8",mesFrom:1,mesTo:8,level:"P1",focus:"memoire"}],
+    {id:"aclair_tout",title:"Tout l’extrait d’étude",bars:"mes. 1-8",mesFrom:1,mesTo:8,level:"P1",focus:"memoire"}],
   q:[ {q:"Combien de notes différentes dans toute la pièce ?", choix:["Deux","Trois","Cinq","Sept"], rep:1},
       {q:"La pièce se termine sur…", choix:["la note la plus aiguë","sa note de départ","une note en clé de fa","un accord"], rep:1} ]},
  {id:"frere", titre:"Frère Jacques", compositeur:"Traditionnel français", pd:true,
   info:"Domaine public. Un canon universel : quatre petites cellules qui se répètent deux fois chacune. La montée vers le carillon fait grimper la lecture jusqu'au mi aigu.",
-  melody:{time:"4/4",tempo:"Allegretto",measures:[
+  melody:{time:"4/4",tempo:"Allegretto",bpm:108,measures:[
     ["sol4","la4","si4","sol4"],["sol4","la4","si4","sol4"],["si4","do5","re5"],["si4","do5","re5"],
-    ["re5","mi5","re5","do5","si4","sol4"],["re5","mi5","re5","do5","si4","sol4"],["sol4","re4","sol4"],["sol4","re4","sol4"]]},
+    ["re5","mi5","re5","do5","si4","sol4"],["re5","mi5","re5","do5","si4","sol4"],["sol4","re4","sol4"],["sol4","re4","sol4"]],beats:[
+    [1,1,1,1],[1,1,1,1],[1,1,2],[1,1,2],
+    [.5,.5,.5,.5,1,1],[.5,.5,.5,.5,1,1],[1,1,2],[1,1,2]]},
   segments:[
     {id:"frere_p1",title:"Le thème",bars:"mes. 1-2",mesFrom:1,mesTo:2,level:"P1",focus:"notes"},
     {id:"frere_p2",title:"La montée",bars:"mes. 3-4",mesFrom:3,mesTo:4,level:"P2",focus:"notes"},
@@ -4931,14 +5182,16 @@ const PIECES_BUILTIN=[
   q:[ {q:"Chaque phrase de la pièce est…", choix:["jouée une seule fois","répétée deux fois","jouée trois fois","improvisée"], rep:1},
       {q:"« Sonnez les matines » monte jusqu'à…", choix:["do5","ré5","mi5","fa5"], rep:2} ]},
  {id:"odejoie", titre:"Ode à la joie", compositeur:"Beethoven", pd:true,
-  info:"Domaine public. Le thème du finale de la 9ᵉ symphonie, devenu hymne européen. Une mélodie par mouvement conjoint : presque chaque note touche sa voisine.",
-  melody:{time:"4/4",tempo:"Maestoso",measures:[
+  info:"Domaine public. Huit mesures du thème du finale de la 9ᵉ symphonie, devenu hymne européen. Une mélodie par mouvement conjoint : presque chaque note touche sa voisine.",
+  melody:{time:"4/4",tempo:"Maestoso",bpm:92,measures:[
     ["mi4","mi4","fa4","sol4"],["sol4","fa4","mi4","re4"],["do4","do4","re4","mi4"],["mi4","re4","re4"],
-    ["mi4","mi4","fa4","sol4"],["sol4","fa4","mi4","re4"],["do4","do4","re4","mi4"],["re4","do4","do4"]]},
+    ["mi4","mi4","fa4","sol4"],["sol4","fa4","mi4","re4"],["do4","do4","re4","mi4"],["re4","do4","do4"]],beats:[
+    [1,1,1,1],[1,1,1,1],[1,1,1,1],[1.5,.5,2],
+    [1,1,1,1],[1,1,1,1],[1,1,1,1],[1.5,.5,2]]},
   segments:[
     {id:"odejoie_p1",title:"L'élan",bars:"mes. 1-4",mesFrom:1,mesTo:4,level:"P5",focus:"notes"},
     {id:"odejoie_p2",title:"La réponse",bars:"mes. 5-8",mesFrom:5,mesTo:8,level:"P5",focus:"notes"},
-    {id:"odejoie_tout",title:"Toute la pièce",bars:"mes. 1-8",mesFrom:1,mesTo:8,level:"P5",focus:"memoire"}],
+    {id:"odejoie_tout",title:"Tout l’extrait d’étude",bars:"mes. 1-8",mesFrom:1,mesTo:8,level:"P5",focus:"memoire"}],
   q:[ {q:"La mélodie avance surtout…", choix:["par grands sauts","par notes voisines","en accords","en silences"], rep:1},
       {q:"Les deux phrases se terminent…", choix:["exactement pareil","presque pareil — la fin change","sur la note la plus aiguë","en clé de fa"], rep:1} ]},
  {id:"ahvous", titre:"Ah ! vous dirai-je, maman", compositeur:"Traditionnel · varié par Mozart", pd:true,
@@ -4956,9 +5209,11 @@ const PIECES_BUILTIN=[
       {q:"Le grand saut du début va…", choix:["de do à sol","de do à do","de sol à ré","il n'y a pas de saut"], rep:0} ]},
  {id:"ventdhiver", titre:"Vive le vent (Jingle Bells)", compositeur:"James L. Pierpont (1857)", pd:true,
   info:"Domaine public. Le refrain le plus répété au monde : trois mi qui sonnent comme des grelots, puis la phrase s'ouvre. Parfait pour ancrer le mi et ses voisines.",
-  melody:{time:"4/4",tempo:"Allegro",measures:[
+  melody:{time:"4/4",tempo:"Allegro",bpm:116,measures:[
     ["mi4","mi4","mi4"],["mi4","mi4","mi4"],["mi4","sol4","do4","re4"],["mi4"],
-    ["fa4","fa4","fa4","fa4"],["fa4","mi4","mi4","mi4"],["mi4","re4","re4","mi4"],["re4","sol4"]]},
+    ["fa4","fa4","fa4","fa4"],["fa4","mi4","mi4","mi4","mi4"],["mi4","re4","re4","mi4"],["re4","sol4"]],beats:[
+    [1,1,2],[1,1,2],[1,1,1,1],[4],
+    [1,1,1.5,.5],[1,1,1,.5,.5],[1,1,1,1],[2,2]]},
   segments:[
     {id:"vent_p1",title:"Les grelots",bars:"mes. 1-4",mesFrom:1,mesTo:4,level:"P5",focus:"notes"},
     {id:"vent_p2",title:"La phrase",bars:"mes. 5-8",mesFrom:5,mesTo:8,level:"P5",focus:"notes"},
@@ -4967,10 +5222,13 @@ const PIECES_BUILTIN=[
       {q:"La note répétée des « grelots » est…", choix:["do","ré","mi","sol"], rep:2} ]},
  {id:"saints", titre:"Oh! quand les saints (When the Saints)", compositeur:"Traditionnel gospel", pd:true,
   info:"Domaine public. Trois appels identiques qui s'élancent vers le sol, puis la marche se déploie. Un standard de La Nouvelle-Orléans, taillé pour la lecture par motifs.",
-  melody:{time:"4/4",tempo:"Tempo di marcia",measures:[
+  melody:{time:"4/4",tempo:"Tempo di marcia",bpm:112,measures:[
     ["do4","mi4","fa4"],["sol4"],["do4","mi4","fa4"],["sol4"],
     ["do4","mi4","fa4","sol4"],["mi4","do4","mi4","re4"],["mi4","re4","do4","do4"],["mi4","sol4","sol4","fa4"],
-    ["mi4","fa4","sol4"],["mi4","do4","re4"],["do4"]]},
+    ["mi4","fa4","sol4"],["mi4","do4","re4"],["do4"]],beats:[
+    [1,1,1],[4],[1,1,1],[4],
+    [1,1,1,1],[2,2,2,4],[1,1,1,3],[1,1,1,3],
+    [1,1,2],[2,2,2],[4]]},
   segments:[
     {id:"saints_p1",title:"Les trois appels",bars:"mes. 1-4",mesFrom:1,mesTo:4,level:"P5",focus:"notes"},
     {id:"saints_p2",title:"La marche",bars:"mes. 5-8",mesFrom:5,mesTo:8,level:"P5",focus:"notes"},
@@ -4979,27 +5237,31 @@ const PIECES_BUILTIN=[
   q:[ {q:"L'appel « do mi fa sol » est joué…", choix:["une fois","deux fois","trois fois","quatre fois"], rep:2},
       {q:"La pièce se termine sur…", choix:["sol","mi","do","ré"], rep:2} ]},
  {id:"aclairfa", titre:"Au clair de la lune — main gauche", compositeur:"Traditionnel français", pd:true,
-  info:"Domaine public. La même lune, un octave plus bas : fa, sol, la en clé de fa. Ta main gauche apprend à lire sur son propre territoire.",
-  melody:{time:"4/4",tempo:"Andante",measures:[
+  info:"Domaine public. Le même extrait d’étude transposé dans le grave : fa, sol, la en clé de fa. Ta main gauche apprend à lire sur son propre territoire.",
+  melody:{time:"2/4",tempo:"Andante",bpm:92,measures:[
     ["fa3","fa3","fa3","sol3"],["la3","sol3"],["fa3","la3","sol3","sol3"],["fa3"],
-    ["fa3","fa3","fa3","sol3"],["la3","sol3"],["fa3","la3","sol3","sol3"],["fa3"]]},
+    ["fa3","fa3","fa3","sol3"],["la3","sol3"],["fa3","la3","sol3","sol3"],["fa3"]],beats:[
+    [.5,.5,.5,.5],[1,1],[.5,.5,.5,.5],[2],
+    [.5,.5,.5,.5],[1,1],[.5,.5,.5,.5],[2]]},
   segments:[
     {id:"aclairfa_p1",title:"Phrase 1",bars:"mes. 1-2",mesFrom:1,mesTo:2,level:"P6",hand:"gauche",focus:"notes"},
     {id:"aclairfa_p2",title:"Phrase 2",bars:"mes. 3-4",mesFrom:3,mesTo:4,level:"P6",hand:"gauche",focus:"notes"},
     {id:"aclairfa_p3",title:"La reprise",bars:"mes. 5-8",mesFrom:5,mesTo:8,level:"P6",hand:"gauche",focus:"memoire"},
-    {id:"aclairfa_tout",title:"Toute la pièce",bars:"mes. 1-8",mesFrom:1,mesTo:8,level:"P6",hand:"gauche",focus:"memoire"}],
+    {id:"aclairfa_tout",title:"Tout l’extrait d’étude",bars:"mes. 1-8",mesFrom:1,mesTo:8,level:"P6",hand:"gauche",focus:"memoire"}],
   clef:"fa",
   q:[ {q:"En clé de fa, cette pièce tourne autour de…", choix:["do ré mi","fa sol la","si do ré","sol la si"], rep:1},
       {q:"La clé de fa désigne la ligne du fa avec…", choix:["sa boucle","ses deux points","sa barre","sa couleur"], rep:1} ]},
  {id:"odejoiefa", titre:"Ode à la joie — main gauche", compositeur:"Beethoven", pd:true,
-  info:"Domaine public. Le même thème de la 9ᵉ, écrit en do majeur pour la clé de fa : mêmes degrés, même chant, une octave sous la main droite. Idéal pour faire dialoguer tes deux clés.",
-  melody:{time:"4/4",tempo:"Maestoso",measures:[
+  info:"Domaine public. Huit mesures du thème de la 9ᵉ, écrites en do majeur pour la clé de fa : mêmes degrés, même chant, une octave sous la main droite.",
+  melody:{time:"4/4",tempo:"Maestoso",bpm:92,measures:[
     ["mi3","mi3","fa3","sol3"],["sol3","fa3","mi3","re3"],["do3","do3","re3","mi3"],["mi3","re3","re3"],
-    ["mi3","mi3","fa3","sol3"],["sol3","fa3","mi3","re3"],["do3","do3","re3","mi3"],["re3","do3","do3"]]},
+    ["mi3","mi3","fa3","sol3"],["sol3","fa3","mi3","re3"],["do3","do3","re3","mi3"],["re3","do3","do3"]],beats:[
+    [1,1,1,1],[1,1,1,1],[1,1,1,1],[1.5,.5,2],
+    [1,1,1,1],[1,1,1,1],[1,1,1,1],[1.5,.5,2]]},
   segments:[
     {id:"odejoiefa_p1",title:"L'élan",bars:"mes. 1-4",mesFrom:1,mesTo:4,level:"P9",hand:"gauche",focus:"notes"},
     {id:"odejoiefa_p2",title:"La réponse",bars:"mes. 5-8",mesFrom:5,mesTo:8,level:"P9",hand:"gauche",focus:"notes"},
-    {id:"odejoiefa_tout",title:"Toute la pièce",bars:"mes. 1-8",mesFrom:1,mesTo:8,level:"P9",hand:"gauche",focus:"memoire"}],
+    {id:"odejoiefa_tout",title:"Tout l’extrait d’étude",bars:"mes. 1-8",mesFrom:1,mesTo:8,level:"P9",hand:"gauche",focus:"memoire"}],
   clef:"fa",
   q:[ {q:"En clé de fa, la ligne du milieu que cette pièce traverse souvent est…", choix:["le do","le ré","le mi","le fa"], rep:1},
       {q:"Cette mélodie avance surtout…", choix:["par notes voisines","par grands sauts","en accords","en trilles"], rep:0} ]},
