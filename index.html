@@ -569,7 +569,7 @@ function esc(s){
   });
 }
 /* ================= DONNÉES ================= */
-const APP_VERSION="v32"; // garder aligné avec CACHE_NAME de sw.js (testé)
+const APP_VERSION="v33"; // garder aligné avec CACHE_NAME de sw.js (testé)
 const NOTES = {
   do4 :{n:"do", clef:"sol", p:-2, midi:60, mn:"Le do du milieu est transpercé par sa petite ligne, rien qu'à lui."},
   re4 :{n:"ré", clef:"sol", p:-1, midi:62, mn:"Collé juste sous la portée."},
@@ -613,13 +613,15 @@ const PALIERS = [
   {id:"B4", t:"Boss · presque tout",   sub:"deux clés, zone 4",      notes:U(["mi4","fa4","sol4","la4","si4","do5","re5","mi5","fa5"],["si2","do3","re3","mi3","fa3","sol3","la3","si3","do4f"])},
   {id:"B5", t:"Bilan de lecture · Les Deux Clés",sub:"tout l'ambitus",notes:U(["do4","re4","mi4","fa4","sol4","la4","si4","do5","re5","mi5","fa5"],["fa2","sol2","la2","si2","do3","re3","mi3","fa3","sol3","la3","si3","do4f"])}
 ];
-/* ===== Parcours d'apprentissage court =====
-   Les paliers historiques restent les défis de précision. Le parcours principal,
-   lui, ne demande jamais de rester bloqué longtemps sur le même petit vocabulaire :
-   3 notes au départ, puis exactement une nouvelle note par exercice. */
+/* ===== Parcours d'acquisition =====
+   Chaque étape ajoute au plus une note. Cette nouveauté reste ensuite dans le même
+   cycle pendant trois séries parfaites de 25 questions. Une tentative avec erreur
+   nourrit la réparation, mais n'ouvre jamais l'étape suivante. */
 const MAX_QUESTIONS_PER_EXERCISE=25;
 const COURSE_MAX_EXERCISES=12;
 const COURSE_QUESTION_BUDGET=25;
+const COURSE_SERIES_PER_STEP=3;
+const COURSE_NEW_NOTE_TARGET=5;
 const COURSES=[
   {id:"sol",label:"Clé de sol",steps:[
     {id:"sol-01",notes:["sol4","la4","si4"],newNote:""},
@@ -910,14 +912,15 @@ function normalizeProfile(p){
 }
 function courseById(id){ return COURSES.find(function(course){return course.id===id;})||null; }
 function freshCourseProgress(){
-  return {version:1,currentItem:"sol",steps:{sol:0,fa:0},exercises:{sol:0,fa:0},complete:false};
+  return {version:2,currentItem:"sol",steps:{sol:0,fa:0},cycles:{sol:0,fa:0},exercises:{sol:0,fa:0},complete:false};
 }
 function normalizeCourseProgress(value){
   const out=freshCourseProgress(), src=isRecord(value)?value:{};
   COURSES.forEach(function(course){
     const max=Math.min(COURSE_MAX_EXERCISES,course.steps.length);
     out.steps[course.id]=clampInt(src.steps&&src.steps[course.id],0,max,0);
-    out.exercises[course.id]=clampInt(src.exercises&&src.exercises[course.id],0,max,out.steps[course.id]);
+    out.cycles[course.id]=out.steps[course.id]>=max?0:clampInt(src.cycles&&src.cycles[course.id],0,COURSE_SERIES_PER_STEP-1,0);
+    out.exercises[course.id]=Math.max(out.steps[course.id],clampInt(src.exercises&&src.exercises[course.id],0,max,out.steps[course.id]));
   });
   if(out.steps.sol>=COURSES[0].steps.length) out.currentItem="fa";
   if(out.steps.fa>=COURSES[1].steps.length){ out.currentItem="fa"; out.complete=true; }
@@ -936,8 +939,8 @@ function currentCourseState(){
     if(!next){ progress.complete=true; return null; }
     item=next; progress.currentItem=item.id; index=progress.steps[item.id]||0;
   }
-  const step=item.steps[index];
-  return step?{item:item,index:index,step:step,progress:progress}:null;
+  const step=item.steps[index], seriesIndex=progress.cycles[item.id]||0;
+  return step?{item:item,index:index,step:step,seriesIndex:seriesIndex,progress:progress}:null;
 }
 function coursePalierFor(step){
   return PALIERS.find(function(p){ return step.notes.every(function(id){return p.notes.indexOf(id)>=0;}); })||PALIERS[0];
@@ -950,20 +953,33 @@ function courseDecision(){
   if(!state) return null;
   const item=state.item, step=state.step, palier=coursePalierFor(step), budget=courseQuestionBudget(step);
   const newLabel=step.newNote&&NOTES[step.newNote]?NOTES[step.newNote].n.toUpperCase():"SOL · LA · SI";
+  const seriesNumber=state.seriesIndex+1, phaseLabels=["Découverte active","Consolidation","Validation"];
   return {
-    kind:"course",label:"Parcours express",n:budget,questionCap:budget,palier:palier,pool:step.notes.slice(),mode:"zen",groupN:1,
-    reason:step.newNote?"Une seule nouvelle note arrive : "+newLabel+". Le reste reste en mouvement.":"Trois repères pour démarrer : SOL, LA, SI.",
-    course:{itemId:item.id,itemLabel:item.label,stepId:step.id,stepIndex:state.index,stepTotal:item.steps.length,newNote:step.newNote||"",signature:"course-v1:"+item.id+":"+state.index}
+    kind:"course",label:"Cycle d’acquisition",n:budget,questionCap:budget,palier:palier,pool:step.notes.slice(),mode:"zen",groupN:1,
+    reason:(step.newNote?"Nouveauté du cycle : "+newLabel+".":"Trois repères pour démarrer : SOL, LA, SI.")+" Série "+seriesNumber+"/"+COURSE_SERIES_PER_STEP+" : 25 réponses justes et aucune erreur pour la valider.",
+    course:{itemId:item.id,itemLabel:item.label,stepId:step.id,stepIndex:state.index,stepTotal:item.steps.length,newNote:step.newNote||"",seriesIndex:state.seriesIndex,seriesNumber:seriesNumber,seriesTotal:COURSE_SERIES_PER_STEP,phaseLabel:phaseLabels[state.seriesIndex]||"Acquisition",signature:"course-v2:"+item.id+":"+state.index+":"+state.seriesIndex}
   };
 }
-function advanceCourseExercise(course){
+function advanceCourseExercise(course,perfect){
   if(!course||!DB) return null;
   const progress=normalizeCourseProgress(DB.courseProgress), item=courseById(course.itemId);
   if(!item) return null;
   const max=Math.min(COURSE_MAX_EXERCISES,item.steps.length);
-  const next=Math.min(max,(progress.steps[item.id]||0)+1);
+  const currentStep=progress.steps[item.id]||0, currentSeries=progress.cycles[item.id]||0;
+  if(perfect!==true||currentStep!==course.stepIndex||currentSeries!==(course.seriesIndex||0)){
+    DB.courseProgress=progress;
+    return courseDecision();
+  }
+  const completedSeries=currentSeries+1;
+  if(completedSeries<COURSE_SERIES_PER_STEP){
+    progress.cycles[item.id]=completedSeries;
+    DB.courseProgress=normalizeCourseProgress(progress);
+    return courseDecision();
+  }
+  const next=Math.min(max,currentStep+1);
   progress.steps[item.id]=next;
-  progress.exercises[item.id]=Math.min(max,(progress.exercises[item.id]||0)+1);
+  progress.cycles[item.id]=0;
+  progress.exercises[item.id]=Math.max(progress.exercises[item.id]||0,next);
   if(next>=item.steps.length){
     const following=COURSES[COURSES.indexOf(item)+1];
     if(following) progress.currentItem=following.id;
@@ -2591,7 +2607,7 @@ function openMusicProfile(){
       '<label>Point de départ déclaré<select id="profLevel">'+optionHtml(PROFILE_LEVELS,p.niveauDepart)+'</select></label>'+
       '<p class="src" style="margin:0">Ce point de départ place l’exploration ; il ne valide aucun acquis et ne remplace pas un diagnostic.</p>'+
       '<label>Temps disponible (défis)<select id="profMinutes">'+optionHtml(DAILY_MINUTES,p.dailyMinutes)+'</select></label>'+
-      '<p class="src" style="margin:0">Le parcours principal comporte exactement 25 questions par séance, quelle que soit cette durée.</p>'+
+      '<p class="src" style="margin:0">Chaque nouveauté se travaille sur 3 séries de 25 questions. Seule une série sans erreur est validée ; la note suivante reste verrouillée jusqu’aux 3 séries parfaites.</p>'+
       '<label>Rythme hebdomadaire<select id="profDays">'+optionHtml(DAYS_PER_WEEK,p.daysPerWeek)+'</select></label>'+
       '<label>Date cible<input id="profTarget" type="date" value="'+esc(p.targetDate)+'"></label>'+
       '<label>Affinité<select id="profAffinity">'+optionHtml(PROFILE_AFFINITIES,p.affinity)+'</select></label>'+
@@ -2790,12 +2806,12 @@ function dailyPlan(decision){
   const profile=normalizeProfile(DB.profile), total=profile.dailyMinutes, piece=activePieceObj();
   if(decision&&decision.kind==="course"){
     const c=decision.course||{}, done=(DB.dailyProgress&&DB.dailyProgress[todayStr()])||{};
-    const signature=c.signature||"course-v1";
+    const signature=c.signature||"course-v2";
     const sessionDone=done.session===signature;
     const newcomer=c.newNote&&NOTES[c.newNote]?"Nouvelle note : "+NOTES[c.newNote].n.toUpperCase()+".":"Départ : SOL · LA · SI.";
     return {
-      isCourse:true,total:decision.n,path:"Parcours vivant",cadence:"une note nouvelle à la fois",profile:profile,signature:signature,
-      blocks:[{id:"course",questions:decision.n,title:(c.itemLabel||"Parcours")+" · étape "+((c.stepIndex||0)+1)+"/"+(c.stepTotal||COURSE_MAX_EXERCISES),note:newcomer+" Les notes déjà vues restent dans le jeu.",done:sessionDone}]
+      isCourse:true,total:decision.n,path:"Parcours d’acquisition",cadence:"3 séries parfaites avant la note suivante",profile:profile,signature:signature,
+      blocks:[{id:"course",questions:decision.n,title:(c.itemLabel||"Parcours")+" · cycle "+((c.stepIndex||0)+1)+"/"+(c.stepTotal||COURSE_MAX_EXERCISES)+" · série "+(c.seriesNumber||1)+"/"+(c.seriesTotal||COURSE_SERIES_PER_STEP),note:newcomer+" "+esc(c.phaseLabel||"Acquisition")+" : 25 réponses justes, aucune erreur.",done:sessionDone}]
     };
   }
   const frag=fragileNoteIds(3), due=dueCount(), pending=(DB.repairQueue||[]).length;
@@ -2886,12 +2902,12 @@ function renderCockpit(decision,plan){
   $("coachKicker").textContent="Coach invisible · "+plan.path;
   if(plan.isCourse){
     const c=decision.course||{}, newcomer=c.newNote&&NOTES[c.newNote]?"Une nouvelle note rejoint le jeu : "+NOTES[c.newNote].n.toUpperCase()+".":"Tes trois premiers repères entrent en jeu.";
-    $("coachPitch").textContent=hello+"ta séance comporte exactement "+plan.total+" questions. "+newcomer;
+    $("coachPitch").textContent=hello+"série "+(c.seriesNumber||1)+"/"+(c.seriesTotal||COURSE_SERIES_PER_STEP)+" : exactement "+plan.total+" questions. "+newcomer+" Une erreur impose de refaire cette série avant d’avancer.";
     $("btnPlayNow").textContent="JOUER · "+plan.total+" QUESTIONS";
     $("cockpitMeta").innerHTML=
       '<span><b>'+esc(c.itemLabel||p.id)+'</b><small>clé</small></span>'+
-      '<span><b>Étape '+((c.stepIndex||0)+1)+'</b><small>sur '+(c.stepTotal||COURSE_MAX_EXERCISES)+'</small></span>'+
-      '<span><b>'+plan.total+' q.</b><small>par séance</small></span>';
+      '<span><b>Cycle '+((c.stepIndex||0)+1)+'</b><small>série '+(c.seriesNumber||1)+'/'+(c.seriesTotal||COURSE_SERIES_PER_STEP)+'</small></span>'+
+      '<span><b>'+plan.total+' q.</b><small>sans faute</small></span>';
     $("coachLine").textContent=decision.reason;
     return;
   }
@@ -2917,8 +2933,11 @@ function renderPlayerState(decision){
       '<span>'+won+'/'+counts.total+' passages conquis'+(next?' · prochain : '+esc(next.title):'')+
       (amb?'<br>Ambition : '+esc(amb.def.label)+(amb.done?' ★ atteinte':' · '+amb.pct+' %'):'')+'</span></div>';
   }
+  const courseState=decision&&decision.kind==="course"&&decision.course
+    ? '<div class="stateTile"><h3>Acquisition en cours</h3><b>Série '+decision.course.seriesNumber+'/'+decision.course.seriesTotal+'</b><span>'+esc(decision.course.phaseLabel)+' · cycle '+(decision.course.stepIndex+1)+'/'+decision.course.stepTotal+'</span></div>'
+    : '<div class="stateTile"><h3>Lecture des notes</h3><b>'+esc(prog)+'</b><span>Repère Cycle 1 · '+esc(p.t)+'</span></div>';
   $("playerState").innerHTML=
-    '<div class="stateTile"><h3>Lecture des notes</h3><b>'+esc(prog)+'</b><span>Repère Cycle 1 · '+esc(p.t)+'</span></div>'+
+    courseState+
     '<div class="stateTile"><h3>Mémoire</h3><b>'+due+' à revoir</b><span>'+(prec===null?'Précision en construction':prec+'% précision globale')+'</span></div>'+
     pieceTile+
     '<div class="stateTile wide"><h3>Notes fragiles</h3><b>'+(frag.length?frag.map(function(id){return NOTES[id].n.toUpperCase();}).join(" · "):"Zone stable")+'</b><span>'+(frag.length?"Le coach les remet dans le jeu.":"Le prochain jeu ouvre la voie.")+'</span></div>';
@@ -2944,7 +2963,7 @@ function renderHome(){
   renderPlayerState(decision);
   const startPid=profileStartPalier(plan.profile.niveauDepart);
   $("missionTxt").innerHTML = plan.isCourse
-    ? "Parcours du jour : "+esc(decision.course.itemLabel)+" · étape "+(decision.course.stepIndex+1)+"/"+decision.course.stepTotal+" · "+(decision.course.newNote?"une nouvelle note arrive.":"trois repères pour démarrer.")
+    ? "Parcours du jour : "+esc(decision.course.itemLabel)+" · cycle "+(decision.course.stepIndex+1)+"/"+decision.course.stepTotal+" · série "+decision.course.seriesNumber+"/"+decision.course.seriesTotal+". "+(decision.course.newNote?"La nouveauté reste la même jusqu’aux 3 séries parfaites.":"Les trois repères doivent tenir sur 3 séries parfaites.")
     : DB.mode==="libre"
     ? (startPid&&DB.sel===startPid?esc(profileStartText(plan.profile.niveauDepart,startPid)):
       "Mode Libre : écoute, chante, explore chaque note avec le piano · plan de "+plan.total+" minutes.")
@@ -3034,7 +3053,7 @@ function renderHome(){
     b.onclick=(function(pid){return function(){startStarReview(pid);};})(sdue[0].id);
     sc.appendChild(b);
   }
-  $("btnSerie").textContent=plan.isCourse?"Exercice court · "+plan.total+" questions":"Session 10 questions · "+modeLabel(DB.mode);
+  $("btnSerie").textContent=plan.isCourse?"Série "+decision.course.seriesNumber+"/"+decision.course.seriesTotal+" · "+plan.total+" questions sans faute":"Session 10 questions · "+modeLabel(DB.mode);
   const nd=dueCount();
   $("defiTxt").textContent = nd>0 ? ("↻ "+nd+" note"+(nd>1?"s":"")+" à revoir")
     : (day&&day.perfect ? "★ Défi parfait réussi" : "★ Défi parfait : tente une Rafale");
@@ -3244,6 +3263,18 @@ function promptOccurrences(id,qtype){
     return total+row.ids.filter(function(noteId){return noteId===id;}).length;
   },0);
 }
+function courseFocusId(pool,qtype){
+  const newcomer=EX&&EX.course&&EX.course.newNote;
+  if(!newcomer||!NOTES[newcomer]||(pool||[]).indexOf(newcomer)<0) return null;
+  const target=Math.min(COURSE_NEW_NOTE_TARGET,EX.questionCap||COURSE_QUESTION_BUDGET);
+  const count=promptOccurrences(newcomer), asked=baselinePromptHistory().reduce(function(total,row){return total+row.ids.length;},0);
+  if(count>=target) return null;
+  const remaining=questionCapacityLeft(), needed=target-count;
+  const paced=asked>=2+count*5, mustFit=remaining<=needed;
+  if(!paced&&!mustFit) return null;
+  if(!mustFit&&recentPromptIds(2).indexOf(newcomer)>=0) return null;
+  return newcomer;
+}
 function pickDiverseId(pool,selected,qtype){
   const source=uniq((pool||[]).filter(function(id){return NOTES[id];}));
   if(!source.length) return null;
@@ -3437,7 +3468,7 @@ function startDailySession(){
     DB.sel=course.palier.id; DB.seen[course.palier.id]=true;
     save();
     beginSerie({sessionMode:"course",n:course.n,questionCap:course.questionCap,palier:course.palier,pool:course.pool,mode:course.mode,groupN:1,
-      label:"Parcours · "+course.course.itemLabel,course:course.course,cold:true});
+      label:"Parcours · "+course.course.itemLabel+" · série "+course.course.seriesNumber+"/"+course.course.seriesTotal,course:course.course,cold:true});
     return;
   }
   let d=coachDecision();
@@ -3495,10 +3526,10 @@ function beginSerie(opts){
       coldPending:coldEligible&&!!coldId,coldId:coldId,coldResult:null,questionDeadlineAt:0,pausedQuestionRemaining:null,pausedResumeNext:false,
       dailyValidationBuffer:opts.daily&&mode!=="libre"?dailyDraftRecords(p.id,mode):[]};
   logEvent("serie_start",{palier:p.id,mode:mode,groupe:groupN,type:EX.sessionMode,n:total,questions:questionCap,segment:EX.segment?EX.segment.segmentId:null,piece:EX.segment?EX.segment.pieceId:null});
-  const label=opts.label || (EX.sessionMode==="course"?"Parcours":(EX.sessionMode==="flash"?"Flash":EX.sessionMode==="repair"?"Réparation":"Session"));
+  const label=opts.label || (EX.sessionMode==="course"?"Cycle d’acquisition":(EX.sessionMode==="flash"?"Flash":EX.sessionMode==="repair"?"Réparation":"Session"));
   $("exMode").textContent=label+" · "+(EX.segment?EX.segment.segmentTitle:p.t)+(groupN>1?" · groupes de "+groupN:"");
   $("timerbar").classList.toggle("on",!!EX.limit||!!EX.daily);
-  $("btnQuit").textContent=EX.daily?"Arrêter la séance":(EX.sessionMode==="course"?"Quitter l’exercice":"Abandonner la série");
+  $("btnQuit").textContent=EX.daily?"Arrêter la séance":(EX.sessionMode==="course"?"Quitter la série":"Abandonner la série");
   $("btnAgain").style.display="block";
   show("scrEx"); if(EX.daily) startDailyClock(); nextQuestion();
 }
@@ -3541,7 +3572,7 @@ function showDecouverte(pid, onContinue, idsOverride){
   const neuves=((idsOverride&&idsOverride.length)?idsOverride:newNotesOf(pid)).slice(0,6);
   if(!p||!neuves.length){ if(onContinue) onContinue(); return; }
   logEvent("decouverte",{palier:pid,nb:neuves.length});
-  const course=EX&&EX.course, heading=course?"Parcours · "+course.itemLabel+" · étape "+(course.stepIndex+1)+"/"+course.stepTotal:p.t;
+  const course=EX&&EX.course, heading=course?"Parcours · "+course.itemLabel+" · cycle "+(course.stepIndex+1)+"/"+course.stepTotal+" · série "+course.seriesNumber+"/"+course.seriesTotal:p.t;
   let body='<h3>Découverte — '+esc(heading)+'</h3><h2>'+(neuves.length>1?"Tes premières notes":"Une nouvelle note")+'</h2>'+
     '<p style="margin-bottom:10px">Regarde où elle se place, écoute-la, puis on la teste. Pression basse, oreille ouverte.</p>';
   body+='<div class="prepNotes">'+neuves.map(function(id){return previewNoteHtml(id,true);}).join("")+'</div>';
@@ -3608,6 +3639,16 @@ function drawWriteStaff(){
   });
 }
 function pickCoverageSeq(pool,n,qtype){
+  const focus=courseFocusId(pool,qtype);
+  if(focus){
+    const same=pool.filter(function(id){return NOTES[id].clef===NOTES[focus].clef;}), seq=[focus];
+    while(seq.length<n){
+      const next=pickDiverseId(same.length?same:pool,seq,qtype);
+      if(!next) break;
+      seq.push(next);
+    }
+    return seq;
+  }
   const missing=(EX.coverageQueue||[]).filter(function(id){return pool.indexOf(id)>=0&&EX.coverageIds.indexOf(id)<0;});
   if(!missing.length) return pickDiverseSeq(pool,n,qtype);
   const first=pickDiverseId(missing,[],qtype)||missing[0], same=pool.filter(function(id){return NOTES[id].clef===NOTES[first].clef;});
@@ -4247,16 +4288,20 @@ function finishSerie(){
       if(tierComplete(EX.mode)){ newlyTier=EX.mode; DB.xp+=100; }
     }
   }
-  let courseNext=null, courseAdvanced=false;
+  let courseNext=null, courseSeriesPassed=false, courseStepAdvanced=false;
   const courseFinished=!!(isCourse&&EX.course&&(EX.course.finishedNaturally||EX.i>=EX.n));
+  const coursePerfect=!!(courseFinished&&EX.promptCount===COURSE_QUESTION_BUDGET&&errs===0&&EX.ok===COURSE_QUESTION_BUDGET);
   if(courseFinished&&answered>0){
     const signature=EX.course.signature;
-    if(!DB.dailyProgress) DB.dailyProgress={};
-    const dayKey=todayStr(); if(!DB.dailyProgress[dayKey]) DB.dailyProgress[dayKey]={};
-    DB.dailyProgress[dayKey].session=signature;
-    courseNext=advanceCourseExercise(EX.course);
-    courseAdvanced=true;
-    logEvent("course_exercise_complete",{item:EX.course.itemId,step:EX.course.stepIndex,questions:EX.promptCount,errors:errs});
+    if(coursePerfect){
+      if(!DB.dailyProgress) DB.dailyProgress={};
+      const dayKey=todayStr(); if(!DB.dailyProgress[dayKey]) DB.dailyProgress[dayKey]={};
+      DB.dailyProgress[dayKey].session=signature;
+    }
+    courseNext=advanceCourseExercise(EX.course,coursePerfect);
+    courseSeriesPassed=coursePerfect;
+    courseStepAdvanced=coursePerfect&&(!courseNext||courseNext.course.itemId!==EX.course.itemId||courseNext.course.stepIndex!==EX.course.stepIndex);
+    logEvent("course_series_complete",{item:EX.course.itemId,step:EX.course.stepIndex,series:EX.course.seriesNumber,questions:EX.promptCount,errors:errs,perfect:coursePerfect,stepAdvanced:courseStepAdvanced});
   }
   let segmentState=null, segPromotion=null;
   if(isPiece){
@@ -4278,7 +4323,7 @@ function finishSerie(){
   const errsForLog=isDaily&&answered?Math.round(errs/answered*10):errs;
   logEvent("serie_end",{palier:p.id,mode:EX.mode,type:EX.sessionMode,ok:EX.ok,errs:errsForLog,avgMs:avgMs(),valide:newlyPalier,course:EX.course?EX.course.stepId:null,segment:EX.segment?EX.segment.segmentId:null,piece:EX.segment?EX.segment.pieceId:null});
   save(); header(); syncPush();
-  const scoreN=Math.max(1,isDaily?answered:(isCourse?EX.promptCount:EX.n)), prec=Math.round(EX.ok/scoreN*100), label=isDaily?(dailyQualified?(transferReached?"Séance du jour":"Séance du jour · sans transfert"):"Séance partielle"):(isCourse?"Exercice court":(isRepair?"Réparation":(isFlash?"Flash":(isPiece?"Partition":modeLabel(EX.mode==="rafale"?"zen":EX.mode)))));
+  const scoreN=Math.max(1,isDaily?answered:(isCourse?EX.promptCount:EX.n)), prec=Math.round(EX.ok/scoreN*100), label=isDaily?(dailyQualified?(transferReached?"Séance du jour":"Séance du jour · sans transfert"):"Séance partielle"):(isCourse?"Cycle d’acquisition":(isRepair?"Réparation":(isFlash?"Flash":(isPiece?"Partition":modeLabel(EX.mode==="rafale"?"zen":EX.mode)))));
   $("resScore").innerHTML=EX.ok+"<small>/"+(isDaily?answered:(isCourse?EX.promptCount:EX.n))+"</small>";
   $("resSub").textContent=isDaily
     ? label+" · "+Math.max(1,Math.round(activeElapsed/60000))+" min actives · précision "+prec+" %"
@@ -4293,11 +4338,12 @@ function finishSerie(){
           ? "Rappel à froid réussi. La séance a ciblé, réparé puis transféré sans lancer de nouvelle question après l’échéance."
           : "Le test à froid a révélé le point utile. Les confusions restent programmées, pas oubliées."));
   } else if(isCourse){
-    resultMessage=courseAdvanced
-      ? (courseNext
-        ? "Étape terminée. La prochaine séance ajoute "+(courseNext.course.newNote&&NOTES[courseNext.course.newNote]?NOTES[courseNext.course.newNote].n.toUpperCase():"une nouvelle clé")+" au jeu."
-        : "Parcours des deux clés terminé. Les défis de précision sont prêts quand tu veux.")
-      : "Exercice interrompu : il ne compte pas comme une étape terminée.";
+    if(!courseFinished) resultMessage="Série interrompue : elle ne remplit aucun jalon du cycle.";
+    else if(!courseSeriesPassed) resultMessage="Série "+EX.course.seriesNumber+"/"+EX.course.seriesTotal+" à refaire : "+errs+" erreur"+(errs>1?"s":"")+". La prochaine note reste verrouillée ; les corrections serviront à la nouvelle tentative.";
+    else if(courseStepAdvanced) resultMessage=courseNext
+      ? "Cycle maîtrisé : 3 séries de 25 sans erreur. La prochaine séance ajoute "+(courseNext.course.newNote&&NOTES[courseNext.course.newNote]?NOTES[courseNext.course.newNote].n.toUpperCase():"une nouvelle clé")+" au jeu."
+      : "Parcours des deux clés maîtrisé : chaque cycle a été validé par trois séries parfaites.";
+    else resultMessage="Série "+EX.course.seriesNumber+"/"+EX.course.seriesTotal+" validée sans erreur. La prochaine série garde exactement les mêmes notes pour consolider l’acquisition.";
   } else if(isRepair){
     resultMessage=errs?"Réparation active. Les notes fragiles reviennent avec un meilleur espacement.":"Réparation nette. La mémoire gagne en stabilité.";
   } else if(isFlash){
@@ -4331,9 +4377,12 @@ function finishSerie(){
       (seg.instruction?'<br><small style="color:var(--dim)">'+esc(seg.instruction)+'</small>':'');
   } else if(isCourse){
     const c=EX.course||{};
-    $("resVal").innerHTML=courseAdvanced
-      ? (courseNext?"<b>Étape "+(c.stepIndex+1)+"/"+c.stepTotal+" terminée.</b> Prochaine : "+esc(courseNext.course.itemLabel)+" · étape "+(courseNext.course.stepIndex+1)+"/"+courseNext.course.stepTotal+".":"<b>Les deux clés sont en place.</b> Passe aux défis quand tu veux.")
-      : "Exercice non terminé : la progression reste exactement où elle était.";
+    if(!courseFinished) $("resVal").textContent="Série non terminée : progression inchangée.";
+    else if(!courseSeriesPassed) $("resVal").innerHTML="<b>Série "+c.seriesNumber+"/"+c.seriesTotal+" non validée.</b> Rejoue-la sans erreur. Les séries parfaites déjà acquises restent conservées.";
+    else if(courseStepAdvanced) $("resVal").innerHTML=courseNext
+      ? "<b>Cycle "+(c.stepIndex+1)+"/"+c.stepTotal+" maîtrisé.</b> Prochaine : "+esc(courseNext.course.itemLabel)+" · cycle "+(courseNext.course.stepIndex+1)+"/"+courseNext.course.stepTotal+" · série 1/3."
+      : "<b>Les deux clés sont en place.</b> Tous les cycles d’acquisition sont maîtrisés.";
+    else $("resVal").innerHTML="<b>Série "+c.seriesNumber+"/"+c.seriesTotal+" parfaite.</b> Prochaine : série "+courseNext.course.seriesNumber+"/"+courseNext.course.seriesTotal+", mêmes notes, aucune nouveauté supplémentaire.";
   } else if(EX.mode==="libre"){
     $("resVal").textContent="Libre : exploration active, mémoire nourrie.";
   } else {
@@ -4349,6 +4398,7 @@ function finishSerie(){
     sfxWin();
     if(EX.mode==="zen" && CARDS[p.id]) setTimeout(function(){if(EX===resultSession&&$("scrRes").classList.contains("active"))showCard(p.id);},600);
   }
+  else if(courseSeriesPassed) sfxWin();
   else if(segPromotion==="maitrise") sfxWin(); // un passage maîtrisé sonne comme une victoire
 }
 function startRevision(){
@@ -6081,7 +6131,7 @@ $("btnQuit").onclick=function(){
     }
   }
   if(EX&&EX.sessionMode==="course"&&!EX.done){
-    if(typeof window.confirm==="function"&&!window.confirm("Quitter cet exercice ? Il ne sera pas compté comme terminé.")) return;
+    if(typeof window.confirm==="function"&&!window.confirm("Quitter cette série ? Elle ne remplira aucun jalon du cycle.")) return;
     logEvent("course_exercise_abort",{palier:EX.palier?EX.palier.id:null,step:EX.course?EX.course.stepId:null,i:EX.i});
     finishSerie(); return;
   }

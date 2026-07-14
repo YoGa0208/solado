@@ -112,7 +112,7 @@ function loadEngine(runtime) {
   const exportsList = [
     "esc", "checkValidation", "seriesCover", "recentCoveredIds", "validationMissingIds", "srs", "srsReview", "isDue", "coldRecallId", "ensureStructure", "cleanId", "isSafeId", "safeMap", "hasOwn",
     "importSave", "compactSave", "undoImport", "tierUnlocked", "tierComplete",
-    "palierPlayable", "playableInMode", "visiblePaliers", "valProgress", "PALIERS", "TIERS", "TIER_IDS", "NOTES", "COURSES", "MAX_QUESTIONS_PER_EXERCISE", "COURSE_MAX_EXERCISES", "courseDecision", "normalizeCourseProgress", "advanceCourseExercise",
+    "palierPlayable", "playableInMode", "visiblePaliers", "valProgress", "PALIERS", "TIERS", "TIER_IDS", "NOTES", "COURSES", "MAX_QUESTIONS_PER_EXERCISE", "COURSE_MAX_EXERCISES", "COURSE_SERIES_PER_STEP", "COURSE_NEW_NOTE_TARGET", "courseDecision", "normalizeCourseProgress", "advanceCourseExercise",
     "buildKeyboard", "pcOf", "isWhite", "pickKbdTarget", "nameOptions", "withAcc",
     "baseNoteObj", "kbdRangeFor", "freshPalierState", "SRS_DAYS", "normalizePiece", "normalizeAttachment", "normalizeSegment", "MAX_PIECE_ATTACHMENT_BYTES", "MAX_TOTAL_ATTACHMENT_BYTES", "SAFE_ATTACHMENT_TYPES", "pieceFileType",
     "normalizeQuestion", "normalizeDay", "normalizeSegmentState", "normalizeNoteStat", "normalizeConfusions", "normalizeRepairItem", "normalizeRepairQueue", "normalizeEasterEggs", "normalizeSeriesRecord", "normalizeTierProgress", "normalizeStar", "normalizeSeen", "normalizeKbdStats", "markDay", "activeDayKeys", "streak", "todayStr",
@@ -179,6 +179,11 @@ function answerCurrentCorrect() {
   } else {
     while (!ex.waiting && !ex.done && ex.k < ex.seq.length) E.answer(E.NOTES[ex.seq[ex.k]].n);
   }
+}
+function answerCurrentWrong() {
+  const ex = E.getEX(), id = ex.seq[ex.k] || ex.seq[0];
+  if (ex.qtype === "ecrit") E.answerPos(E.NOTES[id].p === 4 ? 5 : 4);
+  else E.answer(E.NOTES[id].n === "do" ? "ré" : "do");
 }
 
 /* 1) Échappement HTML (XSS) */
@@ -799,8 +804,9 @@ eq(skipEx.phaseStats.transfert.n, 0, "une mission passée ne prétend pas que le
 ok(skipEx.transferReached !== true, "une mission passée conserve l'indicateur sans transfert");
 E.clearQTimers(); E.clearDailyTimer(); E.haltEX();
 
-/* 9septies-bis) Parcours court — 3 notes, une arrivée à la fois, jamais une marée de répétitions */
-group("Parcours court — cadence, plafond et variété");
+/* 9septies-bis) Parcours d'acquisition — trois séries parfaites avant la nouveauté suivante */
+group("Parcours d’acquisition — cycles parfaits, plafond et variété");
+eq(E.COURSE_SERIES_PER_STEP, 3, "chaque nouveauté reste en place pendant trois séries validées");
 E.COURSES.forEach(function(course){
   ok(course.steps.length <= E.COURSE_MAX_EXERCISES && course.steps.length <= 12,
     course.label + " ne dépasse jamais 12 exercices");
@@ -835,25 +841,70 @@ for(let guard=0;guard<60&&!E.getEX().done;guard++){
 }
 ok(E.getEX().done && E.getEX().promptCount === E.MAX_QUESTIONS_PER_EXERCISE,
   "même la Rafale s'arrête au plafond de 25 questions");
+
+const migratedCourse=E.normalizeCourseProgress({version:1,currentItem:"sol",steps:{sol:2,fa:0},exercises:{sol:2,fa:0}});
+eq(migratedCourse.version,2,"l’ancien parcours migre vers les cycles d’acquisition");
+eq(migratedCourse.steps.sol,2,"la migration conserve le vocabulaire déjà atteint");
+eq(migratedCourse.cycles.sol,0,"la compétence courante repart au premier jalon sans perdre les notes acquises");
+
 freshDB();
-E.startDailySession();
-eq(E.getEX().sessionMode, "course", "le bouton principal démarre le parcours court");
+seedSeen(["sol4","la4","si4"]);
+function playCourseAttempt(withError){
+  E.startDailySession();
+  if(E.getEX().pendingDecouverte && typeof E.getEl("btnDecGo").onclick === "function") E.getEl("btnDecGo").onclick();
+  let missed=false;
+  for(let guard=0;guard<140&&!E.getEX().done;guard++){
+    if(E.getEX().pendingDecouverte && typeof E.getEl("btnDecGo").onclick === "function") E.getEl("btnDecGo").onclick();
+    else if(E.getEX().waiting) E.nextQuestion();
+    else if(withError&&!missed){ answerCurrentWrong(); missed=true; }
+    else answerCurrentCorrect();
+  }
+  return E.getEX();
+}
+
+const firstSignature=E.courseDecision().course.signature;
+const failedFirst=playCourseAttempt(true);
+eq(failedFirst.promptCount,E.MAX_QUESTIONS_PER_EXERCISE,"même une tentative imparfaite va au bout de ses 25 questions utiles");
+eq(E.courseDecision().course.seriesNumber,1,"une erreur empêche la première série de remplir un jalon");
+ok(!E.getDB().dailyProgress[E.todayStr()]||E.getDB().dailyProgress[E.todayStr()].session!==firstSignature,
+  "une série avec erreur n’est jamais marquée validée dans le plan");
+
+const perfectOne=playCourseAttempt(false);
+eq(perfectOne.sessionMode, "course", "le bouton principal démarre le cycle d’acquisition");
 eq(E.getEX().pool, ["sol4","la4","si4"], "le parcours commence bien avec SOL, LA, SI");
 eq(E.getEX().questionCap, E.MAX_QUESTIONS_PER_EXERCISE, "chaque séance du parcours comporte exactement 25 questions");
-if(E.getEX().pendingDecouverte && typeof E.getEl("btnDecGo").onclick === "function") E.getEl("btnDecGo").onclick();
-for(let guard=0;guard<60&&!E.getEX().done;guard++){
-  if(E.getEX().waiting) E.nextQuestion(); else answerCurrentCorrect();
-}
+eq(E.courseDecision().course.seriesNumber,2,"une première série parfaite ouvre seulement la série 2/3");
+eq(E.courseDecision().pool.length,3,"aucune nouvelle note n’arrive après une seule série parfaite");
+
+playCourseAttempt(true);
+eq(E.courseDecision().course.seriesNumber,2,"une erreur en série 2 impose de rejouer la série 2");
+eq(E.getDB().courseProgress.cycles.sol,1,"la première série parfaite reste acquise après une tentative imparfaite");
+playCourseAttempt(false);
+eq(E.courseDecision().course.seriesNumber,3,"deux séries parfaites ouvrent la validation 3/3 sans nouvelle note");
+eq(E.courseDecision().pool.length,3,"la troisième série travaille encore exactement le même vocabulaire");
+playCourseAttempt(false);
 const nextCourse=E.courseDecision();
-ok(E.getEX().done && nextCourse && nextCourse.pool.length === 4,
-  "un exercice terminé ouvre immédiatement l'étape à quatre notes");
+ok(nextCourse && nextCourse.pool.length === 4 && nextCourse.course.seriesNumber === 1,
+  "seules trois séries parfaites ouvrent le cycle suivant à quatre notes");
 ok(["sol4","la4","si4"].every(function(id){return nextCourse.pool.indexOf(id)>=0;}),
   "les trois repères initiaux restent actifs après l'arrivée de DO");
 const savedCourse=JSON.parse(E.compactSave());
-ok(!!savedCourse.courseProgress && savedCourse.courseProgress.steps.sol === 1,
-  "la progression courte suit la sauvegarde locale / QR");
-ok(E.cloudDocument().progress.courseProgress.steps.sol === 1,
-  "la progression courte suit aussi la synchro cloud");
+ok(!!savedCourse.courseProgress && savedCourse.courseProgress.steps.sol === 1 && savedCourse.courseProgress.cycles.sol === 0,
+  "le cycle d’acquisition suit la sauvegarde locale / QR");
+ok(E.cloudDocument().progress.courseProgress.steps.sol === 1 && E.cloudDocument().progress.courseProgress.cycles.sol === 0,
+  "le cycle d’acquisition suit aussi la synchro cloud");
+
+freshDB();
+const lastFaIndex=E.COURSES[1].steps.length-1;
+E.getDB().courseProgress=E.normalizeCourseProgress({version:2,currentItem:"fa",steps:{sol:E.COURSES[0].steps.length,fa:lastFaIndex},cycles:{sol:0,fa:0},exercises:{sol:E.COURSES[0].steps.length,fa:lastFaIndex}});
+const wideCourse=E.courseDecision(); seedSeen(wideCourse.pool);
+E.beginSerie({sessionMode:"course",n:wideCourse.n,questionCap:wideCourse.questionCap,palier:wideCourse.palier,pool:wideCourse.pool,mode:"zen",groupN:1,course:wideCourse.course,cold:false});
+for(let guard=0;guard<100&&!E.getEX().done;guard++){
+  if(E.getEX().waiting) E.nextQuestion(); else answerCurrentCorrect();
+}
+ok((E.getEX().promptCountById[wideCourse.course.newNote]||0)>=E.COURSE_NEW_NOTE_TARGET,
+  "même dans un grand vocabulaire, la nouveauté apparaît au moins cinq fois sur 25");
+
 const oldRandom=Math.random, prompts=[];
 try{
   Math.random=function(){return 0;};
