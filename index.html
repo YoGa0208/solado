@@ -58,9 +58,12 @@
   header h1{flex:1 1 100%;text-align:center;font-size:15px;margin:0;font-weight:700;letter-spacing:1.6px;color:var(--petrole);font-family:var(--serif)}
   .hstats{width:100%;display:flex;gap:8px;justify-content:center;align-items:center;font-size:13px;color:var(--dim)}
   .hstats b{color:var(--ink)}
-  #btnSound,#btnQuickSave{background:linear-gradient(135deg,var(--paper),var(--ceramique2));border:1px solid rgba(184,137,58,.55);color:var(--petrole);
+  #btnSound,#btnQuickSave,#btnGlobalHome{background:linear-gradient(135deg,var(--paper),var(--ceramique2));border:1px solid rgba(184,137,58,.55);color:var(--petrole);
     border-radius:999px;min-height:44px;padding:6px 11px;font-size:12.5px}
   #btnQuickSave{min-width:44px;min-height:44px;padding:4px 8px;font-size:16px;font-weight:800}
+  #btnGlobalHome{font-weight:900;min-width:84px}
+  #btnGlobalHome:not([hidden]){position:fixed;top:max(8px,env(safe-area-inset-top));left:max(8px,env(safe-area-inset-left));z-index:8;box-shadow:0 6px 18px rgba(8,57,71,.2);background:var(--paper)}
+  #btnGlobalHome[hidden]{display:none}
   .screen{display:none;flex:1;flex-direction:column}
   .screen.active{display:flex}
   button{font-family:inherit;cursor:pointer}
@@ -141,6 +144,38 @@
   .linkrow{display:flex;justify-content:space-between;align-items:center;margin-top:4px}
   .linkbtn{background:none;border:none;color:var(--dim);font-size:13px;text-decoration:underline;min-height:40px;padding:10px 6px}
   .defi{font-size:13px;color:var(--or-deep)}
+
+  .journey{background:linear-gradient(150deg,rgba(255,253,247,.98),rgba(215,233,232,.72) 55%,rgba(216,169,77,.18));border:1px solid rgba(184,137,58,.42);border-radius:26px 9px 24px 11px;padding:14px;margin-bottom:12px;position:relative;overflow:hidden}
+  .journey:after{content:"";position:absolute;right:-22px;top:34px;width:132px;height:58px;border:1px solid rgba(15,76,92,.18);border-left:0;border-bottom:0;border-radius:50%;transform:rotate(-8deg);pointer-events:none}
+  .journeyHead{display:flex;align-items:flex-start;justify-content:space-between;gap:9px;position:relative;z-index:1}
+  .journeyHead h3{margin:0;font-family:var(--serif);font-size:20px;color:var(--petrole)}
+  .journeyHead small{display:block;color:var(--dim);font-size:11.5px;line-height:1.3;margin-top:3px}
+  .dayMedallion{flex:none;display:flex;align-items:center;justify-content:center;min-width:62px;height:62px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff8dc,#e4bd67 53%,var(--or));border:2px solid #fff3c4;box-shadow:0 4px 13px rgba(141,104,38,.24);color:var(--petrole2);font-family:var(--serif);font-weight:900;text-align:center;line-height:1.05;font-size:12px}
+  .journeyLabel{display:block;margin:12px 0 6px;color:var(--or-deep);font-family:var(--serif);font-size:11px;font-weight:900;letter-spacing:.45px;text-transform:uppercase;position:relative;z-index:1}
+  .moodRow,.timeRow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;position:relative;z-index:1}
+  .moodRow button,.timeRow button{min-height:44px;padding:7px 4px;border:1px solid rgba(15,76,92,.18);border-radius:14px 6px 14px 6px;background:rgba(255,253,247,.86);color:var(--dim);font-size:11.5px;font-weight:700}
+  .moodRow button.on,.timeRow button.on{border-color:var(--or);background:var(--petrole);color:#fff;box-shadow:inset 0 -3px 0 var(--or)}
+  .moodRow button:disabled,.timeRow button:disabled{opacity:.7}
+  .missionContract{margin-top:10px;padding:11px;background:rgba(255,255,255,.7);border:1px solid rgba(15,76,92,.12);border-radius:18px 7px 18px 7px;position:relative;z-index:1}
+  .missionContract b{display:block;color:var(--petrole);font-size:14px}
+  .missionContract span{display:block;color:var(--dim);font-size:12px;line-height:1.35;margin-top:3px}
+  .weekSeals{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin:10px 0 7px;position:relative;z-index:1}
+  .weekSeal{aspect-ratio:1;border-radius:50%;display:flex;align-items:center;justify-content:center;border:1px dashed rgba(15,76,92,.35);background:rgba(255,255,255,.54);color:var(--dim);font-size:11px;font-weight:900}
+  .weekSeal.on{border-style:solid;border-color:var(--or);background:radial-gradient(circle at 35% 30%,#fff8dc,#e2bc68);color:var(--petrole2)}
+  .journeyActions{display:grid;grid-template-columns:1fr 1fr;gap:7px;position:relative;z-index:1}
+  .journeyActions button{min-height:44px;border:1px solid rgba(15,76,92,.2);border-radius:999px;background:var(--paper);color:var(--petrole);font-size:12px;font-weight:800}
+  .journeyActions button.weeklyReady{grid-column:1/-1;background:linear-gradient(135deg,#f7dfa0,var(--gold),var(--or));border-color:var(--or-deep);color:var(--petrole2);font-size:13px}
+  .journeyReason{position:relative;z-index:1;margin:8px 2px 0;color:var(--dim);font-size:11.5px;line-height:1.35}
+  .appointmentList{display:flex;flex-direction:column;gap:8px;margin:10px 0}
+  .appointmentRow{padding:10px;border:1px solid rgba(15,76,92,.14);border-radius:16px 7px 16px 7px;background:var(--paper)}
+  .appointmentRow b,.appointmentRow small{display:block}
+  .appointmentRow small{color:var(--dim);margin-top:3px;line-height:1.35}
+  .appointmentRow.cancelled{opacity:.62}
+  .appointmentRow .row{margin-top:7px}
+  .calendarForm{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}
+  .calendarForm label{display:flex;flex-direction:column;gap:4px;color:var(--dim);font-size:11px;font-weight:700}
+  .calendarForm label.wide{grid-column:1/-1}
+  .calendarForm input,.calendarForm select{width:100%;min-height:44px;border:1px solid rgba(15,76,92,.2);border-radius:10px;background:var(--paper);color:var(--petrole);padding:8px;font:16px var(--sans)}
 
   .exhead{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:5px 8px;font-size:13px;color:var(--dim);margin:4px 0 8px}
   #exMode{flex:1 1 100%;min-width:0;color:var(--petrole);font-weight:700;line-height:1.25}
@@ -234,8 +269,20 @@
   #overlay{position:fixed;inset:0;background:rgba(15,76,92,.38);display:none;align-items:center;
     justify-content:center;padding:max(12px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));z-index:10}
   #overlay.on{display:flex}
-  .dialogTools{position:sticky;top:-20px;z-index:2;display:flex;justify-content:flex-end;margin:-20px -20px 10px;padding:8px 10px;background:linear-gradient(180deg,rgba(255,250,240,.98),rgba(255,250,240,.9) 75%,transparent)}
-  #btnOverlaySave{position:static;width:auto;margin:0;min-height:44px;padding:8px 12px;border:1px solid rgba(216,169,77,.85);border-radius:999px;background:var(--petrole2);color:#fff;font-size:12px;font-weight:800;box-shadow:0 5px 16px rgba(8,57,71,.24)}
+  .dialogTools{position:sticky;top:-20px;z-index:2;display:flex;justify-content:flex-start;gap:6px;flex-wrap:wrap;margin:-20px -20px 10px;padding:8px 10px;background:linear-gradient(180deg,rgba(255,250,240,.98),rgba(255,250,240,.9) 75%,transparent)}
+  .dialogTools button{position:static;width:auto;margin:0;min-height:44px;padding:8px 12px;border:1px solid rgba(15,76,92,.25);border-radius:999px;background:var(--paper);color:var(--petrole);font-size:12px;font-weight:800;box-shadow:0 4px 12px rgba(8,57,71,.12)}
+  #btnOverlaySave{margin-left:auto;border-color:rgba(216,169,77,.85);background:var(--petrole2);color:#fff;box-shadow:0 5px 16px rgba(8,57,71,.24)}
+  .celebration{position:relative;text-align:center;padding:6px 2px 2px;overflow:hidden}
+  .celebrationBurst{position:absolute;inset:0;pointer-events:none}
+  .celebrationBurst i{position:absolute;left:50%;top:38%;width:8px;height:26px;border-radius:99px;background:var(--or);transform-origin:50% 92px;animation:sezamBurst 1.3s ease-out both}
+  .celebrationBurst i:nth-child(2){transform:rotate(45deg);background:var(--ceramique)}.celebrationBurst i:nth-child(3){transform:rotate(90deg);background:var(--vert)}.celebrationBurst i:nth-child(4){transform:rotate(135deg);background:var(--rouge)}.celebrationBurst i:nth-child(5){transform:rotate(180deg)}.celebrationBurst i:nth-child(6){transform:rotate(225deg);background:var(--ceramique)}.celebrationBurst i:nth-child(7){transform:rotate(270deg);background:var(--vert)}.celebrationBurst i:nth-child(8){transform:rotate(315deg);background:var(--rouge)}
+  @keyframes sezamBurst{0%{opacity:0;translate:-50% 0;scale:.2}28%{opacity:1}100%{opacity:0;translate:-50% -82px;scale:1}}
+  .celebrationBadge{position:relative;display:flex;align-items:center;justify-content:center;width:132px;height:132px;margin:8px auto 14px;border-radius:50%;background:radial-gradient(circle at 35% 28%,#fffdf2,#f2d58d 48%,var(--or));border:5px double #fff2bd;box-shadow:0 0 0 4px rgba(184,137,58,.18),0 12px 28px rgba(141,104,38,.25);color:var(--petrole2);font-family:var(--serif);font-size:46px;animation:badgeArrive .72s cubic-bezier(.2,.9,.2,1.2) both}
+  @keyframes badgeArrive{from{opacity:0;transform:scale(.35) rotate(-16deg)}to{opacity:1;transform:scale(1) rotate(0)}}
+  .celebration h2{position:relative;font-size:27px;margin:0 0 5px}.celebration p{position:relative}
+  .celebration .weekSeals{max-width:300px;margin:13px auto}
+  .celebrationActions{display:grid;grid-template-columns:1fr 1fr;gap:8px;position:relative}
+  .celebrationActions button{min-height:48px}.celebrationActions .primary{background:var(--petrole);color:#fff}
   .card{background:linear-gradient(160deg,#fffaf0,#f4eddc 54%,#d7e9e8);border:1px solid rgba(15,76,92,.2);border-radius:28px 10px 24px 12px;
     padding:20px;max-width:min(390px,92vw);max-height:100%;min-height:0;overflow:auto;animation:pop .35s ease}
   .card h3{margin:0 0 4px;font-size:13px;color:var(--or-deep);letter-spacing:.8px;text-transform:uppercase}
@@ -244,6 +291,8 @@
   .card .src{font-size:11.5px;color:var(--dim);font-style:italic}
   .card button{margin-top:14px;width:100%;padding:12px;border:none;border-radius:10px;
     background:var(--gold);color:var(--petrole2);font-weight:700;font-size:15px}
+  .card .dialogTools button{width:auto;margin-top:0;padding:8px 12px;border:1px solid rgba(15,76,92,.25);border-radius:999px;background:var(--paper);color:var(--petrole);font-size:12px}
+  .card .dialogTools #btnOverlaySave{margin-left:auto;background:var(--petrole2);color:#fff;border-color:rgba(216,169,77,.85)}
   .card .playerPick{margin-top:0;width:100%;min-height:58px;padding:8px 10px;border:1px solid rgba(15,76,92,.16);border-radius:18px 7px 18px 7px;background:linear-gradient(145deg,var(--paper),rgba(127,184,194,.18));color:var(--petrole);font-size:inherit}
   .card .playerPick[aria-current="true"]{border-color:var(--or);box-shadow:inset 4px 0 0 var(--or)}
   .card .playerEdit{margin-top:0;width:48px;min-width:48px;min-height:58px;padding:0;border:1px solid rgba(15,76,92,.16);border-radius:12px 6px 12px 6px;background:var(--panel2);color:var(--petrole);font-size:18px}
@@ -297,6 +346,7 @@
     font-size:10px;display:flex;align-items:center;justify-content:center;position:relative}
   .calDay.on{background:rgba(127,184,194,.38);border-color:rgba(184,137,58,.6);color:var(--petrole);font-weight:700}
   .calDay.perfect{background:rgba(184,137,58,.22);border-color:rgba(111,143,103,.75);color:var(--gold)}
+  .calDay.mission{box-shadow:inset 0 0 0 2px var(--or);position:relative}.calDay.mission:after{content:"♪";position:absolute;right:2px;top:0;font-size:8px;color:var(--or-deep)}
   .calDay.today:after{content:"";position:absolute;left:50%;bottom:3px;width:4px;height:4px;border-radius:50%;background:var(--good);transform:translateX(-50%)}
   .calDay.empty{visibility:hidden}
   .ritualNote{font-size:12.5px;line-height:1.4;color:var(--dim);margin-top:8px}
@@ -426,6 +476,7 @@
     <div class="hstats">
       <span>XP <b id="hXp">0</b></span>
       <span>Jours <b id="hStreak">0</b></span>
+      <button id="btnGlobalHome" hidden aria-label="Revenir immédiatement à l’accueil">⌂ Accueil</button>
       <button id="btnQuickSave" aria-label="Créer maintenant une sauvegarde complète" title="Sauvegarder maintenant">💾</button>
       <button id="btnSound">♪ chant</button>
     </div>
@@ -449,6 +500,7 @@
       <div class="coachLine" id="coachLine"></div>
       <button class="profileQuick" id="btnProfileQuick">Mon parcours · lecture musicale</button>
     </section>
+    <section class="journey" id="journeyBox" aria-label="Mission quotidienne"></section>
     <div class="dailyPlan" id="dailyPlan"></div>
     <div id="courseReview"></div>
     <div class="playerState" id="playerState"></div>
@@ -457,7 +509,7 @@
       <summary>Défis et outils</summary>
       <div class="mission"><span class="who">Sezam</span><br><span id="missionTxt"></span></div>
       <div class="ritual" id="ritualBox">
-        <div class="ritualTop"><span class="who">Rituel</span><b id="ritualTitle"></b></div>
+        <div class="ritualTop"><span class="who">Régularité</span><b id="ritualTitle"></b></div>
         <div class="ritualStats" id="ritualStats"></div>
         <div class="calHead"><span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>D</span></div>
         <div class="calGrid" id="calGrid"></div>
@@ -468,7 +520,7 @@
       <div class="tiers" id="tierRow"></div>
       <div class="paliers" id="palierList"></div>
       <div id="starCTA"></div>
-      <button class="secbtn" id="btnSerie">Session 10 questions</button>
+      <button class="secbtn" id="btnSerie">Mission · 25 questions</button>
       <button class="secbtn" id="btnRafale">Rafale 20 s · chrono</button>
       <button class="secbtn" id="btnClavier">Clavier — lire &amp; jouer</button>
       <div class="linkrow">
@@ -602,7 +654,7 @@
   </div>
 </div>
 
-<div id="overlay"><div class="card" id="cardDialog" role="dialog" aria-modal="true" tabindex="-1"><div class="dialogTools"><button type="button" id="btnOverlaySave" aria-label="Créer une sauvegarde complète sans fermer cette fenêtre">💾 Sauvegarder</button></div><div id="cardBox"></div></div></div>
+<div id="overlay"><div class="card" id="cardDialog" role="dialog" aria-modal="true" tabindex="-1"><div class="dialogTools"><button type="button" id="btnOverlayBack" aria-label="Fermer cette fenêtre et revenir à la page précédente">← Retour</button><button type="button" id="btnOverlayHome" aria-label="Fermer cette fenêtre et revenir immédiatement à l’accueil">⌂ Accueil</button><button type="button" id="btnOverlaySave" aria-label="Créer une sauvegarde complète sans fermer cette fenêtre">💾 Sauvegarder</button></div><div id="cardBox"></div></div></div>
 <div id="memoryToast" role="status" aria-live="polite" aria-atomic="true"></div>
 
 <script>/* qrcode-generator (Kazuhiko Arase, MIT) — minifié, embarqué pour le transfert QR hors-ligne */
@@ -619,7 +671,7 @@ function esc(s){
   });
 }
 /* ================= DONNÉES ================= */
-const APP_VERSION="v38"; // garder aligné avec CACHE_NAME de sw.js (testé)
+const APP_VERSION="v39"; // garder aligné avec CACHE_NAME de sw.js (testé)
 const NOTES = {
   do4 :{n:"do", clef:"sol", p:-2, midi:60, mn:"Le do du milieu est transpercé par sa petite ligne, rien qu'à lui."},
   re4 :{n:"ré", clef:"sol", p:-1, midi:62, mn:"Collé juste sous la portée."},
@@ -817,6 +869,19 @@ const CURRICULUM_CURRENT_FALLBACK={
 let CURRICULUM_CATALOG=null;
 const DAILY_MINUTES=[10,15,20,30,45,60].map(function(n){return {id:n,label:n+" minutes"};});
 const DAYS_PER_WEEK=[2,3,4,5,6,7].map(function(n){return {id:n,label:n+" jours / semaine"};});
+const DAILY_MISSION_QUESTIONS=25, DAILY_REWARD_XP=20, WEEKLY_REWARD_XP=100;
+const DAILY_MOODS=[
+  {id:"concentre",label:"Concentré",icon:"◎",strategy:"progression"},
+  {id:"calme",label:"Calme",icon:"◌",strategy:"consolidation"},
+  {id:"joueur",label:"Joueur",icon:"♪",strategy:"transfert"},
+  {id:"fatigue",label:"Fatigué",icon:"☾",strategy:"douceur"}
+];
+const DAILY_TIME_CHOICES=[10,15,20,30];
+const APPOINTMENT_TYPES=[
+  {id:"cours",label:"Cours"},{id:"repetition",label:"Répétition"},{id:"audition",label:"Audition"},
+  {id:"concert",label:"Concert"},{id:"examen",label:"Examen"},{id:"indisponible",label:"Temps indisponible"}
+];
+const MAX_CALENDAR_APPOINTMENTS=Number.MAX_SAFE_INTEGER; // aucun plafond ne purge ni n'écrase un rendez-vous existant
 const THEME_MODES=[
   {id:"classique",label:"Classique blanc",note:"Fond blanc, lecture claire, accent SEZAM",colors:["#ffffff","#0f4c5c","#7fb8c2","#b8893a"]},
   {id:"partition",label:"Partition crème",note:"Papier crème, lecture bleu pétrole",colors:["#f8f1df","#0f4c5c","#7fb8c2","#b8893a"]},
@@ -1003,6 +1068,96 @@ function normalizeProfile(p){
     daysPerWeek:DAYS_PER_WEEK.some(function(x){return x.id===Number(p.daysPerWeek);})?Number(p.daysPerWeek):5,
     domains:domains
   };
+}
+function moodById(id){ return DAILY_MOODS.find(function(m){return m.id===id;})||DAILY_MOODS[0]; }
+function freshCoachContext(){ return {version:1,checkIns:safeMap()}; }
+function normalizeCoachContext(value){
+  const out=freshCoachContext(), src=isRecord(value)&&isRecord(value.checkIns)?value.checkIns:{};
+  Object.keys(src).filter(function(k){return normalizeTargetDate(k)===k;}).sort().forEach(function(key){
+    const row=isRecord(src[key])?src[key]:{}, mood=moodById(row.mood).id;
+    const available=DAILY_TIME_CHOICES.indexOf(Number(row.availableMinutes))>=0?Number(row.availableMinutes):20;
+    out.checkIns[key]={mood:mood,availableMinutes:available,updatedAt:clampInt(row.updatedAt,0,Number.MAX_SAFE_INTEGER,0)};
+  });
+  return out;
+}
+function appointmentTypeById(id){ return APPOINTMENT_TYPES.find(function(t){return t.id===id;})||APPOINTMENT_TYPES[0]; }
+function normalizeClockTime(value){
+  const s=String(value||""); return /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(s)?s:"";
+}
+function normalizeAppointment(value){
+  if(!isRecord(value)||!isSafeId(value.id)) return null;
+  const date=normalizeTargetDate(value.date), time=normalizeClockTime(value.time);
+  if(!date||!time) return null;
+  const focus=PRACTICE_DOMAINS.some(function(d){return d.id===value.focusDomain;})?value.focusDomain:"lecture";
+  return {
+    id:String(value.id),title:cleanText(value.title,80,appointmentTypeById(value.type).label),type:appointmentTypeById(value.type).id,
+    date:date,time:time,duration:clampInt(value.duration,15,480,60),focusDomain:focus,
+    pieceId:isSafeId(value.pieceId)?String(value.pieceId):"",createdAt:clampInt(value.createdAt,0,Number.MAX_SAFE_INTEGER,0),
+    updatedAt:clampInt(value.updatedAt,0,Number.MAX_SAFE_INTEGER,0),cancelledAt:clampInt(value.cancelledAt,0,Number.MAX_SAFE_INTEGER,0)
+  };
+}
+function freshTrainingCalendar(){ return {version:1,appointments:[]}; }
+function normalizeTrainingCalendar(value){
+  const out=freshTrainingCalendar(), rows=isRecord(value)&&Array.isArray(value.appointments)?value.appointments:[], seen=safeMap();
+  rows.forEach(function(raw){
+    const row=normalizeAppointment(raw); if(!row||seen[row.id]) return; seen[row.id]=1; out.appointments.push(row);
+  });
+  out.appointments.sort(function(a,b){return a.date.localeCompare(b.date)||a.time.localeCompare(b.time)||a.id.localeCompare(b.id);});
+  return out;
+}
+function normalizeMissionEvidence(value){
+  value=isRecord(value)?value:{};
+  return {questions:clampInt(value.questions,0,DAILY_MISSION_QUESTIONS,0),correct:clampInt(value.correct,0,DAILY_MISSION_QUESTIONS,0),activeMs:clampInt(value.activeMs,0,24*60*60*1000,0),transferReached:value.transferReached===true,sessionType:cleanText(value.sessionType,32,"")};
+}
+function normalizeEngagementDay(value,key){
+  value=isRecord(value)?value:{};
+  const status=value.completedAt?"complete":(value.startedAt?"started":"ready"), mood=moodById(value.mood).id;
+  const available=DAILY_TIME_CHOICES.indexOf(Number(value.minutes))>=0?Number(value.minutes):20;
+  return {
+    missionId:isSafeId(value.missionId)?String(value.missionId):("daily_"+String(key).replace(/-/g,"")),
+    status:status,mood:mood,minutes:available,focusDomain:PRACTICE_DOMAINS.some(function(d){return d.id===value.focusDomain;})?value.focusDomain:"lecture",
+    appointmentId:isSafeId(value.appointmentId)?String(value.appointmentId):"",pieceId:isSafeId(value.pieceId)?String(value.pieceId):"",
+    title:cleanText(value.title,80,"Mission du jour"),createdAt:clampInt(value.createdAt,0,Number.MAX_SAFE_INTEGER,0),startedAt:clampInt(value.startedAt,0,Number.MAX_SAFE_INTEGER,0),
+    completedAt:clampInt(value.completedAt,0,Number.MAX_SAFE_INTEGER,0),ordinal:clampInt(value.ordinal,0,999999,0),badgeId:isSafeId(value.badgeId)?String(value.badgeId):"",
+    rewardXp:clampInt(value.rewardXp,0,9999,0),migrated:value.migrated===true,evidence:normalizeMissionEvidence(value.evidence)
+  };
+}
+function normalizeWeeklyEngagement(value,key){
+  value=isRecord(value)?value:{};
+  const dailyKeys=uniq((Array.isArray(value.dailyKeys)?value.dailyKeys:[]).filter(function(k){return normalizeTargetDate(k)===k&&weekKey(parseDayKey(k))===key;})).slice(0,7);
+  return {dailyKeys:dailyKeys,unlockedAt:clampInt(value.unlockedAt,0,Number.MAX_SAFE_INTEGER,0),attempts:clampInt(value.attempts,0,9999,0),best:clampInt(value.best,0,DAILY_MISSION_QUESTIONS,0),completedAt:clampInt(value.completedAt,0,Number.MAX_SAFE_INTEGER,0),badgeId:isSafeId(value.badgeId)?String(value.badgeId):"",rewardXp:clampInt(value.rewardXp,0,9999,0)};
+}
+function freshEngagement(){ return {version:1,daily:safeMap(),weekly:safeMap()}; }
+function normalizeEngagement(value){
+  const out=freshEngagement(), src=isRecord(value)?value:{}, days=isRecord(src.daily)?src.daily:{}, weeks=isRecord(src.weekly)?src.weekly:{};
+  Object.keys(days).filter(function(k){return normalizeTargetDate(k)===k;}).sort().forEach(function(key){out.daily[key]=normalizeEngagementDay(days[key],key);});
+  Object.keys(weeks).filter(function(k){return normalizeTargetDate(k)===k;}).sort().forEach(function(key){out.weekly[key]=normalizeWeeklyEngagement(weeks[key],key);});
+  return out;
+}
+function completedMissionKeys(engagement){
+  const source=engagement||DB&&DB.engagement||freshEngagement();
+  return Object.keys(source.daily||{}).filter(function(k){return !!(source.daily[k]&&source.daily[k].completedAt);}).sort();
+}
+function nextMissionOrdinal(engagement){
+  const source=engagement||DB&&DB.engagement||freshEngagement(), keys=completedMissionKeys(source);
+  return Math.max(keys.length,keys.reduce(function(max,key){return Math.max(max,clampInt(source.daily[key].ordinal,0,999999,0));},0))+1;
+}
+function reconcileEngagement(value,dailyProgress){
+  const migrateLegacy=!(isRecord(value)&&value.version===1),out=normalizeEngagement(value), legacy=isRecord(dailyProgress)?dailyProgress:{};
+  if(migrateLegacy)Object.keys(legacy).filter(function(k){return normalizeTargetDate(k)===k&&legacy[k]&&legacy[k].session;}).sort().forEach(function(key){
+      if(out.daily[key]&&out.daily[key].completedAt) return;
+      out.daily[key]=normalizeEngagementDay({missionId:"legacy_"+key.replace(/-/g,""),mood:"concentre",minutes:20,title:"Mission historique",completedAt:parseDayKey(key).getTime()||1,badgeId:"legacy_seal",rewardXp:0,migrated:true,evidence:{questions:DAILY_MISSION_QUESTIONS,sessionType:"legacy"}},key);
+    });
+  let nextOrdinal=completedMissionKeys(out).reduce(function(max,key){return Math.max(max,clampInt(out.daily[key].ordinal,0,999999,0));},0);
+  completedMissionKeys(out).forEach(function(key){if(!out.daily[key].ordinal)out.daily[key].ordinal=++nextOrdinal;});
+  const grouped=safeMap(); completedMissionKeys(out).forEach(function(key){const wk=weekKey(parseDayKey(key));if(!grouped[wk])grouped[wk]=[];grouped[wk].push(key);});
+  Object.keys(grouped).forEach(function(wk){
+    if(grouped[wk].length<7) return;
+    const current=normalizeWeeklyEngagement(out.weekly[wk],wk);current.dailyKeys=grouped[wk].slice(0,7);
+    if(!current.unlockedAt)current.unlockedAt=Math.max.apply(null,current.dailyKeys.map(function(key){return out.daily[key].completedAt||0;}));
+    out.weekly[wk]=current;
+  });
+  return out;
 }
 function courseById(id){ return COURSES.find(function(course){return course.id===id;})||null; }
 function freshCourseProgress(){
@@ -1487,7 +1642,7 @@ function normalizeCurriculumState(value){
     return {catalogVersion:sourceVersion,progress:safeMap(),futureOpaque:""};
   }
   const progress=safeMap(), raw=isRecord(value.progress)?value.progress:{};
-  Object.keys(raw).filter(isSafeId).slice(0,240).forEach(function(competencyId){
+  Object.keys(raw).filter(isSafeId).forEach(function(competencyId){
     const definition=curriculumCompetency(competencyId);
     if(CURRICULUM_CATALOG&&!forwardCompatible&&!definition) return;
     const src=isRecord(raw[competencyId])?raw[competencyId]:{}, proofs=safeMap(), rawProofs=isRecord(src.proofs)?src.proofs:{};
@@ -1529,7 +1684,7 @@ const BONUS_EGG_DEFS=[
 function normalizeDailyProgress(value){
   const out=safeMap();
   if(!value||typeof value!=="object"||Array.isArray(value)) return out;
-  Object.keys(value).filter(function(k){return /^\d{4}-\d{2}-\d{2}$/.test(k);}).slice(-400).forEach(function(k){
+  Object.keys(value).filter(function(k){return /^\d{4}-\d{2}-\d{2}$/.test(k);}).sort().forEach(function(k){
     const src=value[k]; if(!src||typeof src!=="object"||Array.isArray(src)) return;
     const day=safeMap(); DAILY_BLOCK_IDS.forEach(function(id){
       if(src[id]===true) day[id]=true;
@@ -1576,7 +1731,7 @@ function normalizeQuestion(q){
   if(!q||typeof q!=="object") return null;
   const text=cleanText(q.q||q.question,160,"");
   const raw=Array.isArray(q.choix)?q.choix:(Array.isArray(q.choices)?q.choices:[]);
-  const choix=raw.map(function(c){return cleanText(c,80,"");}).filter(Boolean).slice(0,6);
+  const choix=raw.map(function(c){return cleanText(c,80,"");}).filter(Boolean);
   const rep=clampInt(q.rep!==undefined?q.rep:q.answer,0,choix.length-1,-1);
   if(!text||choix.length<2||rep<0) return null;
   return {q:text,choix:choix,rep:rep};
@@ -1634,9 +1789,9 @@ function normalizeSegment(s,idx,piece){
     focus:validChoice(s.focus||s.objectif,PIECE_SEGMENT_FOCUSES,"notes"),
     instruction:cleanText(s.instruction||s.work||s.consigne,180,"")
   };
-  if(notes.length) out.notes=notes.slice(0,16);
+  if(notes.length) out.notes=notes;
   // Ancrage sur la partition réelle : plage de mesures (1-based, bornée)
-  const mf=clampInt(s.mesFrom,1,64,0), mt=clampInt(s.mesTo,1,64,0);
+  const mf=clampInt(s.mesFrom,1,Number.MAX_SAFE_INTEGER,0), mt=clampInt(s.mesTo,1,Number.MAX_SAFE_INTEGER,0);
   if(mf&&mt&&mf<=mt){ out.mesFrom=mf; out.mesTo=mt; }
   return out;
 }
@@ -1644,10 +1799,10 @@ function normalizeSegment(s,idx,piece){
 function normalizeMelody(m){
   if(!m||typeof m!=="object"||!Array.isArray(m.measures)) return null;
   const measures=[], beats=[], rawBeats=Array.isArray(m.beats)?m.beats:[];
-  m.measures.slice(0,64).forEach(function(mes,measureIndex){
+  m.measures.forEach(function(mes,measureIndex){
     if(!Array.isArray(mes)) return;
     const notes=[], durations=[], row=Array.isArray(rawBeats[measureIndex])?rawBeats[measureIndex]:[];
-    mes.slice(0,12).forEach(function(value,noteIndex){
+    mes.forEach(function(value,noteIndex){
       const id=String(value||"").trim();
       if(!NOTES[id]) return;
       const duration=Number(row[noteIndex]);
@@ -1668,7 +1823,7 @@ function normalizeMelody(m){
 function normalizePiece(p,idx){
   if(!p||typeof p!=="object") return null;
   const titre=cleanText(p.titre||p.title,80,"Partition importée");
-  const q=(Array.isArray(p.q)?p.q:[]).map(normalizeQuestion).filter(Boolean).slice(0,24);
+  const q=(Array.isArray(p.q)?p.q:[]).map(normalizeQuestion).filter(Boolean);
   const piece={
     id:cleanId(p.id,"u"),
     titre:titre,
@@ -1688,7 +1843,7 @@ function normalizePiece(p,idx){
     if(melodyClefs.length===1) piece.clef=melodyClefs[0];
     else if(melodyClefs.length>1) piece.clef="deux";
   }
-  const segments=(Array.isArray(p.segments)?p.segments:[]).map(function(s,i){return normalizeSegment(s,i,piece);}).filter(Boolean).slice(0,24);
+  const segments=(Array.isArray(p.segments)?p.segments:[]).map(function(s,i){return normalizeSegment(s,i,piece);}).filter(Boolean);
   if(segments.length) piece.segments=segments;
   return piece;
 }
@@ -1707,7 +1862,7 @@ function normalizeDay(d){
 function normalizeConfusions(value){
   const out=safeMap();
   if(!value||typeof value!=="object"||Array.isArray(value)) return out;
-  Object.keys(value).slice(0,24).forEach(function(k){
+  Object.keys(value).forEach(function(k){
     const key=cleanText(k,32,"");
     if(/^(name:[a-zà-ÿ♯♭-]+|position:-?\d+|timeout)$/.test(key)) out[key]=clampInt(value[k],1,999,1);
   });
@@ -1757,11 +1912,11 @@ function normalizeRepairQueue(value){
   return value.map(normalizeRepairItem).filter(function(item){
     if(!item||seen[item.sourceId]) return false;
     seen[item.sourceId]=1; return true;
-  }).sort(function(a,b){return a.dueQuestion-b.dueQuestion||a.createdAt-b.createdAt;}).slice(0,32);
+  }).sort(function(a,b){return a.dueQuestion-b.dueQuestion||a.createdAt-b.createdAt;});
 }
 function normalizeSegmentState(s){
   if(!s||typeof s!=="object") s={};
-  let cleanAt=Array.isArray(s.cleanAt)?s.cleanAt.map(function(ts){return clampInt(ts,0,Number.MAX_SAFE_INTEGER,0);}).filter(Boolean).sort().slice(-4):[];
+  let cleanAt=Array.isArray(s.cleanAt)?s.cleanAt.map(function(ts){return clampInt(ts,0,Number.MAX_SAFE_INTEGER,0);}).filter(Boolean).sort():[];
   if(!cleanAt.length && clampInt(s.mastery,0,3,0)>=3 && s.last) cleanAt=[clampInt(s.last,0,Number.MAX_SAFE_INTEGER,0)];
   const masteredOnceAt=clampInt(s.masteredOnceAt||(clampInt(s.mastery,0,3,0)>=3?s.last:0),0,Number.MAX_SAFE_INTEGER,0);
   return {
@@ -1780,7 +1935,6 @@ function normalizeSegmentState(s){
     feel:clampInt(s.feel,0,3,0) // difficulté ressentie : 1 facile · 2 juste · 3 difficile
   };
 }
-const MAX_SERIES_PER_TIER=80;
 function normalizeSeriesRecord(value){
   if(!isRecord(value)) return null;
   const out={
@@ -1794,7 +1948,7 @@ function normalizeSeriesRecord(value){
 }
 function normalizeTierProgress(value){
   value=isRecord(value)?value:{};
-  const series=(Array.isArray(value.series)?value.series:[]).map(normalizeSeriesRecord).filter(Boolean).slice(-MAX_SERIES_PER_TIER);
+  const series=(Array.isArray(value.series)?value.series:[]).map(normalizeSeriesRecord).filter(Boolean);
   return {series:series,ok:value.ok===true||value.ok===1};
 }
 function normalizeStar(value){
@@ -1946,7 +2100,7 @@ function backupToDb(o){
   if(o.history && Array.isArray(o.history.events)) db.events=o.history.events;
   db._sezam={
     app:"SEZAM",
-    schema:14,
+    schema:15,
     userId:cleanId(o.userId,"user"),
     createdAt:clampInt(o.createdAt||o.timestamp,0,Number.MAX_SAFE_INTEGER,Date.now()),
     updatedAt:clampInt(o.timestamp,0,Number.MAX_SAFE_INTEGER,Date.now()),
@@ -1958,7 +2112,7 @@ function backupToDb(o){
 function ensureMeta(db){
   if(!db._sezam||typeof db._sezam!=="object") db._sezam={};
   db._sezam.app="SEZAM";
-  db._sezam.schema=14;
+  db._sezam.schema=15;
   if(!db._sezam.userId) db._sezam.userId=makeLocalId("user");
   db._sezam.userId=cleanId(db._sezam.userId,"user");
   if(db._sezam.playerId&&!isSafeId(db._sezam.playerId)) delete db._sezam.playerId;
@@ -1982,26 +2136,20 @@ function ensureStructure(db){
   db.haptic=typeof db.haptic==="boolean"?db.haptic:true;
   db.seen=normalizeSeen(db.seen);
   if(!Array.isArray(db.pieces)) db.pieces=[];
-  db.pieces=db.pieces.map(normalizePiece).filter(Boolean).slice(0,80); // partitions ajoutées par le joueur, normalisées après import douteux
-  let attachmentBytes=0;
-  db.pieces.forEach(function(piece){
-    if(!piece.attachment) return;
-    if(attachmentBytes+piece.attachment.size>MAX_TOTAL_ATTACHMENT_BYTES) delete piece.attachment;
-    else attachmentBytes+=piece.attachment.size;
-  });
+  db.pieces=db.pieces.map(normalizePiece).filter(Boolean); // chaque partition valide déjà enregistrée reste conservée
   const pieceProgress=safeMap(), rawPieceProgress=isRecord(db.pieceProgress)?db.pieceProgress:{};
-  Object.keys(rawPieceProgress).filter(isSafeId).slice(0,160).forEach(function(pid){
+  Object.keys(rawPieceProgress).filter(isSafeId).forEach(function(pid){
     const rawSegments=isRecord(rawPieceProgress[pid])?rawPieceProgress[pid]:null;
     if(!rawSegments) return;
     const segments=safeMap();
-    Object.keys(rawSegments).filter(isSafeId).slice(0,80).forEach(function(sid){ segments[sid]=normalizeSegmentState(rawSegments[sid]); });
+    Object.keys(rawSegments).filter(isSafeId).forEach(function(sid){ segments[sid]=normalizeSegmentState(rawSegments[sid]); });
     if(Object.keys(segments).length) pieceProgress[pid]=segments;
   });
   db.pieceProgress=pieceProgress;
   // Œuvre en cours + ambitions par pièce (le joueur pilote son projet musical)
   db.activePiece=isSafeId(db.activePiece)?String(db.activePiece):"";
   const pieceGoals=safeMap(), rawGoals=isRecord(db.pieceGoals)?db.pieceGoals:{};
-  Object.keys(rawGoals).filter(isSafeId).slice(0,160).forEach(function(pid){
+  Object.keys(rawGoals).filter(isSafeId).forEach(function(pid){
     const g=normalizeGoal(rawGoals[pid]); if(g) pieceGoals[pid]=g;
   });
   db.pieceGoals=pieceGoals;
@@ -2013,15 +2161,18 @@ function ensureStructure(db){
   db.questionClock=clampInt(db.questionClock,0,999999998,0);
   db.repairQueue=normalizeRepairQueue(db.repairQueue);
   const days=safeMap(), rawDays=isRecord(db.days)?db.days:{};
-  Object.keys(rawDays).filter(function(k){return /^\d{4}-\d{2}-\d{2}$/.test(k);}).slice(-4000).forEach(function(k){ days[k]=normalizeDay(rawDays[k]); });
+  Object.keys(rawDays).filter(function(k){return /^\d{4}-\d{2}-\d{2}$/.test(k);}).sort().forEach(function(k){ days[k]=normalizeDay(rawDays[k]); });
   db.days=days;
-  db.events=Array.isArray(db.events)?db.events.slice(-500):[]; // journal d'événements local, toujours borné et normalisé
+  db.events=Array.isArray(db.events)?db.events.filter(function(event){return isRecord(event);}):[];
   db.kbdStats=normalizeKbdStats(db.kbdStats);
   db.profile=normalizeProfile(db.profile);
   db.courseProgress=normalizeCourseProgress(db.courseProgress);
   db.courseReviewState=normalizeCourseReviewState(db.courseReviewState);
   db.curriculum=normalizeCurriculumState(db.curriculum);
   db.dailyProgress=normalizeDailyProgress(db.dailyProgress);
+  db.coachContext=normalizeCoachContext(db.coachContext);
+  db.calendar=normalizeTrainingCalendar(db.calendar);
+  db.engagement=reconcileEngagement(db.engagement,db.dailyProgress);
   db.validationDrafts=normalizeValidationDrafts(db.validationDrafts);
   db.easterEggs=normalizeEasterEggs(db.easterEggs);
   if(!THEME_MODES.find(function(x){return x.id===db.themeMode;})) db.themeMode="classique";
@@ -2067,7 +2218,7 @@ function ensureStructure(db){
   if(!db.mode||(db.mode!=="libre"&&TIER_IDS.indexOf(db.mode)<0)) db.mode="zen";
   if(db.mode!=="libre" && tierDef(db.mode) && tierDef(db.mode).future) db.mode="zen";
   if(!PALIERS.find(function(p){return p.id===db.sel;})) db.sel="P1";
-  db.v=13;
+  db.v=14;
   return backfillCurriculumFromGame(db);
 }
 const LS_KEY="solfegeProto1", LS_MIRROR="solfegeProto1_mirror", LS_PREIMPORT="solfegeProto1_preimport", LS_CHECKPOINT="solfegeProto1_checkpoint";
@@ -2349,6 +2500,8 @@ function detectMemoryOverlayType(cardHtml){
   if(cardHtml.indexOf('id="prNext"')>=0)return "first_look_answer";
   if(cardHtml.indexOf('id="prChoices"')>=0)return "first_look_quiz";
   if(cardHtml.indexOf('id="syncKeepRestored"')>=0)return "sync_choice";
+  if(cardHtml.indexOf('id="calAdd"')>=0)return "training_calendar";
+  if(cardHtml.indexOf('id="celebrateStay"')>=0)return "celebration";
   if(cardHtml.indexOf("onclick=")>=0&&cardHtml.indexOf("<form")<0)return "inline_only";
   return "other";
 }
@@ -2392,11 +2545,17 @@ function memoryLevelContext(extra){
   let attempts=0,errors=0;noteIds.forEach(function(id){attempts+=DB.noteStats[id].v||0;errors+=DB.noteStats[id].e||0;});
   let validations=0;PALIERS.forEach(function(p){TIER_IDS.forEach(function(t){if(DB.paliers[p.id]&&DB.paliers[p.id][t]&&DB.paliers[p.id][t].ok)validations++;});});
   const scene=activeMemoryScreen(),current=typeof EX!=="undefined"&&EX&&!EX.done?("question "+((EX.i||0)+1)+"/"+(EX.n||EX.questionCap||"?")):(typeof KX!=="undefined"&&KX&&!KX.done?("clavier "+((KX.i||0)+1)+"/"+KX.n):"écran "+scene);
+  const engagement=normalizeEngagement(DB.engagement),missionKeys=completedMissionKeys(engagement),todayMission=engagement.daily[todayStr()]||null;
+  const crowns=Object.keys(engagement.weekly).filter(function(key){return !!engagement.weekly[key].completedAt;}).length;
+  const finals=missionKeys.filter(function(key){return engagement.daily[key].badgeId==="mission_ten";}).length;
+  const appointments=activeAppointments(),nextAppointment=nextTrainingAppointment();
+  const missionState=todayMission?((todayMission.completedAt?"terminée":(todayMission.startedAt?"en cours":"prête"))+" · "+moodById(todayMission.mood).label+" · "+todayMission.minutes+" min · "+(todayMission.evidence.questions||0)+"/25 questions"):"non créée";
   const choices="mode "+DB.mode+" · thème "+(DB.themeMode||"classique")+" · parcours "+((DB.profile&&DB.profile.parcours)||"libre")+" · niveau Coach "+(displayedCoachLevelId?displayedCoachLevelId():"non choisi")+" · œuvre "+(DB.activePiece||"aucune");
-  const summary="Niveau "+level+" ("+levelLabel+") · "+(DB.xp||0)+" XP · "+noteIds.length+" notes mémorisées · "+attempts+" réponses, "+errors+" erreurs · "+validations+" validations · "+(DB.repairQueue||[]).length+" réparations en cours · "+(DB.pieces||[]).length+" partitions personnelles · "+current+" · "+choices+".";
-  return {level:level,levelLabel:levelLabel,palier:sel.id,xp:DB.xp||0,noteIds:noteIds,attempts:attempts,errors:errors,validations:validations,repairs:(DB.repairQueue||[]).length,pieces:(DB.pieces||[]).length,scene:scene,current:current,choices:choices,summary:summary,milestone:cleanText(extra.milestone,180,"")};
+  const engagementSummary=missionKeys.length+" sceaux · "+finals+" finales de dix jours · "+crowns+" couronnes · mission du jour "+missionState+" · "+appointments.length+" rendez-vous actifs"+(nextAppointment?(", prochain « "+nextAppointment.title+" » le "+nextAppointment.date+" à "+nextAppointment.time):"");
+  const summary="Niveau "+level+" ("+levelLabel+") · "+(DB.xp||0)+" XP · "+noteIds.length+" notes mémorisées · "+attempts+" réponses, "+errors+" erreurs · "+validations+" validations · "+(DB.repairQueue||[]).length+" réparations en cours · "+(DB.pieces||[]).length+" partitions personnelles · "+engagementSummary+" · "+current+" · "+choices+".";
+  return {level:level,levelLabel:levelLabel,palier:sel.id,xp:DB.xp||0,noteIds:noteIds,attempts:attempts,errors:errors,validations:validations,repairs:(DB.repairQueue||[]).length,pieces:(DB.pieces||[]).length,missionDays:missionKeys.length,missionFinals:finals,weeklyCrowns:crowns,appointments:appointments.length,missionState:missionState,scene:scene,current:current,choices:choices,summary:summary,milestone:cleanText(extra.milestone,180,"")};
 }
-function memoryKindLabel(kind){return {manual:"Manuelle",level_complete:"Niveau terminé",pre_level_change:"Avant changement de niveau",pre_restore:"Avant restauration",pre_import:"Avant import",pre_recovery:"Avant code de reprise",pre_cloud:"Avant synchro cloud",pre_delete_cloud:"Avant suppression cloud",pre_delete:"Avant suppression",legacy_preimport:"Ancienne protection"}[kind]||"Protection automatique";}
+function memoryKindLabel(kind){return {manual:"Manuelle",level_complete:"Niveau terminé",daily_complete:"Mission quotidienne",weekly_complete:"Défi hebdomadaire",pre_level_change:"Avant changement de niveau",pre_restore:"Avant restauration",pre_import:"Avant import",pre_recovery:"Avant code de reprise",pre_cloud:"Avant synchro cloud",pre_delete_cloud:"Avant suppression cloud",pre_delete:"Avant suppression",legacy_preimport:"Ancienne protection"}[kind]||"Protection automatique";}
 function formatMemoryDate(ts){try{return new Date(ts).toLocaleString("fr-FR",{dateStyle:"short",timeStyle:"medium"});}catch(e){return new Date(ts).toLocaleString("fr-FR");}}
 function finalizedMemoryMeta(record,number,storage){
   const createdAt=record.createdAt,id=record.playerId+"-"+String(number).padStart(12,"0")+"-"+record.captureId;
@@ -2487,7 +2646,7 @@ function pumpMemorySnapshots(){
   try{appendMemoryRecord(job.record,function(ok,meta,error){
     memorySnapshotWriting=false;
     const result={ok:!!ok,meta:meta||null,message:ok?(meta.name+" créée. "+meta.context.summary):(error||"Sauvegarde impossible. Rien n’a été effacé.")};
-    if(job.notify!==false)memoryToast(ok?(meta.name+" créée. Mémoire protégée."):result.message,!ok);
+    if(job.notify!==false)memoryToast(ok?(meta.name+" créée. "+meta.context.summary+" Rien n’a été écrasé."):result.message,!ok);
     if(ok)checkMemoryStoragePressure();
     try{if(typeof job.cb==="function")job.cb(result);}finally{pumpMemorySnapshots();}
   });}catch(e){memorySnapshotWriting=false;const result={ok:false,meta:null,message:"Sauvegarde interrompue sans effacer aucun ancien point."};try{if(job.cb)job.cb(result);}finally{pumpMemorySnapshots();}}
@@ -2524,8 +2683,8 @@ function validateMemoryEnvelope(raw,meta){
   try{state=JSON.parse(env.stateRaw);runtime=JSON.parse(env.runtimeRaw);}catch(e){return {ok:false,message:"Contenu incomplet : restauration annulée."};}
   if(!recognizableStoredState(state)||!isRecord(state._sezam)||state._sezam.playerId!==ACTIVE_PLAYER_ID)return {ok:false,message:"Identité de sauvegarde incohérente : restauration annulée."};
   const validScreens={scrHome:1,scrEx:1,scrKbd:1,scrRes:1,scrStats:1,scrPieces:1,scrPiece:1};
-  const validOverlays={other:1,inline_only:1,player_switch:1,player_add:1,player_edit:1,profile:1,discovery:1,preview:1,keyboard_config:1,keyboard_result:1,watch:1,startup_recovery:1,piece_goal:1,piece_goal_segment:1,first_look_self:1,first_look_quiz:1,first_look_answer:1,sync_choice:1};
-  const controlsOk=runtime&&(!hasOwn(runtime,"overlayControls")||(Array.isArray(runtime.overlayControls)&&runtime.overlayControls.length<=400&&runtime.overlayControls.every(function(row,index){return isRecord(row)&&row.index===index&&typeof row.id==="string"&&row.id.length<=120&&typeof row.tag==="string";})));
+  const validOverlays={other:1,inline_only:1,player_switch:1,player_add:1,player_edit:1,profile:1,discovery:1,preview:1,keyboard_config:1,keyboard_result:1,watch:1,startup_recovery:1,piece_goal:1,piece_goal_segment:1,first_look_self:1,first_look_quiz:1,first_look_answer:1,sync_choice:1,training_calendar:1,celebration:1};
+  const controlsOk=runtime&&(!hasOwn(runtime,"overlayControls")||(Array.isArray(runtime.overlayControls)&&runtime.overlayControls.every(function(row,index){return isRecord(row)&&row.index===index&&typeof row.id==="string"&&row.id.length<=120&&typeof row.tag==="string";})));
   const prOk=runtime&&(!runtime.pr||(isRecord(runtime.pr)&&isSafeId(runtime.pr.pieceId)&&Number.isInteger(runtime.pr.i)&&runtime.pr.i>=0&&Number.isInteger(runtime.pr.ok)&&runtime.pr.ok>=0&&(!runtime.pr.segmentId||isSafeId(runtime.pr.segmentId))));
   const syncOk=!!runtime&&(runtime.overlayType!=="sync_choice"||runtime.syncRemote===null||recognizableStoredState(runtime.syncRemote));
   if(!isRecord(runtime)||runtime.schema!==1||!isRecord(runtime.scene)||!validScreens[runtime.screen]||!Number.isFinite(runtime.capturedAt)||!validOverlays[runtime.overlayType||"other"]||!controlsOk||!prOk||!syncOk||((runtime.screen==="scrEx"||runtime.screen==="scrRes")&&!isRecord(runtime.ex))||(runtime.screen==="scrKbd"&&!isRecord(runtime.kx))||(runtime.screen==="scrPiece"&&(!isSafeId(runtime.pieceId)||!runtime.pieceId)))return {ok:false,message:"Contexte de scène illisible : restauration annulée, état actuel intact."};
@@ -2584,6 +2743,8 @@ function bindRestoredOverlay(runtime){
   else if(runtime.overlayType==="first_look_self"){const self=$("prSelfDone");bindFirstLookSelfDialog(self&&self.getAttribute("data-pr-piece"),self&&self.getAttribute("data-pr-segment")||"");}
   else if(runtime.overlayType==="first_look_quiz"||runtime.overlayType==="first_look_answer")bindPremierRegardRestored(runtime.overlayType);
   else if(runtime.overlayType==="sync_choice")bindSyncChoiceDialog(runtime.syncRemote||null,true);
+  else if(runtime.overlayType==="training_calendar")bindTrainingCalendarDialog();
+  else if(runtime.overlayType==="celebration"){if($("celebrateStay"))$("celebrateStay").onclick=closeOverlay;if($("celebrateHome"))$("celebrateHome").onclick=universalHome;}
   else if(runtime.overlayType==="discovery"&&EX){
     const go=$("btnDecGo"),home=$("btnDecHome");
     if(go)go.onclick=function(){markPalierSeen(EX.palier);save();$("overlay").classList.remove("on");EX.pendingDecouverte=false;nextQuestion();};
@@ -2850,7 +3011,6 @@ function logEvent(type,data){
   if(!DB) return;
   if(!DB.events) DB.events=[];
   DB.events.push(Object.assign({t:Date.now(),type:type},data||{}));
-  if(DB.events.length>500) DB.events=DB.events.slice(-500); // journal capé
 }
 function saveBanner(show){
   let b=document.getElementById("saveWarn");
@@ -2908,7 +3068,7 @@ function save(opts){
   return ok&&registryOk;
 }
 function freshPlayerState(id,name){
-  const db=ensureStructure({_sezam:{app:"SEZAM",schema:14,userId:id,playerId:id,createdAt:Date.now(),updatedAt:Date.now()},profile:{displayName:name}});
+  const db=ensureStructure({_sezam:{app:"SEZAM",schema:15,userId:id,playerId:id,createdAt:Date.now(),updatedAt:Date.now()},profile:{displayName:name}});
   db._sezam.playerId=id;return db;
 }
 function playerSummary(state){
@@ -3547,8 +3707,20 @@ function bonusStaffSVG(kind,solved){
 /* ================= ÉCRANS ================= */
 const $=function(id){return document.getElementById(id);};
 function show(id){document.querySelectorAll(".screen").forEach(function(s){s.classList.remove("active");});$(id).classList.add("active");
+  if($("btnGlobalHome"))$("btnGlobalHome").hidden=id==="scrHome";
   try{ window.scrollTo(0,0); }catch(e){} // chaque écran démarre en haut (fiches longues sur mobile)
   if(id==="scrRes"){ renderResCode(); renderResPiece(); } // code de secours + bilan partition à chaque résultat
+}
+function closeOverlay(){
+  if(!$("overlay"))return false;$("overlay").classList.remove("on");if($("cardDialog")&&typeof $("cardDialog").removeAttribute==="function")$("cardDialog").removeAttribute("aria-labelledby");return true;
+}
+function overlayBack(){
+  const type=detectMemoryOverlayType($("cardBox")&&$("cardBox").innerHTML||"");
+  if((type==="discovery"||type==="preview")&&EX&&!EX.done)return returnToHomeFromExercise();
+  if(type==="keyboard_result")return universalHome();
+  if(type==="first_look_self"||type==="first_look_quiz"||type==="first_look_answer"){if(typeof PR!=="undefined")PR=null;}
+  if(type==="sync_choice"&&typeof memorySyncChoiceRemote!=="undefined")memorySyncChoiceRemote=null;
+  return closeOverlay();
 }
 let overlayReturnFocus=null;
 if(typeof MutationObserver!=="undefined"){
@@ -3568,7 +3740,7 @@ if(typeof MutationObserver!=="undefined"){
 }
 document.addEventListener("keydown",function(ev){
   if(!$("overlay").classList.contains("on"))return;
-  if(ev.key==="Escape"){ev.preventDefault();$("overlay").classList.remove("on");return;}
+  if(ev.key==="Escape"){ev.preventDefault();overlayBack();return;}
   if(ev.key!=="Tab")return;
   const focusable=Array.from($("cardDialog").querySelectorAll('button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])'));
   if(!focusable.length){ev.preventDefault();$("cardDialog").focus();return;}
@@ -3593,6 +3765,7 @@ function renderCalendar(){
     let cls="calDay";
     if(dayActive(day)) cls+=" on";
     if(day&&day.perfect) cls+=" perfect";
+    if(DB.engagement&&DB.engagement.daily&&DB.engagement.daily[key]&&DB.engagement.daily[key].completedAt)cls+=" mission";
     if(key===todayStr()) cls+=" today";
     html+='<span class="'+cls+'">'+d+'</span>';
   }
@@ -3602,14 +3775,15 @@ function renderRitual(){
   const totals=practiceTotals(), ws=weekStats(), st=streak(), best=longestStreak();
   const today=DB.days[todayStr()]||normalizeDay({});
   const todayCount=(today.series||0)+(today.rafales||0)+(today.clavier||0)+(today.revisions||0);
-  $("ritualTitle").textContent=todayCount?("Aujourd'hui : "+todayCount+" session"+(todayCount>1?"s":"")):"Rituel à lancer";
+  const mission=DB.engagement&&DB.engagement.daily&&DB.engagement.daily[todayStr()];
+  $("ritualTitle").textContent=mission&&mission.completedAt?("Jour "+mission.ordinal+" · sceau gagné"):(todayCount?("Aujourd'hui : "+todayCount+" pratique"+(todayCount>1?"s":"")):"Mission à lancer");
   $("ritualStats").innerHTML=
     '<div class="rstat"><div class="v">'+st+'</div><div class="l">jours de suite</div></div>'+
     '<div class="rstat"><div class="v">'+ws.current+'</div><div class="l">semaines</div></div>'+
     '<div class="rstat"><div class="v">'+trophiesEarned()+'/'+shownTrophyDefs().length+'</div><div class="l">trophées</div></div>';
-  $("ritualNote").textContent = todayCount
-    ? "Investissement compté : séries, rafales, révisions et clavier. Meilleure suite : "+best+" jour"+(best>1?"s":"")+"."
-    : "Un jour coché suffit à garder le fil. Une petite série propre vaut mieux qu'une grande séance brouillonne.";
+  $("ritualNote").textContent = mission&&mission.completedAt
+    ? "Mission de 25 questions terminée et sauvegardée. Meilleure suite d’activité : "+best+" jour"+(best>1?"s":"")+"."
+    : (todayCount?"La pratique est conservée. Le sceau quotidien demande d’aller au bout des 25 questions.":"Aucun jour manqué n’efface un acquis. Reviens quand tu peux ; chaque mission terminée ajoute un sceau.");
   renderCalendar();
 }
 function renderTrophies(){
@@ -3947,6 +4121,172 @@ function targetCadence(profile){
   if(days<=90) return "échéance dans "+days+" jours · cadence régulière";
   return "échéance dans "+days+" jours · progression au long cours";
 }
+function appointmentTimestamp(row){
+  if(!row||!row.date||!row.time) return 0;
+  const parts=row.time.split(":").map(Number), day=parseDayKey(row.date);
+  day.setHours(parts[0]||0,parts[1]||0,0,0); return day.getTime();
+}
+function activeAppointments(){
+  return (DB.calendar&&Array.isArray(DB.calendar.appointments)?DB.calendar.appointments:[]).filter(function(row){return !row.cancelledAt;}).slice().sort(function(a,b){return appointmentTimestamp(a)-appointmentTimestamp(b)||a.id.localeCompare(b.id);});
+}
+function nextTrainingAppointment(now){
+  now=Number.isFinite(Number(now))?Number(now):Date.now();
+  return activeAppointments().find(function(row){return appointmentTimestamp(row)+row.duration*60000>=now;})||null;
+}
+function nearestTimeChoice(value){
+  value=Number(value)||20; return DAILY_TIME_CHOICES.slice().sort(function(a,b){return Math.abs(a-value)-Math.abs(b-value)||a-b;})[0];
+}
+function dailyCoachContext(now){
+  now=Number.isFinite(Number(now))?Number(now):Date.now();
+  DB.coachContext=normalizeCoachContext(DB.coachContext);DB.calendar=normalizeTrainingCalendar(DB.calendar);DB.engagement=reconcileEngagement(DB.engagement,DB.dailyProgress);
+  const key=dateKey(new Date(now)), saved=DB.engagement.daily[key], frozen=!!(saved&&(saved.startedAt||saved.completedAt));
+  const profile=normalizeProfile(DB.profile), check=DB.coachContext.checkIns[key]||{}, mood=moodById(frozen?saved.mood:(check.mood||"concentre")).id;
+  let minutes=nearestTimeChoice(frozen?saved.minutes:(check.availableMinutes||profile.dailyMinutes));
+  const appointment=frozen?(saved.appointmentId?(DB.calendar.appointments||[]).find(function(row){return row.id===saved.appointmentId;})||null:null):nextTrainingAppointment(now), apptAt=appointment?appointmentTimestamp(appointment):0, hours=appointment?(apptAt-now)/36e5:Infinity;
+  const pieceId=frozen?(saved.pieceId||""):((appointment&&appointment.pieceId)||""), appointmentEnd=appointment?apptAt+appointment.duration*60000:0;
+  let unavailableNow=!!(appointment&&appointment.type==="indisponible"&&now>=apptAt&&now<appointmentEnd);
+  let focus=frozen?saved.focusDomain:dailyFocusDomain(profile), reasons=[];
+  if(!frozen&&mood==="fatigue"){minutes=Math.min(minutes,15);reasons.push("énergie basse : séance familière et sans nouveauté");}
+  else if(mood==="calme")reasons.push("humeur calme : consolidation avant progression");
+  else if(mood==="joueur")reasons.push("humeur joueuse : priorité au transfert musical");
+  else reasons.push("concentration disponible : progression normale");
+  if(!frozen&&appointment&&hours<=72){
+    if(appointment.pieceId||["repetition","audition","concert"].indexOf(appointment.type)>=0)focus="integration";
+    else if(["cours","examen"].indexOf(appointment.type)>=0)focus=appointment.focusDomain||"lecture";
+    if(hours>=0&&hours<3){
+      const free=Math.max(0,Math.floor((apptAt-now)/60000)-15), allowed=DAILY_TIME_CHOICES.filter(function(n){return n<=free;});
+      if(allowed.length)minutes=Math.min(minutes,allowed[allowed.length-1]);
+    }
+    if(appointment.type==="indisponible")reasons.push(unavailableNow?("créneau indisponible en cours jusqu’à "+new Date(appointmentEnd).toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})+" : la mission reste prête pour plus tard"):("temps indisponible bientôt : garde la mission pour un créneau complet"));
+    else reasons.push("« "+appointment.title+" » approche : "+(focus==="integration"?"préparation de l’œuvre":"objectif "+labelFrom(PRACTICE_DOMAINS,focus).toLowerCase()));
+  }
+  if(frozen){unavailableNow=false;reasons=["mission commencée : son contrat reste figé jusqu’au bilan"];}
+  return {date:key,mood:mood,minutes:minutes,focusDomain:focus,appointment:appointment,appointmentId:appointment?appointment.id:"",pieceId:pieceId,hoursToAppointment:hours,unavailableNow:unavailableNow,unavailableUntil:unavailableNow?appointmentEnd:0,frozen:frozen,reason:reasons.join(" · ")};
+}
+function missionTitleFor(ordinal,context){
+  if(ordinal>0&&ordinal%10===0)return "Finale de la mission "+Math.ceil(ordinal/10)+" · 10e jour";
+  if(context.appointment&&context.appointment.type!=="indisponible"&&context.hoursToAppointment<=72)return "Cap sur « "+context.appointment.title+" »";
+  return {concentre:"Mission précision",calme:"Mission ancrage",joueur:"Mission en musique",fatigue:"Mission douceur"}[context.mood]||"Mission du jour";
+}
+function ensureTodayMission(now){
+  now=Number.isFinite(Number(now))?Number(now):Date.now();
+  DB.engagement=reconcileEngagement(DB.engagement,DB.dailyProgress);
+  const key=dateKey(new Date(now)), context=dailyCoachContext(now), nextOrdinal=nextMissionOrdinal(DB.engagement);
+  let row=DB.engagement.daily[key];
+  if(!row){
+    row=normalizeEngagementDay({missionId:"daily_"+key.replace(/-/g,""),mood:context.mood,minutes:context.minutes,focusDomain:context.focusDomain,appointmentId:context.appointmentId,pieceId:context.pieceId,title:missionTitleFor(nextOrdinal,context),createdAt:now,ordinal:nextOrdinal},key);
+    DB.engagement.daily[key]=row;
+  } else if(!row.startedAt&&!row.completedAt){
+    row.mood=context.mood;row.minutes=context.minutes;row.focusDomain=context.focusDomain;row.appointmentId=context.appointmentId||"";row.pieceId=context.pieceId||"";row.title=missionTitleFor(row.ordinal||nextOrdinal,context);row.ordinal=row.ordinal||nextOrdinal;
+  }
+  return row;
+}
+function freezeTodayMission(now){
+  now=Number.isFinite(Number(now))?Number(now):Date.now();const row=ensureTodayMission(now);
+  if(!row.startedAt&&!row.completedAt){row.startedAt=now;row.status="started";if(!save()){row.startedAt=0;row.status="ready";memoryToast("La mission n’a pas démarré : l’enregistrement local doit d’abord être disponible. Rien n’a été perdu.",true);return null;}}
+  return row;
+}
+function setDailyCheckIn(kind,value){
+  const coachBefore=JSON.stringify(DB.coachContext||freshCoachContext()), engagementBefore=JSON.stringify(DB.engagement||freshEngagement()), updatedAtBefore=DB._sezam&&DB._sezam.updatedAt||0, registryBefore=JSON.stringify(PLAYER_REGISTRY);
+  const row=ensureTodayMission(), key=todayStr();
+  if(row.startedAt||row.completedAt){memoryToast("Cette mission a déjà commencé : son humeur et son temps restent figés jusqu’au bilan.",false);return false;}
+  if(!DB.coachContext.checkIns[key])DB.coachContext.checkIns[key]={mood:"concentre",availableMinutes:nearestTimeChoice(DB.profile.dailyMinutes),updatedAt:0};
+  if(kind==="mood")DB.coachContext.checkIns[key].mood=moodById(value).id;
+  else if(kind==="minutes"&&DAILY_TIME_CHOICES.indexOf(Number(value))>=0)DB.coachContext.checkIns[key].availableMinutes=Number(value);
+  DB.coachContext.checkIns[key].updatedAt=Date.now();delete DB.engagement.daily[key];ensureTodayMission();
+  if(!save()){
+    DB.coachContext=normalizeCoachContext(JSON.parse(coachBefore));DB.engagement=normalizeEngagement(JSON.parse(engagementBefore));
+    if(DB._sezam)DB._sezam.updatedAt=updatedAtBefore;PLAYER_REGISTRY=normalizePlayerRegistry(JSON.parse(registryBefore));
+    const rollbackPersisted=save({touch:false,cloud:false});
+    memoryToast(rollbackPersisted?"Le changement n’a pas été enregistré : l’humeur, le temps et la mission précédents restent exactement intacts.":"Le stockage de cet appareil ne répond pas. L’ancien état reste affiché et intact ; exporte une sauvegarde avant de quitter.",true);renderHome();return false;
+  }
+  renderHome();return true;
+}
+function currentWeekMissionKeys(now){
+  now=now instanceof Date?now:new Date();const wk=weekKey(now);
+  return completedMissionKeys().filter(function(key){return weekKey(parseDayKey(key))===wk;});
+}
+function pendingWeeklyChallenge(){
+  DB.engagement=reconcileEngagement(DB.engagement,DB.dailyProgress);
+  const keys=Object.keys(DB.engagement.weekly||{}).sort();
+  for(let i=0;i<keys.length;i++){const row=DB.engagement.weekly[keys[i]];if(row.unlockedAt&&!row.completedAt)return {key:keys[i],state:row};}
+  return null;
+}
+function adaptDailyDecision(base,context){
+  if(!base)return base;context=context||dailyCoachContext();
+  const gentle=context.mood==="fatigue"||context.mood==="calme", playful=context.mood==="joueur";
+  if(base.kind==="course"&&(gentle||playful)){
+    let pool=(base.pool||base.palier.notes||[]).slice();
+    if(context.mood==="fatigue"&&base.course&&base.course.newNote&&pool.length>3)pool=pool.filter(function(id){return id!==base.course.newNote;});
+    const requestedPiece=context.pieceId?pieceById(context.pieceId):null, piece=(requestedPiece&&pieceMelody(requestedPiece))?requestedPiece:activePieceObj(), seg=piece&&nextSegmentForPiece(piece), piecePool=playful&&piece&&seg?segmentNotePool(seg,piece):[];
+    if(piecePool.length){const musicalOrder=piecePool.filter(function(id){return pool.indexOf(id)>=0;});if(musicalOrder.length)pool=uniq(musicalOrder.concat(pool));}
+    return {kind:"session",label:"Mission du jour",n:DAILY_MISSION_QUESTIONS,palier:base.palier,pool:uniq(pool),mode:"libre",groupN:1,
+      reason:gentle?"Consolidation choisie : aucune nouveauté ne sera validée aujourd’hui.":"Transfert choisi : lire en musique sans déplacer le parcours.",moodAdapted:true,sourceCourse:base.course,dailyContext:context};
+  }
+  const copy=Object.assign({},base,{dailyContext:context});
+  if((gentle||playful)&&copy.kind!=="course"){copy.mode="libre";copy.groupN=1;copy.reason=(gentle?"Consolidation familière. ":"Transfert musical. ")+copy.reason;}
+  return copy;
+}
+function dailyDecision(){ return adaptDailyDecision(courseDecision()||coachDecision(),dailyCoachContext()); }
+function weekSealsHtml(keys){
+  const done=safeMap();(keys||[]).forEach(function(key){done[key]=1;});
+  const start=parseDayKey(weekKey(new Date()));
+  return Array.from({length:7},function(_,i){const key=dateKey(addDays(start,i));return '<span class="weekSeal'+(done[key]?' on':'')+'" title="'+key+'">'+(done[key]?'♪':(i+1))+'</span>';}).join("");
+}
+function renderJourney(){
+  const box=$("journeyBox");if(!box)return;
+  const day=ensureTodayMission(),context=dailyCoachContext(),weekKeys=currentWeekMissionKeys(),pending=pendingWeeklyChallenge(),locked=!!(day.startedAt||day.completedAt);
+  const next=context.appointment, appointmentText=next?("Prochain rendez-vous : "+next.title+" · "+next.date+" à "+next.time):"Aucun rendez-vous musical à venir.";
+  const cycleDay=((Math.max(1,day.ordinal)-1)%10)+1, cycleNumber=Math.ceil(Math.max(1,day.ordinal)/10);
+  box.innerHTML='<div class="journeyHead"><div><h3>'+(day.completedAt?'Mission accomplie':'Ta mission du jour')+'</h3><small>Mission '+cycleNumber+' · '+esc(day.title)+' · 25 questions maximum et un vrai bilan.</small></div><span class="dayMedallion">'+(day.completedAt?'✓<br>Jour '+cycleDay:'Jour '+cycleDay+'<br>/ 10')+'</span></div>'+
+    '<span class="journeyLabel">Comment arrives-tu ?</span><div class="moodRow">'+DAILY_MOODS.map(function(m){return '<button data-mood="'+m.id+'" class="'+(day.mood===m.id?'on':'')+'" '+(locked?'disabled':'')+' aria-pressed="'+(day.mood===m.id?'true':'false')+'"><span aria-hidden="true">'+m.icon+'</span><br>'+esc(m.label)+'</button>';}).join("")+'</div>'+
+    '<span class="journeyLabel">Temps disponible</span><div class="timeRow">'+DAILY_TIME_CHOICES.map(function(n){return '<button data-minutes="'+n+'" class="'+(day.minutes===n?'on':'')+'" '+(locked?'disabled':'')+' aria-pressed="'+(day.minutes===n?'true':'false')+'">'+n+'<br>min</button>';}).join("")+'</div>'+
+    '<div class="missionContract"><b>'+esc(day.title)+'</b><span>'+esc(day.completedAt?'Le sceau de ce jour est protégé. Tu peux continuer librement sans perdre cette réussite.':'Contrat : aller au bout des 25 questions. Les erreurs entraînent la mémoire ; elles ne font avancer une étape que selon les règles des trois séries parfaites.')+'</span></div>'+
+    '<span class="journeyLabel">Semaine · '+weekKeys.length+'/7 sceaux</span><div class="weekSeals">'+weekSealsHtml(weekKeys)+'</div><div class="journeyActions"><button id="btnJourneySave">💾 Enregistrer</button><button id="btnCalendar">Calendrier musical</button>'+
+    (pending?'<button id="btnWeeklyChallenge" class="weeklyReady">★ Défi des défis · 25 questions</button>':'')+'</div><p class="journeyReason">'+esc(context.reason)+'<br>'+esc(appointmentText)+' L’humeur adapte la séance, jamais les critères d’acquisition.</p>';
+  box.querySelectorAll("[data-mood]").forEach(function(btn){btn.onclick=function(){setDailyCheckIn("mood",btn.getAttribute("data-mood"));};});
+  box.querySelectorAll("[data-minutes]").forEach(function(btn){btn.onclick=function(){setDailyCheckIn("minutes",Number(btn.getAttribute("data-minutes")));};});
+  $("btnJourneySave").onclick=function(){manualMemorySnapshot("header");};
+  $("btnCalendar").onclick=openTrainingCalendar;
+  if($("btnWeeklyChallenge"))$("btnWeeklyChallenge").onclick=startWeeklyChallenge;
+}
+function calendarOptionHtml(list,current){return list.map(function(row){return '<option value="'+row.id+'"'+(row.id===current?' selected':'')+'>'+esc(row.label)+'</option>';}).join("");}
+function calendarPieceOptions(){
+  return '<option value="">Aucune partition liée</option>'+allPieces().map(function(piece){return '<option value="'+piece.id+'">'+esc(piece.titre)+'</option>';}).join("");
+}
+function appointmentListHtml(){
+  const rows=(DB.calendar.appointments||[]).slice().sort(function(a,b){return appointmentTimestamp(a)-appointmentTimestamp(b);});
+  if(!rows.length)return '<p class="src">Aucun rendez-vous. Le Coach utilise seulement ce que tu choisis d’inscrire ici.</p>';
+  return '<div class="appointmentList">'+rows.map(function(row){const type=appointmentTypeById(row.type);return '<div class="appointmentRow'+(row.cancelledAt?' cancelled':'')+'"><b>'+esc(row.title)+'</b><small>'+esc(type.label)+' · '+row.date+' à '+row.time+' · '+row.duration+' min'+(row.cancelledAt?' · retiré mais conservé':'')+'</small><div class="row"><button data-appt-toggle="'+row.id+'">'+(row.cancelledAt?'Restaurer':'Retirer')+'</button></div></div>';}).join("")+'</div>';
+}
+function openTrainingCalendar(){
+  DB.calendar=normalizeTrainingCalendar(DB.calendar);
+  $("cardBox").innerHTML='<h3>Coach invisible</h3><h2>Calendrier musical</h2><p>Inscris un cours, une répétition ou une échéance. Le Coach ajuste la priorité et le temps proposé. Ces données restent dans Sezam et dans tes sauvegardes ; aucune humeur ni date n’est envoyée à une IA.</p>'+
+    '<div class="calendarForm"><label class="wide">Nom du rendez-vous<input id="calTitle" maxlength="80" placeholder="Ex. Cours avec Marie"></label><label>Date<input id="calDate" type="date" value="'+todayStr()+'"></label><label>Heure<input id="calTime" type="time" value="18:00"></label><label>Nature<select id="calType">'+calendarOptionHtml(APPOINTMENT_TYPES,"cours")+'</select></label><label>Durée<select id="calDuration"><option value="30">30 min</option><option value="45">45 min</option><option value="60" selected>1 h</option><option value="90">1 h 30</option><option value="120">2 h</option></select></label><label class="wide">Partition<select id="calPiece">'+calendarPieceOptions()+'</select></label><label class="wide">Objectif<select id="calFocus">'+calendarOptionHtml(PRACTICE_DOMAINS,"lecture")+'</select></label></div>'+
+    '<button id="calAdd">Ajouter ce rendez-vous</button><button id="calExport" style="margin-top:8px;background:var(--panel2);color:var(--ink)">Exporter vers Calendrier iPhone/iPad (.ics)</button><p class="src" id="calMsg"></p>'+appointmentListHtml();
+  $("overlay").classList.add("on");
+  bindTrainingCalendarDialog();
+}
+function bindTrainingCalendarDialog(){
+  if(!$("calAdd"))return;
+  $("calAdd").onclick=function(){
+    const raw={id:makeLocalId("appt"),title:$("calTitle").value,type:$("calType").value,date:$("calDate").value,time:$("calTime").value,duration:Number($("calDuration").value),pieceId:$("calPiece").value,focusDomain:$("calFocus").value,createdAt:Date.now(),updatedAt:Date.now(),cancelledAt:0};
+    const row=normalizeAppointment(raw);if(!row){$("calMsg").textContent="Vérifie la date et l’heure. Rien n’a été ajouté.";return;}
+    DB.calendar.appointments.push(row);DB.calendar=normalizeTrainingCalendar(DB.calendar);logEvent("calendar_add",{type:row.type,date:row.date});
+    if(!save()){DB.calendar.appointments=DB.calendar.appointments.filter(function(item){return item.id!==row.id;});$("calMsg").textContent="Le rendez-vous n’a pas été ajouté : l’enregistrement local est indisponible. Tous les rendez-vous précédents restent intacts.";return;}
+    openTrainingCalendar();
+  };
+  $("calExport").onclick=exportTrainingCalendar;
+  $("cardBox").querySelectorAll("[data-appt-toggle]").forEach(function(btn){btn.onclick=function(){const id=btn.getAttribute("data-appt-toggle"),row=DB.calendar.appointments.find(function(a){return a.id===id;});if(!row)return;const before={cancelledAt:row.cancelledAt,updatedAt:row.updatedAt},nextCancelled=row.cancelledAt?0:Date.now();row.cancelledAt=nextCancelled;row.updatedAt=Date.now();logEvent(row.cancelledAt?"calendar_cancel":"calendar_restore",{id:id});if(!save()){row.cancelledAt=before.cancelledAt;row.updatedAt=before.updatedAt;$("calMsg").textContent="La modification n’a pas été enregistrée. Le rendez-vous reste exactement dans son état précédent.";return;}openTrainingCalendar();};});
+}
+function icsText(value){return String(value||"").replace(/\\/g,"\\\\").replace(/([,;])/g,"\\$1").replace(/\r?\n/g,"\\n");}
+function exportTrainingCalendar(){
+  const rows=activeAppointments();if(!rows.length){if($("calMsg"))$("calMsg").textContent="Ajoute d’abord un rendez-vous actif.";return false;}
+  const stamp=new Date().toISOString().replace(/[-:]/g,"").replace(/\.\d{3}Z$/,"Z"), lines=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//SEZAM//Calendrier musical//FR","CALSCALE:GREGORIAN"];
+  rows.forEach(function(row){const start=row.date.replace(/-/g,"")+"T"+row.time.replace(":","")+"00", endDate=new Date(appointmentTimestamp(row)+row.duration*60000),end=dateKey(endDate).replace(/-/g,"")+"T"+String(endDate.getHours()).padStart(2,"0")+String(endDate.getMinutes()).padStart(2,"0")+"00";lines.push("BEGIN:VEVENT","UID:"+row.id+"@sezam.local","DTSTAMP:"+stamp,"DTSTART:"+start,"DTEND:"+end,"SUMMARY:"+icsText(row.title),"DESCRIPTION:"+icsText("Rendez-vous musical · "+appointmentTypeById(row.type).label),"END:VEVENT");
+  });lines.push("END:VCALENDAR");
+  try{const blob=new Blob([lines.join("\r\n")],{type:"text/calendar;charset=utf-8"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="sezam-calendrier.ics";document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(url);},1000);if($("calMsg"))$("calMsg").textContent="Fichier calendrier créé. Ouvre-le sur iPhone ou iPad pour ajouter les rendez-vous.";return true;}catch(e){if($("calMsg"))$("calMsg").textContent="Export impossible sur cet appareil. Les rendez-vous restent enregistrés dans Sezam.";return false;}
+}
 function dailyMission(domain,piece){
   const missions={
     rythme:{title:"Rythme hors écran",note:"Clappe une pulsation stable puis lis quatre mesures à voix haute."},
@@ -3964,7 +4304,7 @@ function dailyFocusDomain(profile){
   return chosen[Math.abs(dayNumber)%chosen.length];
 }
 function dailyPlan(decision){
-  const profile=normalizeProfile(DB.profile), total=profile.dailyMinutes, piece=activePieceObj();
+  const profile=normalizeProfile(DB.profile), context=decision&&decision.dailyContext?decision.dailyContext:dailyCoachContext(), total=context.minutes, piece=activePieceObj();
   if(decision&&decision.kind==="course"){
     const c=decision.course||{}, done=(DB.dailyProgress&&DB.dailyProgress[todayStr()])||{};
     const signature=c.signature||"course-v2";
@@ -3974,17 +4314,17 @@ function dailyPlan(decision){
     const newcomer=c.newNote&&NOTES[c.newNote]?"Nouvelle note : "+NOTES[c.newNote].n.toUpperCase()+".":"Départ : "+firstNotes+".";
     if(c.review){
       return {
-        isCourse:true,isCourseReview:true,total:decision.n,path:"Entraînement continu",cadence:"25 nouvelles lectures à chaque reprise",profile:profile,signature:signature,
+        isCourse:true,isCourseReview:true,total:decision.n,path:"Entraînement continu",cadence:"25 nouvelles lectures à chaque reprise",profile:profile,context:context,signature:signature,
         blocks:[{id:"course",questions:decision.n,title:(c.itemLabel||"Parcours")+" · étape "+((c.stepIndex||0)+1)+"/"+(c.stepTotal||COURSE_MAX_EXERCISES)+" · entraînement continu",note:"Parcours acquis : 25 nouvelles notes dorées dans des fragments de partitions, sans déplacer ta progression.",done:sessionDone}]
       };
     }
     return {
-      isCourse:true,total:decision.n,path:"Parcours d’acquisition",cadence:"3 séries parfaites avant la note suivante",profile:profile,signature:signature,
+      isCourse:true,total:decision.n,path:"Parcours d’acquisition",cadence:"3 séries parfaites avant la note suivante",profile:profile,context:context,signature:signature,
       blocks:[{id:"course",questions:decision.n,title:(c.itemLabel||"Parcours")+" · étape "+((c.stepIndex||0)+1)+"/"+(c.stepTotal||COURSE_MAX_EXERCISES)+" · série "+(c.seriesNumber||1)+"/"+(c.seriesTotal||COURSE_SERIES_PER_STEP),note:newcomer+" "+esc(c.phaseLabel||"Acquisition")+" : 25 réponses justes, aucune erreur.",done:sessionDone}]
     };
   }
   const frag=fragileNoteIds(3), due=dueCount(), pending=(DB.repairQueue||[]).length;
-  const focusDomain=dailyFocusDomain(profile), transferMission=dailyMission(focusDomain,piece);
+  const focusDomain=context.focusDomain||dailyFocusDomain(profile), transferMission=dailyMission(focusDomain,piece);
   const firstTitle=frag.length?"Cible · "+frag.map(function(id){return NOTES[id].n.toUpperCase();}).join(" · "):"Cible · "+decision.palier.id;
   const firstNote=decision.reason+" Le coach garde la difficulté utile.";
   const specs=[
@@ -3997,13 +4337,13 @@ function dailyPlan(decision){
   const done=(DB.dailyProgress&&DB.dailyProgress[todayStr()])||{};
   // Version du format de plan, volontairement stable entre v28 et v29 : une
   // mise à jour de l'app ne doit pas faire rejouer une séance déjà terminée.
-  const signature="v28:"+decision.palier.id+":"+(piece?piece.id:"aucune")+":"+total;
+  const signature="v39:"+decision.palier.id+":"+(piece?piece.id:"aucune")+":"+total+":"+context.mood+":"+focusDomain;
   const sessionDone=done.session===true||done.session===signature;
   return {
     total:total,
     path:labelFrom(PROFILE_PATHS,profile.parcours),
     cadence:targetCadence(profile),
-    profile:profile,
+    profile:profile,context:context,questions:DAILY_MISSION_QUESTIONS,
     signature:signature,
     blocks:specs.map(function(s,i){
       return Object.assign({},s,{minutes:minutes[i],signature:signature,done:sessionDone});
@@ -4027,7 +4367,7 @@ function renderDailyPlan(plan){
     }).join("");
     return;
   }
-  $("dailyPlan").innerHTML='<div class="dailyPlanHead"><span>Séance du jour · '+esc(plan.path)+'</span><b>'+plan.total+' min</b></div>'+plan.blocks.map(function(b){
+  $("dailyPlan").innerHTML='<div class="dailyPlanHead"><span>Séance du jour · '+esc(plan.path)+'</span><b>'+plan.questions+' q. · repère '+plan.total+' min</b></div>'+plan.blocks.map(function(b){
     return '<div class="dailyBlock"><span class="mins">'+b.minutes+' min</span><span><b>'+esc(b.title)+'</b><small>'+esc(b.note)+'</small></span><span class="dailyAuto'+(b.done?' done':'')+'">'+(b.done?'Fait ✓':'Inclus')+'</span></div>';
   }).join("");
 }
@@ -4120,12 +4460,12 @@ function renderCockpit(decision,plan){
     $("coachLine").textContent=decision.reason;
     return;
   }
-  $("coachPitch").textContent=hello+"ta séance vise "+plan.total+" minutes et laisse finir la question en cours. Rappel à froid, cible, réparation puis transfert : Sezam enchaîne tout.";
-  $("btnPlayNow").textContent="FAIRE MA SÉANCE · "+plan.total+" MIN";
+  $("coachPitch").textContent=hello+"ta mission contient exactement "+plan.questions+" questions au maximum, avec un repère de "+plan.total+" minutes. Rappel à froid, cible, réparation puis transfert : Sezam enchaîne tout.";
+  $("btnPlayNow").textContent="FAIRE MA MISSION · "+plan.questions+" QUESTIONS";
   $("cockpitMeta").innerHTML=
     '<span><b>'+esc(p.id)+'</b><small>palier</small></span>'+
     '<span><b>'+esc(modeLabelText)+'</b><small>mode</small></span>'+
-    '<span><b>'+plan.total+' min</b><small>aujourd’hui</small></span>';
+    '<span><b>'+plan.questions+' q.</b><small>repère '+plan.total+' min</small></span>';
   $("coachLine").textContent=decision.reason+" "+plan.cadence+".";
 }
 function renderPlayerState(decision){
@@ -4168,8 +4508,9 @@ function renderHome(){
     if(first) DB.sel=first.id;
   }
   ensureActivePiece();
-  const day=DB.days[todayStr()], nbToday=day?day.series:0, decision=courseDecision()||coachDecision(), plan=dailyPlan(decision);
+  const day=DB.days[todayStr()], decision=dailyDecision(), plan=dailyPlan(decision), missionDay=ensureTodayMission();
   renderCockpit(decision,plan);
+  renderJourney();
   renderDailyPlan(plan);
   renderCourseReview();
   renderPlayerState(decision);
@@ -4181,9 +4522,8 @@ function renderHome(){
     : DB.mode==="libre"
     ? (startPid&&DB.sel===startPid?esc(profileStartText(plan.profile.niveauDepart,startPid)):
       "Mode Libre : écoute, chante, explore chaque note avec le piano · plan de "+plan.total+" minutes.")
-    : nbToday===0 ? "Mission du jour : "+esc(plan.path)+" · "+plan.total+" minutes · "+plan.profile.daysPerWeek+" jours par semaine. Précision d'abord."
-    : nbToday<3 ? "Encore "+(3-nbToday)+" série"+(3-nbToday>1?"s":"")+" pour le badge du jour."
-    : "Badge du jour gagné. Pousse le niveau, ou souffle en Libre.";
+    : missionDay.completedAt ? "Sceau du jour gagné et sauvegardé. Tu peux continuer à t’entraîner sans jamais perdre cette réussite."
+    : "Mission du jour : "+esc(missionDay.title)+" · 25 questions · "+plan.total+" minutes indicatives. Le sceau récompense le travail ; la note suivante exige toujours trois séries parfaites.";
   renderRitual();
   renderOracle();
   renderWatch();
@@ -4267,7 +4607,7 @@ function renderHome(){
     b.onclick=(function(pid){return function(){startStarReview(pid);};})(sdue[0].id);
     sc.appendChild(b);
   }
-  $("btnSerie").textContent=plan.isCourse?(decision.course.review?"Entraînement continu · "+plan.total+" nouvelles lectures":"Série "+decision.course.seriesNumber+"/"+decision.course.seriesTotal+" · "+plan.total+" questions sans faute"):"Session 10 questions · "+modeLabel(DB.mode);
+  $("btnSerie").textContent=plan.isCourse?(decision.course.review?"Entraînement continu · "+plan.total+" nouvelles lectures":"Série "+decision.course.seriesNumber+"/"+decision.course.seriesTotal+" · "+plan.total+" questions sans faute"):"Mission · "+DAILY_MISSION_QUESTIONS+" questions · "+modeLabel(DB.mode);
   const nd=dueCount();
   $("defiTxt").textContent = nd>0 ? ("↻ "+nd+" note"+(nd>1?"s":"")+" à revoir")
     : (day&&day.perfect ? "★ Défi parfait réussi" : "★ Défi parfait : tente une Rafale");
@@ -4560,7 +4900,7 @@ function configureDailyCampaignTarget(target){
   if(!EX||!EX.daily||!target||!target.palier) return false;
   const td=tierDef(target.mode); if(!td||td.future) return false;
   EX.palier=target.palier; EX.mode=target.mode; EX.pool=target.palier.notes.slice();
-  EX.groupN=td.n||1; EX.msNote=td.ms; EX.limit=td.ms?td.ms*EX.groupN:null; EX.last=null;
+  EX.groupN=EX.daily?1:(td.n||1); EX.msNote=td.ms; EX.limit=td.ms?td.ms*EX.groupN:null; EX.last=null;
   EX.coverageIds=[]; EX.coverageQueue=validationMissingIds(target.palier.id,target.mode,target.palier.notes);
   EX.daily.targetPool=target.palier.notes.slice();
   EX.dailyValidationBuffer=dailyDraftRecords(target.palier.id,target.mode);
@@ -4602,20 +4942,20 @@ function recordDailyTargetEvidence(questionRecord){
 }
 function buildDailySession(decision,now){
   now=Number.isFinite(Number(now))?Number(now):Date.now();
-  const profile=normalizeProfile(DB.profile), totalMs=profile.dailyMinutes*60000;
+  const profile=normalizeProfile(DB.profile), context=decision&&decision.dailyContext?decision.dailyContext:dailyCoachContext(now), totalMs=context.minutes*60000;
   const targetPool=uniq((decision.pool&&decision.pool.length?decision.pool:decision.palier.notes).filter(function(id){return NOTES[id];}));
   const pending=repairBlockedIds();
   const dueSnapshot=unlockedNoteIds().filter(function(id){return pending.indexOf(id)<0&&isDue(id,now);});
   const repairSnapshot=repairPool().filter(function(id){return dueSnapshot.indexOf(id)<0;});
-  const focusDomain=dailyFocusDomain(profile), piece=ensureActivePiece(), seg=piece?nextSegmentForPiece(piece):null;
-  const transferScript=(piece&&seg)?(segmentScript(seg,piece)||segmentNotePool(seg,piece)||[]):[];
+  const focusDomain=context.focusDomain||dailyFocusDomain(profile), requestedPiece=context.pieceId?pieceById(context.pieceId):null, piece=(requestedPiece&&pieceMelody(requestedPiece))?requestedPiece:ensureActivePiece(), seg=piece?nextSegmentForPiece(piece):null;
+  const rawTransferScript=(piece&&seg)?(segmentScript(seg,piece)||segmentNotePool(seg,piece)||[]):[], transferScript=rawTransferScript.filter(function(id){return targetPool.indexOf(id)>=0;});
   const weights=[.2,.6,.1,.1], ids=["rappel","cible","reparation","transfert"];
   let cursor=now;
   const blocks=ids.map(function(id,i){
     const duration=i===ids.length-1?now+totalMs-cursor:Math.round(totalMs*weights[i]);
     const block={id:id,startAt:cursor,endAt:cursor+duration}; cursor=block.endAt; return block;
   });
-  return {startAt:now,endAt:now+totalMs,totalMs:totalMs,totalMinutes:profile.dailyMinutes,blocks:blocks,pausedAt:0,pausedMs:0,
+  return {startAt:now,endAt:now+totalMs,totalMs:totalMs,totalMinutes:context.minutes,missionDate:context.date||dateKey(new Date(now)),mood:context.mood,blocks:blocks,pausedAt:0,pausedMs:0,
     targetPool:targetPool,dueSnapshot:dueSnapshot,repairSnapshot:repairSnapshot,
     coldPool:uniq(dueSnapshot.concat(targetPool)),transferScript:transferScript.slice(),transferIdx:0,transferReads:0,bonusIndex:0,bonusFound:0,proofs:[],promotions:[],campaignComplete:false,
     pieceId:piece?piece.id:"",segmentId:seg?seg.id:"",segmentTitle:seg?seg.title:"",decisionKind:decision.kind,
@@ -4716,9 +5056,9 @@ function updateDailyClock(){
   const sec=Math.ceil(left/1000), mm=Math.floor(sec/60), ss=String(sec%60).padStart(2,"0");
   const tempo=EX.limit&&EX.currentTask&&EX.currentTask.phase==="cible"&&EX.currentTask.role==="baseline"
     ? " · tempo "+Math.round(EX.limit/1000)+" s / "+EX.groupN+" note"+(EX.groupN>1?"s":"") : "";
-  const phaseName=EX.currentTask&&EX.currentTask.role==="bonus"?"Atelier bonus":dailyPhaseLabel(phase?phase.id:"transfert");
-  $("exMode").textContent="Séance · "+phaseName+" · "+mm+":"+ss+" restantes"+tempo;
-  if(left<=0){ EX.stopRequested=true; $("btnQuit").textContent="Terminer maintenant"; }
+  const phaseName=EX.currentTask&&EX.currentTask.role==="bonus"?"Atelier bonus":dailyPhaseLabel(phase?phase.id:"transfert"), progress=Math.min(DAILY_MISSION_QUESTIONS,EX.promptCount||0);
+  $("exMode").textContent="Mission · "+phaseName+" · "+progress+"/"+DAILY_MISSION_QUESTIONS+(left>0?" · repère "+mm+":"+ss:" · repère de temps atteint")+tempo;
+  if(left<=0){ EX.stopRequested=true; $("btnQuit").textContent=progress>=DAILY_MISSION_QUESTIONS?"Terminer maintenant":"Arrêter et garder "+progress+"/"+DAILY_MISSION_QUESTIONS; }
   else if(EX.currentTask&&EX.currentTask.role==="bonus") $("btnQuit").textContent="Terminer et voir le bilan";
   else $("btnQuit").textContent="Arrêter et voir le bilan";
 }
@@ -4728,20 +5068,22 @@ function startDailyClock(){
 function startDailySession(){
   if(protectedGameStartBlocked()) return false;
   if(EX&&!EX.done) return;
-  const course=courseDecision();
-  if(course){
-    if(course.practice){
-      if(course.course.review) claimCourseReviewPlan(course.course.stepId,course.practice);
-      else claimCoursePracticePlan(course.course.stepId,course.practice);
+  const preContext=dailyCoachContext();
+  if(preContext.unavailableNow&&typeof window.confirm==="function"&&!window.confirm("Ton calendrier indique un temps indisponible maintenant. Garder la mission pour après ce rendez-vous ? Choisis Annuler pour rester à l’accueil, ou OK pour jouer quand même."))return false;
+  const mission=freezeTodayMission();if(!mission)return false;const chosen=dailyDecision();
+  if(chosen&&chosen.kind==="course"){
+    if(chosen.practice){
+      if(chosen.course.review) claimCourseReviewPlan(chosen.course.stepId,chosen.practice);
+      else claimCoursePracticePlan(chosen.course.stepId,chosen.practice);
     }
-    if(!course.palier.courseOnly){DB.sel=course.palier.id;markPalierSeen(course.palier);}
+    if(!chosen.palier.courseOnly){DB.sel=chosen.palier.id;markPalierSeen(chosen.palier);}
     save();
-    beginSerie({sessionMode:course.course.review?"courseReview":"course",n:course.n,questionCap:course.questionCap,palier:course.palier,pool:course.pool,mode:course.mode,groupN:1,
-      label:course.course.review?("Entraînement continu · "+course.course.itemLabel+" · étape "+(course.course.stepIndex+1)+"/"+course.course.stepTotal):("Parcours · "+course.course.itemLabel+" · série "+course.course.seriesNumber+"/"+course.course.seriesTotal),
-      course:course.course,script:course.script,practice:course.practice,cold:false});
+    beginSerie({sessionMode:chosen.course.review?"courseReview":"course",n:chosen.n,questionCap:chosen.questionCap,palier:chosen.palier,pool:chosen.pool,mode:chosen.mode,groupN:1,
+      label:chosen.course.review?("Entraînement continu · "+chosen.course.itemLabel+" · étape "+(chosen.course.stepIndex+1)+"/"+chosen.course.stepTotal):("Parcours · "+chosen.course.itemLabel+" · série "+chosen.course.seriesNumber+"/"+chosen.course.seriesTotal),
+      course:chosen.course,script:chosen.script,practice:chosen.practice,cold:false,engagementDate:mission&&todayStr()});
     return true;
   }
-  let d=coachDecision();
+  let d=chosen||coachDecision();
   if(d.kind==="repair"&&DB.mode!=="libre"){
     const target=coachDecision("session");
     target.reason=d.reason+" La réparation reste incluse dans son créneau."; d=target;
@@ -4750,8 +5092,8 @@ function startDailySession(){
   if(d.mode&&d.mode!=="libre") DB.mode=d.mode;
   const daily=buildDailySession(d,Date.now());
   save();
-  beginSerie({sessionMode:"daily",label:"Séance du jour",palier:d.palier,pool:d.pool,mode:d.mode,groupN:d.groupN,
-    openEnded:true,daily:daily,cold:true});
+  beginSerie({sessionMode:"daily",label:"Séance du jour",palier:d.palier,pool:d.pool,mode:d.mode,groupN:1,
+    openEnded:true,daily:daily,cold:true,engagementDate:mission&&todayStr()});
 }
 function startCoachPlay(force){
   if(protectedGameStartBlocked()) return false;
@@ -4792,11 +5134,11 @@ function beginSerie(opts){
   const coldSource=(opts.daily&&opts.daily.coldPool.length)?opts.daily.coldPool:pool;
   const coldPool=ordinaryQuestionPool(coldSource,p.notes,true), coldId=coldEligible?coldRecallId(coldPool,Date.now()):null;
   EX={kind:"serie",sessionMode:opts.sessionMode||"session",mode:mode,n:total,groupN:groupN,msNote:msNote,limit:msNote?msNote*groupN:null,
-      palier:p,pool:pool,i:0,ok:0,errs:[],times:[],hist:[],last:null,waiting:false,done:false,qid:0,
+      palier:p,pool:pool,i:0,ok:0,errs:[],times:[],hist:[],last:null,waiting:false,done:false,qid:0,weeklyKey:normalizeTargetDate(opts.weeklyKey)||"",
       qtype:"lect",seq:[],k:0,writePos:4,segment:opts.segment||null,
       script:(opts.script&&opts.script.length)?opts.script.slice():null,scriptIdx:0,seenIds:[],testedIds:[],coverageIds:[],coverageQueue:coverage,
       course:opts.course||null,practice:opts.practice||null,currentPracticeCard:null,questionCap:questionCap,promptCount:0,promptHistory:[],promptCountById:{},writePromptCount:0,writePromptIds:[],
-      openEnded:openEnded,daily:opts.daily||null,stopRequested:false,currentTask:null,questionRecords:[],phaseStats:{rappel:{n:0,ok:0},cible:{n:0,ok:0},reparation:{n:0,ok:0},transfert:{n:0,ok:0}},transferReached:false,
+      openEnded:openEnded,daily:opts.daily||null,engagementDate:normalizeTargetDate(opts.engagementDate)||"",stopRequested:false,currentTask:null,questionRecords:[],phaseStats:{rappel:{n:0,ok:0},cible:{n:0,ok:0},reparation:{n:0,ok:0},transfert:{n:0,ok:0}},transferReached:false,
       coldPending:coldEligible&&!!coldId,coldId:coldId,coldResult:null,questionDeadlineAt:0,pausedQuestionRemaining:null,pausedResumeNext:false,
       dailyValidationBuffer:opts.daily&&mode!=="libre"?dailyDraftRecords(p.id,mode):[]};
   logEvent("serie_start",{palier:p.id,mode:mode,groupe:groupN,type:EX.sessionMode,n:total,questions:questionCap,segment:EX.segment?EX.segment.segmentId:null,piece:EX.segment?EX.segment.pieceId:null});
@@ -5016,6 +5358,7 @@ function dailyTransferChunk(daily,n){
 }
 function dailyTransferReadyForBonus(daily){
   if(!daily) return false;
+  if(!EX||dailyScoredCount()<DAILY_MISSION_QUESTIONS) return false;
   const needsMission=daily.focusDomain!=="lecture"&&daily.focusDomain!=="integration";
   if(needsMission&&!daily.missionDone) return false;
   if(daily.transferScript&&daily.transferScript.length) return (daily.transferIdx||0)>=daily.transferScript.length;
@@ -5086,7 +5429,6 @@ function freshTargetNoteIds(){
   if(!EX||EX.kind!=="serie"||EX.done) return [];
   if(EX.sessionMode!=="session"&&EX.sessionMode!=="daily"&&EX.sessionMode!=="course"&&EX.sessionMode!=="courseReview") return [];
   if(EX.review||EX.segment||(EX.script&&EX.sessionMode!=="course"&&EX.sessionMode!=="courseReview")) return [];
-  if(EX.daily){ const ph=dailyPhaseAt(EX.daily,Date.now()); if(!ph||(ph.id!=="rappel"&&ph.id!=="cible")) return []; }
   if(!Array.isArray(EX.introducedIds)) EX.introducedIds=[];
   const base=(EX.daily&&EX.daily.targetPool&&EX.daily.targetPool.length)?EX.daily.targetPool:((EX.pool&&EX.pool.length)?EX.pool:(EX.palier&&EX.palier.notes)||[]);
   return uniq(base).filter(function(id){
@@ -5096,7 +5438,7 @@ function freshTargetNoteIds(){
 function nextQuestion(){
   if(EX.done) return;
   clearQTimers();
-  if(EX.daily&&(EX.stopRequested||Date.now()>=EX.daily.endAt)) return finishSerie();
+  if(EX.daily&&(EX.stopRequested||Date.now()>=EX.daily.endAt)&&questionCapacityLeft()<=0) return finishSerie();
   if(EX.review==="star"&&(DB.repairQueue||[]).length&&EX.i>0) return finishSerie();
   if(EX.kind==="rafale"&&questionCapacityLeft()<=0) return finishRafale();
   if(EX.kind==="serie"&&questionCapacityLeft()<=0){
@@ -5577,17 +5919,60 @@ function renderResPiece(){
   box.innerHTML=h;
   bindResPiece(piece,null);
 }
-function completeDailyProgress(){
-  if(!EX||!EX.daily) return;
+function completeDailyProgress(key){
+  key=normalizeTargetDate(key)||(EX&&normalizeTargetDate(EX.engagementDate))||todayStr();
   if(!DB.dailyProgress) DB.dailyProgress={};
-  const key=todayStr(); if(!DB.dailyProgress[key]) DB.dailyProgress[key]={};
+  if(!DB.dailyProgress[key]) DB.dailyProgress[key]={};
   DB.dailyProgress[key].session=true;
 }
 function dailyScoredCount(){
   if(!EX||!Array.isArray(EX.questionRecords)) return 0;
   return EX.questionRecords.filter(function(q){return q&&Array.isArray(q.ids)&&q.ids.length>0;}).length;
 }
-function dailySessionQualified(){ return dailyScoredCount()>=10; }
+function dailySessionQualified(){ return !!(EX&&dailyScoredCount()>=DAILY_MISSION_QUESTIONS&&questionCapacityLeft()<=0); }
+function grantDailyMissionReward(key,evidence){
+  key=normalizeTargetDate(key);if(!key)return null;
+  evidence=normalizeMissionEvidence(evidence);if(evidence.questions<DAILY_MISSION_QUESTIONS)return null;
+  DB.engagement=reconcileEngagement(DB.engagement,DB.dailyProgress);
+  let day=DB.engagement.daily[key];
+  if(day&&day.completedAt)return null;
+  if(!day)day=normalizeEngagementDay({missionId:"daily_"+key.replace(/-/g,""),mood:"concentre",minutes:20,focusDomain:"lecture",title:"Mission du jour",createdAt:Date.now()},key);
+  const ordinal=nextMissionOrdinal(DB.engagement), rewardXp=DAILY_REWARD_XP+(ordinal%10===0?30:0), completedAt=Date.now();
+  day.status="complete";day.completedAt=completedAt;day.startedAt=day.startedAt||completedAt;day.ordinal=ordinal;day.badgeId=ordinal%10===0?"mission_ten":"daily_seal";day.rewardXp=rewardXp;day.evidence=evidence;DB.engagement.daily[key]=day;
+  DB.xp+=rewardXp;completeDailyProgress(key);DB.engagement=reconcileEngagement(DB.engagement,DB.dailyProgress);
+  const wk=weekKey(parseDayKey(key)), weekly=DB.engagement.weekly[wk]||normalizeWeeklyEngagement({},wk), count=weekly.dailyKeys.length||completedMissionKeys().filter(function(k){return weekKey(parseDayKey(k))===wk;}).length;
+  logEvent("daily_mission_complete",{date:key,ordinal:ordinal,questions:day.evidence.questions,correct:day.evidence.correct,week:count,rewardXp:rewardXp});
+  return {kind:"daily",date:key,ordinal:ordinal,title:day.title,badgeId:day.badgeId,rewardXp:rewardXp,weekKey:wk,weekCount:count,weeklyUnlocked:!!weekly.unlockedAt,correct:day.evidence.correct,questions:day.evidence.questions};
+}
+function grantWeeklyChallengeResult(key,correct,questions){
+  key=normalizeTargetDate(key);if(!key||!DB.engagement.weekly[key]||!DB.engagement.weekly[key].unlockedAt)return null;
+  questions=clampInt(questions,0,DAILY_MISSION_QUESTIONS,0);correct=clampInt(correct,0,questions,0);
+  const row=DB.engagement.weekly[key];
+  if(questions<DAILY_MISSION_QUESTIONS){logEvent("weekly_challenge_end",{week:key,correct:correct,questions:questions,success:false,incomplete:true});return {kind:"weekly_attempt",success:false,incomplete:true,weekKey:key,correct:correct,questions:questions,best:row.best||0};}
+  row.attempts=(row.attempts||0)+1;row.best=Math.max(row.best||0,correct);
+  const success=correct>=20;
+  logEvent("weekly_challenge_end",{week:key,correct:correct,questions:questions,success:success});
+  if(!success||row.completedAt)return {kind:"weekly_attempt",success:success,weekKey:key,correct:correct,questions:questions,best:row.best};
+  row.completedAt=Date.now();row.badgeId=correct===DAILY_MISSION_QUESTIONS?"weekly_gold":"weekly_crown";row.rewardXp=WEEKLY_REWARD_XP;DB.xp+=WEEKLY_REWARD_XP;
+  return {kind:"weekly",success:true,weekKey:key,correct:correct,questions:questions,badgeId:row.badgeId,rewardXp:WEEKLY_REWARD_XP};
+}
+function startWeeklyChallenge(){
+  if(protectedGameStartBlocked())return false;const pending=pendingWeeklyChallenge();if(!pending){memoryToast("Le Défi des défis s’ouvre après sept sceaux quotidiens dans la même semaine.",false);return false;}
+  const p=PALIERS.find(function(row){return row.id===DB.sel;})||PALIERS[0], pool=uniq(repairPool().concat(unlockedNoteIds(),p.notes)).filter(function(id){return NOTES[id];}).slice(0,40);
+  beginSerie({sessionMode:"weeklyChallenge",label:"Défi des défis",n:DAILY_MISSION_QUESTIONS,questionCap:DAILY_MISSION_QUESTIONS,palier:p,pool:pool.length?pool:p.notes,mode:"libre",groupN:1,cold:false,weeklyKey:pending.key});return true;
+}
+function weekSealsForWeekHtml(key){
+  const done=safeMap(), row=DB.engagement&&DB.engagement.weekly&&DB.engagement.weekly[key], keys=row&&row.dailyKeys&&row.dailyKeys.length?row.dailyKeys:completedMissionKeys().filter(function(day){return weekKey(parseDayKey(day))===key;});
+  keys.forEach(function(day){done[day]=1;});const start=parseDayKey(key);
+  return Array.from({length:7},function(_,i){const day=dateKey(addDays(start,i));return '<span class="weekSeal'+(done[day]?' on':'')+'">'+(done[day]?'♪':(i+1))+'</span>';}).join("");
+}
+function showMissionCelebration(reward){
+  if(!reward||!(reward.kind==="daily"||reward.kind==="weekly"))return false;
+  const daily=reward.kind==="daily", cycleDay=daily?((Math.max(1,reward.ordinal)-1)%10)+1:0, cycleNumber=daily?Math.ceil(Math.max(1,reward.ordinal)/10):0, title=daily?((reward.badgeId==="mission_ten"?"Mission "+cycleNumber+" terminée · ":"")+"Jour "+cycleDay+" — Mission accomplie"):("Défi des défis réussi"), icon=daily?(reward.badgeId==="mission_ten"?"10":"♪"):(reward.badgeId==="weekly_gold"?"★":"♛");
+  const detail=daily?(reward.correct+" réponses justes sur "+reward.questions+" questions · "+reward.weekCount+"/7 sceaux cette semaine"):(reward.correct+"/"+reward.questions+" · Couronne de la semaine");
+  $("cardBox").innerHTML='<div class="celebration"><div class="celebrationBurst" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="celebrationBadge" aria-hidden="true">'+icon+'</div><h2>'+esc(title)+'</h2><p><b>'+esc(daily?(reward.badgeId==="mission_ten"?"Finale des dix jours":"Sceau quotidien"):(reward.badgeId==="weekly_gold"?"Couronne d’or":"Couronne hebdomadaire"))+'</b><br>'+esc(detail)+'<br><b>+'+reward.rewardXp+' XP</b></p><div class="weekSeals">'+weekSealsForWeekHtml(reward.weekKey)+'</div>'+(daily&&reward.weeklyUnlocked?'<p><b>Les sept sceaux sont réunis : le Défi des défis est maintenant ouvert.</b></p>':'')+'<div class="celebrationActions"><button id="celebrateStay">Voir mon bilan</button><button id="celebrateHome" class="primary">Accueil</button></div></div>';
+  $("overlay").classList.add("on");$("celebrateStay").onclick=function(){$("overlay").classList.remove("on");};$("celebrateHome").onclick=universalHome;sfxWin();vibrate([50,35,70,35,110]);return true;
+}
 function dailyPromotionsHtml(){
   const rows=EX&&EX.daily&&Array.isArray(EX.daily.promotions)?EX.daily.promotions:[];
   if(!rows.length) return "";
@@ -5609,7 +5994,7 @@ function finishSerie(){
   const p=EX.palier, errs=EX.errs.length, answered=EX.hist.length, isDaily=EX.sessionMode==="daily";
   if(EX.review==="star"){ markDay("revision",EX.ok); return finishStarReview(errs); }
   if(EX.review==="due"){ markDay("revision",EX.ok); return finishDueReview(errs); }
-  const isRepair=EX.sessionMode==="repair", isFlash=EX.sessionMode==="flash", isCourse=EX.sessionMode==="course", isCourseReview=EX.sessionMode==="courseReview", isSession=EX.sessionMode==="session"||isDaily, isPiece=EX.sessionMode==="piece";
+  const isRepair=EX.sessionMode==="repair", isFlash=EX.sessionMode==="flash", isCourse=EX.sessionMode==="course", isCourseReview=EX.sessionMode==="courseReview", isWeekly=EX.sessionMode==="weeklyChallenge", isSession=EX.sessionMode==="session"||isDaily, isPiece=EX.sessionMode==="piece", completedQuestions=dailyScoredCount();
   if(!isDaily||answered>0) markDay(isRepair?"revision":"serie",EX.ok);
   let newlyPalier=false, newlyTier=null;
   if(isSession && !isDaily && EX.mode!=="libre"){
@@ -5631,7 +6016,7 @@ function finishSerie(){
     const signature=EX.course.signature;
     if(coursePerfect){
       if(!DB.dailyProgress) DB.dailyProgress={};
-      const dayKey=todayStr(); if(!DB.dailyProgress[dayKey]) DB.dailyProgress[dayKey]={};
+      const dayKey=normalizeTargetDate(EX.engagementDate)||todayStr(); if(!DB.dailyProgress[dayKey]) DB.dailyProgress[dayKey]={};
       DB.dailyProgress[dayKey].session=signature;
     }
     courseNext=advanceCourseExercise(EX.course,coursePerfect);
@@ -5650,32 +6035,41 @@ function finishSerie(){
       DB.xp+=after==="maitrise"?25:15;
     }
   }
-  const dailyQualified=isDaily&&dailySessionQualified(), activeElapsed=isDaily?dailyActiveElapsed(EX.daily,Date.now()):0;
+  const dailyQualified=isDaily&&dailySessionQualified(), activeElapsed=isDaily?dailyActiveElapsed(EX.daily,Date.now()):Math.max(0,(EX.times||[]).reduce(function(sum,n){return sum+(Number(n)||0);},0));
   const transferReached=!!EX.transferReached; // tentative réelle : lecture ou mission faite, jamais mission passée (F20/F21)
   if(isDaily){
-    if(dailyQualified) completeDailyProgress();
-    logEvent("daily_session_end",{minutes:EX.daily.totalMinutes,elapsed:activeElapsed,complete:dailyQualified,scored:dailyScoredCount(),ok:EX.ok,answered:answered,repairs:(EX.phaseStats.reparation||{}).n||0,proofs:(EX.daily.proofs||[]).length,promotions:(EX.daily.promotions||[]).length});
+    logEvent("daily_session_end",{minutes:EX.daily.totalMinutes,elapsed:activeElapsed,complete:dailyQualified,scored:completedQuestions,ok:EX.ok,answered:answered,repairs:(EX.phaseStats.reparation||{}).n||0,proofs:(EX.daily.proofs||[]).length,promotions:(EX.daily.promotions||[]).length});
   }
+  const engagementQualified=!!(EX.engagementDate&&completedQuestions>=DAILY_MISSION_QUESTIONS&&questionCapacityLeft()<=0&&(isDaily||isCourse||isCourseReview));
+  const rewardCheckpoint=engagementQualified||isWeekly?{xp:DB.xp,engagement:JSON.stringify(DB.engagement||freshEngagement()),dailyProgress:JSON.stringify(DB.dailyProgress||{})}:null;
+  let dailyReward=engagementQualified?grantDailyMissionReward(EX.engagementDate,{questions:Math.min(DAILY_MISSION_QUESTIONS,completedQuestions),correct:Math.min(completedQuestions,EX.ok||0),activeMs:activeElapsed,transferReached:transferReached,sessionType:EX.sessionMode}):null;
+  let weeklyReward=isWeekly?grantWeeklyChallengeResult(EX.weeklyKey,EX.ok||0,completedQuestions):null;
   const errsForLog=isDaily&&answered?Math.round(errs/answered*10):errs;
   logEvent("serie_end",{palier:p.id,mode:EX.mode,type:EX.sessionMode,ok:EX.ok,errs:errsForLog,avgMs:avgMs(),valide:newlyPalier,course:EX.course?EX.course.stepId:null,segment:EX.segment?EX.segment.segmentId:null,piece:EX.segment?EX.segment.pieceId:null});
-  save(); header(); syncPush();
-  const scoredCourse=isCourse||isCourseReview;
-  const scoreN=Math.max(1,isDaily?answered:(scoredCourse?EX.promptCount:EX.n)), prec=Math.round(EX.ok/scoreN*100), label=isDaily?(dailyQualified?(transferReached?"Séance du jour":"Séance du jour · sans transfert"):"Séance partielle"):(isCourse?"Étape d’acquisition":(isCourseReview?(EX.course&&EX.course.continuous?"Entraînement continu":"Entraînement libre"):(isRepair?"Réparation":(isFlash?"Flash":(isPiece?"Partition":modeLabel(EX.mode==="rafale"?"zen":EX.mode))))));
-  $("resScore").innerHTML=EX.ok+"<small>/"+(isDaily?answered:(scoredCourse?EX.promptCount:EX.n))+"</small>";
+  const persisted=save();
+  if(!persisted&&rewardCheckpoint&&(dailyReward||weeklyReward)){DB.xp=rewardCheckpoint.xp;DB.engagement=normalizeEngagement(JSON.parse(rewardCheckpoint.engagement));DB.dailyProgress=normalizeDailyProgress(JSON.parse(rewardCheckpoint.dailyProgress));dailyReward=null;weeklyReward=null;}
+  header();if(persisted)syncPush();
+  const scoredCourse=isCourse||isCourseReview||isWeekly;
+  const displayedQuestions=(isDaily||isWeekly)?completedQuestions:(scoredCourse?EX.promptCount:EX.n), scoreN=Math.max(1,displayedQuestions), prec=displayedQuestions?Math.round(EX.ok/scoreN*100):0, label=isDaily?(dailyQualified?(transferReached?"Mission du jour":"Mission du jour · sans transfert"):"Mission partielle"):(isWeekly?"Défi des défis":(isCourse?"Étape d’acquisition":(isCourseReview?(EX.course&&EX.course.continuous?"Entraînement continu":"Entraînement libre"):(isRepair?"Réparation":(isFlash?"Flash":(isPiece?"Partition":modeLabel(EX.mode==="rafale"?"zen":EX.mode)))))));
+  $("resScore").innerHTML=EX.ok+"<small>/"+displayedQuestions+"</small>";
   $("btnReplayCourse").style.display=isCourse?"block":"none";
-  $("btnAgain").textContent=isCourse?"Continuer mon parcours":(isCourseReview?"25 nouvelles lectures sur partitions":"Encore une série");
+  $("btnAgain").textContent=isWeekly?(weeklyReward&&weeklyReward.kind==="weekly"?"Accueil":"Rejouer le Défi des défis"):(isCourse?"Continuer mon parcours":(isCourseReview?"25 nouvelles lectures sur partitions":"Encore une série"));
   $("resSub").textContent=isDaily
     ? label+" · "+Math.max(1,Math.round(activeElapsed/60000))+" min actives · précision "+prec+" %"
     : "Précision "+prec+"% · "+(avgMs()/1000).toFixed(1)+" s par question · "+label;
   let resultMessage;
   if(isDaily){
     resultMessage=!dailyQualified
-      ? "Cette pratique est conservée, mais la séance n’est pas marquée terminée : il faut au moins 10 vraies questions musicales."
+      ? "Cette pratique est conservée, mais le sceau reste à gagner : une mission quotidienne se termine au bout de 25 vraies questions musicales."
       : (!transferReached
-        ? "Dix vraies questions : la séance compte. Le transfert musical n’a pas été atteint aujourd’hui — il reviendra en fin de prochaine séance."
+        ? "Les 25 questions sont terminées : la mission compte. Le transfert musical reviendra dans une prochaine séance."
         : (EX.coldResult&&EX.coldResult.ok
-          ? "Rappel à froid réussi. La séance a ciblé, réparé puis transféré sans lancer de nouvelle question après l’échéance."
+          ? "Rappel à froid réussi. La mission a ciblé, réparé puis transféré sur 25 questions."
           : "Le test à froid a révélé le point utile. Les confusions restent programmées, pas oubliées."));
+  } else if(isWeekly){
+    resultMessage=weeklyReward&&weeklyReward.kind==="weekly"
+      ? "Défi des défis remporté : la Couronne de la semaine rejoint tes récompenses sans modifier artificiellement ton niveau."
+      : "Le Défi des défis reste ouvert. Atteins au moins 20 réponses justes sur 25 pour remporter la Couronne ; tu peux le rejouer sans perdre tes sept sceaux.";
   } else if(isCourse){
     if(!courseFinished) resultMessage="Série interrompue : elle ne remplit aucun jalon de l’étape.";
     else if(!courseSeriesPassed) resultMessage="Série "+EX.course.seriesNumber+"/"+EX.course.seriesTotal+" à refaire : "+errs+" erreur"+(errs>1?"s":"")+". La prochaine note reste verrouillée ; les lectures espacées referment la réparation sans faire avancer l’étape.";
@@ -5707,6 +6101,10 @@ function finishSerie(){
       ((DB.repairQueue||[]).length?"<br>"+(DB.repairQueue||[]).length+" confusion"+((DB.repairQueue||[]).length>1?"s":"")+" gardée"+((DB.repairQueue||[]).length>1?"s":"")+" pour le prochain rappel à froid.":"<br>Toutes les réparations prévues sont refermées.")+
       ((EX.daily.bonusFound||0)?"<br>Secret"+((EX.daily.bonusFound||0)>1?"s":"")+" repéré"+((EX.daily.bonusFound||0)>1?"s":"")+" : <b>"+EX.daily.bonusFound+"</b>.":"");
     $("btnAgain").style.display="none";
+  } else if(isWeekly){
+    $("resVal").innerHTML=weeklyReward&&weeklyReward.kind==="weekly"
+      ? "<b>Couronne gagnée · +"+weeklyReward.rewardXp+" XP.</b> Les sept sceaux et ce badge sont sauvegardés."
+      : "<b>Meilleur score : "+((weeklyReward&&weeklyReward.best)||EX.ok)+"/25.</b> Droit au défi conservé : aucune réussite quotidienne n’est perdue.";
   } else if(isRepair){
     const left=repairPool().length;
     $("resVal").innerHTML = left ? "Réparation restante : <b>"+left+"</b> note"+(left>1?"s":"")+"." : "<b>Réparation terminée.</b>";
@@ -5744,13 +6142,17 @@ function finishSerie(){
   if(newlyPalier)memoryMilestones.push("Palier "+p.id+" validé au niveau "+modeLabel(EX.mode));
   if(newlyTier)memoryMilestones.push("Grade "+modeLabel(newlyTier)+" terminé");
   if(segPromotion)memoryMilestones.push("Passage de partition "+(segPromotion==="maitrise"?"maîtrisé":"validé"));
+  if(dailyReward)memoryMilestones.push("Jour "+dailyReward.ordinal+" · mission quotidienne accomplie · sceau protégé");
+  if(weeklyReward&&weeklyReward.kind==="weekly")memoryMilestones.push("Défi des défis remporté · Couronne hebdomadaire protégée");
   if(memoryMilestones.length){
     $("resSave").style.display="block";$("resSave").textContent="Protection de la progression complète en cours…";
-    createMemorySnapshot("level_complete",{milestone:memoryMilestones.join(" · ")},function(res){
+    const snapshotKind=dailyReward&&!courseStepAdvanced&&!newlyPalier&&!newlyTier&&!segPromotion?"daily_complete":((weeklyReward&&weeklyReward.kind==="weekly"&&!courseStepAdvanced&&!newlyPalier&&!newlyTier&&!segPromotion)?"weekly_complete":"level_complete");
+    createMemorySnapshot(snapshotKind,{milestone:memoryMilestones.join(" · ")},function(res){
       if(EX===resultSession){$("resSave").style.display="block";$("resSave").textContent=res.ok?("✓ "+res.meta.name+" · rien ne sera écrasé par la prochaine sauvegarde."):res.message;}
     });
   } else {$("resSave").style.display="none";$("resSave").textContent="";}
-  if(newlyTier){ sfxWin(); const t=newlyTier; setTimeout(function(){if(EX===resultSession&&$("scrRes").classList.contains("active"))showTierCard(t);},600); }
+  if(dailyReward||(weeklyReward&&weeklyReward.kind==="weekly")){const reward=dailyReward||(weeklyReward&&weeklyReward.kind==="weekly"?weeklyReward:null);setTimeout(function(){if(EX===resultSession&&$("scrRes").classList.contains("active"))showMissionCelebration(reward);},420);}
+  else if(newlyTier){ sfxWin(); const t=newlyTier; setTimeout(function(){if(EX===resultSession&&$("scrRes").classList.contains("active"))showTierCard(t);},600); }
   else if(newlyPalier){
     sfxWin();
     if(EX.mode==="zen" && CARDS[p.id]) setTimeout(function(){if(EX===resultSession&&$("scrRes").classList.contains("active"))showCard(p.id);},600);
@@ -6097,6 +6499,9 @@ function renderStats(){
   const totals=practiceTotals(), weeks=weekStats();
   const days=totals.days;
   const stars=Object.keys(DB.days).filter(function(k){return DB.days[k].perfect;}).length;
+  const missionDays=completedMissionKeys().length, weeklyCrowns=Object.keys(DB.engagement&&DB.engagement.weekly||{}).filter(function(k){return !!DB.engagement.weekly[k].completedAt;}).length;
+  const missionFinals=completedMissionKeys().filter(function(key){return DB.engagement.daily[key].badgeId==="mission_ten";}).length;
+  const goldenCrowns=Object.keys(DB.engagement&&DB.engagement.weekly||{}).filter(function(key){return DB.engagement.weekly[key].badgeId==="weekly_gold";}).length;
   $("statGrid").innerHTML=
     '<div class="stat"><div class="v">'+prec+'%</div><div class="l">précision globale</div></div>'+
     '<div class="stat"><div class="v">'+streak()+'</div><div class="l">jours de suite</div></div>'+
@@ -6104,6 +6509,8 @@ function renderStats(){
     '<div class="stat"><div class="v">'+weeks.current+'</div><div class="l">semaines d\'affilée</div></div>'+
     '<div class="stat"><div class="v">'+medals+'/'+total+'</div><div class="l">validations ('+days+' jours)</div></div>'+
     '<div class="stat"><div class="v star">★ '+stars+'</div><div class="l">défis parfaits</div></div>'+
+    '<div class="stat"><div class="v">♪ '+missionDays+'</div><div class="l">sceaux quotidiens</div></div>'+
+    '<div class="stat"><div class="v">♛ '+weeklyCrowns+'</div><div class="l">couronnes de semaine</div></div>'+
     '<div class="stat"><div class="v">'+trophiesEarned()+'/'+shownTrophyDefs().length+'</div><div class="l">trophées</div></div>';
   const frag=Object.keys(DB.noteStats)
     .filter(function(k){const s=DB.noteStats[k];return s.e>=2 && s.e/s.v>0.2;})
@@ -6112,9 +6519,12 @@ function renderStats(){
   const aRevoir=unlockedNoteIds().filter(isDue).length;
   const memLine='<br><br><b>Mémoire (répétition espacée) :</b> '+ancrees+' note'+(ancrees>1?'s':'')+' ancrée'+(ancrees>1?'s':'')+' (boîte 5), '+aRevoir+' à revoir aujourd\'hui.'+
     '<br><b>Investissement :</b> '+totals.series+' série'+(totals.series>1?'s':'')+', '+totals.rafales+' rafale'+(totals.rafales>1?'s':'')+', '+totals.clavier+' clavier, '+totals.revisions+' révision'+(totals.revisions>1?'s':'')+'.';
+  const rewardRows=completedMissionKeys().map(function(key){const row=DB.engagement.daily[key];return {at:row.completedAt,label:row.badgeId==="mission_ten"?("Finale de la mission "+Math.ceil(row.ordinal/10)+" · jour 10"):("Sceau quotidien · jour "+(((Math.max(1,row.ordinal)-1)%10)+1)),date:key};}).concat(Object.keys(DB.engagement&&DB.engagement.weekly||{}).filter(function(key){return DB.engagement.weekly[key].completedAt;}).map(function(key){const row=DB.engagement.weekly[key];return {at:row.completedAt,label:row.badgeId==="weekly_gold"?"Couronne d’or · 25/25":"Couronne hebdomadaire",date:"semaine du "+key};})).sort(function(a,b){return b.at-a.at;});
+  const recentRewards=rewardRows.slice(0,8), allRewards=rewardRows.map(function(row){return esc(row.label+' — '+row.date);}).join('<br>');
+  const rewardLine='<br><br><b>Vitrine des missions :</b> '+missionDays+' sceau'+(missionDays>1?'x':'')+', '+missionFinals+' finale'+(missionFinals>1?'s':'')+' de dix jours, '+weeklyCrowns+' couronne'+(weeklyCrowns>1?'s':'')+(goldenCrowns?' dont '+goldenCrowns+' en or':'')+'.'+(rewardRows.length?'<br>'+recentRewards.map(function(row){return esc(row.label+' — '+row.date);}).join('<br>')+(rewardRows.length>recentRewards.length?'<details><summary>Voir les '+rewardRows.length+' récompenses conservées</summary><p>'+allRewards+'</p></details>':''):' Les premiers badges apparaîtront ici et resteront visibles.');
   $("fragBox").innerHTML = (frag.length
     ? "<b>Notes fragiles :</b> "+frag.map(function(k){return NOTES[k].n+" ("+clefShortLabel(NOTES[k].clef)+")";}).join(", ")+".<br>Sezam : elles seront servies plus souvent, en lecture ET en écriture."
-    : "Notes solides pour le moment. Continue comme ça.") + memLine;
+    : "Notes solides pour le moment. Continue comme ça.") + memLine + rewardLine;
   renderThemeModes();
   const rc=currentRecoveryCode();
   $("saveCode").textContent = rc
@@ -6582,7 +6992,7 @@ function recordSegmentResult(seg,ok,n,errs,now){
   st.lastPrec=prec; st.lastErrs=clampInt(errs,0,999,0); st.last=now;
   if(prec>=95&&errs===0){
     const lastClean=st.cleanAt.length?st.cleanAt[st.cleanAt.length-1]:0;
-    if(!lastClean||now-lastClean>=SEGMENT_MASTERY_GAP_MS) st.cleanAt=st.cleanAt.concat(now).slice(-4);
+    if(!lastClean||now-lastClean>=SEGMENT_MASTERY_GAP_MS) st.cleanAt=st.cleanAt.concat(now);
     if(st.cleanAt.length>=2&&!st.masteredOnceAt) st.masteredOnceAt=now;
   }
   if(prec>=85) st.flagged=false; // un passage réparé proprement sort de « à retravailler »
@@ -7043,7 +7453,7 @@ function parseSegmentNotes(txt){
     const id=raw.trim();
     if(NOTES[id] && out.indexOf(id)<0) out.push(id);
   });
-  return out.slice(0,16);
+  return out;
 }
 function addSegment(){
   const pid=$("segPiece").value;
@@ -7224,7 +7634,7 @@ function finishClavier(){
    Contrat : un token utilisateur, un gist, un fichier JSON ; les divergences concurrentes sont bloquées au lieu d'écraser un appareil.
    Le token reste uniquement en mémoire de session : jamais dans localStorage, DB, exports ou QR. */
 const LS_SYNC="sezam_sync", LS_SYNC_LEGACY="solado_sync",
-  GIST_FILE="sezam-progress.json", GIST_FILE_LEGACY="solado-save.json", GIST_CLOUD_SCHEMA=3, GIST_DESC="SEZAM progression (auto)";
+  GIST_FILE="sezam-progress.json", GIST_FILE_LEGACY="solado-save.json", GIST_CLOUD_SCHEMA=4, GIST_DESC="SEZAM progression (auto)";
 let syncBusy=false, syncLastPush=0, syncQueued=null, syncTokenSessions=safeMap();
 function canSyncNow(){ return typeof navigator==="undefined" || navigator.onLine!==false; }
 function syncStorageKey(playerId){return LS_SYNC+":"+(isSafeId(playerId)?playerId:"invalid");}
@@ -7389,7 +7799,7 @@ function cloudDocument(){
     timestamp:stateTimestamp(DB)||Date.now(),
     progress:{
       v:DB.v, mode:DB.mode, sel:DB.sel, seen:DB.seen, paliers:DB.paliers, courseProgress:DB.courseProgress||freshCourseProgress(), courseReviewState:DB.courseReviewState||freshCourseReviewState(),
-      days:DB.days, dailyProgress:DB.dailyProgress||{}, pieces:cloudPieces(), pieceProgress:DB.pieceProgress||{},
+      days:DB.days, dailyProgress:DB.dailyProgress||{}, engagement:DB.engagement||freshEngagement(), coachContext:DB.coachContext||freshCoachContext(), calendar:DB.calendar||freshTrainingCalendar(), pieces:cloudPieces(), pieceProgress:DB.pieceProgress||{},
       activePiece:DB.activePiece||"", pieceGoals:DB.pieceGoals||{}, questionClock:DB.questionClock||0, repairQueue:DB.repairQueue||[], validationDrafts:DB.validationDrafts||{}, easterEggs:DB.easterEggs||{}, curriculum:DB.curriculum||normalizeCurriculumState(null)
     },
     scores:{ xp:DB.xp||0, noteStats:DB.noteStats||{}, kbdStats:DB.kbdStats||{} },
@@ -7600,7 +8010,7 @@ function activateSync(){
 function compactSave(){
   backfillCurriculumFromGame(DB);
   const out={v:DB.v,xp:DB.xp,sound:DB.sound,soundLong:DB.soundLong,haptic:DB.haptic,mode:DB.mode,sel:DB.sel,themeMode:DB.themeMode||"classique",courseProgress:DB.courseProgress||freshCourseProgress(),courseReviewState:DB.courseReviewState||freshCourseReviewState(),
-             _sezam:DB._sezam,days:DB.days,dailyProgress:DB.dailyProgress||{},seen:DB.seen,noteStats:{},paliers:{},pieces:DB.pieces||[],pieceProgress:DB.pieceProgress||{},
+             _sezam:DB._sezam,days:DB.days,dailyProgress:DB.dailyProgress||{},engagement:DB.engagement||freshEngagement(),coachContext:DB.coachContext||freshCoachContext(),calendar:DB.calendar||freshTrainingCalendar(),seen:DB.seen,noteStats:{},paliers:{},pieces:DB.pieces||[],pieceProgress:DB.pieceProgress||{},
              activePiece:DB.activePiece||"",pieceGoals:DB.pieceGoals||{},profile:DB.profile,kbdStats:DB.kbdStats,curriculum:DB.curriculum||normalizeCurriculumState(null),
              questionClock:DB.questionClock||0,repairQueue:DB.repairQueue||[],validationDrafts:DB.validationDrafts||{},easterEggs:DB.easterEggs||{}};
   Object.keys(DB.noteStats||{}).forEach(function(k){ const s=DB.noteStats[k]; if(s&&(s.v||s.e||s.box||s.due)) out.noteStats[k]=s; });
@@ -7638,9 +8048,19 @@ function returnToHomeFromExercise(){
   if(rafTimer) clearInterval(rafTimer);
   clearQTimers(); clearDailyTimer();
   if(EX) EX.done=true;
-  $("overlay").classList.remove("on");
+  closeOverlay();
   save(); renderHome(); show("scrHome"); flushPendingSync();
+  try{$("btnPlayNow").focus();}catch(e){}
   return true;
+}
+function universalHome(){
+  if(memoryProtectedActionBusy||memoryRestoreBusy||playerOperationBusy){memoryToast("La protection en cours se termine d’abord. L’accueil reste disponible dès sa confirmation et rien n’est perdu.",false);return false;}
+  if(EX&&!EX.done)return returnToHomeFromExercise();
+  if(rafTimer)clearInterval(rafTimer);clearQTimers();clearDailyTimer();
+  if(KX&&!KX.done){clearKbdTimer();logEvent("clavier_home",{i:KX.i||0});KX.done=true;}KX=null;
+  if(typeof PR!=="undefined"&&PR)PR=null;
+  if(typeof memorySyncChoiceRemote!=="undefined")memorySyncChoiceRemote=null;
+  closeOverlay();save();renderHome();show("scrHome");flushPendingSync();try{$("btnPlayNow").focus();}catch(e){}return true;
 }
 
 /* ================= LIAISONS ================= */
@@ -7672,7 +8092,7 @@ $("btnNext").onclick=function(){
 $("btnQuit").onclick=function(){
   if(EX&&EX.daily&&!EX.done){
     const bonus=EX.currentTask&&EX.currentTask.role==="bonus", expired=EX.stopRequested||Date.now()>=EX.daily.endAt;
-    if(!bonus&&!expired&&typeof window.confirm==="function"&&!window.confirm("Arrêter maintenant et voir le bilan ? La pratique déjà faite sera conservée ; la séance ne sera marquée terminée qu’après 10 questions musicales.")) return;
+    if(!bonus&&!expired&&typeof window.confirm==="function"&&!window.confirm("Arrêter maintenant et voir le bilan ? La pratique déjà faite sera conservée ; le sceau du jour ne sera gagné qu’après 25 questions musicales.")) return;
     if(EX.hist.length||EX.questionRecords.length||bonus||expired){
       logEvent("daily_session_finish",{palier:EX.palier?EX.palier.id:null,mode:EX.mode,i:EX.i,early:!expired});
       finishSerie(); return;
@@ -7689,6 +8109,7 @@ $("btnQuit").onclick=function(){
 $("btnAgain").onclick=function(){
   if(syncPendingRemote){renderHome();show("scrHome");flushPendingSync();return;}
   if(EX.daily){renderHome();show("scrHome");flushPendingSync();return;}
+  if(EX.sessionMode==="weeklyChallenge"){if(pendingWeeklyChallenge())startWeeklyChallenge();else{renderHome();show("scrHome");}return;}
   if(EX.review==="due"){ if(unlockedNoteIds().filter(isDue).length){ startRevision(); } else { renderHome(); show("scrHome"); } return; }
   if(EX.review==="star"){ renderHome(); show("scrHome"); return; }
   if(EX.kind==="rafale") startRafale();
@@ -7710,6 +8131,9 @@ $("btnHome").onclick=function(){ renderHome(); show("scrHome"); flushPendingSync
 $("btnQuickSave").onclick=function(){manualMemorySnapshot("header");};
 $("btnManualSave").onclick=function(){manualMemorySnapshot("stats");};
 $("btnOverlaySave").onclick=function(){manualMemorySnapshot("overlay");};
+$("btnGlobalHome").onclick=universalHome;
+$("btnOverlayHome").onclick=universalHome;
+$("btnOverlayBack").onclick=overlayBack;
 $("btnSound").onclick=function(){
   if(DB.sound&&DB.soundLong){DB.soundLong=false;}
   else if(DB.sound){DB.sound=false;}
