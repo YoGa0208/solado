@@ -194,7 +194,7 @@ function loadEngine(runtime) {
     "longestStreak", "weekStats", "practiceTotals", "trophyDefs", "shownTrophyDefs", "trophiesEarned", "BONUS_EGG_DEFS", "awardEasterEgg",
     "writtenLabelOf", "kbdLabelOf", "recoveryCodeInfo", "applyRecoveryCode",
     "trainingFocusText", "stateTimestamp", "stateScore", "shouldAdopt", "backupToDb", "THEME_MODES", "themeModeLabel", "watchHomeItems", "memoryLevelContext", "renderStats",
-    "PROFILE_INSTRUMENTS", "PROFILE_PATHS", "PROFILE_LEVELS", "COACH_LEVELS", "coachLevelById", "coachLevelForCourse", "displayedCoachLevelId", "saveCoachLevel", "PRACTICE_DOMAINS", "normalizeProfile", "normalizeDailyProgress", "normalizeValidationDrafts", "validationDraftKey", "DAILY_MISSION_QUESTIONS", "DAILY_REWARD_XP", "WEEKLY_REWARD_XP", "DAILY_MOODS", "DAILY_TIME_CHOICES", "APPOINTMENT_TYPES", "MAX_CALENDAR_APPOINTMENTS", "normalizeCoachContext", "normalizeAppointment", "normalizeTrainingCalendar", "normalizeEngagement", "reconcileEngagement", "completedMissionKeys",
+    "PROFILE_INSTRUMENTS", "PROFILE_PATHS", "PROFILE_LEVELS", "COACH_LEVELS", "COACH_CLASSES", "coachLevelById", "coachLevelForCourse", "coachYearLabel", "coachClassId", "coachClassById", "validCoachYear", "coachClassLabel", "displayedCoachLevelId", "displayedCoachYear", "coachLevelProgressText", "saveCoachLevel", "renderCoachLevelControl", "PRACTICE_DOMAINS", "normalizeProfile", "normalizeDailyProgress", "normalizeValidationDrafts", "validationDraftKey", "DAILY_MISSION_QUESTIONS", "DAILY_REWARD_XP", "WEEKLY_REWARD_XP", "DAILY_MOODS", "DAILY_TIME_CHOICES", "APPOINTMENT_TYPES", "MAX_CALENDAR_APPOINTMENTS", "normalizeCoachContext", "normalizeAppointment", "normalizeTrainingCalendar", "normalizeEngagement", "reconcileEngagement", "completedMissionKeys",
     "CURRICULUM_CATALOG_VERSION", "CURRICULUM_SCOPE", "CURRICULUM_EVIDENCE_TYPES", "CURRICULUM_PROGRESS_STATUSES", "normalizeCurriculumProof", "normalizeCurriculumState", "validCurriculumCatalog", "curriculumCompetency", "curriculumStatusFromProofs", "setCurriculumCatalog", "backfillCurriculumFromGame", "curriculumScopeHtml",
     "profileStartPalier", "applyProfileStartPlacement", "profileStartText", "coachPalier", "coachDecision", "repairPool", "fragileNoteIds", "globalPrecision", "sessionCountToday",
     "dailyPlan", "splitPlanMinutes", "targetCadence", "dailyMission", "dailyFocusDomain", "DAILY_BLOCK_IDS", "runDailyBlock", "appointmentTimestamp", "activeAppointments", "nextTrainingAppointment", "dailyCoachContext", "ensureTodayMission", "freezeTodayMission", "setDailyCheckIn", "pendingWeeklyChallenge", "adaptDailyDecision", "dailyDecision", "grantDailyMissionReward", "grantWeeklyChallengeResult", "startWeeklyChallenge", "openTrainingCalendar", "exportTrainingCalendar",
@@ -958,21 +958,78 @@ const utSvg=E.staffSVG("ut",[{p:4,color:"#000",x:200,big:1}]);
 ok(utSvg.indexOf('class="clef clef-ut"')>=0&&utSvg.indexOf('data-ref-p="4"')>=0,"la clé d’ut est vectorielle et ancrée sur la troisième ligne");
 ok(utSvg.indexOf('aria-label="Portée en clé d’ut 3e.')>=0&&utSvg.indexOf('clé d’ut 3e</text>')>=0,"la portée visuelle et le lecteur d’écran annoncent correctement la clé d’ut 3e");
 
+eq(E.COACH_LEVELS.map(function(level){return [level.id,level.cycleId,level.cycleNumber,level.familyLabel,level.yearCount,level.courseId];}),[
+  ["debutant","c1",1,"Débutant",5,"sol"],
+  ["intermediaire","c2",2,"Intermédiaire",5,"fa"],
+  ["avance","c3",3,"Avancé",4,"ut"]
+],"les trois familles du Coach correspondent clairement aux Cycles 1, 2 et 3 et à leurs clés");
+eq(E.COACH_CLASSES.length,14,"les durées maximales 5 + 5 + 4 produisent exactement quatorze classes annuelles");
+eq(new Set(E.COACH_CLASSES.map(function(row){return row.id;})).size,14,"chaque classe annuelle possède un identifiant unique");
+eq(E.COACH_LEVELS.map(function(level){
+  return E.COACH_CLASSES.filter(function(row){return row.levelId===level.id;}).map(function(row){return row.year;});
+}),[[1,2,3,4,5],[1,2,3,4,5],[1,2,3,4]],"les années de chaque cycle sont continues, sans trou ni année inventée");
+ok(E.COACH_CLASSES.every(function(row){
+  const level=E.coachLevelById(row.levelId),resolved=E.coachClassById(row.id);
+  return !!level&&resolved===row&&row.cycleId===level.cycleId&&row.courseId===level.courseId&&
+    row.label.indexOf(level.cycleLabel)>=0&&row.label.indexOf(row.yearLabel)>=0&&
+    row.label.indexOf(level.familyLabel)>=0&&row.label.indexOf(level.keyLabel)>=0;
+}),"chaque classe relie sans ambiguïté cycle, année, famille et clé");
+eq([E.coachYearLabel(1),E.coachYearLabel(2),E.coachYearLabel(0)],["1re année","2e année","année à préciser"],"les années emploient un libellé français lisible et une migration non trompeuse");
+ok(E.validCoachYear(E.coachLevelById("debutant"),"5")&&E.validCoachYear(E.coachLevelById("avance"),4),"les bornes hautes des Cycles 1 et 3 sont acceptées, y compris après lecture d’un ancien JSON");
+ok(!E.validCoachYear(E.coachLevelById("debutant"),0)&&!E.validCoachYear(E.coachLevelById("debutant"),6)&&
+  !E.validCoachYear(E.coachLevelById("avance"),5)&&!E.validCoachYear(E.coachLevelById("avance"),1.5),
+  "zéro, dépassement de cycle et année décimale sont refusés comme choix explicites");
+eq([E.coachClassId(E.coachLevelById("debutant"),0),E.coachClassId(E.coachLevelById("debutant"),6),E.coachClassId(E.coachLevelById("debutant"),1.5)],["","",""],
+  "aucun identifiant de classe n’est fabriqué à partir d’une année invalide");
+
+const legacyCoachProfiles=[
+  ["debutant","sol"],
+  ["intermediaire","fa"],
+  ["avance","ut"]
+];
+legacyCoachProfiles.forEach(function(row){
+  const profile=E.normalizeProfile({coachLevel:row[0]});
+  eq([profile.coachLevel,profile.coachYear,E.coachLevelById(profile.coachLevel).courseId],[row[0],0,row[1]],
+    "migration de l’ancien niveau "+row[0]+" : famille et clé conservées, année laissée à préciser");
+});
+eq(E.normalizeProfile({coachLevel:"debutant",coachYear:"5"}).coachYear,5,"une année valide sérialisée en texte redevient un entier");
+eq([
+  E.normalizeProfile({coachLevel:"debutant",coachYear:6}).coachYear,
+  E.normalizeProfile({coachLevel:"avance",coachYear:5}).coachYear,
+  E.normalizeProfile({coachLevel:"avance",coachYear:2.5}).coachYear,
+  E.normalizeProfile({coachLevel:"inconnu",coachYear:2}).coachYear
+],[0,0,0,0],"les années invalides ou sans famille connue migrent vers « à préciser », jamais vers une fausse classe");
+const legacyCoachState=E.ensureStructure({xp:432,profile:{coachLevel:"intermediaire"},courseProgress:{version:4,currentItem:"fa",steps:{sol:3,fa:2,ut:0},cycles:{sol:1,fa:2,ut:0},exercises:{sol:3,fa:2,ut:0}},noteStats:{sol4:{v:7,e:1,box:2,due:42,last:41}},paliers:{P1:{zen:{ok:true,best:100,series:[]}}}});
+eq([legacyCoachState.profile.coachLevel,legacyCoachState.profile.coachYear,legacyCoachState.xp],["intermediaire",0,432],"un joueur v39 conserve sa famille et son XP sans se voir attribuer une année arbitraire");
+eq([legacyCoachState.courseProgress.steps.sol,legacyCoachState.courseProgress.steps.fa,legacyCoachState.courseProgress.cycles.sol,legacyCoachState.courseProgress.cycles.fa],[3,2,1,2],
+  "la migration v40 ne saute ni étape ni série déjà acquise");
+eq([legacyCoachState.noteStats.sol4.v,legacyCoachState.noteStats.sol4.e,legacyCoachState.paliers.P1.zen.ok],[7,1,true],
+  "la migration de classe ne réécrit ni mémoire de note ni ancien palier");
+
+E.COACH_CLASSES.forEach(function(row){
+  E.setDB(E.ensureStructure({profile:{coachLevel:row.levelId,coachYear:row.year},courseProgress:{version:4,currentItem:row.courseId,steps:{sol:0,fa:0,ut:0},cycles:{sol:0,fa:0,ut:0},exercises:{sol:0,fa:0,ut:0}}}));
+  const decision=E.courseDecision();
+  eq([decision.course.itemId,decision.n],[row.courseId,25],row.label+" lance réellement la bonne clé avec 25 questions");
+});
+freshDB();
+
 const coachLocal=makeLocalStorage(),Coach=loadEngine({localStorage:coachLocal});
 Coach.getDB().courseProgress=Coach.normalizeCourseProgress({version:4,currentItem:"sol",steps:{sol:2,fa:1,ut:0},cycles:{sol:1,fa:2,ut:0},exercises:{sol:2,fa:1,ut:0}});
 Coach.save({cloud:false});
 const coachProgressBefore=JSON.stringify(Coach.getDB().courseProgress),coachStatsBefore=JSON.stringify(Coach.getDB().noteStats),coachPaliersBefore=JSON.stringify(Coach.getDB().paliers);
 let coachSaved=null;
-Coach.saveCoachLevel("intermediaire",function(result){coachSaved=result;});
+Coach.saveCoachLevel("intermediaire",4,function(result){coachSaved=result;});
 ok(coachSaved&&coachSaved.ok&&coachSaved.meta&&coachSaved.meta.number>=2,"le bouton Enregistrer protège d’abord l’ancien niveau puis crée la sauvegarde complète numérotée");
 ok(/Clé de fa · étape 2\/10 · série 3\/3/.test(coachSaved.meta.context.levelLabel),"la sauvegarde nomme exactement la clé, l’étape et la série où se trouve le joueur");
-eq(Coach.getDB().profile.coachLevel,"intermediaire","le niveau choisi est conservé dans le profil du joueur");
+ok(/Cycle 2 · 4e année · Intermédiaire · clé de fa/.test(coachSaved.meta.context.milestone)&&/Cycle 2 · 4e année · Intermédiaire · clé de fa/.test(coachSaved.message),
+  "la sauvegarde et sa confirmation utilisent le libellé humain complet, jamais un identifiant technique");
+eq([Coach.getDB().profile.coachLevel,Coach.getDB().profile.coachYear,coachSaved.coachYear],["intermediaire",4,4],"la famille et l’année choisies sont conservées dans le profil et confirmées au joueur");
 eq(Coach.courseDecision().course.itemId,"fa","le niveau intermédiaire affiche et lance réellement la clé de fa");
 eq(Coach.getDB().courseProgress.cycles.sol,1,"changer de clé conserve la série partielle déjà acquise en clé de sol");
 eq(Coach.getDB().courseProgress.cycles.fa,2,"changer de clé conserve aussi les deux séries parfaites déjà acquises en clé de fa");
 eq(JSON.stringify(Coach.getDB().noteStats),coachStatsBefore,"le choix du niveau ne réécrit aucune mémoire de note");
 eq(JSON.stringify(Coach.getDB().paliers),coachPaliersBefore,"le choix du niveau ne valide ni n’efface aucun palier");
-Coach.saveCoachLevel("avance",function(result){coachSaved=result;});
+Coach.saveCoachLevel("avance",2,function(result){coachSaved=result;});
 ok(coachSaved&&coachSaved.ok&&Coach.courseDecision().course.itemId==="ut","le niveau avancé bascule sur la vraie clé d’ut 3e et la sauvegarde");
 Coach.getDB().sel="P7";Coach.getDB().seen.P1=false;
 Coach.startDailySession();
@@ -980,13 +1037,33 @@ ok(Coach.getEX()&&Coach.getEX().palier.courseOnly===true&&Coach.getEX().palier.i
 eq(Coach.getDB().sel,"P7","commencer la clé d’ut ne ramène jamais silencieusement le repère sol/fa à P1");
 ok(Coach.getDB().seen.P1===false&&Coach.getEX().pendingDecouverte===true,"la découverte ut n’invente aucune visite du palier P1");
 Coach.returnToHomeFromExercise();
-Coach.saveCoachLevel("debutant",function(result){coachSaved=result;});
+Coach.saveCoachLevel("debutant",5,function(result){coachSaved=result;});
 ok(coachSaved&&coachSaved.ok&&Coach.courseDecision().course.itemId==="sol","le joueur peut revenir à la clé de sol sans course en avant imposée");
 eq(Coach.getDB().courseProgress.cycles.sol,1,"l’aller-retour de niveau restitue exactement la série partielle de sol");
 eq(JSON.stringify(Coach.getDB().courseProgress),coachProgressBefore,"un aller-retour complet ne modifie aucun jalon d’acquisition");
+eq([JSON.parse(Coach.compactSave()).profile.coachLevel,JSON.parse(Coach.compactSave()).profile.coachYear],["debutant",5],"la classe annuelle suit le transfert compact / QR");
+eq([Coach.cloudDocument().settings.profile.coachLevel,Coach.cloudDocument().settings.profile.coachYear],["debutant",5],"la classe annuelle suit la sauvegarde cloud");
+const coachCloudRoundTrip=Coach.ensureStructure(Coach.backupToDb(Coach.cloudDocument()));
+eq([coachCloudRoundTrip.profile.coachLevel,coachCloudRoundTrip.profile.coachYear,JSON.stringify(coachCloudRoundTrip.courseProgress)],["debutant",5,coachProgressBefore],
+  "un aller-retour cloud restitue la classe et chaque jalon d’acquisition sans décalage");
+const coachReload=loadEngine({localStorage:coachLocal});
+eq([coachReload.getDB().profile.coachLevel,coachReload.getDB().profile.coachYear,JSON.stringify(coachReload.getDB().courseProgress)],["debutant",5,coachProgressBefore],
+  "un rechargement local restitue la classe annuelle et la progression exacte");
+
+const sameFamilyLocal=makeLocalStorage(),SameFamilyCoach=loadEngine({localStorage:sameFamilyLocal});
+SameFamilyCoach.getDB().profile=SameFamilyCoach.normalizeProfile(Object.assign({},SameFamilyCoach.getDB().profile,{coachLevel:"intermediaire",coachYear:2}));
+SameFamilyCoach.getDB().courseProgress=SameFamilyCoach.normalizeCourseProgress({version:4,currentItem:"fa",steps:{sol:4,fa:3,ut:1},cycles:{sol:2,fa:1,ut:2},exercises:{sol:4,fa:3,ut:1}});
+SameFamilyCoach.getDB().noteStats.sol4=SameFamilyCoach.normalizeNoteStat({v:17,e:2,box:3,due:55,last:44});
+SameFamilyCoach.getDB().paliers.P2.zen.ok=true;SameFamilyCoach.save({cloud:false});
+const sameFamilyProgress=JSON.stringify(SameFamilyCoach.getDB().courseProgress),sameFamilyStats=JSON.stringify(SameFamilyCoach.getDB().noteStats),sameFamilyPaliers=JSON.stringify(SameFamilyCoach.getDB().paliers);
+let sameFamilyResult=null;SameFamilyCoach.saveCoachLevel("intermediaire",5,function(result){sameFamilyResult=result;});
+ok(sameFamilyResult&&sameFamilyResult.ok,"changer seulement d’année dans un même cycle crée une sauvegarde complète");
+eq([SameFamilyCoach.getDB().profile.coachLevel,SameFamilyCoach.getDB().profile.coachYear],["intermediaire",5],"la nouvelle année est persistée sans changer de famille");
+eq([JSON.stringify(SameFamilyCoach.getDB().courseProgress),JSON.stringify(SameFamilyCoach.getDB().noteStats),JSON.stringify(SameFamilyCoach.getDB().paliers)],[sameFamilyProgress,sameFamilyStats,sameFamilyPaliers],
+  "passer de la 2e à la 5e année du même cycle ne saute aucune étape, série, note ou validation");
 
 const completedCoach=loadEngine(), completedUt=completedCoach.COURSES.find(function(course){return course.id==="ut";});
-completedCoach.getDB().profile=completedCoach.normalizeProfile(Object.assign({},completedCoach.getDB().profile,{coachLevel:"avance"}));
+completedCoach.getDB().profile=completedCoach.normalizeProfile(Object.assign({},completedCoach.getDB().profile,{coachLevel:"avance",coachYear:4}));
 completedCoach.getDB().courseProgress=completedCoach.normalizeCourseProgress({version:4,currentItem:"ut",steps:{sol:0,fa:0,ut:completedUt.steps.length},cycles:{sol:0,fa:0,ut:0},exercises:{sol:0,fa:0,ut:completedUt.steps.length}});
 completedCoach.getDB().sel="P7";completedCoach.getDB().seen.P1=false;
 const completedProgressBefore=JSON.stringify(completedCoach.getDB().courseProgress), continuousDecision=completedCoach.courseDecision();
@@ -1001,23 +1078,34 @@ completedCoach.returnToHomeFromExercise();
 eq(JSON.stringify(completedCoach.getDB().courseProgress),completedProgressBefore,
   "interrompre l’entraînement continu laisse chaque jalon officiel strictement inchangé");
 
+const invalidYearCoach=loadEngine(),invalidYearBefore=JSON.stringify(invalidYearCoach.getDB());
+let invalidYearResult=null;invalidYearCoach.saveCoachLevel("avance",5,function(result){invalidYearResult=result;});
+ok(invalidYearResult&&!invalidYearResult.ok&&/année disponible/.test(invalidYearResult.message),"une 5e année de Cycle 3 est refusée explicitement");
+eq(JSON.stringify(invalidYearCoach.getDB()),invalidYearBefore,"une année hors cycle ne crée ni classe, ni progression, ni sauvegarde");
+invalidYearCoach.saveCoachLevel("avance",function(result){invalidYearResult=result;});
+ok(invalidYearResult&&!invalidYearResult.ok,"un changement de famille sans année est refusé au lieu de perdre le repère annuel");
+eq(JSON.stringify(invalidYearCoach.getDB()),invalidYearBefore,"un appel sans année conserve exactement la famille, l’année et la progression précédentes");
+invalidYearCoach.saveCoachLevel("debutant",0,function(result){invalidYearResult=result;});
+ok(invalidYearResult&&!invalidYearResult.ok,"l’année zéro de migration doit être précisée avant un nouvel enregistrement volontaire");
+eq(JSON.stringify(invalidYearCoach.getDB()),invalidYearBefore,"le refus de l’année zéro laisse l’état exact du joueur inchangé");
+
 const blockedLocal=makeLocalStorage(),BlockedCoach=loadEngine({localStorage:blockedLocal}),blockedBefore=JSON.stringify(BlockedCoach.getDB());
 blockedLocal.failAfter(BlockedCoach.memoryLocalIndexKey(BlockedCoach.getActivePlayerId()),1);
-let blockedResult=null;BlockedCoach.saveCoachLevel("avance",function(result){blockedResult=result;});
+let blockedResult=null;BlockedCoach.saveCoachLevel("avance",3,function(result){blockedResult=result;});
 ok(blockedResult&&!blockedResult.ok,"si la protection préalable échoue, le changement de niveau est refusé");
 eq(JSON.stringify(BlockedCoach.getDB()),blockedBefore,"un échec de sauvegarde laisse l’état du joueur strictement inchangé");
 
 const candidateLocal=makeLocalStorage(),CandidateCoach=loadEngine({localStorage:candidateLocal});
 candidateLocal.failAfter("solfegeProto1",1);
-let candidateResult=null;CandidateCoach.saveCoachLevel("avance",function(result){candidateResult=result;});
+let candidateResult=null;CandidateCoach.saveCoachLevel("avance",3,function(result){candidateResult=result;});
 ok(candidateResult&&!candidateResult.ok&&candidateResult.rollbackPersisted===true,"si l’écriture du niveau candidat échoue, le niveau antérieur est réécrit et confirmé");
-eq(CandidateCoach.getDB().profile.coachLevel,"","un échec du niveau candidat ne reste jamais actif en mémoire");
+eq([CandidateCoach.getDB().profile.coachLevel,CandidateCoach.getDB().profile.coachYear],["",0],"un échec du niveau candidat ne laisse ni famille ni année actives en mémoire");
 
 const postLocal=makeLocalStorage(),PostCoach=loadEngine({localStorage:postLocal});
 postLocal.failAfter(PostCoach.memoryLocalIndexKey(PostCoach.getActivePlayerId()),2);
-let postResult=null;PostCoach.saveCoachLevel("avance",function(result){postResult=result;});
+let postResult=null;PostCoach.saveCoachLevel("avance",3,function(result){postResult=result;});
 ok(postResult&&!postResult.ok&&postResult.rollbackPersisted===true,"si le snapshot final échoue, le choix précédent est restauré de façon persistante");
-eq(PostCoach.getDB().profile.coachLevel,"","un snapshot final incomplet n’active jamais silencieusement le nouveau niveau");
+eq([PostCoach.getDB().profile.coachLevel,PostCoach.getDB().profile.coachYear],["",0],"un snapshot final incomplet n’active jamais silencieusement la nouvelle classe");
 let postRows=[];PostCoach.memorySnapshotList(function(rows){postRows=rows;});
 ok(postRows.length===1&&postRows[0].kind==="pre_level_change","le point préalable immuable reste disponible après l’échec du snapshot final");
 
@@ -1037,11 +1125,11 @@ concurrentLocal.setItem=function(key,value){
 };
 ConcurrentCoach=loadEngine({localStorage:concurrentLocal});
 concurrentIndexKey=ConcurrentCoach.memoryLocalIndexKey(ConcurrentCoach.getActivePlayerId());
-let concurrentResult=null;ConcurrentCoach.saveCoachLevel("avance",function(result){concurrentResult=result;});
+let concurrentResult=null;ConcurrentCoach.saveCoachLevel("avance",3,function(result){concurrentResult=result;});
 ok(concurrentResult&&!concurrentResult.ok&&concurrentResult.rollbackPersisted===true,
   "un échec final annule proprement le seul choix de niveau en cours");
-eq([ConcurrentCoach.getDB().profile.coachLevel,ConcurrentCoach.getDB().courseProgress.currentItem],["","sol"],
-  "le rollback ciblé remet uniquement le niveau et sa clé précédents");
+eq([ConcurrentCoach.getDB().profile.coachLevel,ConcurrentCoach.getDB().profile.coachYear,ConcurrentCoach.getDB().courseProgress.currentItem],["",0,"sol"],
+  "le rollback ciblé remet uniquement la famille, l’année et la clé précédentes");
 eq([ConcurrentCoach.getDB().themeMode,ConcurrentCoach.getDB().profile.displayName,ConcurrentCoach.getDB().pieces[0].id],["nocturne","Réglage concurrent conservé","piece-concurrente"],
   "le rollback ne perd ni réglage, ni profil, ni partition modifiés pendant la protection");
 const ConcurrentReload=loadEngine({localStorage:concurrentLocal});
@@ -1050,9 +1138,9 @@ eq([ConcurrentReload.getDB().themeMode,ConcurrentReload.getDB().profile.displayN
 
 const hardLocal=makeLocalStorage(),HardCoach=loadEngine({localStorage:hardLocal});
 hardLocal.failAfter("solfegeProto1",1);hardLocal.failAfter(HardCoach.PLAYER_REGISTRY_KEY,2);
-let hardResult=null;HardCoach.saveCoachLevel("avance",function(result){hardResult=result;});
+let hardResult=null;HardCoach.saveCoachLevel("avance",3,function(result){hardResult=result;});
 ok(hardResult&&!hardResult.ok&&hardResult.rollbackPersisted===false&&/stockage actif n’a pas confirmé/.test(hardResult.message),"un double échec de stockage est annoncé honnêtement sans prétendre la restauration persistée");
-eq(HardCoach.getDB().profile.coachLevel,"","même lors du double échec, l’état affiché revient au niveau antérieur et le point préalable subsiste");
+eq([HardCoach.getDB().profile.coachLevel,HardCoach.getDB().profile.coachYear],["",0],"même lors du double échec, l’état affiché revient à la classe antérieure et le point préalable subsiste");
 
 const legacyP7Paliers={};
 ["P1","P2","P3","P4","P5","P6"].forEach(function(id){
@@ -1361,10 +1449,28 @@ ok(appSrcA4.indexOf('id="courseReviewSelect"')>=0 && appSrcA4.indexOf('id="btnRe
   "le retour aux étapes antérieures et la répétition depuis le bilan sont visibles dans l’interface");
 ok(appSrcA4.indexOf('id="btnDecHome"')>=0,
   "même l’écran de découverte laisse revenir à l’accueil sans fermer l’application");
-ok(appSrcA4.indexOf('id="coachLevelSelect"')>=0&&appSrcA4.indexOf('id="btnCoachSave"')>=0&&appSrcA4.indexOf('function saveCoachLevel')>=0,
-  "le Coach invisible propose le niveau et son enregistrement simple sur la carte d’accueil");
-ok(appSrcA4.indexOf("button.disabled=false;select.disabled=false")>=0,
-  "le choix du niveau redevient immédiatement disponible après un enregistrement réussi");
+ok(appSrcA4.indexOf('id="coachLevelSelect"')>=0&&appSrcA4.indexOf('id="coachYearSelect"')>=0&&appSrcA4.indexOf('id="coachClassSummary"')>=0&&
+  appSrcA4.indexOf('id="btnCoachSave"')>=0&&appSrcA4.indexOf('function saveCoachLevel')>=0,
+  "le Coach invisible distingue famille/cycle, année et résumé de classe sur la carte d’accueil");
+const coachRender=loadEngine();coachRender.renderCoachLevelControl();
+const coachFamilySelect=coachRender.getEl("coachLevelSelect"),coachYearSelect=coachRender.getEl("coachYearSelect"),coachClassSummary=coachRender.getEl("coachClassSummary"),coachClassSave=coachRender.getEl("btnCoachSave");
+eq((coachFamilySelect.innerHTML.match(/<option /g)||[]).length,3,"le premier sélecteur rend exactement les trois familles/cycles");
+ok(["Cycle 1","Cycle 2","Cycle 3","Débutant","Intermédiaire","Avancé"].every(function(label){return coachFamilySelect.innerHTML.indexOf(label)>=0;}),
+  "les trois cycles et les trois familles sont lisibles sans ouvrir une documentation");
+eq((coachYearSelect.innerHTML.match(/<option /g)||[]).length,6,"le Cycle 1 rend cinq années et le choix de migration « à préciser »");
+eq([coachFamilySelect.value,coachYearSelect.value,coachClassSave.disabled],["debutant","0",true],
+  "un ancien joueur reste dans sa famille mais doit préciser son année avant d’enregistrer");
+ok(/C1\.\?/.test(coachClassSummary.innerHTML)&&/Cycle 1/.test(coachClassSummary.innerHTML)&&/année à préciser/.test(coachClassSummary.innerHTML),
+  "le résumé rend honnêtement une ancienne classe dont l’année n’est pas encore connue");
+coachFamilySelect.value="avance";coachFamilySelect.onchange();
+eq((coachYearSelect.innerHTML.match(/<option /g)||[]).length,5,"le Cycle 3 rend quatre années et le choix « à préciser », jamais une 5e année");
+ok(coachYearSelect.innerHTML.indexOf('value="5"')<0&&coachYearSelect.value==="0"&&coachClassSave.disabled,
+  "changer de famille remet l’année à préciser au lieu de fabriquer une progression");
+coachYearSelect.value="4";coachYearSelect.onchange();
+ok(/C3\.4/.test(coachClassSummary.innerHTML)&&["Cycle 3","4e année","Avancé","clé d’ut 3e"].every(function(label){return coachClassSummary.innerHTML.indexOf(label)>=0;})&&!coachClassSave.disabled,
+  "le second sélecteur produit un résumé humain complet et active Enregistrer seulement pour une vraie classe");
+ok(appSrcA4.indexOf("button.disabled=false;select.disabled=false;yearSelect.disabled=false")>=0,
+  "les deux sélecteurs redeviennent immédiatement disponibles après un échec d’enregistrement");
 const coachSaveBodyA4=appSrcA4.slice(appSrcA4.indexOf("function saveCoachLevel"),appSrcA4.indexOf("function protectMemoryAction"));
 ok(coachSaveBodyA4.indexOf("save({cloud:false})")>=0&&coachSaveBodyA4.indexOf("queueCloudSync()")>=0,
   "le cloud attend la confirmation de la sauvegarde complète avant de recevoir le nouveau niveau");
@@ -1387,6 +1493,20 @@ ok((syncPushBodyA4.match(/memoryProtectedActionBusy\|\|memoryRestoreBusy/g)||[])
   "une synchronisation déjà planifiée ou en vol recontrôle la protection avant tout envoi cloud");
 ok(appSrcA4.indexOf("Cycle d’acquisition")<0&&appSrcA4.indexOf("Choisis un cycle déjà atteint")<0&&appSrcA4.indexOf("Rejouer ce cycle")<0,
   "les étapes du jeu ne sont plus présentées comme des cycles du conservatoire");
+coachRender.getDB().profile=coachRender.normalizeProfile(Object.assign({},coachRender.getDB().profile,{coachLevel:"avance",coachYear:4}));
+coachRender.getDB().courseProgress=coachRender.normalizeCourseProgress({version:4,currentItem:"ut",steps:{sol:8,fa:8,ut:8},cycles:{sol:2,fa:2,ut:2},exercises:{sol:8,fa:8,ut:8}});
+const coachHumanContext=coachRender.memoryLevelContext({milestone:"Contrôle classe humaine"}),coachPublicText=[
+  coachFamilySelect.innerHTML,coachYearSelect.innerHTML,coachClassSummary.innerHTML,
+  coachRender.coachLevelProgressText(coachRender.coachLevelById("avance"),4),
+  coachHumanContext.choices,coachHumanContext.summary,coachRender.curriculumScopeHtml()
+].join("\n");
+ok(/classe musicale Cycle 3 · 4e année · Avancé · clé d’ut 3e/.test(coachHumanContext.choices)&&
+  coachHumanContext.choices.indexOf("niveau Coach avance")<0&&coachHumanContext.choices.indexOf("c3-a4")<0,
+  "le résumé exact des sauvegardes emploie le libellé humain, jamais l’ancien id ni un id de classe technique");
+ok(!/\bCycle\s+(?:[4-9]|[1-9]\d+)\b/i.test(coachPublicText),
+  "aucune surface publique ne transforme une étape ou la propriété interne cycles en « Cycle 9 »");
+ok(/étape 9\/12 · série 3\/3/.test(coachRender.coachLevelProgressText(coachRender.coachLevelById("avance"),4)),
+  "une neuvième étape reste clairement une étape à l’intérieur du Cycle 3");
 
 /* 9nonies) Finition — le trophée dit ce qu'il mesure (grille J24) */
 group("Partition — le libellé Maîtrisé précise sa portée réelle (J24)");
@@ -1728,7 +1848,7 @@ E.getDB().noteStats.sol4=E.normalizeNoteStat({v:3,e:0,coldV:1,coldE:0,last:40,la
 const cloud = E.cloudDocument();
 ok(cloud.progress && cloud.scores && cloud.settings && cloud.timestamp, "cloudDocument produit le fichier unique progress/scores/settings/timestamp");
 eq(cloud.schema, E.GIST_CLOUD_SCHEMA, "l'enveloppe cloud est versionnée pour protéger les nouveaux champs");
-eq(E.GIST_CLOUD_SCHEMA, 4, "la v39 protège missions, humeur et calendrier contre une réécriture par une ancienne application");
+eq(E.GIST_CLOUD_SCHEMA, 5, "la v40 protège la classe annuelle, les missions, l’humeur et le calendrier contre une réécriture par une ancienne application");
 ok(cloud.progress.curriculum && cloud.progress.curriculum.catalogVersion === E.CURRICULUM_CATALOG_VERSION, "le suivi de cursus voyage dans la sauvegarde cloud");
 eq(cloud.progress.curriculum.progress["c1-reading-landmarks"].proofs.recognition.attempts,3,"une nouvelle activité alimente immédiatement l'export cloud, sans ouvrir les stats ni recharger");
 ok(JSON.stringify(cloud).indexOf("tok_SECRET_123") < 0, "le token n'est jamais dans le document cloud");
@@ -1807,8 +1927,10 @@ eq(E.getDB().profile.parcours, "libre", "ancien joueur : parcours libre par déf
 eq(E.getDB().profile.dailyMinutes, 20, "durée de séance par défaut : 20 minutes");
 eq(E.getDB().profile.daysPerWeek, 5, "cadence par défaut : 5 jours par semaine");
 eq(E.getDB().profile.domains, E.PRACTICE_DOMAINS.map(d => d.id), "les six domaines sont proposés par défaut");
-eq(E.getDB()._sezam.schema, 15, "schéma local v15 pour les missions, badges, humeur et calendrier");
+eq(E.getDB()._sezam.schema, 16, "schéma local v16 pour les classes annuelles, missions, badges, humeur et calendrier");
+eq(E.getDB().v, 15, "base joueur v15 après migration non destructive vers les classes annuelles");
 eq(E.getDB().profile.coachLevel, "", "un ancien joueur n’est jamais renvoyé de force au niveau débutant");
+eq(E.getDB().profile.coachYear, 0, "sans information historique, l’année reste à préciser au lieu d’être inventée");
 eq(E.COACH_LEVELS.map(function(level){return level.courseId;}),["sol","fa","ut"],"les trois niveaux du Coach ciblent respectivement sol, fa et ut 3e");
 const sanitizedProfile = E.normalizeProfile({
   displayName: "  <Youcef>   Test  ", instrument: "inconnu", parcours: "rattrapage_a2",

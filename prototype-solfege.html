@@ -94,11 +94,14 @@
   .playerDanger{background:transparent!important;color:var(--bad)!important;border:1px solid rgba(180,95,75,.35)!important}
   .cockpit h2{font-family:var(--serif);font-size:34px;line-height:.95;letter-spacing:0;margin:0;color:var(--petrole)}
   .cockpit p{font-size:14px;line-height:1.38;margin:8px 0 12px;color:var(--petrole);position:relative;z-index:1}
-  .coachLevelPanel{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px;align-items:end;position:relative;z-index:2;margin:3px 0 8px;padding:9px;background:rgba(255,253,247,.72);border:1px solid rgba(15,76,92,.14);border-radius:16px 7px 16px 7px}
+  .coachLevelPanel{display:grid;grid-template-columns:minmax(0,1fr);gap:7px;align-items:end;position:relative;z-index:2;margin:3px 0 8px;padding:9px;background:rgba(255,253,247,.72);border:1px solid rgba(15,76,92,.14);border-radius:16px 7px 16px 7px}
   .coachLevelField{display:flex;flex-direction:column;gap:4px;min-width:0;color:var(--or-deep);font-family:var(--serif);font-size:10.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase}
   .coachLevelField select{width:100%;min-height:44px;padding:8px 10px;border:1px solid rgba(15,76,92,.24);border-radius:11px;background:var(--paper);color:var(--petrole);font-family:var(--sans);font-size:13px;font-weight:700;text-transform:none;letter-spacing:0}
-  .coachLevelSave{min-height:44px;padding:8px 13px;border:1px solid var(--petrole);border-radius:11px;background:var(--petrole);color:#fff;font-size:12.5px;font-weight:900}
-  .coachLevelSave:disabled{opacity:.58;cursor:wait}
+  .coachLevelFields{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(120px,.65fr);gap:7px;min-width:0}
+  .coachClassSummary{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:5px;min-height:25px}
+  .coachClassSummary span{display:inline-flex;align-items:center;min-height:25px;padding:4px 8px;border:1px solid rgba(15,76,92,.14);border-radius:999px;background:var(--paper);color:var(--petrole);font-size:10.5px;font-weight:800;line-height:1.1}
+  .coachLevelSave{width:100%;min-height:44px;padding:8px 13px;border:1px solid var(--petrole);border-radius:11px;background:var(--petrole);color:#fff;font-size:12.5px;font-weight:900}
+  .coachLevelSave:disabled{opacity:.58;cursor:not-allowed}
   .coachSaveMsg{min-height:16px;margin:-2px 2px 3px;position:relative;z-index:2;color:var(--good);font-size:11.5px;line-height:1.3}
   .cockpitMeta{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:10px 0 12px;position:relative;z-index:1}
   .cockpitMeta span{background:rgba(255,253,247,.78);border:1px solid rgba(15,76,92,.13);border-radius:16px 7px 16px 7px;padding:8px 6px;min-width:0}
@@ -264,7 +267,12 @@
   #memoryToast{position:fixed;left:50%;bottom:max(16px,env(safe-area-inset-bottom));width:min(402px,calc(100vw - 24px));transform:translateX(-50%) translateY(18px);z-index:60;background:var(--petrole2);color:#fff;border:1px solid rgba(216,169,77,.72);border-radius:18px 8px 18px 8px;padding:11px 13px;font-size:12.5px;line-height:1.4;box-shadow:0 10px 28px rgba(8,57,71,.28);opacity:0;pointer-events:none;transition:opacity .18s,transform .18s}
   #memoryToast.on{opacity:1;transform:translateX(-50%) translateY(0)}
   @media(max-width:390px){.hstats{gap:6px}.hstats>span{font-size:11px}#btnSound{padding:5px 9px;font-size:11px}header h1{font-size:13px;letter-spacing:1px}}
-  @media(max-width:600px){input,select,textarea,.segmentForm .field,.savebox textarea{font-size:16px!important}}
+  @media(max-width:600px){
+    input,select,textarea,.segmentForm .field,.savebox textarea{font-size:16px!important}
+    .coachLevelPanel{grid-template-columns:1fr}
+    .coachLevelFields{grid-template-columns:1fr}
+    .coachLevelSave{width:100%}
+  }
 
   #overlay{position:fixed;inset:0;background:rgba(15,76,92,.38);display:none;align-items:center;
     justify-content:center;padding:max(12px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));z-index:10}
@@ -491,8 +499,12 @@
       <h2>JOUER</h2>
       <p id="coachPitch"></p>
       <div class="coachLevelPanel">
-        <label class="coachLevelField"><span>Mon niveau</span><select id="coachLevelSelect" aria-describedby="coachSaveMsg"></select></label>
+        <div class="coachLevelFields">
+          <label class="coachLevelField"><span>Famille et cycle</span><select id="coachLevelSelect" aria-describedby="coachClassSummary coachSaveMsg"></select></label>
+          <label class="coachLevelField"><span>Année</span><select id="coachYearSelect" required aria-required="true" aria-describedby="coachClassSummary coachSaveMsg"></select></label>
+        </div>
         <button type="button" class="coachLevelSave" id="btnCoachSave">Enregistrer</button>
+        <div class="coachClassSummary" id="coachClassSummary"></div>
       </div>
       <div class="coachSaveMsg" id="coachSaveMsg" role="status" aria-live="polite"></div>
       <div class="cockpitMeta" id="cockpitMeta"></div>
@@ -671,7 +683,7 @@ function esc(s){
   });
 }
 /* ================= DONNÉES ================= */
-const APP_VERSION="v39"; // garder aligné avec CACHE_NAME de sw.js (testé)
+const APP_VERSION="v40"; // garder aligné avec CACHE_NAME de sw.js (testé)
 const NOTES = {
   do4 :{n:"do", clef:"sol", p:-2, midi:60, mn:"Le do du milieu est transpercé par sa petite ligne, rien qu'à lui."},
   re4 :{n:"ré", clef:"sol", p:-1, midi:62, mn:"Collé juste sous la portée."},
@@ -840,12 +852,22 @@ const PROFILE_LEVELS=[
   {id:"fin_c1",label:"Je lis déjà les deux clés"}
 ];
 const COACH_LEVELS=[
-  {id:"debutant",label:"Débutant · clé de sol",courseId:"sol",profileLevel:"debutant"},
-  {id:"intermediaire",label:"Intermédiaire · clé de fa",courseId:"fa",profileLevel:"annee2"},
-  {id:"avance",label:"Avancé · clé d’ut 3e",courseId:"ut",profileLevel:"fin_c1"}
+  {id:"debutant",label:"Cycle 1 · Débutant",familyLabel:"Débutant",cycleId:"c1",cycleNumber:1,cycleLabel:"Cycle 1",stageLabel:"Fondations",durationLabel:"3 à 5 ans",yearCount:5,courseId:"sol",keyLabel:"clé de sol",profileLevel:"debutant"},
+  {id:"intermediaire",label:"Cycle 2 · Intermédiaire",familyLabel:"Intermédiaire",cycleId:"c2",cycleNumber:2,cycleLabel:"Cycle 2",stageLabel:"Consolidation et autonomie",durationLabel:"3 à 5 ans",yearCount:5,courseId:"fa",keyLabel:"clé de fa",profileLevel:"annee2"},
+  {id:"avance",label:"Cycle 3 · Avancé",familyLabel:"Avancé",cycleId:"c3",cycleNumber:3,cycleLabel:"Cycle 3",stageLabel:"Approfondissement et projet",durationLabel:"2 à 4 ans",yearCount:4,courseId:"ut",keyLabel:"clé d’ut 3e",profileLevel:"fin_c1"}
 ];
 function coachLevelById(id){ return COACH_LEVELS.find(function(level){return level.id===id;})||null; }
 function coachLevelForCourse(courseId){ return COACH_LEVELS.find(function(level){return level.courseId===courseId;})||COACH_LEVELS[0]; }
+function coachYearLabel(year){year=Number(year)||0;return year===1?"1re année":(year>1?year+"e année":"année à préciser");}
+function coachClassId(level,year){return validCoachYear(level,year)?level.cycleId+"-a"+Number(year):"";}
+function coachClassCode(level,year){return level?("C"+level.cycleNumber+"."+(validCoachYear(level,year)?Number(year):"?")):"";}
+const COACH_CLASSES=COACH_LEVELS.reduce(function(rows,level){
+  for(let year=1;year<=level.yearCount;year++)rows.push({id:coachClassId(level,year),levelId:level.id,familyLabel:level.familyLabel,cycleId:level.cycleId,cycleNumber:level.cycleNumber,cycleLabel:level.cycleLabel,year:year,yearLabel:coachYearLabel(year),courseId:level.courseId,keyLabel:level.keyLabel,label:level.cycleLabel+" · "+coachYearLabel(year)+" · "+level.familyLabel+" · "+level.keyLabel});
+  return rows;
+},[]);
+function coachClassById(id){return COACH_CLASSES.find(function(row){return row.id===id;})||null;}
+function validCoachYear(level,year){year=Number(year)||0;return !!(level&&Number.isInteger(year)&&year>=1&&year<=level.yearCount);}
+function coachClassLabel(level,year){return level?(level.cycleLabel+" · "+coachYearLabel(year)+" · "+level.familyLabel+" · "+level.keyLabel):"Classe musicale non choisie";}
 const PRACTICE_DOMAINS=[
   {id:"lecture",label:"Lecture — évaluée"},
   {id:"rythme",label:"Rythme — mission guidée"},
@@ -1055,6 +1077,7 @@ function normalizeProfile(p){
     if(allowed.indexOf(id)<0||seen[id]) return false; seen[id]=1; return true;
   });
   if(!domains.length) domains=["lecture"];
+  const coachLevel=coachLevelById(p.coachLevel),coachYear=validCoachYear(coachLevel,p.coachYear)?Number(p.coachYear):0;
   return {
     displayName:cleanText(p.displayName,40,""),
     instrument:listHas(PROFILE_INSTRUMENTS,p.instrument)?p.instrument:"piano",
@@ -1062,7 +1085,8 @@ function normalizeProfile(p){
     aspiration:listHas(PROFILE_ASPIRATIONS,p.aspiration)?p.aspiration:"interprete",
     parcours:listHas(PROFILE_PATHS,p.parcours)?p.parcours:"libre",
     niveauDepart:listHas(PROFILE_LEVELS,p.niveauDepart)?p.niveauDepart:"debutant",
-    coachLevel:coachLevelById(p.coachLevel)?p.coachLevel:"",
+    coachLevel:coachLevel?coachLevel.id:"",
+    coachYear:coachYear,
     targetDate:normalizeTargetDate(p.targetDate),
     dailyMinutes:DAILY_MINUTES.some(function(x){return x.id===Number(p.dailyMinutes);})?Number(p.dailyMinutes):20,
     daysPerWeek:DAYS_PER_WEEK.some(function(x){return x.id===Number(p.daysPerWeek);})?Number(p.daysPerWeek):5,
@@ -2100,7 +2124,7 @@ function backupToDb(o){
   if(o.history && Array.isArray(o.history.events)) db.events=o.history.events;
   db._sezam={
     app:"SEZAM",
-    schema:15,
+    schema:16,
     userId:cleanId(o.userId,"user"),
     createdAt:clampInt(o.createdAt||o.timestamp,0,Number.MAX_SAFE_INTEGER,Date.now()),
     updatedAt:clampInt(o.timestamp,0,Number.MAX_SAFE_INTEGER,Date.now()),
@@ -2112,7 +2136,7 @@ function backupToDb(o){
 function ensureMeta(db){
   if(!db._sezam||typeof db._sezam!=="object") db._sezam={};
   db._sezam.app="SEZAM";
-  db._sezam.schema=15;
+  db._sezam.schema=16;
   if(!db._sezam.userId) db._sezam.userId=makeLocalId("user");
   db._sezam.userId=cleanId(db._sezam.userId,"user");
   if(db._sezam.playerId&&!isSafeId(db._sezam.playerId)) delete db._sezam.playerId;
@@ -2218,7 +2242,7 @@ function ensureStructure(db){
   if(!db.mode||(db.mode!=="libre"&&TIER_IDS.indexOf(db.mode)<0)) db.mode="zen";
   if(db.mode!=="libre" && tierDef(db.mode) && tierDef(db.mode).future) db.mode="zen";
   if(!PALIERS.find(function(p){return p.id===db.sel;})) db.sel="P1";
-  db.v=14;
+  db.v=15;
   return backfillCurriculumFromGame(db);
 }
 const LS_KEY="solfegeProto1", LS_MIRROR="solfegeProto1_mirror", LS_PREIMPORT="solfegeProto1_preimport", LS_CHECKPOINT="solfegeProto1_checkpoint";
@@ -2550,12 +2574,13 @@ function memoryLevelContext(extra){
   const finals=missionKeys.filter(function(key){return engagement.daily[key].badgeId==="mission_ten";}).length;
   const appointments=activeAppointments(),nextAppointment=nextTrainingAppointment();
   const missionState=todayMission?((todayMission.completedAt?"terminée":(todayMission.startedAt?"en cours":"prête"))+" · "+moodById(todayMission.mood).label+" · "+todayMission.minutes+" min · "+(todayMission.evidence.questions||0)+"/25 questions"):"non créée";
-  const choices="mode "+DB.mode+" · thème "+(DB.themeMode||"classique")+" · parcours "+((DB.profile&&DB.profile.parcours)||"libre")+" · niveau Coach "+(displayedCoachLevelId?displayedCoachLevelId():"non choisi")+" · œuvre "+(DB.activePiece||"aucune");
+  const coachLevel=coachLevelById(displayedCoachLevelId?displayedCoachLevelId():""),coachYear=displayedCoachYear?displayedCoachYear():0;
+  const choices="mode "+DB.mode+" · thème "+(DB.themeMode||"classique")+" · parcours "+((DB.profile&&DB.profile.parcours)||"libre")+" · classe musicale "+(coachLevel?coachClassLabel(coachLevel,coachYear):"non choisie")+" · œuvre "+(DB.activePiece||"aucune");
   const engagementSummary=missionKeys.length+" sceaux · "+finals+" finales de dix jours · "+crowns+" couronnes · mission du jour "+missionState+" · "+appointments.length+" rendez-vous actifs"+(nextAppointment?(", prochain « "+nextAppointment.title+" » le "+nextAppointment.date+" à "+nextAppointment.time):"");
   const summary="Niveau "+level+" ("+levelLabel+") · "+(DB.xp||0)+" XP · "+noteIds.length+" notes mémorisées · "+attempts+" réponses, "+errors+" erreurs · "+validations+" validations · "+(DB.repairQueue||[]).length+" réparations en cours · "+(DB.pieces||[]).length+" partitions personnelles · "+engagementSummary+" · "+current+" · "+choices+".";
   return {level:level,levelLabel:levelLabel,palier:sel.id,xp:DB.xp||0,noteIds:noteIds,attempts:attempts,errors:errors,validations:validations,repairs:(DB.repairQueue||[]).length,pieces:(DB.pieces||[]).length,missionDays:missionKeys.length,missionFinals:finals,weeklyCrowns:crowns,appointments:appointments.length,missionState:missionState,scene:scene,current:current,choices:choices,summary:summary,milestone:cleanText(extra.milestone,180,"")};
 }
-function memoryKindLabel(kind){return {manual:"Manuelle",level_complete:"Niveau terminé",daily_complete:"Mission quotidienne",weekly_complete:"Défi hebdomadaire",pre_level_change:"Avant changement de niveau",pre_restore:"Avant restauration",pre_import:"Avant import",pre_recovery:"Avant code de reprise",pre_cloud:"Avant synchro cloud",pre_delete_cloud:"Avant suppression cloud",pre_delete:"Avant suppression",legacy_preimport:"Ancienne protection"}[kind]||"Protection automatique";}
+function memoryKindLabel(kind){return {manual:"Manuelle",level_complete:"Niveau terminé",daily_complete:"Mission quotidienne",weekly_complete:"Défi hebdomadaire",pre_level_change:"Avant changement de classe",pre_restore:"Avant restauration",pre_import:"Avant import",pre_recovery:"Avant code de reprise",pre_cloud:"Avant synchro cloud",pre_delete_cloud:"Avant suppression cloud",pre_delete:"Avant suppression",legacy_preimport:"Ancienne protection"}[kind]||"Protection automatique";}
 function formatMemoryDate(ts){try{return new Date(ts).toLocaleString("fr-FR",{dateStyle:"short",timeStyle:"medium"});}catch(e){return new Date(ts).toLocaleString("fr-FR");}}
 function finalizedMemoryMeta(record,number,storage){
   const createdAt=record.createdAt,id=record.playerId+"-"+String(number).padStart(12,"0")+"-"+record.captureId;
@@ -2891,53 +2916,63 @@ function displayedCoachLevelId(){
   const progress=normalizeCourseProgress(DB&&DB.courseProgress),derived=coachLevelForCourse(progress.currentItem);
   return derived.id;
 }
-function coachLevelProgressText(level){
+function displayedCoachYear(){
+  const profile=normalizeProfile(DB&&DB.profile),level=coachLevelById(profile.coachLevel);
+  return validCoachYear(level,profile.coachYear)?profile.coachYear:0;
+}
+function coachLevelProgressText(level,year){
   const course=level&&courseById(level.courseId),progress=normalizeCourseProgress(DB&&DB.courseProgress);
   if(!course) return "niveau inconnu";
+  year=validCoachYear(level,year)?Number(year):0;
   const step=Math.min(course.steps.length,(progress.steps[course.id]||0)+1);
-  if((progress.steps[course.id]||0)>=course.steps.length) return level.label+" · toutes les étapes sont acquises";
-  return level.label+" · étape "+step+"/"+course.steps.length+" · série "+((progress.cycles[course.id]||0)+1)+"/"+COURSE_SERIES_PER_STEP;
+  if((progress.steps[course.id]||0)>=course.steps.length) return coachClassLabel(level,year)+" · toutes les étapes sont acquises";
+  return coachClassLabel(level,year)+" · étape "+step+"/"+course.steps.length+" · série "+((progress.cycles[course.id]||0)+1)+"/"+COURSE_SERIES_PER_STEP;
 }
-function saveCoachLevel(levelId,cb){
+function saveCoachLevel(levelId,coachYear,cb){
+  const yearWasProvided=typeof coachYear!=="function"&&coachYear!==undefined&&coachYear!==null&&coachYear!=="";
+  if(typeof coachYear==="function"){cb=coachYear;coachYear=undefined;}
   cb=typeof cb==="function"?cb:function(){};
   const level=coachLevelById(levelId);
-  if(!level){cb({ok:false,message:"Ce niveau n’existe pas."});return false;}
+  if(!level){cb({ok:false,message:"Cette famille de niveau n’existe pas."});return false;}
+  const previousProfile=normalizeProfile(DB.profile),oldLevel=previousProfile.coachLevel,oldYear=previousProfile.coachYear;
+  const requestedYear=yearWasProvided?Number(coachYear):(oldLevel===level.id?oldYear:0);
+  if(!validCoachYear(level,requestedYear)){cb({ok:false,message:"Choisis une année disponible dans "+level.cycleLabel+" avant d’enregistrer."});return false;}
   if(memoryProtectedActionBusy||memoryRestoreBusy||playerOperationBusy){
     const message="Une sauvegarde protégée est déjà en cours. Réessaie dès sa confirmation ; rien n’a été perdu.";
     memoryToast(message,false);cb({ok:false,message:message});return false;
   }
-  const token=memoryActionToken(),oldLevel=normalizeProfile(DB.profile).coachLevel,oldCourseItem=normalizeCourseProgress(DB.courseProgress).currentItem,changed=oldLevel!==level.id;
+  const token=memoryActionToken(),oldCourseItem=normalizeCourseProgress(DB.courseProgress).currentItem,changed=oldLevel!==level.id||oldYear!==requestedYear;
   const rollback=function(message,safetyMeta){
     let persisted=false;
     try{
-      DB.profile=normalizeProfile(Object.assign({},DB.profile||{},{coachLevel:oldLevel}));
+      DB.profile=normalizeProfile(Object.assign({},DB.profile||{},{coachLevel:oldLevel,coachYear:oldYear}));
       DB.courseProgress=normalizeCourseProgress(DB.courseProgress);DB.courseProgress.currentItem=oldCourseItem;
       persisted=save({touch:false,cloud:false});applyTheme();
     }catch(e){}
     if(!persisted){
       const point=safetyMeta&&safetyMeta.name?(" Restaure « "+safetyMeta.name+" » avant de recharger la page."):" Exporte immédiatement la progression affichée avant de recharger la page.";
-      message="L’ancien niveau est revenu à l’écran, mais le stockage actif n’a pas confirmé sa restauration."+point+" Aucun point de sauvegarde existant n’a été effacé.";
+      message="L’ancienne classe est revenue à l’écran, mais le stockage actif n’a pas confirmé sa restauration."+point+" Aucun point de sauvegarde existant n’a été effacé.";
     }
     memoryProtectedActionBusy=false;memoryToast(message,true);cb({ok:false,message:message,rollbackPersisted:persisted,safety:safetyMeta||null});
   };
   const applyAndSave=function(safetyMeta){
-    if(!memoryActionCurrent(token)){memoryProtectedActionBusy=false;cb({ok:false,message:"Le joueur actif a changé : niveau inchangé."});return;}
-    DB.profile=normalizeProfile(Object.assign({},DB.profile||{},{coachLevel:level.id}));
+    if(!memoryActionCurrent(token)){memoryProtectedActionBusy=false;cb({ok:false,message:"Le joueur actif a changé : classe inchangée."});return;}
+    DB.profile=normalizeProfile(Object.assign({},DB.profile||{},{coachLevel:level.id,coachYear:requestedYear}));
     DB.courseProgress=normalizeCourseProgress(DB.courseProgress);
     DB.courseProgress.currentItem=level.courseId;
-    if(!save({cloud:false})){rollback("Enregistrement impossible : le niveau précédent reste actif et la progression est intacte.",safetyMeta);return;}
-    const milestone="Niveau du Coach enregistré · "+coachLevelProgressText(level);
+    if(!save({cloud:false})){rollback("Enregistrement impossible : la classe précédente reste active et la progression est intacte.",safetyMeta);return;}
+    const milestone="Classe musicale enregistrée · "+coachLevelProgressText(level,requestedYear);
     createMemorySnapshot("manual",{milestone:milestone,notify:false},function(result){
       if(!memoryActionCurrent(token)){memoryProtectedActionBusy=false;cb({ok:false,message:"Le joueur actif a changé avant la confirmation."});return;}
       if(!result.ok){rollback("Le niveau précédent a été restauré car la sauvegarde complète n’a pas pu être créée. Aucun acquis n’a été effacé.",safetyMeta);return;}
       memoryProtectedActionBusy=false;queueCloudSync();
-      const message="✓ "+coachLevelProgressText(level)+" enregistré · "+result.meta.name+". Tous les acquis antérieurs restent disponibles.";
-      memoryToast(message,false);cb({ok:true,message:message,meta:result.meta,safety:safetyMeta||null,level:level});
+      const message="✓ "+coachLevelProgressText(level,requestedYear)+" enregistré · "+result.meta.name+". Tous les acquis antérieurs restent disponibles.";
+      memoryToast(message,false);cb({ok:true,message:message,meta:result.meta,safety:safetyMeta||null,level:level,coachYear:requestedYear});
     });
   };
   memoryProtectedActionBusy=true;
   if(!changed){applyAndSave(null);return true;}
-  createMemorySnapshot("pre_level_change",{milestone:"Avant le choix « "+level.label+" »",notify:false},function(safety){
+  createMemorySnapshot("pre_level_change",{milestone:"Avant le choix « "+coachClassLabel(level,requestedYear)+" »",notify:false},function(safety){
     if(!safety.ok){memoryProtectedActionBusy=false;const message="Changement annulé : l’état actuel n’a pas pu être protégé d’abord. Rien n’a été modifié.";memoryToast(message,true);cb({ok:false,message:message});return;}
     applyAndSave(safety.meta);
   });
@@ -3068,7 +3103,7 @@ function save(opts){
   return ok&&registryOk;
 }
 function freshPlayerState(id,name){
-  const db=ensureStructure({_sezam:{app:"SEZAM",schema:15,userId:id,playerId:id,createdAt:Date.now(),updatedAt:Date.now()},profile:{displayName:name}});
+  const db=ensureStructure({_sezam:{app:"SEZAM",schema:16,userId:id,playerId:id,createdAt:Date.now(),updatedAt:Date.now()},profile:{displayName:name}});
   db._sezam.playerId=id;return db;
 }
 function playerSummary(state){
@@ -3298,7 +3333,7 @@ function applyProfileStartPlacement(level){
 }
 function profileStartText(level,pid){
   const label=labelFrom(PROFILE_LEVELS,level);
-  return "Point de départ "+label+" : exploration Libre placée sur "+pid+". Aucun acquis n’est validé automatiquement.";
+  return "Repère d’exploration libre "+label+" : écran placé sur "+pid+". Aucun acquis n’est validé automatiquement.";
 }
 function seriesCover(window,requiredIds){
   if(!requiredIds||!requiredIds.length) return true;
@@ -3953,6 +3988,7 @@ function bindMusicProfileDialog(previousLevel){
 }
 function openMusicProfile(){
   const p=normalizeProfile(DB.profile), selected={};
+  const coachLevel=coachLevelById(p.coachLevel)||coachLevelForCourse(normalizeCourseProgress(DB.courseProgress).currentItem),coachClass=coachClassLabel(coachLevel,p.coachYear);
   p.domains.forEach(function(id){selected[id]=1;});
   const domainHtml=PRACTICE_DOMAINS.map(function(d){
     return '<label><input type="checkbox" name="profDomain" value="'+esc(d.id)+'"'+(selected[d.id]?' checked':'')+'> '+esc(d.label)+'</label>';
@@ -3960,12 +3996,13 @@ function openMusicProfile(){
   $("cardBox").innerHTML='<h3>Mon parcours</h3><h2>Une séance faite pour toi</h2>'+
     '<p>Ces réglages sont enregistrés sur ton appareil et inclus dans tes exports/QR. Ils rejoignent aussi ton Gist secret uniquement si tu actives la synchro GitHub.</p>'+
     '<details class="curriculumScope"><summary>Repères du cursus · Cycles 1 → 3</summary>'+curriculumScopeHtml()+'</details>'+
+    '<div class="curriculumScope"><b>Classe du Coach enregistrée</b><p>'+esc(coachClass)+'. Elle se change depuis l’accueil et ne certifie aucun acquis.</p></div>'+
     '<div class="profileGrid">'+
       '<label>Prénom ou nom d’usage<input id="profName" maxlength="40" autocomplete="nickname" value="'+esc(p.displayName)+'" placeholder="Facultatif"></label>'+
       '<label>Instrument<select id="profInstrument">'+optionHtml(PROFILE_INSTRUMENTS,p.instrument)+'</select></label>'+
       '<label>Intention affichée<select id="profPath">'+optionHtml(PROFILE_PATHS,p.parcours)+'</select></label>'+
-      '<label>Point de départ déclaré<select id="profLevel">'+optionHtml(PROFILE_LEVELS,p.niveauDepart)+'</select></label>'+
-      '<p class="src" style="margin:0">Ce point de départ place l’exploration ; il ne valide aucun acquis et ne remplace pas un diagnostic.</p>'+
+      '<label>Repère d’exploration libre (facultatif)<select id="profLevel">'+optionHtml(PROFILE_LEVELS,p.niveauDepart)+'</select></label>'+
+      '<p class="src" style="margin:0">Ce repère place uniquement l’écran du mode Libre. Il ne change pas la classe du Coach, ne saute aucune série et ne valide aucun acquis.</p>'+
       '<label>Temps disponible (défis)<select id="profMinutes">'+optionHtml(DAILY_MINUTES,p.dailyMinutes)+'</select></label>'+
       '<p class="src" style="margin:0">Chaque nouveauté se travaille sur 3 séries de 25 questions. Seule une série sans erreur est validée ; la note suivante reste verrouillée jusqu’aux 3 séries parfaites.</p>'+
       '<label>Rythme hebdomadaire<select id="profDays">'+optionHtml(DAYS_PER_WEEK,p.daysPerWeek)+'</select></label>'+
@@ -4420,17 +4457,38 @@ function coachDecision(force){
   return {kind:"session",label:"Session",n:10,palier:p,pool:p.notes,mode:mode,groupN:tier.n||1,reason:"Progression de palier active."};
 }
 function renderCoachLevelControl(){
-  const select=$("coachLevelSelect"),button=$("btnCoachSave"),message=$("coachSaveMsg"),play=$("btnPlayNow");
-  if(!select||!button||!message)return;
-  const selected=displayedCoachLevelId();
-  select.innerHTML=COACH_LEVELS.map(function(level){return '<option value="'+level.id+'"'+(level.id===selected?' selected':'')+'>'+esc(level.label)+'</option>';}).join("");
-  message.textContent="Repère de jeu — indépendant des cycles du conservatoire. Tes séries déjà réussies ne sont jamais effacées.";
-  button.disabled=false;select.disabled=false;if(play)play.disabled=false;
+  const select=$("coachLevelSelect"),yearSelect=$("coachYearSelect"),button=$("btnCoachSave"),message=$("coachSaveMsg"),summary=$("coachClassSummary"),play=$("btnPlayNow");
+  if(!select||!yearSelect||!button||!message)return;
+  const selected=displayedCoachLevelId(),savedYear=displayedCoachYear();
+  select.innerHTML=COACH_LEVELS.map(function(level){return '<option value="'+level.id+'"'+(level.id===selected?' selected':'')+'>'+esc(level.cycleLabel+" · "+level.familyLabel+" — "+level.stageLabel+" ("+level.durationLabel+")")+'</option>';}).join("");
+  select.value=selected;
+  const selectedLevel=function(){return coachLevelById(select.value)||COACH_LEVELS[0];};
+  const fillYears=function(year){
+    const level=selectedLevel(),chosen=validCoachYear(level,year)?Number(year):0;
+    let html='<option value="0"'+(chosen?'':' selected')+'>Année à préciser</option>';
+    for(let n=1;n<=level.yearCount;n++)html+='<option value="'+n+'"'+(n===chosen?' selected':'')+'>'+esc(coachYearLabel(n)+" · "+coachClassCode(level,n))+'</option>';
+    yearSelect.innerHTML=html;yearSelect.value=String(chosen);
+  };
+  const refresh=function(){
+    const level=selectedLevel(),year=Number(yearSelect.value)||0;
+    if(summary)summary.innerHTML='<span>'+esc(coachClassCode(level,year))+'</span><span>'+esc(level.cycleLabel)+'</span><span>'+esc(coachYearLabel(year))+'</span><span>'+esc(level.familyLabel)+'</span><span>'+esc(level.keyLabel)+'</span>';
+    yearSelect.setAttribute("aria-invalid",validCoachYear(level,year)?"false":"true");button.setAttribute("aria-busy","false");
+    button.disabled=!validCoachYear(level,year);
+    message.textContent=validCoachYear(level,year)
+      ?"Repère déclaré, pas certification : les acquis restent décidés uniquement par les séries parfaites."
+      :"Choisis ton année dans "+level.cycleLabel+". Ce repère n’efface, ne valide et ne saute aucun acquis.";
+  };
+  fillYears(savedYear);refresh();
+  select.disabled=false;yearSelect.disabled=false;if(play)play.disabled=false;
+  select.onchange=function(){fillYears(0);refresh();};
+  yearSelect.onchange=refresh;
   button.onclick=function(){
-    button.disabled=true;select.disabled=true;if(play)play.disabled=true;message.textContent="Protection de l’état actuel puis enregistrement…";
-    saveCoachLevel(select.value,function(result){
+    const level=selectedLevel(),year=Number(yearSelect.value)||0;
+    if(!validCoachYear(level,year)){refresh();return;}
+    button.disabled=true;button.setAttribute("aria-busy","true");select.disabled=true;yearSelect.disabled=true;if(play)play.disabled=true;message.textContent="Protection de l’état actuel puis enregistrement de la classe…";
+    saveCoachLevel(level.id,year,function(result){
       if(result.ok){renderHome();const live=$("coachSaveMsg");if(live)live.textContent=result.message;return;}
-      button.disabled=false;select.disabled=false;if(play)play.disabled=false;select.value=displayedCoachLevelId();message.textContent=result.message;
+      button.disabled=false;select.disabled=false;yearSelect.disabled=false;if(play)play.disabled=false;select.value=displayedCoachLevelId();fillYears(displayedCoachYear());refresh();message.textContent=result.message;
     });
   };
 }
@@ -4472,6 +4530,7 @@ function renderPlayerState(decision){
   const p=decision.palier, mode=decision.mode;
   const frag=fragileNoteIds(3), due=dueCount(), prec=globalPrecision();
   const prog=mode==="libre"?"Exploration libre":((mode&&DB.paliers[p.id]&&DB.paliers[p.id][mode])?valProgress(p.id,mode):"Progression en construction");
+  const declaredLevel=coachLevelById(displayedCoachLevelId()),declaredYear=displayedCoachYear(),declaredClass=declaredLevel?coachClassLabel(declaredLevel,declaredYear):"Classe musicale non choisie";
   const piece=ensureActivePiece();
   let pieceTile="";
   if(piece){
@@ -4486,7 +4545,7 @@ function renderPlayerState(decision){
     ? (decision.course.review
       ? '<div class="stateTile"><h3>Parcours acquis</h3><b>Entraînement continu</b><span>'+esc(decision.course.itemLabel)+' · étape '+(decision.course.stepIndex+1)+'/'+decision.course.stepTotal+'</span></div>'
       : '<div class="stateTile"><h3>Acquisition en cours</h3><b>Série '+decision.course.seriesNumber+'/'+decision.course.seriesTotal+'</b><span>'+esc(decision.course.phaseLabel)+' · étape '+(decision.course.stepIndex+1)+'/'+decision.course.stepTotal+'</span></div>')
-    : '<div class="stateTile"><h3>Lecture des notes</h3><b>'+esc(prog)+'</b><span>Repère du cursus · Cycle 1 · '+esc(p.t)+'</span></div>';
+    : '<div class="stateTile"><h3>Lecture des notes</h3><b>'+esc(prog)+'</b><span>'+esc(declaredClass)+' · '+esc(p.t)+'</span></div>';
   $("playerState").innerHTML=
     courseState+
     '<div class="stateTile"><h3>Mémoire</h3><b>'+due+' à revoir</b><span>'+(prec===null?'Précision en construction':prec+'% précision globale')+'</span></div>'+
@@ -7634,7 +7693,7 @@ function finishClavier(){
    Contrat : un token utilisateur, un gist, un fichier JSON ; les divergences concurrentes sont bloquées au lieu d'écraser un appareil.
    Le token reste uniquement en mémoire de session : jamais dans localStorage, DB, exports ou QR. */
 const LS_SYNC="sezam_sync", LS_SYNC_LEGACY="solado_sync",
-  GIST_FILE="sezam-progress.json", GIST_FILE_LEGACY="solado-save.json", GIST_CLOUD_SCHEMA=4, GIST_DESC="SEZAM progression (auto)";
+  GIST_FILE="sezam-progress.json", GIST_FILE_LEGACY="solado-save.json", GIST_CLOUD_SCHEMA=5, GIST_DESC="SEZAM progression (auto)";
 let syncBusy=false, syncLastPush=0, syncQueued=null, syncTokenSessions=safeMap();
 function canSyncNow(){ return typeof navigator==="undefined" || navigator.onLine!==false; }
 function syncStorageKey(playerId){return LS_SYNC+":"+(isSafeId(playerId)?playerId:"invalid");}
