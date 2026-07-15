@@ -2,6 +2,8 @@
 
 Cette fiche explique le fonctionnement de SEZAM sans vocabulaire technique. Elle distingue ce que signifie **finir la campagne**, **maîtriser la bibliothèque** et atteindre le **prestige absolu**. Les durées humaines sont des estimations transparentes : elles ne promettent pas qu'un débutant lira au tempo Rhodium en quelques jours.
 
+> **Avertissement v39 — règles actives.** Une série d'acquisition contient désormais exactement **25 questions** et une étape ne s'ouvre qu'après **trois séries de 25 sans erreur**. La mission quotidienne demande elle aussi 25 réponses réellement données, quel que soit le temps indicatif choisi. Les anciens totaux de 3 208 écrans-question, 9 711 réponses et 39,27 minutes proviennent de la partie témoin historique fondée sur des séries de 10 questions ; ils restent documentés comme point de comparaison, mais ne décrivent plus le minimum mécanique de la v39.
+
 ## Le jeu en une minute
 
 SEZAM entraîne la lecture de notes sur deux clés : la clé de sol et la clé de fa. Le joueur avance dans 15 paliers, puis recommence ces 15 territoires avec une exigence de vitesse croissante.
@@ -105,39 +107,39 @@ Détail de la croissance :
 
 ## Comment un palier est validé
 
-Une série standard contient 10 questions. Une validation exige à la fois de la précision et une couverture réelle de toutes les notes du palier.
+En v39, une série d'acquisition contient exactement **25 questions**. Seul un résultat de **25/25** valide la série. Il faut réussir **trois séries parfaites** pour valider l'étape et autoriser l'ajout d'une seule note nouvelle.
 
-Le palier est validé par l'une de ces deux voies :
+Le principe est celui de l'entonnoir inversé : un nouvel item commence avec trois notes, puis une seule note s'ajoute à chaque étape. Un item comporte au maximum 12 étapes. Si une erreur survient, la série en cours est à refaire, mais les séries parfaites déjà obtenues restent protégées.
 
-- les 3 dernières séries totalisent au plus 1 erreur et couvrent toutes les notes ;
-- ou 5 séries réalisées dans les 7 derniers jours totalisent au plus 2 erreurs et couvrent toutes les notes.
+Les questions de réparation, de consolidation et de transfert servent à apprendre ; elles ne sont jamais transformées artificiellement en preuves d'acquisition. Le joueur peut revenir à une étape antérieure ou la rejouer avec de nouveaux fragments de partitions. Il n'est pas poussé dans une course en avant.
 
-Les questions de réparation et de transfert ne sont pas utilisées comme preuves de validation. Elles servent à apprendre, pas à gonfler artificiellement un score.
+Les paliers s'ouvrent dans l'ordre. Une fois les 15 paliers d'un grade validés, le grade suivant devient disponible ; après B5, le parcours reprend à P1 dans le grade supérieur.
 
-Les paliers s'ouvrent dans l'ordre. Une fois les 15 paliers d'un grade validés, le grade suivant devient disponible. Dans la séance quotidienne corrigée, SEZAM passe lui-même au palier suivant ; après B5, il repart à P1 dans le grade supérieur.
+## La mission quotidienne v39
 
-## La séance quotidienne corrigée
+Avant de jouer, la personne indique son humeur et le temps dont elle dispose. Le temps choisi — 10, 15, 20 ou 30 minutes — est un **repère d'organisation**, jamais un moyen de raccourcir la preuve : le sceau du jour exige 25 questions réellement répondues.
 
-Le bouton principal lance une séance de la durée choisie par le joueur. Le temps est réparti ainsi :
+| Humeur | Adaptation proposée |
+|---|---|
+| Concentré | progression d'acquisition habituelle |
+| Calme | consolidation prioritaire, sans forcer une nouveauté |
+| Joueur | davantage de transfert dans des fragments musicaux |
+| Fatigué | contenu familier, sans nouveauté, avec 15 minutes proposées au maximum |
 
-| Phase | Part du temps | Rôle |
-|---|---:|---|
-| Rappel à froid | 20 % | retrouver sans aide ce qui risque d'être oublié |
-| Cible | 60 % | faire avancer le palier et le grade actuels |
-| Réparation | 10 % | retravailler les confusions observées |
-| Transfert | 10 % | relier la lecture à une pièce ou à une mission musicale |
+Dès la première question, l'humeur, le temps, le rendez-vous musical et l'objectif du jour sont figés jusqu'au bilan. Le Coach invisible peut organiser la mission en rappel à froid, cible, réparation et transfert, mais ces adaptations ne modifient jamais les règles d'acquisition. Une mission quotidienne utilise une question à la fois : **25 questions signifient bien 25 réponses données**.
 
-Pendant la phase Cible :
+Une sortie avant la vingt-cinquième réponse conserve le travail et les erreurs utiles, mais ne donne ni sceau ni récompense de fin. Lorsque la vingt-cinquième réponse est enregistrée, la mission accomplie déclenche :
 
-- chaque tranche de 10 questions admissibles devient une preuve de validation ;
-- une tranche incomplète est conservée pour la séance suivante ;
-- après trois preuves suffisantes, le palier est validé et le suivant commence dans la même séance ;
-- après B5, SEZAM avance au grade suivant sans demander au joueur de fouiller dans les réglages.
+- une célébration visuelle, sonore et, si l'appareil l'autorise, vibrante ;
+- le sceau daté du jour et **+20 XP**, une seule fois ;
+- un badge spécial à chaque dixième mission accomplie, la **Finale des dix jours** ;
+- une sauvegarde automatique complète, datée et numérotée.
 
-Le chronomètre est un plafond souple : aucune nouvelle question ne commence après l'échéance, mais la question en cours peut être terminée.
-Il se met en pause lorsque l'application passe en arrière-plan. Une séance n'est marquée « faite » qu'après au moins 10 vraies questions musicales ; une sortie plus courte conserve le travail et affiche un bilan partiel.
+Du lundi au dimanche, sept sceaux distincts ouvrent le **Défi des défis**. Ce défi comporte 25 questions. Une Couronne est gagnée à partir de 20 bonnes réponses, une Couronne d'or à 25/25 et la première réussite rapporte +100 XP. Un échec ne retire aucun sceau, n'efface pas le meilleur score et ne ferme jamais le droit de rejouer.
 
-Quand la mission et le transfert prévus sont finis avant le chrono, le temps restant devient un **atelier bonus**. Les easter eggs donnent quelques XP, mais n'améliorent ni la validation ni la mémoire espacée.
+Le calendrier musical peut annoncer un cours, une répétition, une audition, un concert, un examen ou une indisponibilité. Le Coach peut alors donner la priorité à la partition concernée ou proposer une organisation différente, sans introduire une note située au-delà du niveau atteint. Les rendez-vous actifs peuvent être copiés dans Calendrier sur iPhone ou iPad grâce à l'export `.ics`.
+
+Un bouton **Accueil** reste accessible sur tous les écrans secondaires. Les fenêtres proposent **Retour**, **Accueil** et **Sauvegarder**. Une sauvegarde manuelle crée toujours un nouveau point ; elle n'écrase jamais les précédents.
 
 ## Ce qui se passe après une erreur
 
@@ -180,11 +182,11 @@ Dans un parcours parfait commencé à J0, une note peut atteindre la boîte 5 à
 
 Un passage traverse cinq états : À découvrir, En travail, Fragile, Validé et Maîtrisé. Le joueur peut choisir une ambition : lire toute la pièce, maîtriser un passage précis, jouer sans blocage ou préparer un cours.
 
-## Volume exact de la partie parfaite
+## Repère historique de la partie témoin
 
-Le bot de complétion joue le vrai moteur avec toutes les réponses justes. Sa route de référence utilise les sessions historiques de 10 questions, puis maîtrise toute la bibliothèque.
+Le bot de complétion historique jouait le moteur avec toutes les réponses justes. Sa route de référence utilisait les sessions v29 de 10 questions, puis maîtrisait toute la bibliothèque. Les chiffres ci-dessous sont conservés pour comparer les versions ; ils ne constituent pas le volume minimal de la v39.
 
-| Mesure | Volume minimal parfait |
+| Mesure | Volume historique observé |
 |---|---:|
 | Validations | 90 |
 | Séries de paliers | 270 |
@@ -194,9 +196,9 @@ Le bot de complétion joue le vrai moteur avec toutes les réponses justes. Sa r
 | Réponses-note | **9 711** |
 | Temps mécanique de feedback et transitions | **39,27 min** |
 
-Les 39,27 minutes ne sont pas une durée humaine. Elles supposent une réponse instantanée, aucune erreur et ne comptent pratiquement que les délais imposés par l'interface.
+Les 39,27 minutes ne sont ni une durée humaine ni une estimation de la v39. Elles supposent une réponse instantanée, aucune erreur et ne comptent pratiquement que les délais imposés par l'ancienne interface.
 
-Dans la séance quotidienne corrigée, les 270 preuves représentent aussi 2 700 questions Cible. Comme les groupes sont complets pendant cette phase, elles représentent 9 450 réponses Cible, auxquelles s'ajoutent les rappels, réparations et transferts des 40 % restants.
+Avec le contrat d'acquisition v39, les 270 séries parfaites minimales représentent à elles seules **6 750 questions** (`270 × 25`). Les missions quotidiennes posent une question à la fois ; rappels, réparations, transferts, reprises et erreurs peuvent augmenter ce total.
 
 ## Temps humain estimé
 
@@ -206,10 +208,10 @@ Le parcours musical complet du Cycle 1 à la fin du Cycle 3 demande normalement 
 
 SEZAM ne remplace pas ce parcours. Le complément numérique futur est estimé à environ 200 à 560 heures actives réparties sur ces années, avec un cœur de planification à 300–450 heures. La campagne actuelle de lecture ci-dessous n'en est qu'un module. Voir `CURSUS-CYCLES-1-3.md` pour les sources, les domaines et la feuille de route.
 
-Deux routes sont distinguées :
+Les estimations ci-dessous ont été établies avant la v39. Elles restent utiles comme ordre de grandeur humain, mais devront être remesurées sur des parties v39 complètes :
 
-- **Route directe** : le joueur utilise surtout les sessions de 10 questions ;
-- **Séance complète** : le joueur utilise le bouton quotidien corrigé, dont 40 % du temps consolide la mémoire, répare et transfère au lieu de produire directement des preuves.
+- **Route directe historique** : le joueur utilisait surtout les sessions v29 de 10 questions ;
+- **Séance complète historique** : le bouton quotidien répartissait le temps entre acquisition, consolidation, réparation et transfert.
 
 | Route | Profil | Temps actif total | À 10 min/j | À 20 min/j | À 30 min/j |
 |---|---|---:|---:|---:|---:|
@@ -220,11 +222,11 @@ Deux routes sont distinguées :
 
 Ces nombres sont des **jours de pratique**, pas forcément des jours calendaires consécutifs. À cinq jours de pratique par semaine, 45 jours de pratique représentent environ neuf semaines.
 
-La route quotidienne est plus longue, mais elle est pédagogiquement plus complète : elle inclut le rappel à froid, la réparation et le transfert que la route directe peut laisser de côté.
+La mission quotidienne v39 conserve cette ambition pédagogique — rappel à froid, réparation et transfert — mais fixe désormais la fin du travail à 25 réponses données plutôt qu'à l'expiration d'un chronomètre.
 
 ## Récompenses et secrets
 
-Le jeu récompense les réponses, les validations, les passages conquis, les grades terminés et les défis. Les trophées couvrent notamment le premier jour, les séries de jours, les semaines régulières, le clavier, les XP, la première œuvre, toute la bibliothèque et Rhodium.
+Le jeu récompense les réponses, les validations, les passages conquis, les grades terminés et les défis. Chaque mission complète allume un sceau, chaque dixième jour célèbre une Finale des dix jours et sept sceaux hebdomadaires ouvrent le Défi des défis. La Vitrine des missions conserve durablement les badges et Couronnes gagnés.
 
 Les trois easter eggs actuels sont :
 
@@ -238,7 +240,9 @@ Ils sont facultatifs et séparés de l'évaluation. Remettre trois fois la clé 
 
 | Réglage | Effet dans le jeu |
 |---|---|
-| Durée quotidienne | change réellement le chronomètre et les quatre phases |
+| Temps disponible | sert de repère au Coach ; ne réduit jamais les 25 questions de la mission |
+| Humeur | adapte la forme de la mission, jamais les critères d'acquisition |
+| Calendrier musical | donne une priorité locale à un rendez-vous ou une partition, sans dépasser le niveau atteint |
 | Domaines choisis | fait tourner les missions de rythme, oreille, chant, écrit ou intégration |
 | Affinité et aspiration | choisit certains miroirs et textes culturels |
 | Couleurs | change réellement l'apparence |
@@ -259,7 +263,8 @@ Un changement n'est autorisé que depuis l'accueil et après la mise à l'abri d
 
 - **Campagne** : 90 validations.
 - **Bibliothèque** : 30 passages, 60 lectures propres, au moins 20 heures d'écart.
-- **Partie parfaite de référence** : 330 séries, 3 208 questions et 9 711 réponses.
-- **Temps humain central** : environ 12 heures en route directe pour un intermédiaire, environ 17 heures avec la séance complète ; environ 25 ou 38 heures pour un débutant.
+- **Partie témoin historique v29** : 330 séries, 3 208 écrans-question et 9 711 réponses ; ce n'est plus le minimum v39.
+- **Plancher d'acquisition v39** : 270 séries parfaites de 25, soit 6 750 réponses avant les réparations et la bibliothèque.
+- **Temps humain historique à remesurer** : environ 12 heures en route directe pour un intermédiaire, environ 17 heures avec l'ancienne séance complète ; environ 25 ou 38 heures pour un débutant.
 - **Prestige absolu** : au minimum 672 jours après le dernier Rhodium.
 - **Cursus musical officiel C1→C3** : 8 à 14 ans ; SEZAM en est un complément, jamais une certification.
