@@ -9,8 +9,8 @@ SEZAM est une borne d'arcade musicale adaptative, offline-first, en français, d
 ## 2. Démarrage en 5 minutes
 
 ```bash
-cd ~/Documents/music
-npm test                              # 580 contrôles moteur — DOIT afficher 0 échec
+cd ~/Documents/music/sezam-codex
+npm test                              # 34 000+ contrôles moteur — DOIT afficher 0 échec
 python3 -m http.server 4173           # puis ouvrir http://localhost:4173/index.html
 node tests/bot_completion.cjs         # joue la partie ENTIÈRE sur le vrai moteur (~3 s)
 ```
@@ -23,9 +23,9 @@ Remote `origin` configuré sur `https://github.com/YoGa0208/solado.git`. Toujour
 |---|---|
 | `index.html` | TOUTE l'application : HTML + CSS + JS vanilla, zéro framework, zéro build |
 | `prototype-solfege.html` | Copie **byte-identique** d'index.html (historique iOS ; un test impose l'égalité stricte) |
-| `sw.js` | Service worker : cache `sezam-solado-v29`, HTML réseau-d'abord, assets cache-d'abord |
+| `sw.js` | Service worker : cache `sezam-solado-v39`, HTML réseau-d'abord, assets cache-d'abord |
 | `manifest.json` | PWA installable (fond blanc, icônes SEZAM) |
-| `tests/engine.test.js` | 580 contrôles : charge le VRAI script d'index.html dans un bac à sable Node |
+| `tests/engine.test.js` | 34 000+ contrôles : charge le VRAI script d'index.html dans un bac à sable Node |
 | `tests/bot_completion.cjs` | Bot qui finit le jeu à 100 % (QA de profondeur/équilibrage) |
 | `FICHE-COMPLETE-JEU.md` | Fiche non technique : niveaux, règles, trois fins et temps humains |
 | `data/music-watch.json` | Brèves culturelles servies sur l'accueil (fallback embarqué dans index.html) |
@@ -42,7 +42,7 @@ Un seul gros `<script>` "use strict" (précédé d'un script qrcode-generator em
 1. **CSS** avec thèmes par variables : `:root` (Classique blanc) + `[data-theme=partition|nocturne|luthier]`. Palette : pétrole `#0f4c5c`, céramique `#7fb8c2`, or `#b8893a`.
 2. **Sécurité** : `esc()` — obligatoire sur TOUTE donnée utilisateur/importée avant `innerHTML`.
 3. **Dictionnaires** : `NOTES` (23 notes, `p` = position de portée, `midi`, `mn` = repère mnémotechnique), `PALIERS` (15 : P1–P10 puis boss B1–B5), `TIERS` (Zen, Bronze 2 notes/5 s, Argent 3/4 s, Vermeil 4/3 s, Or 5/2 s, Rhodium 6/1 s ; gemmes/étoiles `future:true`), `SEGMENT_STATES` (5 états), `PIECE_AMBITIONS` (4 ambitions), `CARDS`/`CARDS_TIER` (cartes-cadeaux culturelles).
-4. **État & normalisation** : `DB` reste l'état du joueur actif ; `ensureStructure(db)` est LE point unique de normalisation (migrations historiques + schéma 13 inclus — ne jamais supprimer ces branches). `sezam_players_v1` contient le registre léger ; IndexedDB conserve `save:<playerId>` pour chaque joueur. Les normaliseurs assainissent aussi les maps, séries, étoiles, brouillons quotidiens, suivi futur du cursus et pièces jointes de tout import.
+4. **État & normalisation** : `ensureStructure(db)` est le point unique de normalisation. La v39 utilise `_sezam.schema = 15`, `DB.v = 14` et ajoute trois racines protégées : `engagement`, `coachContext` et `calendar`. Leurs normaliseurs restent non destructifs : aucun sceau, check-in ou rendez-vous valide n'est tronqué. La migration d'un ancien `dailyProgress` ne s'exécute que si l'engagement v1 est absent.
 5. **Stockage 3 filets** : localStorage `solfegeProto1` + `_mirror` + `_checkpoint` forment le cache triple du joueur actif ; IndexedDB `soladoBackup` garde un coffre `save:<playerId>` pour chaque joueur et le registre familial ; le Gist GitHub optionnel est lui aussi isolé par joueur avec détection des divergences.
 6. **Moteurs** (voir §5) puis **écrans** : `scrHome` (cockpit), `scrEx` (jeu), `scrRes` (résultat + bilan partition), `scrStats`, `scrPieces` (liste), `scrPiece` (fiche d'une pièce), `scrKbd` (clavier, module isolé `KX`).
 7. **SVG** : `staffSVG` (portée de jeu) et `pieceMapSVG` (carte de conquête multi-systèmes, passages teintés par état, halos dorés sur notes travaillées, zones tactiles `data-seg`).
@@ -53,9 +53,19 @@ Un seul gros `<script>` "use strict" (précédé d'un script qrcode-generator em
 
 **Coach (`coachDecision`)** — hiérarchie VERROUILLÉE par tests : ≥2 erreurs récentes ou ≥2 notes en réparation → RÉPARATION ; pause longue (>5 j, `LONG_BREAK_MS`) → FLASH ; sinon SESSION. Le bouton JOUER passe par `startCoachPlay(force?)`.
 
-**Séance quotidienne (`dailyPlan` + `buildDailySession`)** — un seul bouton orchestre, dans le temps choisi, 20 % de rappel à froid, 60 % de cible, 10 % de réparation et 10 % de transfert. Chaque tranche persistante de 10 questions Cible admissibles devient une preuve de validation. Une tranche incomplète survit à la fin du chrono ; après validation, le moteur sélectionne le palier suivant, puis P1 du grade supérieur après B5. Le chronomètre se suspend en arrière-plan, n'ouvre plus de question après l'échéance et ne marque la séance terminée qu'après 10 vraies questions musicales. Une fin anticipée conserve un bilan partiel. Le tempo du niveau reste contrôlé pendant la cible. Une fois mission et transfert terminés, `dailyBonusTask` sert des eggs facultatifs au lieu de laisser un temps mort. `solveBonusEgg` attribue de petits XP une fois par jour sans toucher aux preuves, au SRS ou à la maîtrise.
+**Parcours d'acquisition** — contrat verrouillé : `COURSE_QUESTION_BUDGET = 25`, `COURSE_SERIES_PER_STEP = 3`, `COURSE_MAX_EXERCISES = 12`. Une étape avance seulement après trois séries parfaites de 25. Une erreur ne valide pas la série et n'efface pas les séries parfaites antérieures. Une seule note nouvelle est ajoutée à la fois. Le vocabulaire public est « item → étape → série » ; ne jamais afficher la propriété interne `cycles` comme « Cycle 9 ».
 
-**Progression paliers** — `checkValidation` : 3 séries consécutives avec ≤1 erreur au total, OU 5 séries dans la semaine avec ≤2, avec couverture de toutes les notes. Les questions de réparation/transfert sont exclues des preuves de validation. Un tier n'est débloqué que si le précédent est complet partout (`tierUnlocked`/`tierComplete`). SRS Leitner 5 boîtes (`srsReview`, délais 1/3/7/16/30 j) : seule une réussite réellement due augmente la boîte. Étoiles = revalidation calendaire après Rhodium ; les échéances cumulées sont J+7, J+37, J+127, J+307 et J+672.
+**Mission quotidienne** — `dailyCoachContext` combine humeur, temps choisi et prochain rendez-vous ; `adaptDailyDecision` peut convertir le parcours en consolidation ou transfert non validant. `freezeTodayMission` fige le contrat avant la première question. Le temps est un repère : il peut proposer l'arrêt, mais le sceau exige 25 questions réelles. `grantDailyMissionReward` refuse toute preuve inférieure à 25, attribue une seule fois +20 XP et, tous les dix jours accomplis, le badge `mission_ten`. Toutes les missions utilisent une question à la fois (`groupN = 1`) pour que 25 signifie bien 25 réponses données.
+
+**Défi hebdomadaire** — `reconcileEngagement` ouvre une semaine après sept dates distinctes du lundi au dimanche. `startWeeklyChallenge` lance 25 questions. `grantWeeklyChallengeResult` gagne la Couronne à partir de 20/25, la Couronne d'or à 25/25 et +100 XP une seule fois. Un échec conserve l'accès, les sept sceaux et le meilleur score ; un défi non joué reste disponible après la semaine.
+
+**Célébration et sauvegarde** — la récompense est persistée avant `showMissionCelebration`. Si `save()` échoue, XP et engagement sont remis à leur état précédent et aucune célébration trompeuse n'est montrée. Toute mission ou victoire hebdomadaire crée ensuite un point complet `daily_complete` ou `weekly_complete`. La Vitrine des missions relit durablement les badges.
+
+**Navigation universelle** — `btnGlobalHome` apparaît sur tout écran autre que l'accueil. `btnOverlayBack`, `btnOverlayHome` et `btnOverlaySave` vivent hors de `cardBox`, donc aucun remplacement de contenu ne peut les supprimer. `universalHome` arrête proprement timers, clavier et scènes transitoires, sauvegarde, puis revient à `scrHome`.
+
+**Humeur et calendrier** — Concentré, Calme, Joueur et Fatigué, avec 10/15/20/30 minutes. Fatigué limite la proposition à 15 minutes et interdit la validation d'une nouveauté ; un rendez-vous proche peut cibler une œuvre, sans jamais introduire de note hors du niveau. Les œuvres intégrées et personnelles sont sélectionnables. Un retrait est réversible, l'export `.ics` n'est qu'une copie, et aucun endpoint d'IA ne reçoit ces données.
+
+Le moteur historique des paliers, le SRS Leitner et les étoiles restent présents pour les modes arcade et les migrations. Ils ne remplacent jamais le contrat d'acquisition 25/25 × 3.
 
 **Partition (le cœur récent)** — `PIECES_BUILTIN` : 8 pièces jouables du domaine public, 30 passages et 71 mesures avec `melody.measures` (tableaux d'ids NOTES, mesure par mesure) + 4 pièces d'écoute (quiz « premier regard » seulement). Chaque passage (`segments[]`) porte `mesFrom/mesTo` (1-based), un `level` (palier), une main, un focus. Règles clés :
 
@@ -70,17 +80,22 @@ Un seul gros `<script>` "use strict" (précédé d'un script qrcode-generator em
 
 ## 6. Invariants — à ne JAMAIS casser (tous testés)
 
-1. `index.html` strictement égal à `prototype-solfege.html` → `cp index.html prototype-solfege.html` avant tout commit.
-2. `APP_VERSION` (index.html) == numéro de `CACHE_NAME` (sw.js). Bump LES DEUX à chaque livraison (actuel : v29 / `sezam-solado-v29`).
-3. Clés de stockage intouchables : `solfegeProto1*`, `soladoBackup`, `sezam_players_v1`, gists v29 `sezam-progress-v2-<userId>.json` (+ lecture/migration de `sezam-progress-<userId>.json`, `sezam-progress.json` et `solado-save.json`). Une progression ne se réinitialise JAMAIS.
-4. Toute note d'un passage appartient au palier annoncé par ce passage (garde-fou pédagogique).
-5. Bibliothèque : domaine public uniquement, mélodies JUSTES (l'incipit d'Ode main gauche est verrouillé par test — on a déjà eu un mode lydien accidentel).
-6. `esc()` sur toute donnée non maîtrisée avant `innerHTML` ; ids passés au SVG filtrés par `cleanId`.
-7. Le token de synchro n'apparaît jamais dans exports/QR/Gist/cloudDocument.
-8. Hiérarchie du coach intouchable ; un appareil vierge n'écrase jamais une progression distante et deux appareils divergents déclenchent un conflit sans remplacement (`syncDecision`).
-9. Pas de dépendance d'exécution, pas de build, offline complet.
-10. Ton éditorial : journaliste scientifique, jamais scolaire (des tests interdisent le retour des libellés type « Culture générale », « En bref. », dates SEZAM·04/07).
-11. Zen→Rhodium décrit l'automatisation de lecture, jamais les cycles officiels. Aucun pourcentage, certification ou fin de Cycle 1 n'est affiché sans preuves multidomaines et validation humaine appropriée.
+1. `index.html` strictement égal à `prototype-solfege.html` avant tout commit.
+2. `APP_VERSION` == `v39` et `CACHE_NAME` == `sezam-solado-v39`.
+3. Schémas de livraison : `_sezam.schema = 15`, `DB.v = 14`, `GIST_CLOUD_SCHEMA = 4`.
+4. Clés de stockage intouchables : `solfegeProto1*`, `soladoBackup`, `sezam_players_v1`, gists historiques et actuels. Une progression ne se réinitialise JAMAIS.
+5. Toute note d'un passage appartient au palier annoncé par ce passage (garde-fou pédagogique).
+6. Bibliothèque : domaine public uniquement, mélodies JUSTES (l'incipit d'Ode main gauche est verrouillé par test — on a déjà eu un mode lydien accidentel).
+7. `esc()` sur toute donnée non maîtrisée avant `innerHTML` ; ids passés au SVG filtrés par `cleanId`.
+8. Le token de synchro n'apparaît jamais dans exports/QR/Gist/cloudDocument.
+9. Hiérarchie du coach intouchable ; un appareil vierge n'écrase jamais une progression distante et deux appareils divergents déclenchent un conflit sans remplacement (`syncDecision`).
+10. Pas de dépendance d'exécution, pas de build, offline complet.
+11. Ton éditorial : journaliste scientifique, jamais scolaire (des tests interdisent le retour des libellés type « Culture générale », « En bref. », dates SEZAM·04/07).
+12. Zen→Rhodium décrit l'automatisation de lecture, jamais les cycles officiels. Aucun pourcentage, certification ou fin de Cycle 1 n'est affiché sans preuves multidomaines et validation humaine appropriée.
+13. Une récompense quotidienne exige 25 questions ; elle est idempotente et ne constitue jamais une preuve d'acquisition.
+14. L'humeur et le calendrier peuvent changer la séance proposée, jamais les critères 25/25 × 3.
+15. Aucun rendez-vous, badge ou point de sauvegarde existant n'est supprimé ou écrasé automatiquement.
+16. Les contrôles Accueil/Retour/Sauvegarder des fenêtres restent statiques hors de `cardBox`.
 
 ## 7. Tests — comment ça marche
 
@@ -92,7 +107,7 @@ Un seul gros `<script>` "use strict" (précédé d'un script qrcode-generator em
 
 ## 9. Synchronisation (optionnelle, par joueur)
 
-Trois niveaux : cache local immédiat → coffre IndexedDB par joueur → Gist secret GitHub par joueur. Le Gist n'est pas indexé mais reste accessible avec son lien et possède un historique. Chaque profil a sa clé locale `sezam_sync:<playerId>`, son token mémoire et son fichier v29 `sezam-progress-v2-<userId>.json`. La v29 lit encore le fichier v28, puis écrit le v2 à côté sans supprimer l'ancien : un onglet v28 resté ouvert ne peut donc pas effacer le suivi du cursus. Le joueur colle un token minimal (scope gist), gardé uniquement jusqu'au rechargement ; `syncEnsure` retrouve ou crée le Gist correspondant. Les pièces jointes et le journal d'événements ne partent pas dans le cloud. Toute réponse réseau capture le joueur et l'époque du changement : si le joueur actif a changé, la réponse est ignorée. Chaque envoi fait GET → comparaison → PATCH ; un distant illisible n'est jamais écrasé et une divergence entre deux appareils bloque le remplacement en demandant d'abord des exports. `looksLikeToken` n'accepte que `ghp_` et `github_pat_`.
+Trois niveaux : cache local immédiat → coffre IndexedDB par joueur → Gist secret GitHub par joueur. Le cloud schema 4 inclut `engagement`, `coachContext` et `calendar` ; ces données ne quittent donc l'appareil que si le joueur active explicitement la synchro GitHub. Aucun endpoint d'IA ne reçoit l'humeur ou les rendez-vous. Le Gist n'est pas indexé mais reste accessible avec son lien et possède un historique. Les pièces jointes et le journal d'événements ne partent pas dans le cloud. Toute réponse réseau tardive d'un ancien joueur est ignorée et une divergence entre appareils bloque le remplacement.
 
 ## 10. Veille culturelle
 
@@ -108,7 +123,7 @@ Le workflow Pages est prêt et testé. La livraison passe par une branche et une
 
 ## 13. Chiffres utiles pour décider (partie témoin, détail dans PARTIE-TEMOIN.md)
 
-Finir la campagne et la bibliothèque = 90 validations + 30 passages Maîtrisés : 330 séries, 3 208 questions et 9 711 réponses dans la partie parfaite de référence. Le plancher mécanique mesuré par le bot est 2 356,48 s, soit 39,27 min ; la maîtrise des passages impose néanmoins au moins 20 h de calendrier. Estimation humaine : route directe 10–14 h pour un intermédiaire ou 22–30 h pour un débutant ; séance quotidienne complète 15–20 h ou 35–45 h. Le prestige absolu demande 75 révisions et arrive au plus tôt 672 jours après le dernier Rhodium. Voir `FICHE-COMPLETE-JEU.md` pour les hypothèses et la conversion en jours de pratique.
+La partie témoin historique v29 combinait 90 validations et 30 passages Maîtrisés : 330 séries, 3 208 écrans-question et 9 711 réponses. Son plancher mécanique de 2 356,48 s, soit 39,27 min, ainsi que ses estimations humaines de 10–14 h à 35–45 h sont conservés comme repères comparatifs, pas comme minimums v39. Le contrat v39 impose déjà 270 séries d'acquisition de 25, soit 6 750 réponses avant réparations et bibliothèque ; il doit faire l'objet d'une nouvelle partie témoin complète. La maîtrise des passages impose toujours au moins 20 h de calendrier et le prestige absolu arrive au plus tôt 672 jours après le dernier Rhodium. Voir `FICHE-COMPLETE-JEU.md` pour les hypothèses historiques.
 
 ## 14. Roadmap proposée (non engagée)
 

@@ -193,12 +193,12 @@ function loadEngine(runtime) {
     "normalizeQuestion", "normalizeDay", "normalizeSegmentState", "normalizeNoteStat", "normalizeConfusions", "normalizeRepairItem", "normalizeRepairQueue", "normalizeEasterEggs", "normalizeSeriesRecord", "normalizeTierProgress", "normalizeStar", "normalizeSeen", "normalizeKbdStats", "markDay", "activeDayKeys", "streak", "todayStr",
     "longestStreak", "weekStats", "practiceTotals", "trophyDefs", "shownTrophyDefs", "trophiesEarned", "BONUS_EGG_DEFS", "awardEasterEgg",
     "writtenLabelOf", "kbdLabelOf", "recoveryCodeInfo", "applyRecoveryCode",
-    "trainingFocusText", "stateTimestamp", "stateScore", "shouldAdopt", "backupToDb", "THEME_MODES", "themeModeLabel", "watchHomeItems",
-    "PROFILE_INSTRUMENTS", "PROFILE_PATHS", "PROFILE_LEVELS", "COACH_LEVELS", "coachLevelById", "coachLevelForCourse", "displayedCoachLevelId", "saveCoachLevel", "PRACTICE_DOMAINS", "normalizeProfile", "normalizeDailyProgress", "normalizeValidationDrafts", "validationDraftKey",
+    "trainingFocusText", "stateTimestamp", "stateScore", "shouldAdopt", "backupToDb", "THEME_MODES", "themeModeLabel", "watchHomeItems", "memoryLevelContext", "renderStats",
+    "PROFILE_INSTRUMENTS", "PROFILE_PATHS", "PROFILE_LEVELS", "COACH_LEVELS", "coachLevelById", "coachLevelForCourse", "displayedCoachLevelId", "saveCoachLevel", "PRACTICE_DOMAINS", "normalizeProfile", "normalizeDailyProgress", "normalizeValidationDrafts", "validationDraftKey", "DAILY_MISSION_QUESTIONS", "DAILY_REWARD_XP", "WEEKLY_REWARD_XP", "DAILY_MOODS", "DAILY_TIME_CHOICES", "APPOINTMENT_TYPES", "MAX_CALENDAR_APPOINTMENTS", "normalizeCoachContext", "normalizeAppointment", "normalizeTrainingCalendar", "normalizeEngagement", "reconcileEngagement", "completedMissionKeys",
     "CURRICULUM_CATALOG_VERSION", "CURRICULUM_SCOPE", "CURRICULUM_EVIDENCE_TYPES", "CURRICULUM_PROGRESS_STATUSES", "normalizeCurriculumProof", "normalizeCurriculumState", "validCurriculumCatalog", "curriculumCompetency", "curriculumStatusFromProofs", "setCurriculumCatalog", "backfillCurriculumFromGame", "curriculumScopeHtml",
     "profileStartPalier", "applyProfileStartPlacement", "profileStartText", "coachPalier", "coachDecision", "repairPool", "fragileNoteIds", "globalPrecision", "sessionCountToday",
-    "dailyPlan", "splitPlanMinutes", "targetCadence", "dailyMission", "dailyFocusDomain", "DAILY_BLOCK_IDS", "runDailyBlock",
-    "buildDailySession", "dailyPhaseAt", "dailyPhasePool", "dailyPhaseLabel", "dailyTransferReadyForBonus", "dailyBonusTask", "startDailySession", "dailyDraftRecords", "storeDailyDraft", "nextCampaignTarget", "configureDailyCampaignTarget", "advanceDailyCampaignTarget", "recordDailyTargetEvidence", "dailyActiveElapsed", "pauseDailySession", "resumeDailySession", "pauseForegroundSession", "resumeForegroundSession", "dailyScoredCount", "dailySessionQualified",
+    "dailyPlan", "splitPlanMinutes", "targetCadence", "dailyMission", "dailyFocusDomain", "DAILY_BLOCK_IDS", "runDailyBlock", "appointmentTimestamp", "activeAppointments", "nextTrainingAppointment", "dailyCoachContext", "ensureTodayMission", "freezeTodayMission", "setDailyCheckIn", "pendingWeeklyChallenge", "adaptDailyDecision", "dailyDecision", "grantDailyMissionReward", "grantWeeklyChallengeResult", "startWeeklyChallenge", "openTrainingCalendar", "exportTrainingCalendar",
+    "buildDailySession", "dailyPhaseAt", "dailyPhasePool", "dailyPhaseLabel", "dailyTransferReadyForBonus", "dailyBonusTask", "startDailySession", "dailyDraftRecords", "storeDailyDraft", "nextCampaignTarget", "configureDailyCampaignTarget", "advanceDailyCampaignTarget", "recordDailyTargetEvidence", "dailyActiveElapsed", "pauseDailySession", "resumeDailySession", "pauseForegroundSession", "resumeForegroundSession", "dailyScoredCount", "dailySessionQualified", "universalHome", "overlayBack", "closeOverlay",
     "pendingRepairIds", "responseKey", "confusedNoteId", "recordConfusion", "scheduleRepair", "dueRepairForSession", "repairBlockedIds", "ordinaryQuestionPool", "nearTransferId", "advanceRepair",
     "validationRecordFromQuestions", "questionTask", "completeMission", "solveBonusEgg", "startRevision", "representativeNoteSample", "starReviewSample", "starReviewCoverage", "starReviewRepairsClear", "startStarReview", "timeUp", "updateDailyClock", "clearQTimers", "clearDailyTimer",
     "recentErrorsCount", "longPauseSignal", "timeSinceLastSession", "lastPracticeAt", "LONG_BREAK_MS",
@@ -811,23 +811,23 @@ ok(/stabilit/i.test(starMsg), "le message du niveau maximum parle de stabilité 
 group("Bilan quotidien — distinction séance complète / sans transfert (F20)");
 freshDB();
 const dQ = E.buildDailySession({ kind: "session", reason: "test", palier: E.PALIERS[0], pool: ["sol4","la4","si4"] }, Date.now());
-E.beginSerie({ sessionMode: "daily", openEnded: true, palier: E.PALIERS[0], pool: ["sol4","la4","si4"], mode: "zen", groupN: 1, daily: dQ, cold: false });
+E.beginSerie({ sessionMode: "daily", openEnded: true, palier: E.PALIERS[0], pool: ["sol4","la4","si4"], mode: "zen", groupN: 1, daily: dQ, cold: false, engagementDate:E.todayStr() });
 let dEx = E.getEX();
-for (let i = 0; i < 10; i++) dEx.questionRecords.push({ phase: "cible", role: "baseline", ok: true, ids: ["sol4"] });
-dEx.phaseStats = { rappel:{n:0,ok:0}, cible:{n:10,ok:10}, reparation:{n:0,ok:0}, transfert:{n:0,ok:0} };
-dEx.hist = new Array(10).fill(true); dEx.ok = 10; dEx.i = 10;
+for (let i = 0; i < 25; i++) dEx.questionRecords.push({ phase: "cible", role: "baseline", ok: true, ids: ["sol4"] });
+dEx.phaseStats = { rappel:{n:0,ok:0}, cible:{n:25,ok:25}, reparation:{n:0,ok:0}, transfert:{n:0,ok:0} };
+dEx.hist = new Array(25).fill(true); dEx.ok = 25; dEx.i = 25; dEx.promptCount=25;
 E.finishSerie();
-ok(String(E.getEl("resSub").textContent || "").indexOf("sans transfert") >= 0, "dix questions sans transfert : le titre distingue la pratique de la séance complète");
+ok(String(E.getEl("resSub").textContent || "").indexOf("sans transfert") >= 0, "25 questions sans transfert : le titre distingue la mission complète");
 ok(String(E.getEl("resSolado").textContent || "").indexOf("transféré") < 0, "le bilan ne prétend jamais avoir transféré quand le transfert n'a pas eu lieu");
-ok(!!(E.getDB().dailyProgress || {})[E.todayStr()], "la pratique reste marquée faite : seul le vocabulaire change (la règle des 10 questions est inchangée)");
+ok(!!(E.getDB().dailyProgress || {})[E.todayStr()], "les 25 questions terminées créent le sceau même sans transfert");
 freshDB();
 const dQ2 = E.buildDailySession({ kind: "session", reason: "test", palier: E.PALIERS[0], pool: ["sol4","la4","si4"] }, Date.now());
-E.beginSerie({ sessionMode: "daily", openEnded: true, palier: E.PALIERS[0], pool: ["sol4","la4","si4"], mode: "zen", groupN: 1, daily: dQ2, cold: false });
+E.beginSerie({ sessionMode: "daily", openEnded: true, palier: E.PALIERS[0], pool: ["sol4","la4","si4"], mode: "zen", groupN: 1, daily: dQ2, cold: false, engagementDate:E.todayStr() });
 dEx = E.getEX();
-for (let i = 0; i < 10; i++) dEx.questionRecords.push({ phase: "cible", role: "baseline", ok: true, ids: ["sol4"] });
+for (let i = 0; i < 24; i++) dEx.questionRecords.push({ phase: "cible", role: "baseline", ok: true, ids: ["sol4"] });
 dEx.questionRecords.push({ phase: "transfert", role: "transfer", ok: true, ids: ["sol4"] });
-dEx.phaseStats = { rappel:{n:0,ok:0}, cible:{n:10,ok:10}, reparation:{n:0,ok:0}, transfert:{n:1,ok:1} };
-dEx.hist = new Array(11).fill(true); dEx.ok = 11; dEx.i = 11;
+dEx.phaseStats = { rappel:{n:0,ok:0}, cible:{n:24,ok:24}, reparation:{n:0,ok:0}, transfert:{n:1,ok:1} };
+dEx.hist = new Array(25).fill(true); dEx.ok = 25; dEx.i = 25; dEx.promptCount=25;
 dEx.transferReached = true; // scénario synthétique : le moteur réel pose ce drapeau dans completeQuestionMeta
 E.finishSerie();
 ok(String(E.getEl("resSub").textContent || "").indexOf("sans transfert") < 0, "transfert atteint : le titre redevient « Séance du jour » sans mention");
@@ -1508,6 +1508,14 @@ Memory.loadMemoryEnvelope(memoryCreate1.meta, function(raw) { memoryEnvelopeRaw1
 const memoryEnvelope1 = JSON.parse(memoryEnvelopeRaw1);
 eq(memoryEnvelope1.schema, Memory.MEMORY_HISTORY_SCHEMA, "l'enveloppe reprend le schéma d'historique");
 ok(Memory.validateMemoryEnvelope(memoryEnvelopeRaw1, memoryCreate1.meta).ok, "l'enveloppe intacte franchit la validation publique");
+const largeOverlayEnvelope=JSON.parse(memoryEnvelopeRaw1),largeOverlayRuntime=JSON.parse(largeOverlayEnvelope.runtimeRaw);
+largeOverlayRuntime.overlayOn=true;largeOverlayRuntime.overlayType="training_calendar";
+largeOverlayRuntime.overlayControls=Array.from({length:405},function(_,index){return {index:index,id:"calendar-control-"+index,tag:"button",disabled:false};});
+largeOverlayEnvelope.runtimeRaw=JSON.stringify(largeOverlayRuntime);
+const largeOverlayMeta=Object.assign({},memoryCreate1.meta,{runtimeBytes:Memory.utf8ByteLength(largeOverlayEnvelope.runtimeRaw),runtimeSha256:Memory.memorySha256(largeOverlayEnvelope.runtimeRaw)});
+largeOverlayEnvelope.meta=Object.assign({},largeOverlayEnvelope.meta,{runtimeBytes:largeOverlayMeta.runtimeBytes,runtimeSha256:largeOverlayMeta.runtimeSha256});
+ok(Memory.validateMemoryEnvelope(JSON.stringify(largeOverlayEnvelope),largeOverlayMeta).ok,
+  "une fenêtre Calendrier de plus de 400 contrôles reste intégralement restaurable");
 eq(memoryEnvelope1.stateRaw, memoryRaw1, "le premier point contient la chaîne JSON exacte, octet pour octet");
 eq(JSON.parse(memoryEnvelope1.stateRaw).pieces[0].attachment, memoryAttachment, "la pièce jointe complète survit dans le point exact");
 eq(JSON.parse(memoryEnvelope1.stateRaw).futureField, Memory.getDB().futureField, "un champ d'une version future est conservé sans normalisation destructive");
@@ -1720,7 +1728,7 @@ E.getDB().noteStats.sol4=E.normalizeNoteStat({v:3,e:0,coldV:1,coldE:0,last:40,la
 const cloud = E.cloudDocument();
 ok(cloud.progress && cloud.scores && cloud.settings && cloud.timestamp, "cloudDocument produit le fichier unique progress/scores/settings/timestamp");
 eq(cloud.schema, E.GIST_CLOUD_SCHEMA, "l'enveloppe cloud est versionnée pour protéger les nouveaux champs");
-eq(E.GIST_CLOUD_SCHEMA, 3, "la v38 protège niveau Coach et progression ut contre une réécriture par une ancienne application");
+eq(E.GIST_CLOUD_SCHEMA, 4, "la v39 protège missions, humeur et calendrier contre une réécriture par une ancienne application");
 ok(cloud.progress.curriculum && cloud.progress.curriculum.catalogVersion === E.CURRICULUM_CATALOG_VERSION, "le suivi de cursus voyage dans la sauvegarde cloud");
 eq(cloud.progress.curriculum.progress["c1-reading-landmarks"].proofs.recognition.attempts,3,"une nouvelle activité alimente immédiatement l'export cloud, sans ouvrir les stats ni recharger");
 ok(JSON.stringify(cloud).indexOf("tok_SECRET_123") < 0, "le token n'est jamais dans le document cloud");
@@ -1799,7 +1807,7 @@ eq(E.getDB().profile.parcours, "libre", "ancien joueur : parcours libre par déf
 eq(E.getDB().profile.dailyMinutes, 20, "durée de séance par défaut : 20 minutes");
 eq(E.getDB().profile.daysPerWeek, 5, "cadence par défaut : 5 jours par semaine");
 eq(E.getDB().profile.domains, E.PRACTICE_DOMAINS.map(d => d.id), "les six domaines sont proposés par défaut");
-eq(E.getDB()._sezam.schema, 14, "schéma local v14 pour le niveau du Coach et la clé d’ut isolée");
+eq(E.getDB()._sezam.schema, 15, "schéma local v15 pour les missions, badges, humeur et calendrier");
 eq(E.getDB().profile.coachLevel, "", "un ancien joueur n’est jamais renvoyé de force au niveau débutant");
 eq(E.COACH_LEVELS.map(function(level){return level.courseId;}),["sol","fa","ut"],"les trois niveaux du Coach ciblent respectivement sol, fa et ut 3e");
 const sanitizedProfile = E.normalizeProfile({
@@ -1909,7 +1917,7 @@ E.timeUp(timedQid);
 eq(E.getEX().hist,[false],"le délai Bronze déclenche réellement la correction de la question cible");
 timedDaily.endAt=Date.now()-1;
 E.updateDailyClock();
-eq(E.getEl("btnQuit").textContent,"Terminer maintenant","à l'échéance, le bouton annonce clairement la fin");
+eq(E.getEl("btnQuit").textContent,"Arrêter et garder 2/25","à l'échéance indicative, le joueur voit que la mission de 25 questions reste incomplète");
 E.getEl("btnQuit").onclick();
 ok(E.getEX().done===true&&!(E.getDB().dailyProgress[E.todayStr()]||{}).session,
   "une seule réponse produit un bilan partiel sans déclarer mensongèrement la séance terminée");
@@ -1962,12 +1970,12 @@ eq(E.getEX().questionDeadlineAt,timedDeadline+5000,"une notification ne consomme
 E.clearQTimers();E.haltEX();
 freshDB();
 const completeStart=Date.now(), completeDaily=E.buildDailySession(E.coachDecision(),completeStart);
-E.beginSerie({sessionMode:"daily",palier:E.PALIERS[0],pool:E.PALIERS[0].notes,mode:"zen",groupN:1,openEnded:true,daily:completeDaily,cold:false});
-E.getEX().questionRecords=Array.from({length:10},(_,i)=>({phase:"cible",role:"baseline",ok:true,ids:[E.PALIERS[0].notes[i%3]]}));
-E.getEX().hist=Array(10).fill(true); E.getEX().ok=10; E.getEX().i=10; E.getEX().stopRequested=true;
+E.beginSerie({sessionMode:"daily",palier:E.PALIERS[0],pool:E.PALIERS[0].notes,mode:"zen",groupN:1,openEnded:true,daily:completeDaily,cold:false,engagementDate:E.todayStr()});
+E.getEX().questionRecords=Array.from({length:25},(_,i)=>({phase:"cible",role:"baseline",ok:true,ids:[E.PALIERS[0].notes[i%3]]}));
+E.getEX().hist=Array(25).fill(true); E.getEX().ok=25; E.getEX().i=25; E.getEX().promptCount=25; E.getEX().stopRequested=true;
 E.getEl("btnQuit").onclick();
 ok(E.getDB().dailyProgress[E.todayStr()].session===true,
-  "dix vraies questions suffisent à marquer honnêtement la séance quotidienne terminée");
+  "25 vraies questions marquent honnêtement la mission quotidienne terminée");
 E.clearQTimers(); E.clearDailyTimer();
 freshDB();
 ["sol4","la4","si4"].forEach((id,i)=>{
@@ -1985,11 +1993,15 @@ const bonusStart=Date.now(), bonusDaily=E.buildDailySession(E.coachDecision(),bo
 bonusDaily.blocks.slice(0,3).forEach(b => { b.endAt=bonusStart-1; });
 bonusDaily.blocks[3].endAt=bonusStart+60000; bonusDaily.endAt=bonusStart+60000;
 bonusDaily.focusDomain="lecture"; bonusDaily.transferScript=[]; bonusDaily.transferReads=3;
-ok(E.dailyTransferReadyForBonus(bonusDaily)===true,"après le transfert prévu, le temps restant bascule vers l'atelier bonus");
+ok(E.dailyTransferReadyForBonus(bonusDaily)===false,"un transfert court ne peut jamais remplacer les 25 vraies questions par des bonus");
 E.beginSerie({sessionMode:"daily",palier:E.PALIERS[0],pool:E.PALIERS[0].notes,mode:"zen",groupN:1,openEnded:true,daily:bonusDaily,cold:false});
-eq(E.getEX().qtype,"bonus","la fin de séance propose immédiatement une activité bonus au lieu d'un temps mort");
-ok(/Atelier bonus/.test(E.getEl("exMode").textContent),"le chronomètre nomme clairement le temps bonus au lieu de laisser croire que la séance attend");
-eq(E.getEX().currentTask.bonusKind,"clef-fa","le premier mystère permet de remettre la clé de fa");
+eq(E.getEX().qtype,"lect","la mission continue avec de vraies lectures tant que le contrat de 25 n'est pas rempli");
+ok(/0\/25/.test(E.getEl("exMode").textContent),"le chronomètre affiche le contrat de 25 questions pendant la poursuite de la mission");
+E.getEX().promptCount=25;
+E.getEX().questionRecords=new Array(25).fill(null).map(function(){return {phase:"transfert",role:"transfer",ok:true,ids:["sol4"]};});
+ok(E.dailyTransferReadyForBonus(bonusDaily)===true,"le moteur bonus ne devient éligible qu'une fois les 25 questions réellement comptées");
+E.getEX().currentTask=E.dailyBonusTask(bonusDaily);E.getEX().qtype="bonus";
+eq(E.getEX().currentTask.bonusKind,"clef-fa","le premier mystère facultatif reste disponible hors du contrat quotidien");
 const bonusI=E.getEX().i, bonusHist=E.getEX().hist.length, bonusXp=E.getDB().xp;
 E.solveBonusEgg();
 eq(E.getDB().xp,bonusXp+3,"remettre spontanément la clé de fa rapporte le petit bonus prévu");
@@ -1998,8 +2010,8 @@ eq([E.getEX().i,E.getEX().hist.length],[bonusI,bonusHist],"un egg ne compte jama
 ok(E.awardEasterEgg("clef-fa").awarded===false&&E.getDB().xp===bonusXp+3,"un même egg ne peut être récolté qu'une fois par jour");
 ok(E.compactSave().indexOf('"easterEggs"')>=0&&E.cloudDocument().progress.easterEggs.total===1,
   "les secrets gagnés suivent les sauvegardes locale, QR et cloud");
-E.nextQuestion();
-eq(E.getEX().currentTask.bonusKind,"ligne-or","les mystères tournent pour investir le temps restant sans répétition vide");
+const nextBonusTask=E.dailyBonusTask(bonusDaily);
+eq(nextBonusTask.bonusKind,"ligne-or","les mystères facultatifs continuent de tourner sans altérer la mission");
 E.clearQTimers(); E.clearDailyTimer(); E.haltEX();
 freshDB();
 E.getDB().easterEggs=E.normalizeEasterEggs({byId:{"clef-fa":2},total:2});
@@ -2008,6 +2020,328 @@ E.getDB().easterEggs=E.normalizeEasterEggs({byId:{"clef-fa":3},total:3});
 ok(E.shownTrophyDefs().some(t => t.id==="copiste"&&t.on),"trois clés remises révèlent le trophée secret Œil du copiste");
 ok(idx.indexOf('data-plan-action') < 0 && idx.indexOf('$("btnPlayNow").onclick=startDailySession') >= 0,
   "un seul bouton principal lance le parcours calibré");
+
+/* 15bis) Missions v39 — navigation, adaptation, récompenses et séparation pédagogique */
+group("v39 — retour universel sur tous les écrans et toutes les fenêtres");
+const globalHomePos=idx.indexOf('id="btnGlobalHome"'), overlayBackPos=idx.indexOf('id="btnOverlayBack"');
+const overlayHomePos=idx.indexOf('id="btnOverlayHome"'), overlayCardPos=idx.indexOf('id="cardBox"');
+ok(globalHomePos>=0&&idx.indexOf('#btnGlobalHome:not([hidden])')>=0,
+  "un bouton Accueil global et fixe est présent hors de la page d’accueil");
+ok(overlayBackPos>=0&&overlayHomePos>=0&&overlayBackPos<overlayCardPos&&overlayHomePos<overlayCardPos,
+  "Retour et Accueil appartiennent à la barre permanente de la fenêtre, hors du contenu remplaçable");
+ok(idx.indexOf('.dialogTools button')>=0&&idx.indexOf('min-height:44px',idx.indexOf('.dialogTools button'))>=0,
+  "les commandes universelles de fenêtre gardent une cible tactile d’au moins 44 px");
+freshDB();
+if(E.getEX())E.haltEX();E.clearQTimers();E.clearDailyTimer();
+E.getEl("overlay").classList.add("on");E.getEl("cardBox").innerHTML="<h2>Fenêtre quelconque</h2>";
+ok(E.overlayBack()===true&&!E.getEl("overlay").classList.contains("on"),
+  "Retour ferme aussi une fenêtre dont le contenu vient d’être remplacé");
+E.getEl("overlay").classList.add("on");E.getEl("btnGlobalHome").hidden=false;
+ok(E.universalHome()===true&&E.getEl("scrHome").classList.contains("active"),
+  "Accueil ramène effectivement à l’écran principal depuis n’importe quel écran");
+ok(!E.getEl("overlay").classList.contains("on")&&E.getEl("btnGlobalHome").hidden===true,
+  "le retour universel referme la fenêtre et masque son propre bouton une fois à l’accueil");
+
+group("v39 — humeur et calendrier adaptent sans effacer ni injecter du HTML");
+freshDB();
+const moodNow=new Date(2026,6,15,10,0,0,0).getTime(), moodKey="2026-07-15";
+E.getDB().coachContext=E.normalizeCoachContext({version:1,checkIns:{
+  "2026-07-15":{mood:"fatigue",availableMinutes:30,updatedAt:moodNow}
+}});
+let coachContext=E.dailyCoachContext(moodNow);
+eq([coachContext.mood,coachContext.minutes],["fatigue",15],
+  "une humeur fatiguée ramène une demande de 30 minutes à une mission familière de 15 minutes");
+const unsafeAppointment=E.normalizeAppointment({
+  id:"appt_safe_1",title:'<img src=x onerror="alert(1)"> Répétition',type:"concert",
+  date:"2026-07-16",time:"10:00",duration:90,focusDomain:"rythme",createdAt:moodNow,updatedAt:moodNow,cancelledAt:0
+});
+ok(!!unsafeAppointment&&unsafeAppointment.title.indexOf("<img")===0,
+  "le calendrier conserve fidèlement le titre utilisateur dans les données");
+eq(E.normalizeAppointment({id:"id avec espaces",date:"2026-07-16",time:"10:00"}),null,
+  "un identifiant de rendez-vous dangereux est rejeté");
+eq(E.normalizeAppointment({id:"appt_bad",date:"2026-02-30",time:"25:99"}),null,
+  "une date ou une heure impossible n’entre jamais dans le calendrier");
+E.getDB().calendar=E.normalizeTrainingCalendar({version:1,appointments:[unsafeAppointment,
+  Object.assign({},unsafeAppointment,{id:"appt_cancel_1",title:"Ancien cours",cancelledAt:moodNow})]});
+eq(E.getDB().calendar.appointments.length,2,
+  "un rendez-vous retiré reste conservé aux côtés du rendez-vous actif");
+ok(E.getDB().calendar.appointments.some(function(row){return row.id==="appt_cancel_1"&&row.cancelledAt===moodNow;}),
+  "le retrait est non destructif et donc restaurable");
+coachContext=E.dailyCoachContext(moodNow);
+ok(coachContext.appointment&&coachContext.appointment.id==="appt_safe_1"&&coachContext.focusDomain==="integration",
+  "un concert à moins de 72 heures oriente la mission vers l’intégration musicale");
+E.openTrainingCalendar();
+ok(E.getEl("cardBox").innerHTML.indexOf("<img src=x")<0&&E.getEl("cardBox").innerHTML.indexOf("&lt;img")>=0,
+  "le titre du rendez-vous est échappé au rendu et ne devient jamais une balise active");
+const frozenMission=E.freezeTodayMission(moodNow);
+ok(!!frozenMission&&frozenMission.startedAt===moodNow,
+  "le contrat quotidien est figé et sauvegardé au démarrage");
+E.getDB().coachContext.checkIns[moodKey]={mood:"joueur",availableMinutes:30,updatedAt:moodNow+1};
+E.getDB().calendar.appointments=[];
+const frozenContext=E.dailyCoachContext(moodNow);
+eq([frozenContext.frozen,frozenContext.mood,frozenContext.minutes,frozenContext.focusDomain],
+  [true,"fatigue",15,"integration"],
+  "une mission commencée garde exactement son humeur, son temps et sa priorité malgré les changements ultérieurs");
+const savedV39=JSON.parse(E.compactSave());
+ok(savedV39.coachContext&&savedV39.calendar&&savedV39.engagement,
+  "humeur, rendez-vous et récompenses font partie de la sauvegarde compacte");
+const cloudV39=E.cloudDocument();
+ok(cloudV39.progress.engagement&&cloudV39.progress.coachContext&&cloudV39.progress.calendar,
+  "humeur, calendrier et assiduité suivent aussi la sauvegarde cloud");
+freshDB();
+const courseBeforeMood=JSON.parse(JSON.stringify(E.getDB().courseProgress)), baseCourse=E.courseDecision();
+const gentleDecision=E.adaptDailyDecision(baseCourse,{mood:"fatigue",minutes:15,focusDomain:"lecture",appointment:null,hoursToAppointment:Infinity,frozen:false,reason:"test"});
+ok(gentleDecision.kind==="session"&&gentleDecision.moodAdapted===true&&gentleDecision.mode==="libre",
+  "l’humeur fatiguée transforme le jour en consolidation sans présenter cette séance comme une acquisition");
+eq(E.getDB().courseProgress,courseBeforeMood,
+  "adapter la séance à l’humeur ne déplace jamais le parcours pédagogique");
+
+group("v39 — sceau quotidien : seuil 25 questions et idempotence");
+freshDB();
+const dailyRewardKey="2026-07-15", dailyXpBefore=E.getDB().xp;
+eq(E.grantDailyMissionReward(dailyRewardKey,{questions:24,correct:24,activeMs:600000,sessionType:"daily"}),null,
+  "24 questions ne donnent ni sceau ni fin de mission");
+eq([E.getDB().xp,E.completedMissionKeys().length],[dailyXpBefore,0],
+  "la tentative à 24/25 n’ajoute ni XP ni journée accomplie");
+const dailyReward=E.grantDailyMissionReward(dailyRewardKey,{questions:25,correct:22,activeMs:900000,transferReached:false,sessionType:"course"});
+ok(dailyReward&&dailyReward.kind==="daily"&&dailyReward.badgeId==="daily_seal",
+  "25 questions donnent le sceau d’assiduité même avec des erreurs");
+eq([dailyReward.questions,dailyReward.correct,dailyReward.rewardXp],[25,22,E.DAILY_REWARD_XP],
+  "le badge conserve la preuve exacte et verse uniquement la récompense quotidienne prévue");
+ok(E.getDB().dailyProgress[dailyRewardKey].session===true&&E.getDB().engagement.daily[dailyRewardKey].completedAt>0,
+  "le sceau et la fin de mission sont persistés ensemble");
+const dailyXpAfter=E.getDB().xp, dailyStateAfter=JSON.stringify(E.getDB().engagement.daily[dailyRewardKey]);
+eq(E.grantDailyMissionReward(dailyRewardKey,{questions:25,correct:25,activeMs:1200000,sessionType:"daily"}),null,
+  "un second bilan du même jour ne recrée jamais la récompense");
+eq([E.getDB().xp,JSON.stringify(E.getDB().engagement.daily[dailyRewardKey])],[dailyXpAfter,dailyStateAfter],
+  "l’idempotence protège à la fois l’XP et le contenu du badge déjà gagné");
+
+group("v39 — la 25e note affichée mais non répondue ne termine jamais la mission");
+freshDB();seedSeen(["sol4","la4","si4"]);
+const unansweredKey=E.todayStr(), unansweredDaily=E.buildDailySession({kind:"session",reason:"régression 25e affichage",palier:E.PALIERS[0],pool:["sol4","la4","si4"],mode:"libre",groupN:1},Date.now());
+E.beginSerie({sessionMode:"daily",openEnded:true,palier:E.PALIERS[0],pool:["sol4","la4","si4"],mode:"libre",groupN:1,daily:unansweredDaily,cold:false,engagementDate:unansweredKey});
+const unansweredEx=E.getEX();
+unansweredEx.promptCount=25;unansweredEx.questionRecords=new Array(24).fill(null).map(function(){return {phase:"cible",role:"baseline",ok:true,ids:["sol4"]};});
+unansweredEx.hist=new Array(24).fill(true);unansweredEx.ok=24;unansweredEx.i=24;unansweredEx.errs=[];
+ok(E.dailyScoredCount()===24&&E.dailySessionQualified()===false,
+  "24 réponses terminées plus une 25e question seulement affichée restent une mission partielle");
+const unansweredXp=E.getDB().xp;E.finishSerie();
+ok(!E.getDB().engagement.daily[unansweredKey]||!E.getDB().engagement.daily[unansweredKey].completedAt,
+  "quitter sur la 25e question non répondue ne crée ni sceau ni journée accomplie");
+eq(E.getDB().xp,unansweredXp,
+  "aucun XP de fin de mission n’est versé tant que la 25e réponse n’existe pas");
+ok(/\/24<\/small>/.test(E.getEl("resScore").innerHTML)&&/Mission partielle/.test(E.getEl("resSub").textContent),
+  "le bilan annonce honnêtement 24 réponses et une mission partielle");
+
+group("v39 — sept sceaux ouvrent le Défi des défis, sans course en avant");
+function engagementWithCompletedDays(keys){
+  const daily={};keys.forEach(function(key,i){const ts=new Date(key+"T12:00:00").getTime();daily[key]={
+    missionId:"daily_"+key.replace(/-/g,""),title:"Mission "+(i+1),mood:"concentre",minutes:20,
+    focusDomain:"lecture",createdAt:ts-1000,startedAt:ts-500,completedAt:ts,badgeId:"daily_seal",rewardXp:E.DAILY_REWARD_XP,
+    evidence:{questions:25,correct:24,activeMs:900000,sessionType:"daily"}
+  };});return {version:1,daily:daily,weekly:{}};
+}
+const weekSix=["2026-07-13","2026-07-14","2026-07-15","2026-07-16","2026-07-17","2026-07-18"];
+freshDB();E.getDB().engagement=E.reconcileEngagement(engagementWithCompletedDays(weekSix),{});
+eq(E.pendingWeeklyChallenge(),null,
+  "six sceaux sur sept ne suffisent pas à ouvrir le défi hebdomadaire");
+ok(!E.getDB().engagement.weekly["2026-07-13"],
+  "aucun droit hebdomadaire anticipé n’est créé à 6/7");
+const weekSeven=weekSix.concat("2026-07-19");
+E.getDB().engagement=E.reconcileEngagement(engagementWithCompletedDays(weekSeven),{});
+const unlockedWeekly=E.pendingWeeklyChallenge();
+ok(unlockedWeekly&&unlockedWeekly.key==="2026-07-13"&&unlockedWeekly.state.dailyKeys.length===7,
+  "les sept jours distincts du lundi au dimanche ouvrent exactement un Défi des défis");
+const weeklyXpBefore=E.getDB().xp;
+const failedWeekly=E.grantWeeklyChallengeResult("2026-07-13",19,25);
+ok(failedWeekly&&failedWeekly.kind==="weekly_attempt"&&failedWeekly.success===false&&failedWeekly.best===19,
+  "19/25 enregistre l’essai sans attribuer la couronne");
+ok(E.pendingWeeklyChallenge()&&E.getDB().xp===weeklyXpBefore,
+  "après un échec, le droit au défi reste disponible et aucun XP de victoire n’est versé");
+const wonWeekly=E.grantWeeklyChallengeResult("2026-07-13",20,25);
+ok(wonWeekly&&wonWeekly.kind==="weekly"&&wonWeekly.badgeId==="weekly_crown",
+  "20/25 remporte la couronne hebdomadaire");
+eq(E.getDB().xp,weeklyXpBefore+E.WEEKLY_REWARD_XP,
+  "la réussite verse une seule fois la récompense hebdomadaire");
+eq(E.pendingWeeklyChallenge(),null,
+  "le défi gagné n’est plus proposé comme défi en attente");
+const weeklyXpAfter=E.getDB().xp, weeklyCompletedAt=E.getDB().engagement.weekly["2026-07-13"].completedAt;
+const repeatedWeekly=E.grantWeeklyChallengeResult("2026-07-13",25,25);
+ok(repeatedWeekly&&repeatedWeekly.kind==="weekly_attempt"&&repeatedWeekly.success===true,
+  "un nouveau 25/25 après victoire reste un entraînement, pas une seconde couronne");
+eq([E.getDB().xp,E.getDB().engagement.weekly["2026-07-13"].completedAt],[weeklyXpAfter,weeklyCompletedAt],
+  "la couronne et son XP sont idempotents après la première réussite");
+
+group("v39 — assiduité récompensée, acquisition toujours verrouillée par le sans-faute");
+freshDB();seedSeen(["sol4","la4","si4"]);
+const courseProgressBefore=JSON.parse(JSON.stringify(E.getDB().courseProgress));
+const imperfectAttendance=playCourseAttempt(true,5), attendanceDay=E.getDB().engagement.daily[E.todayStr()];
+eq(imperfectAttendance.promptCount,25,
+  "la série imparfaite va bien au bout des 25 questions de la mission");
+ok(imperfectAttendance.errs.length>=1&&attendanceDay&&attendanceDay.completedAt>0&&attendanceDay.evidence.questions===25,
+  "l’effort quotidien reçoit son sceau malgré l’erreur");
+ok(attendanceDay.evidence.correct<25,
+  "la preuve d’assiduité conserve honnêtement que la série n’était pas parfaite");
+eq([E.getDB().courseProgress.steps.sol,E.getDB().courseProgress.cycles.sol,E.getDB().courseProgress.exercises.sol],
+  [courseProgressBefore.steps.sol,courseProgressBefore.cycles.sol,courseProgressBefore.exercises.sol],
+  "le sceau quotidien ne valide ni série, ni étape, ni nouvelle note");
+eq(E.courseDecision().course.seriesNumber,1,
+  "après l’erreur, le joueur reste sur la série 1/3 à refaire sans faute");
+E.clearQTimers();E.clearDailyTimer();E.haltEX();
+
+group("v39 — aucun historique ancien n’est tronqué par une normalisation");
+function bulkDateKey(startUtc,offset){return new Date(startUtc+offset*864e5).toISOString().slice(0,10);}
+const historyStart=Date.UTC(2020,0,1), historicalDaily={};
+for(let i=0;i<1462;i++){
+  const key=bulkDateKey(historyStart,i), ordinal=i===0?7001:(i===1461?9001:i+1);
+  historicalDaily[key]={missionId:"daily_"+key.replace(/-/g,""),title:"Mission historique "+i,mood:"concentre",minutes:20,
+    focusDomain:"lecture",createdAt:i+1,startedAt:i+1,completedAt:i+1,ordinal:ordinal,badgeId:"daily_seal",rewardXp:20,
+    evidence:{questions:25,correct:24,activeMs:600000,sessionType:"daily"}};
+}
+const fullEngagement=E.normalizeEngagement({version:1,daily:historicalDaily,weekly:{}}), historicalKeys=Object.keys(fullEngagement.daily);
+eq(historicalKeys.length,1462,
+  "normalizeEngagement conserve plus de 1 460 journées au lieu de purger les plus anciennes");
+eq([fullEngagement.daily[historicalKeys[0]].ordinal,fullEngagement.daily[historicalKeys[1461]].ordinal],[7001,9001],
+  "les numéros de mission déjà attribués restent intacts pendant la normalisation");
+const historicalCheckIns={};
+for(let i=0;i<732;i++){const key=bulkDateKey(Date.UTC(2022,0,1),i);historicalCheckIns[key]={mood:i%2?"calme":"joueur",availableMinutes:i%2?15:30,updatedAt:i+1};}
+const fullCoachHistory=E.normalizeCoachContext({version:1,checkIns:historicalCheckIns});
+eq(Object.keys(fullCoachHistory.checkIns).length,732,
+  "normalizeCoachContext conserve plus de 730 états d’humeur et de temps");
+const historicalAppointments=[];
+for(let i=0;i<503;i++)historicalAppointments.push({id:"appt_bulk_"+String(i).padStart(3,"0"),title:"Rendez-vous "+i,type:"cours",
+  date:"2026-08-01",time:String(Math.floor(i%24)).padStart(2,"0")+":"+String(i%60).padStart(2,"0"),duration:60,focusDomain:"lecture",createdAt:i+1,updatedAt:i+1,cancelledAt:i%11===0?i+1:0});
+const fullCalendar=E.normalizeTrainingCalendar({version:1,appointments:historicalAppointments});
+eq(fullCalendar.appointments.length,503,
+  "normalizeTrainingCalendar conserve plus de 500 rendez-vous, y compris ceux retirés");
+ok(fullCalendar.appointments.some(function(row){return row.id==="appt_bulk_000"&&row.cancelledAt>0;})&&
+   fullCalendar.appointments.some(function(row){return row.id==="appt_bulk_502";}),
+  "le premier rendez-vous retiré et le dernier rendez-vous restent tous deux restaurables");
+
+const longDailyProgress={}, longDays={};
+for(let i=0;i<4201;i++){const key=bulkDateKey(Date.UTC(2010,0,1),i);longDays[key]={series:1,last:i+1};if(i<1462)longDailyProgress[key]={session:true};}
+eq(Object.keys(E.normalizeDailyProgress(longDailyProgress)).length,1462,
+  "plus de 1 460 preuves quotidiennes restent dans la sauvegarde, sans fenêtre glissante");
+const longEvents=new Array(503).fill(null).map(function(_,i){return {t:i+1,type:"historique_"+i};});
+const retainedHistory=E.ensureStructure({days:longDays,dailyProgress:longDailyProgress,events:longEvents});
+eq([Object.keys(retainedHistory.days).length,Object.keys(retainedHistory.dailyProgress).length,retainedHistory.events.length],[4201,1462,503],
+  "ensureStructure conserve toutes les journées, preuves et traces historiques valides");
+
+const manyPieces=new Array(81).fill(null).map(function(_,i){return {id:"piece_"+String(i).padStart(3,"0"),titre:"Partition "+i,clef:"sol",q:[],segments:[]};});
+eq(E.ensureStructure({pieces:manyPieces}).pieces.length,81,
+  "la 81e partition du joueur n’efface jamais la première");
+const longQuestions=new Array(25).fill(null).map(function(_,i){return {q:"Question "+i,choix:["A","B"],rep:0};});
+const longSegments=new Array(25).fill(null).map(function(_,i){return {id:"seg_"+String(i).padStart(3,"0"),title:"Passage "+i,level:"P1",notes:["sol4"]};});
+const longMeasures=new Array(65).fill(null).map(function(){return ["sol4","la4","si4"];});
+const fullPiece=E.normalizePiece({id:"piece_longue",titre:"Partition longue",clef:"sol",q:longQuestions,segments:longSegments,melody:{measures:longMeasures}});
+eq([fullPiece.q.length,fullPiece.segments.length,fullPiece.melody.measures.length],[25,25,65],
+  "questions, passages et mesures d’une partition valide ne sont plus coupés silencieusement");
+const longTier=E.normalizeTierProgress({series:new Array(81).fill(null).map(function(_,i){return {ts:i+1,e:0,ids:["sol4"]};})});
+const longClean=E.normalizeSegmentState({cleanAt:[1,2,3,4,5]});
+eq([longTier.series.length,longClean.cleanAt.length],[81,5],
+  "les anciennes séries et réussites espacées restent toutes présentes dans l’historique");
+const repairSources=Object.keys(E.NOTES).slice(0,33), longRepair=repairSources.map(function(id,i){return {id:"rep_"+i,sourceId:id,probeId:id,stage:"retest",wrongKind:"timeout",dueQuestion:i+1,attempts:1,qtype:"lect",palierId:"P1",createdAt:i+1,updatedAt:i+1};});
+eq(E.normalizeRepairQueue(longRepair).length,repairSources.length,
+  "la file de réparation ne perd aucune note fragile valide au-delà d’un ancien plafond");
+const attachmentBytes=450*1024, attachmentData="A".repeat(attachmentBytes*4/3), attachment=function(name){return {name:name,type:"application/pdf",size:attachmentBytes,dataUrl:"data:application/pdf;base64,"+attachmentData};};
+const attachmentState=E.ensureStructure({pieces:[{id:"score_a",titre:"A",clef:"sol",attachment:attachment("a.pdf")},{id:"score_b",titre:"B",clef:"sol",attachment:attachment("b.pdf")}]});
+ok(attachmentState.pieces[0].attachment&&attachmentState.pieces[1].attachment,
+  "deux pièces jointes déjà sauvegardées restent intactes même si leur total dépasse l’ancienne limite d’ajout");
+
+group("v39 — un choix d’humeur est transactionnel si le stockage refuse l’écriture");
+const checkInStorage=makeLocalStorage(), CheckInEngine=loadEngine({localStorage:checkInStorage});
+CheckInEngine.setDB(CheckInEngine.ensureStructure({}));CheckInEngine.ensureTodayMission();
+const checkInCoachBefore=JSON.stringify(CheckInEngine.getDB().coachContext), checkInEngagementBefore=JSON.stringify(CheckInEngine.getDB().engagement);
+checkInStorage.failAfter("solfegeProto1",1);
+ok(CheckInEngine.setDailyCheckIn("mood","joueur")===false,
+  "un échec de stockage refuse le changement au lieu d’afficher une humeur non enregistrée");
+eq([JSON.stringify(CheckInEngine.getDB().coachContext),JSON.stringify(CheckInEngine.getDB().engagement)],[checkInCoachBefore,checkInEngagementBefore],
+  "après l’échec, le contexte et le contrat quotidien reviennent exactement à leur état précédent");
+const restoredPrimary=JSON.parse(checkInStorage.getItem("solfegeProto1"));
+eq([JSON.stringify(restoredPrimary.coachContext),JSON.stringify(restoredPrimary.engagement)],[checkInCoachBefore,checkInEngagementBefore],
+  "la copie principale est elle aussi réécrite avec l’ancien état, sans divergence au prochain démarrage");
+
+group("v39 — un rendez-vous peut préparer une œuvre intégrée sans sortir du vocabulaire cible");
+freshDB();E.openTrainingCalendar();
+const calendarOptionsHtml=E.getEl("cardBox").innerHTML;
+ok(E.PIECES_BUILTIN.every(function(piece){return calendarOptionsHtml.indexOf(E.esc(piece.titre))>=0;}),
+  "le calendrier propose toutes les œuvres intégrées, pas seulement les partitions personnelles");
+const linkedNow=new Date(2026,6,15,10,0,0,0).getTime();
+E.getDB().calendar=E.normalizeTrainingCalendar({version:1,appointments:[{
+  id:"appt_aclair",title:"Répétition Au clair",type:"repetition",date:"2026-07-16",time:"10:00",duration:90,
+  focusDomain:"integration",pieceId:"aclair",createdAt:linkedNow,updatedAt:linkedNow,cancelledAt:0
+}]});
+let linkedContext=E.dailyCoachContext(linkedNow);
+eq([linkedContext.appointmentId,linkedContext.pieceId,linkedContext.focusDomain],["appt_aclair","aclair","integration"],
+  "le Coach relie le rendez-vous à l’œuvre intégrée et à son objectif musical");
+const linkedMission=E.freezeTodayMission(linkedNow);
+eq([linkedMission.appointmentId,linkedMission.pieceId],["appt_aclair","aclair"],
+  "le contrat démarré fige l’identifiant du rendez-vous et celui de l’œuvre");
+E.getDB().calendar.appointments[0].pieceId="frere";
+linkedContext=E.dailyCoachContext(linkedNow);
+eq([linkedContext.appointmentId,linkedContext.pieceId],["appt_aclair","aclair"],
+  "modifier ensuite le rendez-vous ne déplace pas la mission quotidienne déjà commencée");
+const linkedDaily=E.buildDailySession({kind:"session",palier:E.PALIERS[0],pool:["sol4","si4"],mode:"libre",groupN:1,dailyContext:linkedContext},linkedNow);
+eq(linkedDaily.pieceId,"aclair",
+  "buildDailySession utilise bien l’œuvre figée par le rendez-vous plutôt que l’œuvre active par défaut");
+ok(linkedDaily.transferScript.length>0&&linkedDaily.transferScript.every(function(id){return linkedDaily.targetPool.indexOf(id)>=0;}),
+  "le fragment musical lié est filtré pour ne servir que des notes appartenant au targetPool");
+ok(linkedDaily.transferScript.indexOf("la4")<0,
+  "une note réelle de l’œuvre mais absente du vocabulaire cible n’est jamais injectée dans le transfert");
+
+group("v39 — les missions quotidiennes restent note par note et créditent seulement les réponses réelles");
+freshDB();seedSeen(["sol4","la4","si4"]);
+const todayMissionKey=E.todayStr();
+E.getDB().coachContext=E.normalizeCoachContext({version:1,checkIns:{[todayMissionKey]:{mood:"calme",availableMinutes:20,updatedAt:Date.now()}}});
+E.startDailySession();
+ok(E.getEX()&&E.getEX().daily&&E.getEX().groupN===1,
+  "une mission quotidienne adaptée à l’humeur démarre toujours avec une seule note par question");
+ok(E.configureDailyCampaignTarget({palier:E.PALIERS[1],mode:"rhodium"})===true&&E.getEX().groupN===1,
+  "un changement de cible en cours de mission ne réactive jamais les groupes du grade Rhodium");
+E.clearQTimers();E.clearDailyTimer();E.haltEX();
+freshDB();seedSeen(["sol4","la4","si4"]);
+E.beginSerie({sessionMode:"session",n:1,questionCap:3,palier:E.PALIERS[0],pool:["sol4","la4","si4"],mode:"bronze",groupN:3,cold:false});
+const groupedSeq=E.getEX().seq.slice(), groupedBefore={};groupedSeq.forEach(function(id){groupedBefore[id]=E.getDB().noteStats[id].v;});
+const answeredGroupedId=groupedSeq[0];answerCurrentWrong();
+eq(E.getEX().questionRecords[E.getEX().questionRecords.length-1].ids,[answeredGroupedId],
+  "une erreur au début d’un groupe enregistre uniquement la note effectivement répondue");
+eq(E.getEX().seenIds,[answeredGroupedId],
+  "le bilan de partition ne crédite aucune note située après l’erreur dans le groupe");
+ok(groupedSeq.slice(1).every(function(id){return E.getDB().noteStats[id].v===groupedBefore[id];}),
+  "les compteurs mémoire des notes non répondues restent strictement inchangés");
+E.clearQTimers();E.haltEX();
+
+group("v39 — le temps indisponible, les badges et la sauvegarde restent visibles");
+freshDB();
+const unavailableNow=new Date(2026,6,15,10,0,0,0).getTime();
+E.getDB().calendar=E.normalizeTrainingCalendar({version:1,appointments:[{
+  id:"appt_busy_now",title:"Indisponible",type:"indisponible",date:"2026-07-15",time:"09:30",duration:90,
+  focusDomain:"lecture",createdAt:unavailableNow,updatedAt:unavailableNow,cancelledAt:0
+}]});
+const unavailableContext=E.dailyCoachContext(unavailableNow);
+ok(unavailableContext.unavailableNow===true&&/indisponible en cours/i.test(unavailableContext.reason),
+  "un créneau Temps indisponible déjà commencé est explicitement signalé par le Coach");
+ok(idx.indexOf("Ton calendrier indique un temps indisponible maintenant")>=0,
+  "le lancement de la mission prévient aussi le joueur avant de continuer pendant ce créneau");
+const badgeDay="2026-07-15", badgeTs=new Date("2026-07-15T12:00:00").getTime();
+E.getDB().engagement=E.normalizeEngagement({version:1,daily:{
+  [badgeDay]:{missionId:"daily_20260715",title:"Finale",mood:"concentre",minutes:20,focusDomain:"lecture",createdAt:badgeTs-2,startedAt:badgeTs-1,
+    completedAt:badgeTs,ordinal:10,badgeId:"mission_ten",rewardXp:50,evidence:{questions:25,correct:25,activeMs:900000,sessionType:"daily"}}
+},weekly:{"2026-07-13":{dailyKeys:[],unlockedAt:badgeTs-2,attempts:1,best:25,completedAt:badgeTs+1,badgeId:"weekly_gold",rewardXp:100}}});
+const futureAppointmentDate=new Date(Date.now()+864e5), futureDateKey=String(futureAppointmentDate.getFullYear())+"-"+String(futureAppointmentDate.getMonth()+1).padStart(2,"0")+"-"+String(futureAppointmentDate.getDate()).padStart(2,"0");
+const futureTime=String(futureAppointmentDate.getHours()).padStart(2,"0")+":"+String(futureAppointmentDate.getMinutes()).padStart(2,"0");
+E.getDB().calendar=E.normalizeTrainingCalendar({version:1,appointments:[{
+  id:"appt_summary",title:"Cours de demain",type:"cours",date:futureDateKey,time:futureTime,duration:60,focusDomain:"lecture",createdAt:badgeTs,updatedAt:badgeTs,cancelledAt:0
+}]});
+E.renderStats();
+const badgeShowcase=E.getEl("fragBox").innerHTML;
+ok(/Vitrine des missions/.test(badgeShowcase)&&/Finale de la mission 1/.test(badgeShowcase)&&/Couronne d’or/.test(badgeShowcase),
+  "Stats affiche une vitrine durable des finales quotidiennes et des couronnes hebdomadaires");
+const memorySummary=E.memoryLevelContext({milestone:"Audit v39"});
+ok(/sceaux/.test(memorySummary.summary)&&/couronnes/.test(memorySummary.summary)&&/rendez-vous actifs/.test(memorySummary.summary),
+  "le résumé exact de sauvegarde compte les missions, les couronnes et les rendez-vous");
+ok(memorySummary.missionDays===1&&memorySummary.missionFinals===1&&memorySummary.weeklyCrowns===1&&memorySummary.appointments===1,
+  "les compteurs structurés de la sauvegarde correspondent exactement à la vitrine");
 
 /* 16) Charte SEZAM — rebrand sans casse de données */
 group("Charte SEZAM — identité appliquée, données intactes");
