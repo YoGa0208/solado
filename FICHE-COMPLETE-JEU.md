@@ -2,15 +2,15 @@
 
 Cette fiche explique le fonctionnement de SEZAM sans vocabulaire technique. Elle distingue ce que signifie **finir la campagne**, **maîtriser la bibliothèque** et atteindre le **prestige absolu**. Les durées humaines sont des estimations transparentes : elles ne promettent pas qu'un débutant lira au tempo Rhodium en quelques jours.
 
-> **Avertissement v39 — règles actives.** Une série d'acquisition contient désormais exactement **25 questions** et une étape ne s'ouvre qu'après **trois séries de 25 sans erreur**. La mission quotidienne demande elle aussi 25 réponses réellement données, quel que soit le temps indicatif choisi. Les anciens totaux de 3 208 écrans-question, 9 711 réponses et 39,27 minutes proviennent de la partie témoin historique fondée sur des séries de 10 questions ; ils restent documentés comme point de comparaison, mais ne décrivent plus le minimum mécanique de la v39.
+> **Avertissement v40 — règles actives.** Une série d'acquisition contient exactement **25 questions** et une étape ne s'ouvre qu'après **trois séries de 25 sans erreur**. La mission quotidienne demande elle aussi 25 réponses réellement données, quel que soit le temps indicatif choisi. La v40 ajoute 14 classes déclarées et le parcours de clé d'ut 3e sans raccourcir la progression. Les anciens totaux de 3 208 écrans-question, 9 711 réponses et 39,27 minutes proviennent de la partie témoin historique fondée sur des séries de 10 questions ; ils restent documentés comme point de comparaison, mais ne décrivent plus le minimum mécanique actuel.
 
 ## Le jeu en une minute
 
-SEZAM entraîne la lecture de notes sur deux clés : la clé de sol et la clé de fa. Le joueur avance dans 15 paliers, puis recommence ces 15 territoires avec une exigence de vitesse croissante.
+SEZAM entraîne désormais la lecture de notes sur **trois clés** : la clé de sol, la clé de fa et la clé d'ut 3e. La campagne arcade historique conserve 15 paliers centrés sur sol, fa et leur lecture combinée ; le parcours d'acquisition v40 ajoute un item indépendant en clé d'ut 3e.
 
 Le parcours principal comprend :
 
-- 23 positions de notes enseignées, dont le do médian présenté dans les deux clés ;
+- 37 positions de notes disponibles : 23 en sol/fa dans la campagne historique et 14 en clé d'ut 3e dans son parcours dédié ;
 - 15 paliers par grade de maîtrise ;
 - 6 grades actifs, de Zen à Rhodium ;
 - 90 validations au total ;
@@ -18,6 +18,20 @@ Le parcours principal comprend :
 - 5 étoiles de stabilité pour chacun des 15 paliers après Rhodium.
 
 Les trois gemmes Diamant Bleu, Jadéite et Diamant Rose visibles dans la brume sont des pistes futures. Elles ne comptent pas dans la fin actuelle du jeu.
+
+## Les 14 classes déclarées de la v40
+
+Le Coach propose un repère inspiré de l'organisation des conservatoires :
+
+| Famille | Cycle | Années disponibles | Durée habituelle | Clé associée |
+|---|---|---:|---:|---|
+| Débutant | Cycle 1 | 1 à 5 | 3 à 5 ans | clé de sol |
+| Intermédiaire | Cycle 2 | 1 à 5 | 3 à 5 ans | clé de fa |
+| Avancé | Cycle 3 | 1 à 4 | 2 à 4 ans | clé d'ut 3e |
+
+Les cinq classes du Cycle 1, les cinq du Cycle 2 et les quatre du Cycle 3 forment **14 classes déclarées**, de C1.1 à C3.4. Il s'agit d'une nomenclature interne à SEZAM, pas de quatorze classes nationales uniformes. Les durées sont des fourchettes : atteindre la troisième année ne force pas la sortie d'un cycle et afficher une cinquième année ne la rend pas obligatoire.
+
+Ce choix sert à désigner la famille d'exercices souhaitée. Il ne certifie aucun niveau de conservatoire, ne valide aucune note, ne saute aucune étape et ne transforme pas les années précédentes en acquis. Les preuves du jeu — séries parfaites, rappels, réparations et transferts — restent intégralement nécessaires et séparées de cette déclaration.
 
 ## Les trois fins du jeu
 
@@ -59,9 +73,9 @@ Si toutes les révisions sont réussies dès leur première échéance :
 
 Le prestige final arrive donc au minimum **672 jours après la dernière validation Rhodium**, et non 672 jours après la première ouverture. Une révision d'étoile manquée revient trois jours plus tard sans retirer les étoiles déjà gagnées.
 
-## Les 6 grades de maîtrise
+## Les 6 grades de maîtrise de la campagne arcade
 
-Chaque grade désigne une traversée complète des 15 paliers avec un degré d'automatisation plus exigeant. Il ne correspond pas à un cycle scolaire officiel.
+Chaque grade désigne une traversée complète des 15 paliers sol/fa avec un degré d'automatisation plus exigeant. Il ne correspond ni à un cycle de conservatoire ni à l'année déclarée dans le Coach.
 
 | Grade de maîtrise | Notes par groupe | Temps autorisé | Paliers | Séries parfaites minimales |
 |---|---:|---:|---:|---:|
@@ -75,7 +89,7 @@ Chaque grade désigne une traversée complète des 15 paliers avec un degré d'a
 
 La vitesse ne remplace jamais la précision. Le chrono vérifie un automatisme déjà construit ; il ne doit pas forcer un joueur à deviner.
 
-## Les 15 paliers de chaque grade
+## Les 15 paliers sol/fa de chaque grade
 
 Chaque grade contient trois territoires de cinq paliers.
 
@@ -107,7 +121,7 @@ Détail de la croissance :
 
 ## Comment un palier est validé
 
-En v39, une série d'acquisition contient exactement **25 questions**. Seul un résultat de **25/25** valide la série. Il faut réussir **trois séries parfaites** pour valider l'étape et autoriser l'ajout d'une seule note nouvelle.
+En v40, une série d'acquisition contient exactement **25 questions**. Seul un résultat de **25/25** valide la série. Il faut réussir **trois séries parfaites** pour valider l'étape et autoriser l'ajout d'une seule note nouvelle. Cette règle vaut aussi pour le parcours d'ut 3e.
 
 Le principe est celui de l'entonnoir inversé : un nouvel item commence avec trois notes, puis une seule note s'ajoute à chaque étape. Un item comporte au maximum 12 étapes. Si une erreur survient, la série en cours est à refaire, mais les séries parfaites déjà obtenues restent protégées.
 
@@ -115,7 +129,7 @@ Les questions de réparation, de consolidation et de transfert servent à appren
 
 Les paliers s'ouvrent dans l'ordre. Une fois les 15 paliers d'un grade validés, le grade suivant devient disponible ; après B5, le parcours reprend à P1 dans le grade supérieur.
 
-## La mission quotidienne v39
+## La mission quotidienne en v40
 
 Avant de jouer, la personne indique son humeur et le temps dont elle dispose. Le temps choisi — 10, 15, 20 ou 30 minutes — est un **repère d'organisation**, jamais un moyen de raccourcir la preuve : le sceau du jour exige 25 questions réellement répondues.
 
@@ -184,7 +198,7 @@ Un passage traverse cinq états : À découvrir, En travail, Fragile, Validé et
 
 ## Repère historique de la partie témoin
 
-Le bot de complétion historique jouait le moteur avec toutes les réponses justes. Sa route de référence utilisait les sessions v29 de 10 questions, puis maîtrisait toute la bibliothèque. Les chiffres ci-dessous sont conservés pour comparer les versions ; ils ne constituent pas le volume minimal de la v39.
+Le bot de complétion historique jouait le moteur avec toutes les réponses justes. Sa route de référence utilisait les sessions v29 de 10 questions, puis maîtrisait toute la bibliothèque. Les chiffres ci-dessous sont conservés pour comparer les versions ; ils ne constituent pas le volume minimal de la v40.
 
 | Mesure | Volume historique observé |
 |---|---:|
@@ -196,19 +210,19 @@ Le bot de complétion historique jouait le moteur avec toutes les réponses just
 | Réponses-note | **9 711** |
 | Temps mécanique de feedback et transitions | **39,27 min** |
 
-Les 39,27 minutes ne sont ni une durée humaine ni une estimation de la v39. Elles supposent une réponse instantanée, aucune erreur et ne comptent pratiquement que les délais imposés par l'ancienne interface.
+Les 39,27 minutes ne sont ni une durée humaine ni une estimation de la v40. Elles supposent une réponse instantanée, aucune erreur et ne comptent pratiquement que les délais imposés par l'ancienne interface.
 
-Avec le contrat d'acquisition v39, les 270 séries parfaites minimales représentent à elles seules **6 750 questions** (`270 × 25`). Les missions quotidiennes posent une question à la fois ; rappels, réparations, transferts, reprises et erreurs peuvent augmenter ce total.
+Avec le contrat d'acquisition actif depuis la v39, les 270 séries parfaites historiques de la campagne sol/fa représentent à elles seules **6 750 questions** (`270 × 25`). Le parcours d'ut 3e de la v40 ajoute son propre entraînement ; rappels, réparations, transferts, reprises et erreurs augmentent encore le total réel.
 
 ## Temps humain estimé
 
 ### Ne pas confondre le jeu et le cursus officiel
 
-Le parcours musical complet du Cycle 1 à la fin du Cycle 3 demande normalement **8 à 14 années calendaires** : 3 à 5 ans pour le Cycle 1, 3 à 5 ans pour le Cycle 2 et 2 à 4 ans pour le Cycle 3. Un centre de fourchette réaliste est environ 10 à 11 ans.
+Le parcours musical complet du Cycle 1 à la fin du Cycle 3 demande habituellement **8 à 14 années calendaires** : 3 à 5 ans pour le Cycle 1, 3 à 5 ans pour le Cycle 2 et 2 à 4 ans pour le Cycle 3. Un centre de fourchette réaliste est environ 10 à 11 ans. Les 14 classes de SEZAM nomment une année possible dans ces fourchettes ; elles n'attestent pas que cette année est acquise.
 
 SEZAM ne remplace pas ce parcours. Le complément numérique futur est estimé à environ 200 à 560 heures actives réparties sur ces années, avec un cœur de planification à 300–450 heures. La campagne actuelle de lecture ci-dessous n'en est qu'un module. Voir `CURSUS-CYCLES-1-3.md` pour les sources, les domaines et la feuille de route.
 
-Les estimations ci-dessous ont été établies avant la v39. Elles restent utiles comme ordre de grandeur humain, mais devront être remesurées sur des parties v39 complètes :
+Les estimations ci-dessous ont été établies avant la v39 et avant le parcours d'ut 3e. Elles restent utiles comme ordre de grandeur humain, mais devront être remesurées sur des parties v40 complètes :
 
 - **Route directe historique** : le joueur utilisait surtout les sessions v29 de 10 questions ;
 - **Séance complète historique** : le bouton quotidien répartissait le temps entre acquisition, consolidation, réparation et transfert.
@@ -222,7 +236,7 @@ Les estimations ci-dessous ont été établies avant la v39. Elles restent utile
 
 Ces nombres sont des **jours de pratique**, pas forcément des jours calendaires consécutifs. À cinq jours de pratique par semaine, 45 jours de pratique représentent environ neuf semaines.
 
-La mission quotidienne v39 conserve cette ambition pédagogique — rappel à froid, réparation et transfert — mais fixe désormais la fin du travail à 25 réponses données plutôt qu'à l'expiration d'un chronomètre.
+La mission quotidienne v40 conserve cette ambition pédagogique — rappel à froid, réparation et transfert — mais fixe la fin du travail à 25 réponses données plutôt qu'à l'expiration d'un chronomètre.
 
 ## Récompenses et secrets
 
@@ -248,6 +262,7 @@ Ils sont facultatifs et séparés de l'évaluation. Remettre trois fois la clé 
 | Couleurs | change réellement l'apparence |
 | Instrument | personnalise le profil, sans changer encore les exercices |
 | Parcours | décrit l'intention et nomme le plan quotidien, sans fabriquer d'acquis |
+| Famille, cycle et année | choisit le parcours sol, fa ou ut 3e ; ne certifie rien, ne valide rien et ne saute aucune étape |
 | Niveau de départ | place l'exploration Libre sur P3, P6 ou B1 selon le choix ; aucun palier n'est validé artificiellement |
 | Date cible et jours par semaine | donnent une indication de cadence, sans imposer un calendrier |
 
@@ -263,8 +278,10 @@ Un changement n'est autorisé que depuis l'accueil et après la mise à l'abri d
 
 - **Campagne** : 90 validations.
 - **Bibliothèque** : 30 passages, 60 lectures propres, au moins 20 heures d'écart.
-- **Partie témoin historique v29** : 330 séries, 3 208 écrans-question et 9 711 réponses ; ce n'est plus le minimum v39.
-- **Plancher d'acquisition v39** : 270 séries parfaites de 25, soit 6 750 réponses avant les réparations et la bibliothèque.
+- **Classes déclarées v40** : 14, réparties en C1.1→C1.5, C2.1→C2.5 et C3.1→C3.4 ; aucune n'est une certification.
+- **Clés entraînées** : sol, fa et ut 3e ; l'arcade historique à 15 paliers reste centrée sur sol/fa.
+- **Partie témoin historique v29** : 330 séries, 3 208 écrans-question et 9 711 réponses ; ce n'est plus le minimum v40.
+- **Plancher historique sol/fa sous le contrat actuel** : 270 séries parfaites de 25, soit 6 750 réponses avant les réparations, l'ut 3e et la bibliothèque.
 - **Temps humain historique à remesurer** : environ 12 heures en route directe pour un intermédiaire, environ 17 heures avec l'ancienne séance complète ; environ 25 ou 38 heures pour un débutant.
 - **Prestige absolu** : au minimum 672 jours après le dernier Rhodium.
-- **Cursus musical officiel C1→C3** : 8 à 14 ans ; SEZAM en est un complément, jamais une certification.
+- **Cursus musical C1→C3** : 8 à 14 ans selon les durées habituelles du SNOP ; SEZAM en est un complément, jamais une certification.

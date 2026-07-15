@@ -6,10 +6,25 @@ Bienvenue dans SEZAM, ton entraînement musical. L'idée est simple : **ta parti
 
 1. Ouvre [SEZAM](https://yoga0208.github.io/solado/) dans Safari, Chrome ou ton navigateur habituel.
 2. Si plusieurs personnes utilisent l'appareil, touche le prénom en haut de la carte **JOUER**, puis choisis ton profil. Les progressions restent séparées.
-3. Dans **Ta mission du jour**, indique comment tu arrives : **Concentré**, **Calme**, **Joueur** ou **Fatigué**.
-4. Choisis ton temps disponible : 10, 15, 20 ou 30 minutes. C'est un repère d'organisation ; le contrat quotidien reste fixé à 25 questions.
-5. Appuie sur **JOUER · 25 QUESTIONS**.
-6. Pour installer SEZAM sur iPhone ou iPad : ouvre le site dans Safari, touche **Partager**, puis **Sur l'écran d'accueil**. L'icône SEZAM se lancera ensuite comme une application et pourra fonctionner hors ligne.
+3. Dans **Famille et cycle**, choisis ton repère déclaré, puis ton **Année**.
+4. Dans **Ta mission du jour**, indique comment tu arrives : **Concentré**, **Calme**, **Joueur** ou **Fatigué**.
+5. Choisis ton temps disponible : 10, 15, 20 ou 30 minutes. C'est un repère d'organisation ; le contrat quotidien reste fixé à 25 questions.
+6. Appuie sur **JOUER · 25 QUESTIONS**.
+7. Pour installer SEZAM sur iPhone ou iPad : ouvre le site dans Safari, touche **Partager**, puis **Sur l'écran d'accueil**. L'icône SEZAM se lancera ensuite comme une application et pourra fonctionner hors ligne.
+
+## Familles, cycles et années
+
+SEZAM v40 propose **14 classes musicales déclarées** :
+
+| Famille | Cycle | Années proposées | Durée habituelle du cycle | Clé travaillée en priorité |
+|---|---|---:|---:|---|
+| Débutant | Cycle 1 | 1 à 5 | 3 à 5 ans | clé de sol |
+| Intermédiaire | Cycle 2 | 1 à 5 | 3 à 5 ans | clé de fa |
+| Avancé | Cycle 3 | 1 à 4 | 2 à 4 ans | clé d'ut 3e |
+
+Par exemple, **Cycle 2 · 3e année · Intermédiaire** correspond à la classe C2.3 et ouvre le parcours de clé de fa. Les années 4 ou 5 existent parce qu'un même cycle peut durer différemment selon la personne et le conservatoire ; elles ne sont pas toutes obligatoires.
+
+Ce réglage indique d'où tu souhaites travailler. Il **ne certifie pas** ton niveau de conservatoire et ne remplace pas une évaluation de professeur. Choisir une famille ou une année ne valide aucune note, ne saute aucune étape et n'efface rien : les séries de 25, les trois réussites parfaites et toute ta progression restent inchangées. Une sauvegarde protégée est créée lors du changement.
 
 ## Ta mission du jour
 
@@ -81,7 +96,7 @@ Sur l'accueil, la tuile **Ton œuvre en cours** ouvre la pièce :
 
 ## Où SEZAM se place dans le cursus
 
-Dans **Mon parcours · lecture musicale**, le volet « Repères du cursus » distingue clairement les Cycles 1, 2 et 3. SEZAM évalue aujourd'hui la lecture de notes : c'est une composante du Cycle 1, pas une certification complète. Il accompagne les entraînements à la maison ; il ne remplace ni le professeur, ni l'instrument ou la voix, ni le jeu collectif.
+Dans **Mon parcours · lecture musicale**, le volet « Repères du cursus » distingue clairement les Cycles 1, 2 et 3. La classe déclarée sur l'accueil sert seulement à choisir une famille de travail : clé de sol, clé de fa ou clé d'ut 3e. SEZAM évalue des exercices de lecture de notes ; il ne certifie ni une année ni un cycle complet. Il accompagne les entraînements à la maison et ne remplace ni le professeur, ni l'instrument ou la voix, ni le jeu collectif.
 
 ## Ta progression est en sécurité
 
