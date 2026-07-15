@@ -91,6 +91,12 @@
   .playerDanger{background:transparent!important;color:var(--bad)!important;border:1px solid rgba(180,95,75,.35)!important}
   .cockpit h2{font-family:var(--serif);font-size:34px;line-height:.95;letter-spacing:0;margin:0;color:var(--petrole)}
   .cockpit p{font-size:14px;line-height:1.38;margin:8px 0 12px;color:var(--petrole);position:relative;z-index:1}
+  .coachLevelPanel{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px;align-items:end;position:relative;z-index:2;margin:3px 0 8px;padding:9px;background:rgba(255,253,247,.72);border:1px solid rgba(15,76,92,.14);border-radius:16px 7px 16px 7px}
+  .coachLevelField{display:flex;flex-direction:column;gap:4px;min-width:0;color:var(--or-deep);font-family:var(--serif);font-size:10.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase}
+  .coachLevelField select{width:100%;min-height:44px;padding:8px 10px;border:1px solid rgba(15,76,92,.24);border-radius:11px;background:var(--paper);color:var(--petrole);font-family:var(--sans);font-size:13px;font-weight:700;text-transform:none;letter-spacing:0}
+  .coachLevelSave{min-height:44px;padding:8px 13px;border:1px solid var(--petrole);border-radius:11px;background:var(--petrole);color:#fff;font-size:12.5px;font-weight:900}
+  .coachLevelSave:disabled{opacity:.58;cursor:wait}
+  .coachSaveMsg{min-height:16px;margin:-2px 2px 3px;position:relative;z-index:2;color:var(--good);font-size:11.5px;line-height:1.3}
   .cockpitMeta{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:10px 0 12px;position:relative;z-index:1}
   .cockpitMeta span{background:rgba(255,253,247,.78);border:1px solid rgba(15,76,92,.13);border-radius:16px 7px 16px 7px;padding:8px 6px;min-width:0}
   .cockpitMeta b{display:block;font-size:16px;line-height:1;color:var(--ink)}
@@ -433,6 +439,11 @@
       </div>
       <h2>JOUER</h2>
       <p id="coachPitch"></p>
+      <div class="coachLevelPanel">
+        <label class="coachLevelField"><span>Mon niveau</span><select id="coachLevelSelect" aria-describedby="coachSaveMsg"></select></label>
+        <button type="button" class="coachLevelSave" id="btnCoachSave">Enregistrer</button>
+      </div>
+      <div class="coachSaveMsg" id="coachSaveMsg" role="status" aria-live="polite"></div>
       <div class="cockpitMeta" id="cockpitMeta"></div>
       <button class="playbtn" id="btnPlayNow">JOUER</button>
       <div class="coachLine" id="coachLine"></div>
@@ -494,7 +505,7 @@
     <div class="sub" id="resCode" style="margin-bottom:12px"></div>
     <div class="memoryProof" id="resSave" style="display:none" role="status" aria-live="polite"></div>
     <button class="bigbtn" id="btnAgain">Encore une série</button>
-    <button class="secbtn" id="btnReplayCourse" style="display:none">Rejouer ce cycle pour m’entraîner</button>
+    <button class="secbtn" id="btnReplayCourse" style="display:none">Rejouer cette étape pour m’entraîner</button>
     <button class="secbtn" id="btnHome">Accueil</button>
   </div>
 
@@ -547,7 +558,7 @@
       <h4>Ajouter une partition</h4>
       <input id="pcTitle" aria-label="Titre de la partition" placeholder="Titre (ex. Le Cygne)" style="width:100%;background:var(--paper);border:1px solid rgba(15,76,92,.18);color:var(--petrole);border-radius:8px;padding:9px;font-size:13.5px;-webkit-user-select:text;user-select:text">
       <div class="row" style="margin-top:8px">
-        <select id="pcClef" aria-label="Clé de la partition" style="flex:1;background:var(--paper);border:1px solid rgba(15,76,92,.18);color:var(--petrole);border-radius:8px;padding:9px;font-size:13.5px"><option value="sol">Clé de sol</option><option value="fa">Clé de fa</option><option value="deux">Les deux clés</option></select>
+        <select id="pcClef" aria-label="Clé de la partition" style="flex:1;background:var(--paper);border:1px solid rgba(15,76,92,.18);color:var(--petrole);border-radius:8px;padding:9px;font-size:13.5px"><option value="sol">Clé de sol</option><option value="fa">Clé de fa</option><option value="ut">Clé d’ut 3e</option><option value="deux">Les deux clés</option></select>
         <input id="pcKey" aria-label="Tonalité de la partition" placeholder="Tonalité (ex. La M)" style="flex:1;background:var(--paper);border:1px solid rgba(15,76,92,.18);color:var(--petrole);border-radius:8px;padding:9px;font-size:13.5px;-webkit-user-select:text;user-select:text">
       </div>
       <input id="pcFile" aria-label="Fichier de partition facultatif" type="file" accept="application/pdf,image/png,image/jpeg,image/gif,image/webp,image/bmp,image/heic,image/heif,.pdf,.png,.jpg,.jpeg,.gif,.webp,.bmp,.heic,.heif" style="width:100%;margin-top:8px;background:var(--paper);border:1px solid rgba(15,76,92,.18);color:var(--petrole);border-radius:8px;padding:9px;font-size:13.5px;-webkit-user-select:text;user-select:text">
@@ -608,7 +619,7 @@ function esc(s){
   });
 }
 /* ================= DONNÉES ================= */
-const APP_VERSION="v37"; // garder aligné avec CACHE_NAME de sw.js (testé)
+const APP_VERSION="v38"; // garder aligné avec CACHE_NAME de sw.js (testé)
 const NOTES = {
   do4 :{n:"do", clef:"sol", p:-2, midi:60, mn:"Le do du milieu est transpercé par sa petite ligne, rien qu'à lui."},
   re4 :{n:"ré", clef:"sol", p:-1, midi:62, mn:"Collé juste sous la portée."},
@@ -617,7 +628,7 @@ const NOTES = {
   sol4:{n:"sol",clef:"sol", p:2,  midi:67, mn:"La clé de sol s'enroule autour de la ligne 2 : tout ce qui la touche est SOL."},
   la4 :{n:"la", clef:"sol", p:3,  midi:69, mn:"Juste au-dessus de la ligne de la clé."},
   si4 :{n:"si", clef:"sol", p:4,  midi:71, mn:"La ligne du milieu, pile au centre."},
-  do5 :{n:"do", clef:"sol", p:5,  midi:72, mn:"3ᵉ interligne : après si, le cycle recommence à do."},
+  do5 :{n:"do", clef:"sol", p:5,  midi:72, mn:"3ᵉ interligne : après si, la suite des notes recommence à do."},
   re5 :{n:"ré", clef:"sol", p:6,  midi:74, mn:"Posé SUR la 4ᵉ ligne."},
   mi5 :{n:"mi", clef:"sol", p:7,  midi:76, mn:"Dernier interligne, tout en haut."},
   fa5 :{n:"fa", clef:"sol", p:8,  midi:77, mn:"Sur la dernière ligne : la portée finit en FA."},
@@ -632,7 +643,21 @@ const NOTES = {
   si2 :{n:"si", clef:"fa",  p:2,  midi:47, mn:"Posé sur la 2ᵉ ligne."},
   la2 :{n:"la", clef:"fa",  p:1,  midi:45, mn:"1ᵉʳ interligne, tout en bas."},
   sol2:{n:"sol",clef:"fa",  p:0,  midi:43, mn:"La 1ʳᵉ ligne de la clé de fa est SOL — comme la clé de sol, mais deux octaves plus bas."},
-  fa2 :{n:"fa", clef:"fa",  p:-1, midi:41, mn:"Collé sous la portée : le fa grave, écho du fa de la clé."}
+  fa2 :{n:"fa", clef:"fa",  p:-1, midi:41, mn:"Collé sous la portée : le fa grave, écho du fa de la clé."},
+  re3u3 :{n:"ré",  clef:"ut", p:-2, midi:50, mn:"Sous la portée : en clé d’ut 3e, le ré grave prend sa petite ligne."},
+  mi3u3 :{n:"mi",  clef:"ut", p:-1, midi:52, mn:"Juste sous la portée en clé d’ut 3e."},
+  fa3u3 :{n:"fa",  clef:"ut", p:0,  midi:53, mn:"Première ligne de la portée en clé d’ut 3e."},
+  sol3u3:{n:"sol", clef:"ut", p:1,  midi:55, mn:"Premier interligne en clé d’ut 3e."},
+  la3u3 :{n:"la",  clef:"ut", p:2,  midi:57, mn:"Deuxième ligne en clé d’ut 3e."},
+  si3u3 :{n:"si",  clef:"ut", p:3,  midi:59, mn:"Juste sous la ligne centrale de la clé d’ut."},
+  do4u3 :{n:"do",  clef:"ut", p:4,  midi:60, mn:"Le centre de la clé d’ut 3e désigne le do médian, sur la troisième ligne."},
+  re4u3 :{n:"ré",  clef:"ut", p:5,  midi:62, mn:"Juste au-dessus du do central en clé d’ut 3e."},
+  mi4u3 :{n:"mi",  clef:"ut", p:6,  midi:64, mn:"Quatrième ligne en clé d’ut 3e."},
+  fa4u3 :{n:"fa",  clef:"ut", p:7,  midi:65, mn:"Dernier interligne en clé d’ut 3e."},
+  sol4u3:{n:"sol", clef:"ut", p:8,  midi:67, mn:"Cinquième ligne en clé d’ut 3e."},
+  la4u3 :{n:"la",  clef:"ut", p:9,  midi:69, mn:"Juste au-dessus de la portée en clé d’ut 3e."},
+  si4u3 :{n:"si",  clef:"ut", p:10, midi:71, mn:"Sur la petite ligne au-dessus de la portée en clé d’ut 3e."},
+  do5u3 :{n:"do",  clef:"ut", p:11, midi:72, mn:"Au-dessus de la petite ligne supplémentaire en clé d’ut 3e."}
 };
 function U(a,b){return a.concat(b);}
 const PALIERS = [
@@ -653,8 +678,8 @@ const PALIERS = [
   {id:"B5", t:"Bilan de lecture · Les Deux Clés",sub:"tout l'ambitus",notes:U(["do4","re4","mi4","fa4","sol4","la4","si4","do5","re5","mi5","fa5"],["fa2","sol2","la2","si2","do3","re3","mi3","fa3","sol3","la3","si3","do4f"])}
 ];
 /* ===== Parcours d'acquisition =====
-   Chaque étape ajoute au plus une note. Cette nouveauté reste ensuite dans le même
-   cycle pendant trois séries parfaites de 25 questions. Une tentative avec erreur
+   Chaque étape ajoute au plus une note. Cette nouveauté reste ensuite dans la même
+   étape pendant trois séries parfaites de 25 questions. Une tentative avec erreur
    nourrit la réparation, mais n'ouvre jamais l'étape suivante. */
 const MAX_QUESTIONS_PER_EXERCISE=25;
 const COURSE_MAX_EXERCISES=12;
@@ -684,8 +709,30 @@ const COURSES=[
     {id:"fa-08",notes:["la2","si2","do3","re3","mi3","fa3","sol3","la3","si3","do4f"],newNote:"la2"},
     {id:"fa-09",notes:["sol2","la2","si2","do3","re3","mi3","fa3","sol3","la3","si3","do4f"],newNote:"sol2"},
     {id:"fa-10",notes:["fa2","sol2","la2","si2","do3","re3","mi3","fa3","sol3","la3","si3","do4f"],newNote:"fa2"}
+  ]},
+  {id:"ut",label:"Clé d’ut 3e",steps:[
+    {id:"ut-01",notes:["si3u3","do4u3","re4u3"],newNote:""},
+    {id:"ut-02",notes:["si3u3","do4u3","re4u3","mi4u3"],newNote:"mi4u3"},
+    {id:"ut-03",notes:["la3u3","si3u3","do4u3","re4u3","mi4u3"],newNote:"la3u3"},
+    {id:"ut-04",notes:["la3u3","si3u3","do4u3","re4u3","mi4u3","fa4u3"],newNote:"fa4u3"},
+    {id:"ut-05",notes:["sol3u3","la3u3","si3u3","do4u3","re4u3","mi4u3","fa4u3"],newNote:"sol3u3"},
+    {id:"ut-06",notes:["sol3u3","la3u3","si3u3","do4u3","re4u3","mi4u3","fa4u3","sol4u3"],newNote:"sol4u3"},
+    {id:"ut-07",notes:["fa3u3","sol3u3","la3u3","si3u3","do4u3","re4u3","mi4u3","fa4u3","sol4u3"],newNote:"fa3u3"},
+    {id:"ut-08",notes:["fa3u3","sol3u3","la3u3","si3u3","do4u3","re4u3","mi4u3","fa4u3","sol4u3","la4u3"],newNote:"la4u3"},
+    {id:"ut-09",notes:["mi3u3","fa3u3","sol3u3","la3u3","si3u3","do4u3","re4u3","mi4u3","fa4u3","sol4u3","la4u3"],newNote:"mi3u3"},
+    {id:"ut-10",notes:["mi3u3","fa3u3","sol3u3","la3u3","si3u3","do4u3","re4u3","mi4u3","fa4u3","sol4u3","la4u3","si4u3"],newNote:"si4u3"},
+    {id:"ut-11",notes:["re3u3","mi3u3","fa3u3","sol3u3","la3u3","si3u3","do4u3","re4u3","mi4u3","fa4u3","sol4u3","la4u3","si4u3"],newNote:"re3u3"},
+    {id:"ut-12",notes:["re3u3","mi3u3","fa3u3","sol3u3","la3u3","si3u3","do4u3","re4u3","mi4u3","fa4u3","sol4u3","la4u3","si4u3","do5u3"],newNote:"do5u3"}
   ]}
 ];
+const CLEF_META={
+  sol:{id:"sol",label:"Clé de sol",shortLabel:"sol",refP:2},
+  fa:{id:"fa",label:"Clé de fa",shortLabel:"fa",refP:6},
+  ut:{id:"ut",label:"Clé d’ut 3e",shortLabel:"ut 3e",refP:4}
+};
+function clefMeta(clef){ return CLEF_META[clef]||CLEF_META.sol; }
+function clefFullLabel(clef){ return clefMeta(clef).label; }
+function clefShortLabel(clef){ return clefMeta(clef).shortLabel; }
 const CARDS = {
   P1:{t:"La clé de sol est une lettre",x:"La clé de sol est un G (sol en notation anglo-saxonne) devenu décoratif au fil des siècles de copie. Sa boucle s'enroule autour de la ligne du sol : la clé ne décore pas, elle désigne.",s:"À vérifier : Grove Music, art. « Clef »."},
   P2:{t:"Pourquoi « do ré mi » ?",x:"Vers l'an 1000, Guido d'Arezzo prend les premières syllabes d'un hymne latin, Ut queant laxis : ut, ré, mi, fa, sol, la. « Ut » deviendra « do ». Tu chantes ses syllabes depuis mille ans.",s:"À vérifier : Britannica, « Guido of Arezzo »."},
@@ -740,6 +787,13 @@ const PROFILE_LEVELS=[
   {id:"annee2",label:"Je commence la clé de fa"},
   {id:"fin_c1",label:"Je lis déjà les deux clés"}
 ];
+const COACH_LEVELS=[
+  {id:"debutant",label:"Débutant · clé de sol",courseId:"sol",profileLevel:"debutant"},
+  {id:"intermediaire",label:"Intermédiaire · clé de fa",courseId:"fa",profileLevel:"annee2"},
+  {id:"avance",label:"Avancé · clé d’ut 3e",courseId:"ut",profileLevel:"fin_c1"}
+];
+function coachLevelById(id){ return COACH_LEVELS.find(function(level){return level.id===id;})||null; }
+function coachLevelForCourse(courseId){ return COACH_LEVELS.find(function(level){return level.courseId===courseId;})||COACH_LEVELS[0]; }
 const PRACTICE_DOMAINS=[
   {id:"lecture",label:"Lecture — évaluée"},
   {id:"rythme",label:"Rythme — mission guidée"},
@@ -805,7 +859,7 @@ function withAcc(o,type){
   return r;
 }
 // Ambitus clavier par clé (calé sur les notes réellement enseignées dans NOTES).
-function kbdRangeFor(clef){ return clef==="fa"?[41,60]:[60,77]; } // fa: fa2–do4 · sol: do4–fa5
+function kbdRangeFor(clef){ return clef==="fa"?[41,60]:(clef==="ut"?[50,72]:[60,77]); } // fa: fa2–do4 · ut3: ré3–do5 · sol: do4–fa5
 function clefNoteIds(clef){ return Object.keys(NOTES).filter(function(id){return NOTES[id].clef===clef;}); }
 // Choisit une cible (avec ou sans altération) dans une plage. Pur : déterministe si rnd fourni.
 function pickKbdTarget(clef,allowAcc,prevMidi,rnd){
@@ -943,6 +997,7 @@ function normalizeProfile(p){
     aspiration:listHas(PROFILE_ASPIRATIONS,p.aspiration)?p.aspiration:"interprete",
     parcours:listHas(PROFILE_PATHS,p.parcours)?p.parcours:"libre",
     niveauDepart:listHas(PROFILE_LEVELS,p.niveauDepart)?p.niveauDepart:"debutant",
+    coachLevel:coachLevelById(p.coachLevel)?p.coachLevel:"",
     targetDate:normalizeTargetDate(p.targetDate),
     dailyMinutes:DAILY_MINUTES.some(function(x){return x.id===Number(p.dailyMinutes);})?Number(p.dailyMinutes):20,
     daysPerWeek:DAYS_PER_WEEK.some(function(x){return x.id===Number(p.daysPerWeek);})?Number(p.daysPerWeek):5,
@@ -951,7 +1006,9 @@ function normalizeProfile(p){
 }
 function courseById(id){ return COURSES.find(function(course){return course.id===id;})||null; }
 function freshCourseProgress(){
-  return {version:3,currentItem:"sol",steps:{sol:0,fa:0},cycles:{sol:0,fa:0},exercises:{sol:0,fa:0},complete:false};
+  const steps=safeMap(),cycles=safeMap(),exercises=safeMap();
+  COURSES.forEach(function(course){steps[course.id]=0;cycles[course.id]=0;exercises[course.id]=0;});
+  return {version:4,currentItem:"sol",steps:steps,cycles:cycles,exercises:exercises,complete:false};
 }
 function freshCourseReviewState(){
   return {version:2,steps:safeMap()};
@@ -995,7 +1052,7 @@ function reconcileCourseProgressWithPaliers(progress,paliers){
     if(minimum>before){ current.steps[id]=minimum; current.cycles[id]=0; }
     current.exercises[id]=Math.max(current.exercises[id]||0,current.steps[id]||0,floor.exercises[id]||0);
   });
-  current.version=3;
+  current.version=4;
   return normalizeCourseProgress(current);
 }
 function normalizeCourseProgress(value){
@@ -1006,45 +1063,74 @@ function normalizeCourseProgress(value){
     out.cycles[course.id]=out.steps[course.id]>=max?0:clampInt(src.cycles&&src.cycles[course.id],0,COURSE_SERIES_PER_STEP-1,0);
     out.exercises[course.id]=Math.max(out.steps[course.id],clampInt(src.exercises&&src.exercises[course.id],0,max,out.steps[course.id]));
   });
-  if(out.steps.sol>=COURSES[0].steps.length) out.currentItem="fa";
-  if(out.steps.fa>=COURSES[1].steps.length){ out.currentItem="fa"; out.complete=true; }
-  else if(src.currentItem==="fa"&&out.steps.sol>=COURSES[0].steps.length) out.currentItem="fa";
+  const sol=courseById("sol"),fa=courseById("fa"),chosen=courseById(src.currentItem);
+  out.complete=!!(sol&&fa&&out.steps.sol>=sol.steps.length&&out.steps.fa>=fa.steps.length);
+  if(chosen) out.currentItem=chosen.id;
+  else if(sol&&out.steps.sol>=sol.steps.length) out.currentItem="fa";
+  if(out.currentItem==="sol"&&sol&&out.steps.sol>=sol.steps.length&&!out.complete) out.currentItem="fa";
+  if(out.complete&&out.currentItem!=="ut") out.currentItem="fa";
   return out;
 }
 function currentCourseState(){
   if(!DB) return null;
   DB.courseProgress=normalizeCourseProgress(DB.courseProgress);
   const progress=DB.courseProgress;
-  if(progress.complete) return null;
-  let item=courseById(progress.currentItem)||COURSES[0];
+  const profile=normalizeProfile(DB.profile),level=coachLevelById(profile.coachLevel);
+  if(!level&&progress.complete) return null;
+  let item=level?courseById(level.courseId):(courseById(progress.currentItem)||COURSES[0]);
+  if(!item) return null;
+  if(level) progress.currentItem=item.id;
   let index=progress.steps[item.id]||0;
   if(index>=item.steps.length){
+    if(level) return null;
     const next=COURSES[COURSES.indexOf(item)+1];
-    if(!next){ progress.complete=true; return null; }
+    if(!next||next.id==="ut"){ progress.complete=true; return null; }
     item=next; progress.currentItem=item.id; index=progress.steps[item.id]||0;
   }
   const step=item.steps[index], seriesIndex=progress.cycles[item.id]||0;
   return step?{item:item,index:index,step:step,seriesIndex:seriesIndex,progress:progress}:null;
 }
 function coursePalierFor(step){
-  return PALIERS.find(function(p){ return step.notes.every(function(id){return p.notes.indexOf(id)>=0;}); })||PALIERS[0];
+  const found=PALIERS.find(function(p){ return step.notes.every(function(id){return p.notes.indexOf(id)>=0;}); });
+  if(found) return found;
+  const ids=(step&&Array.isArray(step.notes)?step.notes:[]).filter(function(id){return !!NOTES[id];});
+  const clef=ids[0]?NOTES[ids[0]].clef:"sol";
+  return {id:"COURSE_"+clef.toUpperCase(),t:clefFullLabel(clef),sub:"Parcours d’acquisition indépendant",notes:ids,courseOnly:true};
+}
+function markPalierSeen(palier){
+  if(!palier||palier.courseOnly||!PALIERS.some(function(p){return p.id===palier.id;})) return false;
+  DB.seen[palier.id]=true;return true;
 }
 function courseQuestionBudget(step){
   return Math.min(COURSE_QUESTION_BUDGET,MAX_QUESTIONS_PER_EXERCISE);
 }
 function courseDecision(){
   const state=currentCourseState();
-  if(!state) return null;
+  if(!state){
+    const profile=normalizeProfile(DB&&DB.profile), level=coachLevelById(profile.coachLevel), item=level&&courseById(level.courseId);
+    const progress=normalizeCourseProgress(DB&&DB.courseProgress);
+    if(!item||(progress.steps[item.id]||0)<item.steps.length) return null;
+    const review=courseReviewDecision(item.id,item.steps.length-1);
+    if(!review) return null;
+    review.kind="course";
+    review.label="Entraînement continu";
+    review.reason="Parcours acquis. "+review.reason;
+    review.course.continuous=true;
+    review.course.phaseLabel="Entraînement continu";
+    review.course.signature="course-continuous-v3:"+review.practice.variantId;
+    return review;
+  }
   const item=state.item, step=state.step, palier=coursePalierFor(step), budget=courseQuestionBudget(step);
-  const newLabel=step.newNote&&NOTES[step.newNote]?NOTES[step.newNote].n.toUpperCase():"SOL · LA · SI";
+  const firstLabels=step.notes.slice(0,3).map(function(id){return NOTES[id]?NOTES[id].n.toUpperCase():"";}).filter(Boolean).join(" · ");
+  const newLabel=step.newNote&&NOTES[step.newNote]?NOTES[step.newNote].n.toUpperCase():firstLabels;
   const seriesNumber=state.seriesIndex+1, phaseLabels=["Découverte active","Consolidation","Validation"];
   DB.courseReviewState=normalizeCourseReviewState(DB.courseReviewState);
   const stored=DB.courseReviewState.steps[step.id]||{run:0,courseRun:0,recent:[],lastScript:[],lastCourseScript:[]};
   const practice=partitionPracticePlan(item.id,state.index,stored.courseRun||0,stored.lastCourseScript||[],"course-"+state.seriesIndex);
   return {
-    kind:"course",label:"Cycle d’acquisition",n:budget,questionCap:budget,palier:palier,pool:step.notes.slice(),mode:"zen",groupN:1,
+    kind:"course",label:"Étape d’acquisition",n:budget,questionCap:budget,palier:palier,pool:step.notes.slice(),mode:"zen",groupN:1,
     script:practice?practice.script.slice():null,practice:practice,
-    reason:(step.newNote?"Nouveauté du cycle : "+newLabel+".":"Trois repères pour démarrer : SOL, LA, SI.")+" Série "+seriesNumber+"/"+COURSE_SERIES_PER_STEP+" : 25 notes dorées dans de vrais fragments, sans ordre de boutons mémorisable.",
+    reason:(step.newNote?"Nouveauté de l’étape : "+newLabel+".":"Trois repères pour démarrer : "+newLabel+".")+" Série "+seriesNumber+"/"+COURSE_SERIES_PER_STEP+" : 25 notes dorées dans de vrais fragments, sans ordre de boutons mémorisable.",
     course:{itemId:item.id,itemLabel:item.label,stepId:step.id,stepIndex:state.index,stepTotal:item.steps.length,newNote:step.newNote||"",seriesIndex:state.seriesIndex,seriesNumber:seriesNumber,seriesTotal:COURSE_SERIES_PER_STEP,phaseLabel:phaseLabels[state.seriesIndex]||"Acquisition",practice:practice,signature:"course-v3:"+item.id+":"+state.index+":"+state.seriesIndex}
   };
 }
@@ -1069,34 +1155,62 @@ function advanceCourseExercise(course,perfect){
   progress.cycles[item.id]=0;
   progress.exercises[item.id]=Math.max(progress.exercises[item.id]||0,next);
   if(next>=item.steps.length){
-    const following=COURSES[COURSES.indexOf(item)+1];
-    if(following) progress.currentItem=following.id;
-    else progress.complete=true;
+    const level=coachLevelById(normalizeProfile(DB.profile).coachLevel);
+    if(level) progress.currentItem=item.id;
+    else {
+      const following=item.id==="sol"?courseById("fa"):null;
+      if(following) progress.currentItem=following.id;
+      else if(item.id==="fa") progress.complete=true;
+    }
   } else progress.currentItem=item.id;
   DB.courseProgress=normalizeCourseProgress(progress);
   return courseDecision();
 }
 function reviewableCourseSteps(){
   if(!DB) return [];
-  const progress=normalizeCourseProgress(DB.courseProgress), rows=[];
+  const progress=normalizeCourseProgress(DB.courseProgress), rows=[],selected=coachLevelById(normalizeProfile(DB.profile).coachLevel);
   COURSES.forEach(function(item,itemIndex){
     let count=0;
-    if(itemIndex===0) count=Math.min(item.steps.length,(progress.steps[item.id]||0)+1);
-    else if((progress.steps[COURSES[0].id]||0)>=COURSES[0].steps.length) count=Math.min(item.steps.length,(progress.steps[item.id]||0)+1);
-    if(progress.complete) count=item.steps.length;
+    const reached=progress.steps[item.id]||0,selectedHere=!!(selected&&selected.courseId===item.id);
+    if(item.id==="sol") count=Math.min(item.steps.length,reached+1);
+    else if(item.id==="fa"&&((progress.steps.sol||0)>=courseById("sol").steps.length||selectedHere||reached>0)) count=Math.min(item.steps.length,reached+1);
+    else if(item.id==="ut"&&(selectedHere||reached>0)) count=Math.min(item.steps.length,reached+1);
+    if(progress.complete&&item.id!=="ut") count=item.steps.length;
     for(let index=0;index<count;index++) rows.push({item:item,index:index,step:item.steps[index]});
   });
   return rows;
 }
-const PARTITION_PRACTICE_CARD_CACHE=safeMap();
+const PARTITION_PRACTICE_CARD_CACHE=safeMap(), PARTITION_PRACTICE_CACHE_ORDER=[];
+const PARTITION_PRACTICE_CACHE_LIMIT=2, PARTITION_PRACTICE_CARD_LIMIT_PER_SOURCE=24;
+function partitionPracticeCacheRead(key){
+  if(!hasOwn(PARTITION_PRACTICE_CARD_CACHE,key)) return null;
+  const index=PARTITION_PRACTICE_CACHE_ORDER.indexOf(key);
+  if(index>=0) PARTITION_PRACTICE_CACHE_ORDER.splice(index,1);
+  PARTITION_PRACTICE_CACHE_ORDER.push(key);
+  return PARTITION_PRACTICE_CARD_CACHE[key];
+}
+function partitionPracticeCacheWrite(key,cards){
+  PARTITION_PRACTICE_CARD_CACHE[key]=cards;
+  const index=PARTITION_PRACTICE_CACHE_ORDER.indexOf(key);
+  if(index>=0) PARTITION_PRACTICE_CACHE_ORDER.splice(index,1);
+  PARTITION_PRACTICE_CACHE_ORDER.push(key);
+  while(PARTITION_PRACTICE_CACHE_ORDER.length>PARTITION_PRACTICE_CACHE_LIMIT){
+    const old=PARTITION_PRACTICE_CACHE_ORDER.shift();delete PARTITION_PRACTICE_CARD_CACHE[old];
+  }
+  return cards;
+}
+function partitionPracticeCacheStats(){
+  const keys=Object.keys(PARTITION_PRACTICE_CARD_CACHE);
+  return {entries:keys.length,cards:keys.reduce(function(total,key){return total+PARTITION_PRACTICE_CARD_CACHE[key].length;},0),limit:PARTITION_PRACTICE_CACHE_LIMIT,perSourceLimit:PARTITION_PRACTICE_CARD_LIMIT_PER_SOURCE};
+}
 function partitionPracticeMotifs(step){
   if(!step||!Array.isArray(step.notes)||!step.notes.length||typeof PIECES_BUILTIN==="undefined") return [];
   const cacheKey=step.id+"|"+step.notes.join(".");
-  if(PARTITION_PRACTICE_CARD_CACHE[cacheKey]) return PARTITION_PRACTICE_CARD_CACHE[cacheKey];
+  const cached=partitionPracticeCacheRead(cacheKey);if(cached) return cached;
   const target=step.notes.filter(function(id){return !!NOTES[id];}).slice().sort(function(a,b){return NOTES[a].midi-NOTES[b].midi;});
   if(!target.length) return [];
-  const clef=NOTES[target[0]].clef, out=[], seen=safeMap(), byMidi=safeMap();
-  target.forEach(function(id){byMidi[String(NOTES[id].midi)]=id;});
+  const clef=NOTES[target[0]].clef, byMidi=safeMap(), buckets=safeMap();
+  target.forEach(function(id){byMidi[String(NOTES[id].midi)]=id;buckets[id]=safeMap();});
   // Une seule version canonique par œuvre. Les cartes en clé de fa sont de
   // vraies transpositions constantes, jamais un contour recollé ou réinventé.
   const sourceIds=["aclair","frere","odejoie","ventdhiver"];
@@ -1122,11 +1236,11 @@ function partitionPracticeMotifs(step){
           const sourceBeats=durations.slice(start,start+length), from=bars[start],to=bars[start+length-1], phraseKey=piece.id+":"+start+":"+length+":"+shift;
           for(let targetIndex=0;targetIndex<mapped.length;targetIndex++){
             const key=phraseKey+":"+targetIndex;
-            if(seen[key]) continue;
-            seen[key]=1;
-            out.push({
+            const targetId=mapped[targetIndex], bucket=buckets[targetId][piece.id]||(buckets[targetId][piece.id]=[]);
+            if(bucket.length>=PARTITION_PRACTICE_CARD_LIMIT_PER_SOURCE) continue;
+            bucket.push({
               sourcePieceId:piece.id,sourceTitle:piece.titre,sourceComposer:piece.compositeur||"",bars:"mes. "+from+(to!==from?"–"+to:""),
-              sourceNotes:sourceNotes.slice(),sourceBeats:sourceBeats.slice(),notes:mapped.slice(),beats:sourceBeats.slice(),targetId:mapped[targetIndex],targetIndex:targetIndex,
+              sourceNotes:sourceNotes.slice(),sourceBeats:sourceBeats.slice(),notes:mapped.slice(),beats:sourceBeats.slice(),targetId:targetId,targetIndex:targetIndex,
               shiftSemitones:shift,exact:true,rhythmExact:true,bpm:melody.bpm,sourceStart:start,phraseKey:phraseKey,cardKey:key,length:length,clef:clef,sourceClef:NOTES[sourceNotes[0]].clef
             });
           }
@@ -1134,8 +1248,9 @@ function partitionPracticeMotifs(step){
       }
     }
   });
-  PARTITION_PRACTICE_CARD_CACHE[cacheKey]=out;
-  return out;
+  const out=[];
+  target.forEach(function(id){sourceIds.forEach(function(sourceId){Array.prototype.push.apply(out,buckets[id][sourceId]||[]);});});
+  return partitionPracticeCacheWrite(cacheKey,out);
 }
 function partitionPracticeHash(value){
   const text=String(value||""); let hash=2166136261;
@@ -1305,11 +1420,12 @@ function courseReviewDecision(itemId,stepIndex){
   };
 }
 function startCourseReview(itemId,stepIndex){
+  if(protectedGameStartBlocked()) return false;
   if(EX&&!EX.done) return false;
   const review=courseReviewDecision(itemId,stepIndex);
   if(!review) return false;
   claimCourseReviewPlan(review.course.stepId,review.practice);
-  DB.sel=review.palier.id; save();
+  if(!review.palier.courseOnly){DB.sel=review.palier.id;markPalierSeen(review.palier);} save();
   beginSerie({sessionMode:"courseReview",n:review.n,questionCap:review.questionCap,palier:review.palier,pool:review.pool,mode:review.mode,groupN:1,script:review.script,
     label:"Lecture sur partitions · étude "+review.practice.number,course:review.course,practice:review.practice,cold:false});
   return true;
@@ -1557,7 +1673,7 @@ function normalizePiece(p,idx){
     id:cleanId(p.id,"u"),
     titre:titre,
     compositeur:cleanText(p.compositeur||p.composer||p.author,80,"(perso)"),
-    clef:["sol","fa","deux"].indexOf(p.clef)>=0?p.clef:"sol",
+    clef:["sol","fa","ut","deux"].indexOf(p.clef)>=0?p.clef:"sol",
     key:cleanText(p.key||p.tonalite,40,""),
     pd:!!p.pd,
     info:cleanText(p.info||p.description,240,"Partition perso — fais ton premier regard sur ta copie."),
@@ -1566,7 +1682,12 @@ function normalizePiece(p,idx){
   const att=normalizeAttachment(p.attachment||p.file);
   if(att) piece.attachment=att;
   const mel=normalizeMelody(p.melody);
-  if(mel) piece.melody=mel;
+  if(mel){
+    piece.melody=mel;
+    const melodyClefs=uniq([].concat.apply([],mel.measures).map(function(id){return NOTES[id].clef;}));
+    if(melodyClefs.length===1) piece.clef=melodyClefs[0];
+    else if(melodyClefs.length>1) piece.clef="deux";
+  }
   const segments=(Array.isArray(p.segments)?p.segments:[]).map(function(s,i){return normalizeSegment(s,i,piece);}).filter(Boolean).slice(0,24);
   if(segments.length) piece.segments=segments;
   return piece;
@@ -1714,9 +1835,12 @@ function backfillCurriculumFromGame(db){
   const runtimeVersion=CURRICULUM_CATALOG?clampInt(CURRICULUM_CATALOG.schemaVersion,1,99,CURRICULUM_CATALOG_VERSION):CURRICULUM_CATALOG_VERSION;
   if(clampInt(db.curriculum.catalogVersion,1,99,CURRICULUM_CATALOG_VERSION)>runtimeVersion) return db; // une ancienne app ne réécrit jamais un futur catalogue
   const progress=db.curriculum.progress||safeMap();
+  const curriculumNoteIds=uniq([].concat.apply([],PALIERS.map(function(p){return p.notes;}))),curriculumNoteMap=safeMap();
+  curriculumNoteIds.forEach(function(id){curriculumNoteMap[id]=1;});
   let recognitionAttempts=0,recognitionSuccesses=0,retentionAttempts=0,retentionSuccesses=0,lastRecognition=0,lastRetention=0;
   const recognitionCovered=safeMap(),retentionCovered=safeMap();
   Object.keys(db.noteStats||{}).forEach(function(id){
+    if(!curriculumNoteMap[id]) return; // l'ut 3e reste une preuve indépendante du cursus sol/fa existant
     const s=db.noteStats[id];
     recognitionAttempts+=s.v||0;recognitionSuccesses+=Math.max(0,(s.v||0)-(s.e||0));lastRecognition=Math.max(lastRecognition,s.last||0);
     retentionAttempts+=s.coldV||0;retentionSuccesses+=Math.max(0,(s.coldV||0)-(s.coldE||0));lastRetention=Math.max(lastRetention,s.lastCold||0);
@@ -1729,7 +1853,7 @@ function backfillCurriculumFromGame(db){
     if(row.cold){if(useSeriesRetention){retentionAttempts++;if(row.cold.ok)retentionSuccesses++;}if(row.cold.ok)retentionCovered[row.cold.id]=1;lastRetention=Math.max(lastRetention,row.ts||0);}
   });});});
   if(recognitionAttempts){
-    const fragile=(db.repairQueue||[]).length>0||(recognitionAttempts>=10&&recognitionSuccesses/recognitionAttempts<.8);
+    const fragile=(db.repairQueue||[]).some(function(item){return item&&(curriculumNoteMap[item.sourceId]||curriculumNoteMap[item.probeId]||curriculumNoteMap[item.confusedId]);})||(recognitionAttempts>=10&&recognitionSuccesses/recognitionAttempts<.8);
     const rhodium=PALIERS.every(function(p){return !!(db.paliers&&db.paliers[p.id]&&db.paliers[p.id].rhodium&&db.paliers[p.id].rhodium.ok);});
     const requiredNotes=uniq(PALIERS[PALIERS.length-1].notes).length,retainedNotes=Object.keys(retentionCovered).filter(function(id){return NOTES[id];}).length;
     const proofs={
@@ -1822,7 +1946,7 @@ function backupToDb(o){
   if(o.history && Array.isArray(o.history.events)) db.events=o.history.events;
   db._sezam={
     app:"SEZAM",
-    schema:13,
+    schema:14,
     userId:cleanId(o.userId,"user"),
     createdAt:clampInt(o.createdAt||o.timestamp,0,Number.MAX_SAFE_INTEGER,Date.now()),
     updatedAt:clampInt(o.timestamp,0,Number.MAX_SAFE_INTEGER,Date.now()),
@@ -1834,7 +1958,7 @@ function backupToDb(o){
 function ensureMeta(db){
   if(!db._sezam||typeof db._sezam!=="object") db._sezam={};
   db._sezam.app="SEZAM";
-  db._sezam.schema=13;
+  db._sezam.schema=14;
   if(!db._sezam.userId) db._sezam.userId=makeLocalId("user");
   db._sezam.userId=cleanId(db._sezam.userId,"user");
   if(db._sezam.playerId&&!isSafeId(db._sezam.playerId)) delete db._sezam.playerId;
@@ -1943,7 +2067,7 @@ function ensureStructure(db){
   if(!db.mode||(db.mode!=="libre"&&TIER_IDS.indexOf(db.mode)<0)) db.mode="zen";
   if(db.mode!=="libre" && tierDef(db.mode) && tierDef(db.mode).future) db.mode="zen";
   if(!PALIERS.find(function(p){return p.id===db.sel;})) db.sel="P1";
-  db.v=12;
+  db.v=13;
   return backfillCurriculumFromGame(db);
 }
 const LS_KEY="solfegeProto1", LS_MIRROR="solfegeProto1_mirror", LS_PREIMPORT="solfegeProto1_preimport", LS_CHECKPOINT="solfegeProto1_checkpoint";
@@ -2248,21 +2372,31 @@ function restoredMemoryOverlayCanBind(runtime,type){
   }
   return true;
 }
+function memoryCourseContext(){
+  const live=typeof EX!=="undefined"&&EX&&EX.course?EX.course:null;
+  if(live) return live;
+  if(!DB) return null;
+  const progress=normalizeCourseProgress(DB.courseProgress),selected=coachLevelById(normalizeProfile(DB.profile).coachLevel);
+  const item=courseById(selected?selected.courseId:progress.currentItem);
+  if(!item) return null;
+  const reached=progress.steps[item.id]||0,completed=reached>=item.steps.length,index=Math.max(0,Math.min(item.steps.length-1,reached));
+  return {itemId:item.id,itemLabel:item.label,stepIndex:index,stepTotal:item.steps.length,seriesNumber:completed?COURSE_SERIES_PER_STEP:((progress.cycles[item.id]||0)+1),seriesTotal:COURSE_SERIES_PER_STEP,completed:completed};
+}
 function memoryLevelContext(extra){
   extra=extra||{};
   const sel=PALIERS.find(function(p){return p.id===DB.sel;})||PALIERS[0],pi=Math.max(0,PALIERS.findIndex(function(p){return p.id===sel.id;}));
-  const course=typeof EX!=="undefined"&&EX&&EX.course?EX.course:null;
+  const course=memoryCourseContext();
   const level=course?course.stepIndex+1:pi+1;
-  const levelLabel=course?(course.itemLabel+" · cycle "+(course.stepIndex+1)+"/"+course.stepTotal+" · série "+course.seriesNumber+"/"+course.seriesTotal):(sel.id+" · "+sel.t);
+  const levelLabel=course?(course.itemLabel+" · étape "+(course.stepIndex+1)+"/"+course.stepTotal+(course.review?(course.continuous?" · entraînement continu":" · entraînement libre"):(course.completed?" · acquise":" · série "+course.seriesNumber+"/"+course.seriesTotal))):(sel.id+" · "+sel.t);
   const noteIds=Object.keys(DB.noteStats||{}).filter(function(id){const s=DB.noteStats[id]||{};return NOTES[id]&&((s.v||0)>0||(s.box||0)>0||(s.last||0)>0);}).sort();
   let attempts=0,errors=0;noteIds.forEach(function(id){attempts+=DB.noteStats[id].v||0;errors+=DB.noteStats[id].e||0;});
   let validations=0;PALIERS.forEach(function(p){TIER_IDS.forEach(function(t){if(DB.paliers[p.id]&&DB.paliers[p.id][t]&&DB.paliers[p.id][t].ok)validations++;});});
   const scene=activeMemoryScreen(),current=typeof EX!=="undefined"&&EX&&!EX.done?("question "+((EX.i||0)+1)+"/"+(EX.n||EX.questionCap||"?")):(typeof KX!=="undefined"&&KX&&!KX.done?("clavier "+((KX.i||0)+1)+"/"+KX.n):"écran "+scene);
-  const choices="mode "+DB.mode+" · thème "+(DB.themeMode||"classique")+" · parcours "+((DB.profile&&DB.profile.parcours)||"libre")+" · œuvre "+(DB.activePiece||"aucune");
+  const choices="mode "+DB.mode+" · thème "+(DB.themeMode||"classique")+" · parcours "+((DB.profile&&DB.profile.parcours)||"libre")+" · niveau Coach "+(displayedCoachLevelId?displayedCoachLevelId():"non choisi")+" · œuvre "+(DB.activePiece||"aucune");
   const summary="Niveau "+level+" ("+levelLabel+") · "+(DB.xp||0)+" XP · "+noteIds.length+" notes mémorisées · "+attempts+" réponses, "+errors+" erreurs · "+validations+" validations · "+(DB.repairQueue||[]).length+" réparations en cours · "+(DB.pieces||[]).length+" partitions personnelles · "+current+" · "+choices+".";
   return {level:level,levelLabel:levelLabel,palier:sel.id,xp:DB.xp||0,noteIds:noteIds,attempts:attempts,errors:errors,validations:validations,repairs:(DB.repairQueue||[]).length,pieces:(DB.pieces||[]).length,scene:scene,current:current,choices:choices,summary:summary,milestone:cleanText(extra.milestone,180,"")};
 }
-function memoryKindLabel(kind){return {manual:"Manuelle",level_complete:"Niveau terminé",pre_restore:"Avant restauration",pre_import:"Avant import",pre_recovery:"Avant code de reprise",pre_cloud:"Avant synchro cloud",pre_delete_cloud:"Avant suppression cloud",pre_delete:"Avant suppression",legacy_preimport:"Ancienne protection"}[kind]||"Protection automatique";}
+function memoryKindLabel(kind){return {manual:"Manuelle",level_complete:"Niveau terminé",pre_level_change:"Avant changement de niveau",pre_restore:"Avant restauration",pre_import:"Avant import",pre_recovery:"Avant code de reprise",pre_cloud:"Avant synchro cloud",pre_delete_cloud:"Avant suppression cloud",pre_delete:"Avant suppression",legacy_preimport:"Ancienne protection"}[kind]||"Protection automatique";}
 function formatMemoryDate(ts){try{return new Date(ts).toLocaleString("fr-FR",{dateStyle:"short",timeStyle:"medium"});}catch(e){return new Date(ts).toLocaleString("fr-FR");}}
 function finalizedMemoryMeta(record,number,storage){
   const createdAt=record.createdAt,id=record.playerId+"-"+String(number).padStart(12,"0")+"-"+record.captureId;
@@ -2452,7 +2586,7 @@ function bindRestoredOverlay(runtime){
   else if(runtime.overlayType==="sync_choice")bindSyncChoiceDialog(runtime.syncRemote||null,true);
   else if(runtime.overlayType==="discovery"&&EX){
     const go=$("btnDecGo"),home=$("btnDecHome");
-    if(go)go.onclick=function(){DB.seen[EX.palier.id]=true;save();$("overlay").classList.remove("on");EX.pendingDecouverte=false;nextQuestion();};
+    if(go)go.onclick=function(){markPalierSeen(EX.palier);save();$("overlay").classList.remove("on");EX.pendingDecouverte=false;nextQuestion();};
     if(home)home.onclick=function(){$("overlay").classList.remove("on");returnToHomeFromExercise();};
   } else if(runtime.overlayType==="preview"&&EX){
     const go=$("btnPrepGo"),home=$("btnPrepHome");
@@ -2585,6 +2719,69 @@ function manualMemorySnapshot(source){
     if(res.ok&&$("memoryList"))renderMemoryHistory();
   });
 }
+function protectedGameStartBlocked(){
+  if(!(memoryProtectedActionBusy||memoryRestoreBusy||playerOperationBusy)) return false;
+  memoryToast("Attends la confirmation de l’enregistrement avant de jouer. Rien n’a été perdu.",false);
+  return true;
+}
+function displayedCoachLevelId(){
+  const profile=normalizeProfile(DB&&DB.profile),explicit=coachLevelById(profile.coachLevel);
+  if(explicit) return explicit.id;
+  const progress=normalizeCourseProgress(DB&&DB.courseProgress),derived=coachLevelForCourse(progress.currentItem);
+  return derived.id;
+}
+function coachLevelProgressText(level){
+  const course=level&&courseById(level.courseId),progress=normalizeCourseProgress(DB&&DB.courseProgress);
+  if(!course) return "niveau inconnu";
+  const step=Math.min(course.steps.length,(progress.steps[course.id]||0)+1);
+  if((progress.steps[course.id]||0)>=course.steps.length) return level.label+" · toutes les étapes sont acquises";
+  return level.label+" · étape "+step+"/"+course.steps.length+" · série "+((progress.cycles[course.id]||0)+1)+"/"+COURSE_SERIES_PER_STEP;
+}
+function saveCoachLevel(levelId,cb){
+  cb=typeof cb==="function"?cb:function(){};
+  const level=coachLevelById(levelId);
+  if(!level){cb({ok:false,message:"Ce niveau n’existe pas."});return false;}
+  if(memoryProtectedActionBusy||memoryRestoreBusy||playerOperationBusy){
+    const message="Une sauvegarde protégée est déjà en cours. Réessaie dès sa confirmation ; rien n’a été perdu.";
+    memoryToast(message,false);cb({ok:false,message:message});return false;
+  }
+  const token=memoryActionToken(),oldLevel=normalizeProfile(DB.profile).coachLevel,oldCourseItem=normalizeCourseProgress(DB.courseProgress).currentItem,changed=oldLevel!==level.id;
+  const rollback=function(message,safetyMeta){
+    let persisted=false;
+    try{
+      DB.profile=normalizeProfile(Object.assign({},DB.profile||{},{coachLevel:oldLevel}));
+      DB.courseProgress=normalizeCourseProgress(DB.courseProgress);DB.courseProgress.currentItem=oldCourseItem;
+      persisted=save({touch:false,cloud:false});applyTheme();
+    }catch(e){}
+    if(!persisted){
+      const point=safetyMeta&&safetyMeta.name?(" Restaure « "+safetyMeta.name+" » avant de recharger la page."):" Exporte immédiatement la progression affichée avant de recharger la page.";
+      message="L’ancien niveau est revenu à l’écran, mais le stockage actif n’a pas confirmé sa restauration."+point+" Aucun point de sauvegarde existant n’a été effacé.";
+    }
+    memoryProtectedActionBusy=false;memoryToast(message,true);cb({ok:false,message:message,rollbackPersisted:persisted,safety:safetyMeta||null});
+  };
+  const applyAndSave=function(safetyMeta){
+    if(!memoryActionCurrent(token)){memoryProtectedActionBusy=false;cb({ok:false,message:"Le joueur actif a changé : niveau inchangé."});return;}
+    DB.profile=normalizeProfile(Object.assign({},DB.profile||{},{coachLevel:level.id}));
+    DB.courseProgress=normalizeCourseProgress(DB.courseProgress);
+    DB.courseProgress.currentItem=level.courseId;
+    if(!save({cloud:false})){rollback("Enregistrement impossible : le niveau précédent reste actif et la progression est intacte.",safetyMeta);return;}
+    const milestone="Niveau du Coach enregistré · "+coachLevelProgressText(level);
+    createMemorySnapshot("manual",{milestone:milestone,notify:false},function(result){
+      if(!memoryActionCurrent(token)){memoryProtectedActionBusy=false;cb({ok:false,message:"Le joueur actif a changé avant la confirmation."});return;}
+      if(!result.ok){rollback("Le niveau précédent a été restauré car la sauvegarde complète n’a pas pu être créée. Aucun acquis n’a été effacé.",safetyMeta);return;}
+      memoryProtectedActionBusy=false;queueCloudSync();
+      const message="✓ "+coachLevelProgressText(level)+" enregistré · "+result.meta.name+". Tous les acquis antérieurs restent disponibles.";
+      memoryToast(message,false);cb({ok:true,message:message,meta:result.meta,safety:safetyMeta||null,level:level});
+    });
+  };
+  memoryProtectedActionBusy=true;
+  if(!changed){applyAndSave(null);return true;}
+  createMemorySnapshot("pre_level_change",{milestone:"Avant le choix « "+level.label+" »",notify:false},function(safety){
+    if(!safety.ok){memoryProtectedActionBusy=false;const message="Changement annulé : l’état actuel n’a pas pu être protégé d’abord. Rien n’a été modifié.";memoryToast(message,true);cb({ok:false,message:message});return;}
+    applyAndSave(safety.meta);
+  });
+  return true;
+}
 function protectMemoryAction(milestone,action,onFail){
   if(memoryProtectedActionBusy||memoryRestoreBusy){if(onFail)onFail("Une autre protection est déjà en cours.");return false;}
   const token=memoryActionToken();memoryProtectedActionBusy=true;
@@ -2711,7 +2908,7 @@ function save(opts){
   return ok&&registryOk;
 }
 function freshPlayerState(id,name){
-  const db=ensureStructure({_sezam:{app:"SEZAM",schema:13,userId:id,playerId:id,createdAt:Date.now(),updatedAt:Date.now()},profile:{displayName:name}});
+  const db=ensureStructure({_sezam:{app:"SEZAM",schema:14,userId:id,playerId:id,createdAt:Date.now(),updatedAt:Date.now()},profile:{displayName:name}});
   db._sezam.playerId=id;return db;
 }
 function playerSummary(state){
@@ -2928,7 +3125,7 @@ function visiblePaliers(){
   return out;
 }
 
-const PROFILE_START_PALIERS={annee1:"P3",annee2:"P6",fin_c1:"B1"};
+const PROFILE_START_PALIERS={debutant:"P1",annee1:"P3",annee2:"P6",fin_c1:"B1"};
 function profileStartPalier(level){ return PROFILE_START_PALIERS[level]||null; }
 function applyProfileStartPlacement(level){
   const pid=profileStartPalier(level);
@@ -3205,6 +3402,18 @@ function clefSVG(clef,top,half,opts){
     return '<text class="clef clef-sol" data-ref-p="2" data-ref-y="'+fmtN(staffY(top,half,2))+
       '" x="'+fmtN(x)+'" y="'+fmtN(y)+'" font-size="'+fmtN(size)+'" font-family="'+musicFont+'" fill="'+color+'">\u{1D11E}</text>';
   }
+  if(clef==="ut"){
+    // Clé d'ut 3e vectorielle : son centre désigne exactement le do médian
+    // sur la troisième ligne (p=4), sans dépendre d'une police musicale.
+    const x=opts.x!==undefined?opts.x:17,scale=half/9,yDo=staffY(top,half,4),h=31*scale;
+    return '<g class="clef clef-ut" data-ref-p="4" data-ref-y="'+fmtN(yDo)+'">'+
+      '<path d="M '+fmtN(x+3*scale)+' '+fmtN(yDo-h)+' L '+fmtN(x+3*scale)+' '+fmtN(yDo+h)+
+        ' M '+fmtN(x+9*scale)+' '+fmtN(yDo-h)+' L '+fmtN(x+9*scale)+' '+fmtN(yDo+h)+'" fill="none" stroke="'+color+'" stroke-width="'+fmtN(3.4*scale)+'" stroke-linecap="square"/>'+
+      '<path d="M '+fmtN(x+11*scale)+' '+fmtN(yDo-h)+' C '+fmtN(x+31*scale)+' '+fmtN(yDo-h)+" "+fmtN(x+38*scale)+" "+fmtN(yDo-17*scale)+" "+fmtN(x+24*scale)+" "+fmtN(yDo)+
+        ' C '+fmtN(x+38*scale)+' '+fmtN(yDo+17*scale)+" "+fmtN(x+31*scale)+" "+fmtN(yDo+h)+" "+fmtN(x+11*scale)+" "+fmtN(yDo+h)+'" fill="none" stroke="'+color+'" stroke-width="'+fmtN(4.8*scale)+'" stroke-linecap="round" stroke-linejoin="round"/>'+
+      '<circle cx="'+fmtN(x+24*scale)+'" cy="'+fmtN(yDo)+'" r="'+fmtN(3.2*scale)+'" fill="'+color+'"/>'+
+      '</g>';
+  }
   // Clé de fa vectorielle : le glyphe Unicode varie trop selon la police et le navigateur.
   // Les deux points encadrent toujours la 4e ligne (fa, p=6), y compris dans Firefox/macOS.
   const x=opts.x!==undefined?opts.x:18, scale=half/9;
@@ -3274,19 +3483,29 @@ function staffDurationLabel(beats){
   if(value>=4) return "ronde";
   return value===1?"noire":"";
 }
-function staffAriaLabel(clef,notes){
-  const name="Portée en clé de "+(clef==="sol"?"sol":"fa"), list=notes||[];
+function staffTargetOrdinal(index){
+  return ["première","deuxième","troisième","quatrième","cinquième","sixième","septième","huitième"][index]||((index+1)+"e");
+}
+function staffAriaLabel(clef,notes,caretX){
+  const name="Portée en "+clefFullLabel(clef).toLowerCase(), list=notes||[];
   if(!list.length) return name+".";
   function describe(note){const rhythm=staffDurationLabel(note.beats);return staffPositionLabel(note.p)+(rhythm?", "+rhythm:"");}
   if(list.length===1) return name+". Une note à identifier "+describe(list[0])+".";
+  let targetIndex=list.findIndex(function(note){return note&&note.target===true;}), distance=Infinity;
+  if(targetIndex<0&&caretX!==undefined&&caretX!==null){
+    list.forEach(function(note,index){const d=Math.abs(Number(note.x)-Number(caretX));if(Number.isFinite(d)&&d<distance){distance=d;targetIndex=index;}});
+  }
+  if(targetIndex>=0){
+    return name+". La note à répondre est la "+staffTargetOrdinal(targetIndex)+" de gauche à droite, "+describe(list[targetIndex])+". Le fragment contient "+list.length+" notes : "+list.map(describe).join(", ")+".";
+  }
   return name+". "+list.length+" notes à identifier, de gauche à droite : "+list.map(describe).join(", ")+".";
 }
 function staffSVG(clef,notes,caretX){ // notes=[{p,color,x,acc,big,mark}]
   const W=STAFF.W, H=STAFF.H;
-  let s='<svg id="staffsvg" role="img" aria-label="'+esc(staffAriaLabel(clef,notes))+'" viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block">';
+  let s='<svg id="staffsvg" role="img" aria-label="'+esc(staffAriaLabel(clef,notes,caretX))+'" viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block">';
   for(let i=0;i<5;i++){const y=STAFF.top+i*2*STAFF.half;
     s+='<line x1="14" y1="'+y+'" x2="'+(W-14)+'" y2="'+y+'" stroke="#4a4337" stroke-width="1.6"/>';}
-  s+=clefSVG(clef,STAFF.top,STAFF.half,{x:clef==="sol"?20:18});
+  s+=clefSVG(clef,STAFF.top,STAFF.half,{x:clef==="sol"?20:(clef==="ut"?17:18)});
   (notes||[]).forEach(function(nx){
     s+=noteGlyph(nx.x,nx.p,nx.color||"#15171c",nx.acc,nx.big===2?2:(nx.big?1:0),nx.beats);
     if(nx.mark){ // 2e canal : forme/texte, lisible sans la couleur (daltonisme)
@@ -3297,7 +3516,7 @@ function staffSVG(clef,notes,caretX){ // notes=[{p,color,x,acc,big,mark}]
   });
   if(caretX!==undefined && caretX!==null)
     s+='<path d="M '+(caretX-7)+' '+(H-6)+' L '+(caretX+7)+' '+(H-6)+' L '+caretX+' '+(H-18)+' Z" fill="#b8893a"/>';
-  s+='<text x="'+(W-16)+'" y="14" text-anchor="end" font-size="11" fill="#9a8f7a" font-family="sans-serif">clé de '+(clef==="sol"?"sol":"fa")+'</text>';
+  s+='<text x="'+(W-16)+'" y="14" text-anchor="end" font-size="11" fill="#9a8f7a" font-family="sans-serif">'+esc(clefFullLabel(clef).toLowerCase())+'</text>';
   s+='</svg>';
   return s;
 }
@@ -3750,10 +3969,18 @@ function dailyPlan(decision){
     const c=decision.course||{}, done=(DB.dailyProgress&&DB.dailyProgress[todayStr()])||{};
     const signature=c.signature||"course-v2";
     const sessionDone=done.session===signature;
-    const newcomer=c.newNote&&NOTES[c.newNote]?"Nouvelle note : "+NOTES[c.newNote].n.toUpperCase()+".":"Départ : SOL · LA · SI.";
+    const activeStep=courseById(c.itemId)&&courseById(c.itemId).steps[c.stepIndex||0];
+    const firstNotes=activeStep?activeStep.notes.slice(0,3).map(function(id){return NOTES[id].n.toUpperCase();}).join(" · "):"trois repères";
+    const newcomer=c.newNote&&NOTES[c.newNote]?"Nouvelle note : "+NOTES[c.newNote].n.toUpperCase()+".":"Départ : "+firstNotes+".";
+    if(c.review){
+      return {
+        isCourse:true,isCourseReview:true,total:decision.n,path:"Entraînement continu",cadence:"25 nouvelles lectures à chaque reprise",profile:profile,signature:signature,
+        blocks:[{id:"course",questions:decision.n,title:(c.itemLabel||"Parcours")+" · étape "+((c.stepIndex||0)+1)+"/"+(c.stepTotal||COURSE_MAX_EXERCISES)+" · entraînement continu",note:"Parcours acquis : 25 nouvelles notes dorées dans des fragments de partitions, sans déplacer ta progression.",done:sessionDone}]
+      };
+    }
     return {
       isCourse:true,total:decision.n,path:"Parcours d’acquisition",cadence:"3 séries parfaites avant la note suivante",profile:profile,signature:signature,
-      blocks:[{id:"course",questions:decision.n,title:(c.itemLabel||"Parcours")+" · cycle "+((c.stepIndex||0)+1)+"/"+(c.stepTotal||COURSE_MAX_EXERCISES)+" · série "+(c.seriesNumber||1)+"/"+(c.seriesTotal||COURSE_SERIES_PER_STEP),note:newcomer+" "+esc(c.phaseLabel||"Acquisition")+" : 25 réponses justes, aucune erreur.",done:sessionDone}]
+      blocks:[{id:"course",questions:decision.n,title:(c.itemLabel||"Parcours")+" · étape "+((c.stepIndex||0)+1)+"/"+(c.stepTotal||COURSE_MAX_EXERCISES)+" · série "+(c.seriesNumber||1)+"/"+(c.seriesTotal||COURSE_SERIES_PER_STEP),note:newcomer+" "+esc(c.phaseLabel||"Acquisition")+" : 25 réponses justes, aucune erreur.",done:sessionDone}]
     };
   }
   const frag=fragileNoteIds(3), due=dueCount(), pending=(DB.repairQueue||[]).length;
@@ -3810,9 +4037,9 @@ function renderCourseReview(){
   if(!rows.length){ host.innerHTML=""; return; }
   const options=rows.map(function(row,index){
     const notes=row.step.notes.map(function(id){return NOTES[id].n.toUpperCase();}).join(" · ");
-    return '<option value="'+row.item.id+':'+row.index+'"'+(index===rows.length-1?' selected':'')+'>'+esc(row.item.label)+' · cycle '+(row.index+1)+' · '+esc(notes)+' · vrais fragments</option>';
+    return '<option value="'+row.item.id+':'+row.index+'"'+(index===rows.length-1?' selected':'')+'>'+esc(row.item.label)+' · étape '+(row.index+1)+' · '+esc(notes)+' · vrais fragments</option>';
   }).join("");
-  host.innerHTML='<section class="courseReview"><h3>↶ Revenir en arrière et s’entraîner</h3><p>Choisis un cycle déjà atteint. Chaque question place une note dorée dans un vrai fragment continu de partition. Les cibles changent d’ordre : il faut lire, pas mémoriser les boutons.</p><select id="courseReviewSelect" aria-label="Cycle à rejouer">'+options+'</select><button id="btnCourseReview">25 NOUVELLES LECTURES SUR PARTITIONS</button></section>';
+  host.innerHTML='<section class="courseReview"><h3>↶ Revenir en arrière et s’entraîner</h3><p>Choisis une étape déjà atteinte. Chaque question place une note dorée dans un vrai fragment continu de partition. Les cibles changent d’ordre : il faut lire, pas mémoriser les boutons.</p><select id="courseReviewSelect" aria-label="Étape à rejouer">'+options+'</select><button id="btnCourseReview">25 NOUVELLES LECTURES SUR PARTITIONS</button></section>';
   $("btnCourseReview").onclick=function(){
     const parts=String($("courseReviewSelect").value||"").split(":");
     startCourseReview(parts[0],Number(parts[1]));
@@ -3852,17 +4079,43 @@ function coachDecision(force){
     return {kind:"session",label:"Session",n:10,palier:p,pool:p.notes,mode:mode,groupN:tier.n||1,reason:"Précision solide, palier en progression."};
   return {kind:"session",label:"Session",n:10,palier:p,pool:p.notes,mode:mode,groupN:tier.n||1,reason:"Progression de palier active."};
 }
+function renderCoachLevelControl(){
+  const select=$("coachLevelSelect"),button=$("btnCoachSave"),message=$("coachSaveMsg"),play=$("btnPlayNow");
+  if(!select||!button||!message)return;
+  const selected=displayedCoachLevelId();
+  select.innerHTML=COACH_LEVELS.map(function(level){return '<option value="'+level.id+'"'+(level.id===selected?' selected':'')+'>'+esc(level.label)+'</option>';}).join("");
+  message.textContent="Repère de jeu — indépendant des cycles du conservatoire. Tes séries déjà réussies ne sont jamais effacées.";
+  button.disabled=false;select.disabled=false;if(play)play.disabled=false;
+  button.onclick=function(){
+    button.disabled=true;select.disabled=true;if(play)play.disabled=true;message.textContent="Protection de l’état actuel puis enregistrement…";
+    saveCoachLevel(select.value,function(result){
+      if(result.ok){renderHome();const live=$("coachSaveMsg");if(live)live.textContent=result.message;return;}
+      button.disabled=false;select.disabled=false;if(play)play.disabled=false;select.value=displayedCoachLevelId();message.textContent=result.message;
+    });
+  };
+}
 function renderCockpit(decision,plan){
   const p=decision.palier, modeLabelText=decision.kind==="repair"?"Réparation":modeLabel(decision.mode);
   const hello=plan.profile.displayName?plan.profile.displayName+", ":"";
   $("coachKicker").textContent="Coach invisible · "+plan.path;
+  renderCoachLevelControl();
   if(plan.isCourse){
     const c=decision.course||{}, newcomer=c.newNote&&NOTES[c.newNote]?"Une nouvelle note rejoint le jeu : "+NOTES[c.newNote].n.toUpperCase()+".":"Tes trois premiers repères entrent en jeu.";
+    if(c.review){
+      $("coachPitch").textContent=hello+"ton parcours "+(c.itemLabel||p.id)+" est acquis. Lance 25 nouvelles lectures : les fragments changent, mais aucun acquis n’est déplacé.";
+      $("btnPlayNow").textContent="JOUER · 25 NOUVELLES LECTURES";
+      $("cockpitMeta").innerHTML=
+        '<span><b>'+esc(c.itemLabel||p.id)+'</b><small>clé acquise</small></span>'+
+        '<span><b>Étape '+((c.stepIndex||0)+1)+'/'+(c.stepTotal||COURSE_MAX_EXERCISES)+'</b><small>entraînement continu</small></span>'+
+        '<span><b>'+plan.total+' q.</b><small>progression protégée</small></span>';
+      $("coachLine").textContent=decision.reason;
+      return;
+    }
     $("coachPitch").textContent=hello+"série "+(c.seriesNumber||1)+"/"+(c.seriesTotal||COURSE_SERIES_PER_STEP)+" : exactement "+plan.total+" questions. "+newcomer+" Une erreur impose de refaire cette série avant d’avancer.";
     $("btnPlayNow").textContent="JOUER · "+plan.total+" QUESTIONS";
     $("cockpitMeta").innerHTML=
       '<span><b>'+esc(c.itemLabel||p.id)+'</b><small>clé</small></span>'+
-      '<span><b>Cycle '+((c.stepIndex||0)+1)+'</b><small>série '+(c.seriesNumber||1)+'/'+(c.seriesTotal||COURSE_SERIES_PER_STEP)+'</small></span>'+
+      '<span><b>Étape '+((c.stepIndex||0)+1)+'</b><small>série '+(c.seriesNumber||1)+'/'+(c.seriesTotal||COURSE_SERIES_PER_STEP)+'</small></span>'+
       '<span><b>'+plan.total+' q.</b><small>sans faute</small></span>';
     $("coachLine").textContent=decision.reason;
     return;
@@ -3890,8 +4143,10 @@ function renderPlayerState(decision){
       (amb?'<br>Ambition : '+esc(amb.def.label)+(amb.done?' ★ atteinte':' · '+amb.pct+' %'):'')+'</span></div>';
   }
   const courseState=decision&&decision.kind==="course"&&decision.course
-    ? '<div class="stateTile"><h3>Acquisition en cours</h3><b>Série '+decision.course.seriesNumber+'/'+decision.course.seriesTotal+'</b><span>'+esc(decision.course.phaseLabel)+' · cycle '+(decision.course.stepIndex+1)+'/'+decision.course.stepTotal+'</span></div>'
-    : '<div class="stateTile"><h3>Lecture des notes</h3><b>'+esc(prog)+'</b><span>Repère Cycle 1 · '+esc(p.t)+'</span></div>';
+    ? (decision.course.review
+      ? '<div class="stateTile"><h3>Parcours acquis</h3><b>Entraînement continu</b><span>'+esc(decision.course.itemLabel)+' · étape '+(decision.course.stepIndex+1)+'/'+decision.course.stepTotal+'</span></div>'
+      : '<div class="stateTile"><h3>Acquisition en cours</h3><b>Série '+decision.course.seriesNumber+'/'+decision.course.seriesTotal+'</b><span>'+esc(decision.course.phaseLabel)+' · étape '+(decision.course.stepIndex+1)+'/'+decision.course.stepTotal+'</span></div>')
+    : '<div class="stateTile"><h3>Lecture des notes</h3><b>'+esc(prog)+'</b><span>Repère du cursus · Cycle 1 · '+esc(p.t)+'</span></div>';
   $("playerState").innerHTML=
     courseState+
     '<div class="stateTile"><h3>Mémoire</h3><b>'+due+' à revoir</b><span>'+(prec===null?'Précision en construction':prec+'% précision globale')+'</span></div>'+
@@ -3920,7 +4175,9 @@ function renderHome(){
   renderPlayerState(decision);
   const startPid=profileStartPalier(plan.profile.niveauDepart);
   $("missionTxt").innerHTML = plan.isCourse
-    ? "Parcours du jour : "+esc(decision.course.itemLabel)+" · cycle "+(decision.course.stepIndex+1)+"/"+decision.course.stepTotal+" · série "+decision.course.seriesNumber+"/"+decision.course.seriesTotal+". "+(decision.course.newNote?"La nouveauté reste la même jusqu’aux 3 séries parfaites.":"Les trois repères doivent tenir sur 3 séries parfaites.")
+    ? (decision.course.review
+      ? "Parcours acquis : "+esc(decision.course.itemLabel)+" · étape "+(decision.course.stepIndex+1)+"/"+decision.course.stepTotal+". Chaque reprise propose 25 nouvelles lectures sans déplacer tes acquis."
+      : "Parcours du jour : "+esc(decision.course.itemLabel)+" · étape "+(decision.course.stepIndex+1)+"/"+decision.course.stepTotal+" · série "+decision.course.seriesNumber+"/"+decision.course.seriesTotal+". "+(decision.course.newNote?"La nouveauté reste la même jusqu’aux 3 séries parfaites.":"Les trois repères doivent tenir sur 3 séries parfaites."))
     : DB.mode==="libre"
     ? (startPid&&DB.sel===startPid?esc(profileStartText(plan.profile.niveauDepart,startPid)):
       "Mode Libre : écoute, chante, explore chaque note avec le piano · plan de "+plan.total+" minutes.")
@@ -4010,7 +4267,7 @@ function renderHome(){
     b.onclick=(function(pid){return function(){startStarReview(pid);};})(sdue[0].id);
     sc.appendChild(b);
   }
-  $("btnSerie").textContent=plan.isCourse?"Série "+decision.course.seriesNumber+"/"+decision.course.seriesTotal+" · "+plan.total+" questions sans faute":"Session 10 questions · "+modeLabel(DB.mode);
+  $("btnSerie").textContent=plan.isCourse?(decision.course.review?"Entraînement continu · "+plan.total+" nouvelles lectures":"Série "+decision.course.seriesNumber+"/"+decision.course.seriesTotal+" · "+plan.total+" questions sans faute"):"Session 10 questions · "+modeLabel(DB.mode);
   const nd=dueCount();
   $("defiTxt").textContent = nd>0 ? ("↻ "+nd+" note"+(nd>1?"s":"")+" à revoir")
     : (day&&day.perfect ? "★ Défi parfait réussi" : "★ Défi parfait : tente une Rafale");
@@ -4056,6 +4313,12 @@ function isDue(id,now){ now=Number.isFinite(Number(now))?Number(now):Date.now();
 function unlockedNoteIds(){
   const set={};
   PALIERS.forEach(function(p){ if(palierPlayable(p.id,"zen")) p.notes.forEach(function(id){set[id]=1;}); });
+  const progress=normalizeCourseProgress(DB&&DB.courseProgress),selected=coachLevelById(normalizeProfile(DB&&DB.profile).coachLevel);
+  COURSES.forEach(function(course){
+    let reached=progress.steps[course.id]||0;
+    if(reached>0||(selected&&selected.courseId===course.id)||course.id===progress.currentItem) reached=Math.min(course.steps.length,reached+1);
+    for(let i=0;i<reached;i++) course.steps[i].notes.forEach(function(id){set[id]=1;});
+  });
   return Object.keys(set);
 }
 function dueCount(){
@@ -4190,6 +4453,13 @@ function advanceRepair(item,correct,pool){
   noteStat(live.sourceId).needsRepair=false;
   noteStat(live.sourceId).lastRepairAt=now;
   DB.repairQueue.splice(idx,1);
+}
+function scriptedRepairForQuestion(ids){
+  if(!EX||!EX.script||EX.daily||(EX.sessionMode!=="course"&&EX.sessionMode!=="courseReview")) return null;
+  const tested=uniq((ids||[]).filter(function(id){return NOTES[id];})), clock=DB.questionClock||0;
+  return (DB.repairQueue||[]).filter(function(item){
+    return item&&item.dueQuestion<=clock&&tested.indexOf(item.probeId)>=0&&(!EX.pool||!EX.pool.length||EX.pool.indexOf(item.sourceId)>=0||EX.pool.indexOf(item.probeId)>=0);
+  }).sort(function(a,b){return a.dueQuestion-b.dueQuestion||a.createdAt-b.createdAt;})[0]||null;
 }
 /* ===== Étoiles — stabilité dans le temps (revalidation espacée d'un palier) ===== */
 const STAR_DAYS=[7,30,90,180,365]; // délai jusqu'à l'étoile suivante
@@ -4456,16 +4726,20 @@ function startDailyClock(){
   clearDailyTimer(); updateDailyClock(); dailyTimer=setInterval(updateDailyClock,500);
 }
 function startDailySession(){
+  if(protectedGameStartBlocked()) return false;
   if(EX&&!EX.done) return;
   const course=courseDecision();
   if(course){
-    if(course.practice) claimCoursePracticePlan(course.course.stepId,course.practice);
-    DB.sel=course.palier.id; DB.seen[course.palier.id]=true;
+    if(course.practice){
+      if(course.course.review) claimCourseReviewPlan(course.course.stepId,course.practice);
+      else claimCoursePracticePlan(course.course.stepId,course.practice);
+    }
+    if(!course.palier.courseOnly){DB.sel=course.palier.id;markPalierSeen(course.palier);}
     save();
-    beginSerie({sessionMode:"course",n:course.n,questionCap:course.questionCap,palier:course.palier,pool:course.pool,mode:course.mode,groupN:1,
-      label:"Parcours · "+course.course.itemLabel+" · série "+course.course.seriesNumber+"/"+course.course.seriesTotal,
+    beginSerie({sessionMode:course.course.review?"courseReview":"course",n:course.n,questionCap:course.questionCap,palier:course.palier,pool:course.pool,mode:course.mode,groupN:1,
+      label:course.course.review?("Entraînement continu · "+course.course.itemLabel+" · étape "+(course.course.stepIndex+1)+"/"+course.course.stepTotal):("Parcours · "+course.course.itemLabel+" · série "+course.course.seriesNumber+"/"+course.course.seriesTotal),
       course:course.course,script:course.script,practice:course.practice,cold:false});
-    return;
+    return true;
   }
   let d=coachDecision();
   if(d.kind==="repair"&&DB.mode!=="libre"){
@@ -4480,6 +4754,7 @@ function startDailySession(){
     openEnded:true,daily:daily,cold:true});
 }
 function startCoachPlay(force){
+  if(protectedGameStartBlocked()) return false;
   const d=coachDecision(force);
   if(d.palier && d.palier.id){ DB.sel=d.palier.id; DB.seen[d.palier.id]=true; }
   if(d.mode && d.mode!=="libre") DB.mode=d.mode;
@@ -4487,15 +4762,18 @@ function startCoachPlay(force){
   beginSerie({sessionMode:d.kind,n:d.n,palier:d.palier,pool:d.pool,mode:d.mode,groupN:d.groupN,label:d.label});
 }
 function startRepair(){
+  if(protectedGameStartBlocked()) return false;
   const pool=repairPool();
   if(!pool.length){ startCoachPlay("flash"); return; }
   const p=PALIERS.find(function(x){return x.id===DB.sel;})||PALIERS[0];
   beginSerie({sessionMode:"repair",n:Math.min(10,Math.max(5,pool.length)),palier:p,pool:pool,mode:"libre",groupN:1,label:"Réparation"});
 }
 function startSerie(){
-  startDailySession();
+  if(protectedGameStartBlocked()) return false;
+  return startDailySession();
 }
 function beginSerie(opts){
+  if(protectedGameStartBlocked()) return false;
   opts=opts||{};
   clearQTimers();
   const p=opts.palier||PALIERS.find(function(x){return x.id===DB.sel;})||PALIERS[0];
@@ -4522,8 +4800,9 @@ function beginSerie(opts){
       coldPending:coldEligible&&!!coldId,coldId:coldId,coldResult:null,questionDeadlineAt:0,pausedQuestionRemaining:null,pausedResumeNext:false,
       dailyValidationBuffer:opts.daily&&mode!=="libre"?dailyDraftRecords(p.id,mode):[]};
   logEvent("serie_start",{palier:p.id,mode:mode,groupe:groupN,type:EX.sessionMode,n:total,questions:questionCap,segment:EX.segment?EX.segment.segmentId:null,piece:EX.segment?EX.segment.pieceId:null});
-  const label=opts.label || (EX.sessionMode==="course"?"Cycle d’acquisition":(EX.sessionMode==="courseReview"?"Entraînement libre":(EX.sessionMode==="flash"?"Flash":EX.sessionMode==="repair"?"Réparation":"Session")));
-  $("exMode").textContent=label+" · "+(EX.segment?EX.segment.segmentTitle:p.t)+(groupN>1?" · groupes de "+groupN:"");
+  const label=opts.label || (EX.sessionMode==="course"?"Étape d’acquisition":(EX.sessionMode==="courseReview"?"Entraînement libre":(EX.sessionMode==="flash"?"Flash":EX.sessionMode==="repair"?"Réparation":"Session")));
+  const exerciseTitle=EX.course?(EX.course.itemLabel+" · étape "+(EX.course.stepIndex+1)):((EX.segment&&EX.segment.segmentTitle)||p.t);
+  $("exMode").textContent=label+" · "+exerciseTitle+(groupN>1?" · groupes de "+groupN:"");
   $("timerbar").classList.toggle("on",!!EX.limit||!!EX.daily);
   $("btnQuit").textContent=EX.daily?"Arrêter la séance":(EX.sessionMode==="course"?"Quitter la série":(EX.sessionMode==="courseReview"?"Terminer l’entraînement":"Abandonner la série"));
   $("btnAgain").style.display="block";
@@ -4539,7 +4818,7 @@ function previewNoteHtml(id,withListen){
   const nt=NOTES[id];
   return '<div class="prepNote">'+
     '<div class="prepStaff">'+staffSVG(nt.clef,[{p:nt.p,color:"#15171c",x:STAFF.W*0.58,big:2}])+'</div>'+
-    '<div class="prepTxt"><b>'+esc(nt.n.toUpperCase())+'</b> · clé de '+(nt.clef==="sol"?"sol":"fa")+
+    '<div class="prepTxt"><b>'+esc(nt.n.toUpperCase())+'</b> · '+esc(clefFullLabel(nt.clef).toLowerCase())+
     '<br>'+esc(nt.mn)+(withListen?'<br><button class="hearbtn" onclick="tone(NOTES[\''+id+'\'].midi,3.2)">♪ écouter — chante-la</button>':'')+'</div></div>';
 }
 function showSeriePreview(pid,onContinue){
@@ -4548,12 +4827,14 @@ function showSeriePreview(pid,onContinue){
   const notes=p.notes.slice();
   const sol=notes.filter(function(id){return NOTES[id].clef==="sol";});
   const fa=notes.filter(function(id){return NOTES[id].clef==="fa";});
+  const ut=notes.filter(function(id){return NOTES[id].clef==="ut";});
   let body='<h3>Préparation — '+esc(p.id)+'</h3><h2>Ce que tu vas retrouver</h2>'+
     '<p>'+esc(p.t)+' · '+esc(p.sub)+'</p>'+
     '<p><b>'+esc(trainingFocusText(DB.mode))+'</b></p>'+
     '<p class="src">Phase d\'observation. Regarde chaque note, écoute-la, chante-la ; la série commence avec le bouton.</p>';
   if(sol.length) body+='<p style="margin-top:10px"><b>Clé de sol</b></p><div class="prepNotes">'+sol.map(function(id){return previewNoteHtml(id,true);}).join("")+'</div>';
   if(fa.length) body+='<p style="margin-top:10px"><b>Clé de fa</b></p><div class="prepNotes">'+fa.map(function(id){return previewNoteHtml(id,true);}).join("")+'</div>';
+  if(ut.length) body+='<p style="margin-top:10px"><b>Clé d’ut 3e</b></p><div class="prepNotes">'+ut.map(function(id){return previewNoteHtml(id,true);}).join("")+'</div>';
   $("cardBox").innerHTML=body+'<button id="btnPrepGo">Commencer la série</button><button id="btnPrepHome">← Accueil</button>';
   $("overlay").classList.add("on");
   $("btnPrepGo").onclick=function(){
@@ -4565,12 +4846,12 @@ function showSeriePreview(pid,onContinue){
 }
 // Écran Découverte : je montre la/les note(s) neuve(s) avant de tester (I-do → You-do)
 function showDecouverte(pid, onContinue, idsOverride){
-  const p=PALIERS.find(function(x){return x.id===pid;});
+  const p=PALIERS.find(function(x){return x.id===pid;})||(EX&&EX.palier&&EX.palier.id===pid?EX.palier:null);
   const neuves=((idsOverride&&idsOverride.length)?idsOverride:newNotesOf(pid)).slice(0,6);
   if(!p||!neuves.length){ if(onContinue) onContinue(); return; }
   logEvent("decouverte",{palier:pid,nb:neuves.length});
   const course=EX&&EX.course, heading=course
-    ? (course.review?"Entraînement libre · "+course.itemLabel+" · cycle "+(course.stepIndex+1):"Parcours · "+course.itemLabel+" · cycle "+(course.stepIndex+1)+"/"+course.stepTotal+" · série "+course.seriesNumber+"/"+course.seriesTotal)
+    ? (course.review?(course.continuous?"Entraînement continu · ":"Entraînement libre · ")+course.itemLabel+" · étape "+(course.stepIndex+1):"Parcours · "+course.itemLabel+" · étape "+(course.stepIndex+1)+"/"+course.stepTotal+" · série "+course.seriesNumber+"/"+course.seriesTotal)
     : p.t;
   let body='<h3>Découverte — '+esc(heading)+'</h3><h2>'+(neuves.length>1?"Tes premières notes":"Une nouvelle note")+'</h2>'+
     '<p style="margin-bottom:10px">Regarde où elle se place, écoute-la, puis on la teste. Pression basse, oreille ouverte.</p>';
@@ -4578,13 +4859,14 @@ function showDecouverte(pid, onContinue, idsOverride){
   $("cardBox").innerHTML=body+'<button id="btnDecGo">Je suis prêt — commencer</button><button id="btnDecHome">← Accueil</button>';
   $("overlay").classList.add("on");
   $("btnDecGo").onclick=function(){
-    DB.seen[pid]=true; save();
+    markPalierSeen(p); save();
     $("overlay").classList.remove("on");
     if(onContinue) onContinue();
   };
   $("btnDecHome").onclick=function(){ $("overlay").classList.remove("on"); returnToHomeFromExercise(); };
 }
 function startRafale(){
+  if(protectedGameStartBlocked()) return false;
   const p=PALIERS.find(function(x){return x.id===DB.sel;});
   EX={kind:"rafale",mode:"rafale",n:MAX_QUESTIONS_PER_EXERCISE,groupN:1,msNote:null,limit:null,questionCap:MAX_QUESTIONS_PER_EXERCISE,promptCount:0,promptHistory:[],promptCountById:{},writePromptCount:0,writePromptIds:[],
       palier:p,i:0,ok:0,errs:[],times:[],hist:[],last:null,waiting:false,done:false,qid:0,
@@ -4626,7 +4908,7 @@ function practiceCardTransposition(card){
     const oct=Math.abs(shift)/12;
     text=oct+" octave"+(oct>1?"s":"")+" vers "+(shift<0?"le grave":"l’aigu");
   } else text="transposition constante de "+Math.abs(shift)+" demi-ton"+(Math.abs(shift)>1?"s":"")+" vers "+(shift<0?"le grave":"l’aigu");
-  if(clefChanged) text+=" · réécrit en clé de "+(card.clef==="fa"?"fa":"sol");
+  if(clefChanged) text+=" · réécrit en "+clefFullLabel(card.clef).toLowerCase();
   return text;
 }
 function practiceCardCreditHtml(card){
@@ -4640,7 +4922,7 @@ function drawPracticeCard(card,state){
     let color=index===targetIndex?"#b8893a":"#718184", mark;
     if(index===targetIndex&&state==="good"){color="#5e6e51";mark="good";}
     if(index===targetIndex&&state==="bad"){color="#a8472a";mark="bad";}
-    return {p:NOTES[id].p,color:color,x:xs[index],big:0,mark:mark,beats:card.beats&&card.beats[index]};
+    return {p:NOTES[id].p,color:color,x:xs[index],big:0,mark:mark,beats:card.beats&&card.beats[index],target:index===targetIndex};
   });
   $("staffbox").innerHTML=staffSVG(card.clef,notes,state?null:xs[targetIndex]);
   return true;
@@ -4803,7 +5085,7 @@ function questionTask(){
 function freshTargetNoteIds(){
   if(!EX||EX.kind!=="serie"||EX.done) return [];
   if(EX.sessionMode!=="session"&&EX.sessionMode!=="daily"&&EX.sessionMode!=="course"&&EX.sessionMode!=="courseReview") return [];
-  if(EX.review||EX.script||EX.segment) return [];
+  if(EX.review||EX.segment||(EX.script&&EX.sessionMode!=="course"&&EX.sessionMode!=="courseReview")) return [];
   if(EX.daily){ const ph=dailyPhaseAt(EX.daily,Date.now()); if(!ph||(ph.id!=="rappel"&&ph.id!=="cible")) return []; }
   if(!Array.isArray(EX.introducedIds)) EX.introducedIds=[];
   const base=(EX.daily&&EX.daily.targetPool&&EX.daily.targetPool.length)?EX.daily.targetPool:((EX.pool&&EX.pool.length)?EX.pool:(EX.palier&&EX.palier.notes)||[]);
@@ -5026,7 +5308,8 @@ function completeQuestionMeta(correct,failId,response){
     if(cs){cs.lastCold=Date.now();cs.coldV++;if(!correct)cs.coldE++;}
     if(!EX.coldResult) EX.coldResult={id:coldId,ok:!!correct};
   }
-  const existing=task.repairId?(DB.repairQueue||[]).find(function(item){return item.id===task.repairId;}):null;
+  const explicitRepair=task.repairId?(DB.repairQueue||[]).find(function(item){return item.id===task.repairId;}):null;
+  const existing=explicitRepair||scriptedRepairForQuestion(EX.currentQuestionTested||[]);
   if(!correct&&failId){
     recordConfusion(failId,response);
     if(existing){
@@ -5053,7 +5336,7 @@ function completeQuestionMeta(correct,failId,response){
 }
 function hearHtml(id){ return '<br><button class="hearbtn" onclick="tone(NOTES[\''+id+'\'].midi)">♪ réécouter — chante-la</button>'; }
 function correctionHtml(failId,msg,response){
-  const nt=NOTES[failId], clef=nt.clef==="sol"?"clé de sol":"clé de fa";
+  const nt=NOTES[failId], clef=clefFullLabel(nt.clef).toLowerCase();
   const pos=(EX&&EX.qtype==="lect"&&EX.seq&&EX.seq.length>1)?EX.k+1:null;
   let html='<div class="corrBox"><h4>Correction à valider</h4>'+
     '<p><b>'+esc(msg)+'</b></p>';
@@ -5353,7 +5636,7 @@ function finishSerie(){
     }
     courseNext=advanceCourseExercise(EX.course,coursePerfect);
     courseSeriesPassed=coursePerfect;
-    courseStepAdvanced=coursePerfect&&(!courseNext||courseNext.course.itemId!==EX.course.itemId||courseNext.course.stepIndex!==EX.course.stepIndex);
+    courseStepAdvanced=coursePerfect&&(!courseNext||courseNext.course.review||courseNext.course.itemId!==EX.course.itemId||courseNext.course.stepIndex!==EX.course.stepIndex);
     logEvent("course_series_complete",{item:EX.course.itemId,step:EX.course.stepIndex,series:EX.course.seriesNumber,questions:EX.promptCount,errors:errs,perfect:coursePerfect,stepAdvanced:courseStepAdvanced});
   }
   let segmentState=null, segPromotion=null;
@@ -5377,7 +5660,7 @@ function finishSerie(){
   logEvent("serie_end",{palier:p.id,mode:EX.mode,type:EX.sessionMode,ok:EX.ok,errs:errsForLog,avgMs:avgMs(),valide:newlyPalier,course:EX.course?EX.course.stepId:null,segment:EX.segment?EX.segment.segmentId:null,piece:EX.segment?EX.segment.pieceId:null});
   save(); header(); syncPush();
   const scoredCourse=isCourse||isCourseReview;
-  const scoreN=Math.max(1,isDaily?answered:(scoredCourse?EX.promptCount:EX.n)), prec=Math.round(EX.ok/scoreN*100), label=isDaily?(dailyQualified?(transferReached?"Séance du jour":"Séance du jour · sans transfert"):"Séance partielle"):(isCourse?"Cycle d’acquisition":(isCourseReview?"Entraînement libre":(isRepair?"Réparation":(isFlash?"Flash":(isPiece?"Partition":modeLabel(EX.mode==="rafale"?"zen":EX.mode))))));
+  const scoreN=Math.max(1,isDaily?answered:(scoredCourse?EX.promptCount:EX.n)), prec=Math.round(EX.ok/scoreN*100), label=isDaily?(dailyQualified?(transferReached?"Séance du jour":"Séance du jour · sans transfert"):"Séance partielle"):(isCourse?"Étape d’acquisition":(isCourseReview?(EX.course&&EX.course.continuous?"Entraînement continu":"Entraînement libre"):(isRepair?"Réparation":(isFlash?"Flash":(isPiece?"Partition":modeLabel(EX.mode==="rafale"?"zen":EX.mode))))));
   $("resScore").innerHTML=EX.ok+"<small>/"+(isDaily?answered:(scoredCourse?EX.promptCount:EX.n))+"</small>";
   $("btnReplayCourse").style.display=isCourse?"block":"none";
   $("btnAgain").textContent=isCourse?"Continuer mon parcours":(isCourseReview?"25 nouvelles lectures sur partitions":"Encore une série");
@@ -5394,11 +5677,11 @@ function finishSerie(){
           ? "Rappel à froid réussi. La séance a ciblé, réparé puis transféré sans lancer de nouvelle question après l’échéance."
           : "Le test à froid a révélé le point utile. Les confusions restent programmées, pas oubliées."));
   } else if(isCourse){
-    if(!courseFinished) resultMessage="Série interrompue : elle ne remplit aucun jalon du cycle.";
-    else if(!courseSeriesPassed) resultMessage="Série "+EX.course.seriesNumber+"/"+EX.course.seriesTotal+" à refaire : "+errs+" erreur"+(errs>1?"s":"")+". La prochaine note reste verrouillée ; les corrections serviront à la nouvelle tentative.";
-    else if(courseStepAdvanced) resultMessage=courseNext
-      ? "Cycle maîtrisé : 3 séries de 25 sans erreur. La prochaine séance ajoute "+(courseNext.course.newNote&&NOTES[courseNext.course.newNote]?NOTES[courseNext.course.newNote].n.toUpperCase():"une nouvelle clé")+" au jeu."
-      : "Parcours des deux clés maîtrisé : chaque cycle a été validé par trois séries parfaites.";
+    if(!courseFinished) resultMessage="Série interrompue : elle ne remplit aucun jalon de l’étape.";
+    else if(!courseSeriesPassed) resultMessage="Série "+EX.course.seriesNumber+"/"+EX.course.seriesTotal+" à refaire : "+errs+" erreur"+(errs>1?"s":"")+". La prochaine note reste verrouillée ; les lectures espacées referment la réparation sans faire avancer l’étape.";
+    else if(courseStepAdvanced) resultMessage=courseNext&&!courseNext.course.review
+      ? "Étape maîtrisée : 3 séries de 25 sans erreur. La prochaine séance ajoute "+(courseNext.course.newNote&&NOTES[courseNext.course.newNote]?NOTES[courseNext.course.newNote].n.toUpperCase():"une nouvelle clé")+" au jeu."
+      : "Parcours sélectionné maîtrisé : chaque étape a été validée par trois séries parfaites.";
     else resultMessage="Série "+EX.course.seriesNumber+"/"+EX.course.seriesTotal+" validée sans erreur. La prochaine série garde exactement les mêmes notes pour consolider l’acquisition.";
   } else if(isCourseReview){
     resultMessage=errs
@@ -5415,7 +5698,7 @@ function finishSerie(){
   const eb=$("resErrs");
   if(errs){ eb.style.display="block";
     eb.innerHTML=EX.errs.map(function(id){const nt=NOTES[id];
-      return '<div class="er"><b>'+nt.n+'</b> ('+ (nt.clef==="sol"?"clé de sol":"clé de fa") +') — '+nt.mn+'</div>';}).join("");
+      return '<div class="er"><b>'+nt.n+'</b> ('+clefFullLabel(nt.clef).toLowerCase()+') — '+nt.mn+'</div>';}).join("");
   } else eb.style.display="none";
   if(isDaily){
     const ps=EX.phaseStats;
@@ -5439,13 +5722,13 @@ function finishSerie(){
     const c=EX.course||{};
     if(!courseFinished) $("resVal").textContent="Série non terminée : progression inchangée.";
     else if(!courseSeriesPassed) $("resVal").innerHTML="<b>Série "+c.seriesNumber+"/"+c.seriesTotal+" non validée.</b> Rejoue-la sans erreur. Les séries parfaites déjà acquises restent conservées.";
-    else if(courseStepAdvanced) $("resVal").innerHTML=courseNext
-      ? "<b>Cycle "+(c.stepIndex+1)+"/"+c.stepTotal+" maîtrisé.</b> Prochaine : "+esc(courseNext.course.itemLabel)+" · cycle "+(courseNext.course.stepIndex+1)+"/"+courseNext.course.stepTotal+" · série 1/3."
-      : "<b>Les deux clés sont en place.</b> Tous les cycles d’acquisition sont maîtrisés.";
+    else if(courseStepAdvanced) $("resVal").innerHTML=courseNext&&!courseNext.course.review
+      ? "<b>Étape "+(c.stepIndex+1)+"/"+c.stepTotal+" maîtrisée.</b> Prochaine : "+esc(courseNext.course.itemLabel)+" · étape "+(courseNext.course.stepIndex+1)+"/"+courseNext.course.stepTotal+" · série 1/3."
+      : "<b>Le parcours sélectionné est en place.</b> Toutes ses étapes d’acquisition sont maîtrisées.";
     else $("resVal").innerHTML="<b>Série "+c.seriesNumber+"/"+c.seriesTotal+" parfaite.</b> Prochaine : série "+courseNext.course.seriesNumber+"/"+courseNext.course.seriesTotal+", mêmes notes, aucune nouveauté supplémentaire.";
   } else if(isCourseReview){
     const practice=EX.course&&EX.course.practice;
-    $("resVal").innerHTML="<b>Mode entraînement :</b> "+(practice?esc(practice.sourceLabel)+" · "+esc(practice.bars.join(" · "))+". ":"")+"Aucune course en avant : relance pour une autre étude, choisis un autre cycle depuis l’accueil, ou poursuis le parcours quand tu le décides.";
+    $("resVal").innerHTML="<b>Mode entraînement :</b> "+(practice?esc(practice.sourceLabel)+" · "+esc(practice.bars.join(" · "))+". ":"")+"Aucune course en avant : relance pour une autre étude, choisis une autre étape depuis l’accueil, ou poursuis le parcours quand tu le décides.";
   } else if(EX.mode==="libre"){
     $("resVal").textContent="Libre : exploration active, mémoire nourrie.";
   } else {
@@ -5457,7 +5740,7 @@ function finishSerie(){
   show("scrRes");
   const resultSession=EX;
   const memoryMilestones=[];
-  if(courseStepAdvanced)memoryMilestones.push(courseNext?("Cycle "+(EX.course.stepIndex+1)+" maîtrisé · prochaine note débloquée"):("Parcours complet maîtrisé"));
+  if(courseStepAdvanced)memoryMilestones.push(courseNext?("Étape "+(EX.course.stepIndex+1)+" maîtrisée · prochaine note débloquée"):("Parcours sélectionné maîtrisé"));
   if(newlyPalier)memoryMilestones.push("Palier "+p.id+" validé au niveau "+modeLabel(EX.mode));
   if(newlyTier)memoryMilestones.push("Grade "+modeLabel(newlyTier)+" terminé");
   if(segPromotion)memoryMilestones.push("Passage de partition "+(segPromotion==="maitrise"?"maîtrisé":"validé"));
@@ -5476,6 +5759,7 @@ function finishSerie(){
   else if(segPromotion==="maitrise") sfxWin(); // un passage maîtrisé sonne comme une victoire
 }
 function startRevision(){
+  if(protectedGameStartBlocked()) return false;
   const pending=repairBlockedIds();
   const pool=unlockedNoteIds().filter(function(id){return pending.indexOf(id)<0&&isDue(id);}).slice(0,40);
   if(!pool.length) return;
@@ -5502,7 +5786,7 @@ function finishDueReview(errs){
   const eb=$("resErrs");
   if(errs){ eb.style.display="block";
     eb.innerHTML=EX.errs.map(function(id){const nt=NOTES[id];
-      return '<div class="er"><b>'+nt.n+'</b> ('+(nt.clef==="sol"?"clé de sol":"clé de fa")+') — '+nt.mn+'</div>';}).join("");
+      return '<div class="er"><b>'+nt.n+'</b> ('+clefFullLabel(nt.clef).toLowerCase()+') — '+nt.mn+'</div>';}).join("");
   } else eb.style.display="none";
   const left=dueCount();
   $("resVal").innerHTML = left ? "Encore <b>"+left+"</b> note"+(left>1?"s":"")+" à revoir aujourd'hui." : "<b>Révisions du jour terminées.</b>";
@@ -5532,6 +5816,7 @@ function starReviewRepairsClear(sample){
   });
 }
 function startStarReview(pid){
+  if(protectedGameStartBlocked()) return false;
   const p=PALIERS.find(function(x){return x.id===pid;});
   if(!p) return;
   const sample=starReviewSample(p);
@@ -5828,7 +6113,7 @@ function renderStats(){
   const memLine='<br><br><b>Mémoire (répétition espacée) :</b> '+ancrees+' note'+(ancrees>1?'s':'')+' ancrée'+(ancrees>1?'s':'')+' (boîte 5), '+aRevoir+' à revoir aujourd\'hui.'+
     '<br><b>Investissement :</b> '+totals.series+' série'+(totals.series>1?'s':'')+', '+totals.rafales+' rafale'+(totals.rafales>1?'s':'')+', '+totals.clavier+' clavier, '+totals.revisions+' révision'+(totals.revisions>1?'s':'')+'.';
   $("fragBox").innerHTML = (frag.length
-    ? "<b>Notes fragiles :</b> "+frag.map(function(k){return NOTES[k].n+" ("+(NOTES[k].clef==="sol"?"sol":"fa")+")";}).join(", ")+".<br>Sezam : elles seront servies plus souvent, en lecture ET en écriture."
+    ? "<b>Notes fragiles :</b> "+frag.map(function(k){return NOTES[k].n+" ("+clefShortLabel(NOTES[k].clef)+")";}).join(", ")+".<br>Sezam : elles seront servies plus souvent, en lecture ET en écriture."
     : "Notes solides pour le moment. Continue comme ça.") + memLine;
   renderThemeModes();
   const rc=currentRecoveryCode();
@@ -5991,7 +6276,7 @@ function pieceMelody(p){
   return m;
 }
 function pieceClef(p){
-  if(p&&(p.clef==="fa"||p.clef==="sol")) return p.clef;
+  if(p&&(p.clef==="fa"||p.clef==="sol"||p.clef==="ut")) return p.clef;
   const m=pieceMelody(p);
   if(m) for(let i=0;i<m.measures.length;i++){ const first=m.measures[i][0]; if(first&&NOTES[first]) return NOTES[first].clef; }
   return "sol";
@@ -6169,7 +6454,7 @@ function pieceMapSVG(piece,opts){
     for(let i=0;i<5;i++){ const y=top+i*2*hf;
       s+='<line x1="'+(x0-16)+'" y1="'+y+'" x2="'+xEnd+'" y2="'+y+'" stroke="#4a4337" stroke-width="1.1"/>'; }
     // clé : la clé de fa est dessinée géométriquement pour que ses deux points encadrent exactement la ligne de fa.
-    s+=clefSVG(clef,top,hf,clef==="sol"?{x:0,size:46,yOffset:11}:{x:-8});
+    s+=clefSVG(clef,top,hf,clef==="sol"?{x:0,size:46,yOffset:11}:(clef==="ut"?{x:0}:{x:-8}));
     // numéro de première mesure du système
     s+='<text x="'+(x0+2)+'" y="'+(top-13)+'" font-size="9" fill="#9a8f7a" font-family="sans-serif">'+(m0+1)+'</text>';
     // barres de mesure
@@ -6245,6 +6530,13 @@ function segmentNotePool(seg,piece){
   let pool=palier.notes.slice();
   if(piece&&piece.clef==="sol") pool=pool.filter(function(id){return NOTES[id]&&NOTES[id].clef==="sol";});
   if(piece&&piece.clef==="fa") pool=pool.filter(function(id){return NOTES[id]&&NOTES[id].clef==="fa";});
+  if(piece&&piece.clef==="ut"){
+    pool=pool.filter(function(id){return NOTES[id]&&NOTES[id].clef==="ut";});
+    if(!pool.length){
+      const course=courseById("ut"),pidx=Math.max(0,PALIERS.findIndex(function(p){return p.id===seg.level;}));
+      if(course) pool=course.steps[Math.min(course.steps.length-1,pidx)].notes.slice();
+    }
+  }
   return pool.length?pool:palier.notes.slice();
 }
 function segmentGroupN(seg){
@@ -6464,6 +6756,7 @@ function deletePieceSegment(pid,sid){
   },function(msg){$("pieceMsg").textContent=msg;});
 }
 function startPieceSegment(pid,sid){
+  if(protectedGameStartBlocked()) return false;
   const piece=allPieces().find(function(x){return x.id===pid;});
   if(!piece) return;
   const seg=pieceSegments(piece).find(function(s){return s.id===sid;});
@@ -6494,6 +6787,7 @@ function startPieceSegment(pid,sid){
   beginSerie(opts);
 }
 function startPieceGame(pid){
+  if(protectedGameStartBlocked()) return false;
   const piece=allPieces().find(function(x){return x.id===pid;});
   if(!piece) return;
   const seg=nextSegmentForPiece(piece);
@@ -6685,6 +6979,7 @@ function bindPremierRegardRestored(type){
   box.querySelectorAll("button").forEach(function(button,index){button.onclick=function(){prAnswer(index);};});
 }
 function startPremierRegard(pid,segmentId){
+  if(protectedGameStartBlocked()) return false;
   const p=allPieces().find(function(x){return x.id===pid;});
   if(!p) return;
   if(!p.q || !p.q.length){ // partition perso : auto-vérification (l'app ne connaît pas son contenu)
@@ -6828,6 +7123,7 @@ function recordKbdAnswer(correct,o){
   if(o.id){ const s=noteStat(o.id); s.v++; if(!correct) s.e++; }
 }
 function startClavier(){
+  if(protectedGameStartBlocked()) return false;
   let cfg={clef:"sol",dir:"read",acc:false};
   function seg(label,opts,key){
     return '<div class="lab">'+label+'</div><div class="seg" data-key="'+key+'">'+
@@ -6835,7 +7131,7 @@ function startClavier(){
   }
   function draw(){
     $("cardBox").innerHTML='<h3>Clavier</h3><h2>Lire &amp; jouer</h2><div class="kbdcfg">'+
-      seg("Clé",[{v:"sol",t:"Clé de sol"},{v:"fa",t:"Clé de fa"}],"clef")+
+      seg("Clé",[{v:"sol",t:"Clé de sol"},{v:"fa",t:"Clé de fa"},{v:"ut",t:"Clé d’ut 3e"}],"clef")+
       seg("Sens",[{v:"read",t:"Note → touche"},{v:"name",t:"Touche → nom"}],"dir")+
       seg("Altérations",[{v:false,t:"Naturelles"},{v:true,t:"Avec ♯ ♭"}],"acc")+
       '</div><button id="kGo">Commencer</button>';
@@ -6850,10 +7146,11 @@ function startClavier(){
   draw(); $("overlay").classList.add("on");
 }
 function beginClavier(cfg){
+  if(protectedGameStartBlocked()) return false;
   clearKbdTimer();
   KX={clef:cfg.clef,dir:cfg.dir,acc:!!cfg.acc,n:10,i:0,ok:0,errs:[],hist:[],cur:null,prev:null,done:false,waiting:false,cfg:cfg,t0:0};
   logEvent("clavier_start",{clef:KX.clef,dir:KX.dir,acc:KX.acc});
-  $("kHead").textContent=(KX.dir==="read"?"Lis et joue":"Trouve le nom")+" · clé de "+(KX.clef==="sol"?"sol":"fa")+(KX.acc?" · ♯♭":"");
+  $("kHead").textContent=(KX.dir==="read"?"Lis et joue":"Trouve le nom")+" · "+clefFullLabel(KX.clef)+(KX.acc?" · ♯♭":"");
   $("kFb").className="feedback"; show("scrKbd"); nextKbd();
 }
 function nextKbd(){
@@ -6927,7 +7224,7 @@ function finishClavier(){
    Contrat : un token utilisateur, un gist, un fichier JSON ; les divergences concurrentes sont bloquées au lieu d'écraser un appareil.
    Le token reste uniquement en mémoire de session : jamais dans localStorage, DB, exports ou QR. */
 const LS_SYNC="sezam_sync", LS_SYNC_LEGACY="solado_sync",
-  GIST_FILE="sezam-progress.json", GIST_FILE_LEGACY="solado-save.json", GIST_CLOUD_SCHEMA=2, GIST_DESC="SEZAM progression (auto)";
+  GIST_FILE="sezam-progress.json", GIST_FILE_LEGACY="solado-save.json", GIST_CLOUD_SCHEMA=3, GIST_DESC="SEZAM progression (auto)";
 let syncBusy=false, syncLastPush=0, syncQueued=null, syncTokenSessions=safeMap();
 function canSyncNow(){ return typeof navigator==="undefined" || navigator.onLine!==false; }
 function syncStorageKey(playerId){return LS_SYNC+":"+(isSafeId(playerId)?playerId:"invalid");}
@@ -7121,8 +7418,11 @@ function cloudDeletePreflight(g){
 function syncEnsure(cb){
   const c=syncCfg();
   if(!c.token||!canSyncNow()){ cb(false); return; }
+  const token=memoryActionToken(),defer=function(){syncStatus("Création du coffre GitHub différée jusqu’à la confirmation de la sauvegarde protégée.");setTimeout(function(){if(memoryActionCurrent(token))syncEnsure(cb);else cb(false);},2200);};
+  if(memoryProtectedActionBusy||memoryRestoreBusy){defer();return;}
   if(c.gistId){ cb(true); return; }
   gistApi("GET","/gists?per_page=100",null,function(list){
+    if(memoryProtectedActionBusy||memoryRestoreBusy){defer();return;}
     const hit=Array.isArray(list)?list.find(function(g){return !!remoteFile(g);}):null;
     if(hit){ syncSet({gistId:hit.id}); cb(true); return; }
     const files={}; files[playerGistFile(ACTIVE_PLAYER_ID)]={content:cloudSaveContent()};
@@ -7174,19 +7474,21 @@ function flushPendingSync(){
 }
 function syncPush(force,forceLocal){
   if(!syncEnabled()) return;
+  if(memoryProtectedActionBusy||memoryRestoreBusy){if(!restorePending())queueCloudSync(2200);syncStatus("Synchronisation différée jusqu’à la confirmation de la sauvegarde protégée.");return;}
   if(restorePending()&&!force){syncStatus("Une restauration locale est active. La synchro automatique est suspendue pour ne pas l’annuler ; utilise « Synchroniser maintenant » pour décider explicitement.");return;}
   if(!canSyncNow()){ syncStatus("Hors ligne : sauvegarde locale active, synchro au retour du réseau."); return; }
   if(!force && Date.now()-syncLastPush<12000) return;
   if(syncBusy) return; syncBusy=true;
   gistApi("GET","/gists/"+syncCfg().gistId,null,function(g){
+    if(memoryProtectedActionBusy||memoryRestoreBusy){syncBusy=false;if(!restorePending())queueCloudSync(2200);syncStatus("Synchronisation différée : aucun état non confirmé n’a été envoyé.");return;}
     if(!g){syncBusy=false;syncStatus("Synchro reportée : impossible de vérifier la sauvegarde distante.");return;}
     const remote=parseRemote(g);
     if(g&&remoteFile(g)&&!remote){syncBusy=false;syncStatus("Sauvegarde distante illisible : aucun envoi effectué. Exporte tes données puis vérifie le Gist GitHub.");return;}
     const decision=remote?syncTransferDecision(DB,remote):"push";
     if(!forceLocal&&decision==="conflict"){syncBusy=false;syncConflictStatus();return;}
     if(!forceLocal&&remote && decision==="pull"){ syncBusy=false; syncAdopt(remote); return; }
-    // Écrit toujours le fichier v2. L'ancien fichier reste dans le Gist pour
-    // qu'une v28 encore ouverte ne puisse pas effacer les nouveaux champs.
+    // Écrit dans le fichier joueur protégé par le schéma cloud courant. Une
+    // ancienne application refuse ce schéma au lieu d'effacer ses nouveaux champs.
     const files={},fileName=playerGistFile(ACTIVE_PLAYER_ID),sentContent=cloudSaveContent(),sentTs=stateTimestamp(DB);files[fileName]={content:sentContent};
     gistApi("PATCH","/gists/"+syncCfg().gistId,{files:files},function(res){
       syncBusy=false;
@@ -7377,7 +7679,7 @@ $("btnQuit").onclick=function(){
     }
   }
   if(EX&&EX.sessionMode==="course"&&!EX.done){
-    if(typeof window.confirm==="function"&&!window.confirm("Quitter cette série ? Elle ne remplira aucun jalon du cycle.")) return;
+    if(typeof window.confirm==="function"&&!window.confirm("Quitter cette série ? Elle ne remplira aucun jalon de l’étape.")) return;
     logEvent("course_exercise_abort",{palier:EX.palier?EX.palier.id:null,step:EX.course?EX.course.stepId:null,i:EX.i});
     finishSerie(); return;
   }

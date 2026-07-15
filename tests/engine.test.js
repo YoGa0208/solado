@@ -187,14 +187,14 @@ function loadEngine(runtime) {
   const exportsList = [
     "esc", "checkValidation", "seriesCover", "recentCoveredIds", "validationMissingIds", "srs", "srsReview", "isDue", "coldRecallId", "ensureStructure", "cleanId", "isSafeId", "safeMap", "hasOwn",
     "importSave", "compactSave", "undoImport", "tierUnlocked", "tierComplete",
-    "palierPlayable", "playableInMode", "visiblePaliers", "valProgress", "PALIERS", "TIERS", "TIER_IDS", "NOTES", "COURSES", "MAX_QUESTIONS_PER_EXERCISE", "COURSE_MAX_EXERCISES", "COURSE_SERIES_PER_STEP", "COURSE_NEW_NOTE_TARGET", "courseDecision", "normalizeCourseProgress", "courseProgressFloorFromPaliers", "reconcileCourseProgressWithPaliers", "advanceCourseExercise", "reviewableCourseSteps", "normalizeCourseReviewState", "partitionPracticeMotifs", "partitionPracticePredictability", "partitionPracticeMaxTrigram", "partitionPracticeTargets", "partitionPracticeCards", "partitionPracticePlan", "claimCourseReviewPlan", "claimCoursePracticePlan", "practiceCardTransposition", "practiceCardCreditHtml", "practiceCardPlaybackEvents", "practiceCardPlaybackMs", "drawPracticeCard", "courseReviewDecision", "startCourseReview", "returnToHomeFromExercise",
+    "palierPlayable", "playableInMode", "visiblePaliers", "valProgress", "PALIERS", "TIERS", "TIER_IDS", "NOTES", "COURSES", "CLEF_META", "clefFullLabel", "clefShortLabel", "MAX_QUESTIONS_PER_EXERCISE", "COURSE_MAX_EXERCISES", "COURSE_SERIES_PER_STEP", "COURSE_NEW_NOTE_TARGET", "courseDecision", "currentCourseState", "normalizeCourseProgress", "courseProgressFloorFromPaliers", "reconcileCourseProgressWithPaliers", "advanceCourseExercise", "reviewableCourseSteps", "normalizeCourseReviewState", "partitionPracticeMotifs", "partitionPracticePredictability", "partitionPracticeMaxTrigram", "partitionPracticeTargets", "partitionPracticeCards", "partitionPracticePlan", "partitionPracticeCacheStats", "PARTITION_PRACTICE_CACHE_LIMIT", "PARTITION_PRACTICE_CARD_LIMIT_PER_SOURCE", "claimCourseReviewPlan", "claimCoursePracticePlan", "practiceCardTransposition", "practiceCardCreditHtml", "practiceCardPlaybackEvents", "practiceCardPlaybackMs", "drawPracticeCard", "courseReviewDecision", "startCourseReview", "returnToHomeFromExercise",
     "buildKeyboard", "pcOf", "isWhite", "pickKbdTarget", "nameOptions", "withAcc",
     "baseNoteObj", "kbdRangeFor", "freshPalierState", "SRS_DAYS", "normalizePiece", "normalizeAttachment", "normalizeSegment", "MAX_PIECE_ATTACHMENT_BYTES", "MAX_TOTAL_ATTACHMENT_BYTES", "SAFE_ATTACHMENT_TYPES", "pieceFileType",
     "normalizeQuestion", "normalizeDay", "normalizeSegmentState", "normalizeNoteStat", "normalizeConfusions", "normalizeRepairItem", "normalizeRepairQueue", "normalizeEasterEggs", "normalizeSeriesRecord", "normalizeTierProgress", "normalizeStar", "normalizeSeen", "normalizeKbdStats", "markDay", "activeDayKeys", "streak", "todayStr",
     "longestStreak", "weekStats", "practiceTotals", "trophyDefs", "shownTrophyDefs", "trophiesEarned", "BONUS_EGG_DEFS", "awardEasterEgg",
     "writtenLabelOf", "kbdLabelOf", "recoveryCodeInfo", "applyRecoveryCode",
     "trainingFocusText", "stateTimestamp", "stateScore", "shouldAdopt", "backupToDb", "THEME_MODES", "themeModeLabel", "watchHomeItems",
-    "PROFILE_INSTRUMENTS", "PROFILE_PATHS", "PROFILE_LEVELS", "PRACTICE_DOMAINS", "normalizeProfile", "normalizeDailyProgress", "normalizeValidationDrafts", "validationDraftKey",
+    "PROFILE_INSTRUMENTS", "PROFILE_PATHS", "PROFILE_LEVELS", "COACH_LEVELS", "coachLevelById", "coachLevelForCourse", "displayedCoachLevelId", "saveCoachLevel", "PRACTICE_DOMAINS", "normalizeProfile", "normalizeDailyProgress", "normalizeValidationDrafts", "validationDraftKey",
     "CURRICULUM_CATALOG_VERSION", "CURRICULUM_SCOPE", "CURRICULUM_EVIDENCE_TYPES", "CURRICULUM_PROGRESS_STATUSES", "normalizeCurriculumProof", "normalizeCurriculumState", "validCurriculumCatalog", "curriculumCompetency", "curriculumStatusFromProofs", "setCurriculumCatalog", "backfillCurriculumFromGame", "curriculumScopeHtml",
     "profileStartPalier", "applyProfileStartPlacement", "profileStartText", "coachPalier", "coachDecision", "repairPool", "fragileNoteIds", "globalPrecision", "sessionCountToday",
     "dailyPlan", "splitPlanMinutes", "targetCadence", "dailyMission", "dailyFocusDomain", "DAILY_BLOCK_IDS", "runDailyBlock",
@@ -210,7 +210,7 @@ function loadEngine(runtime) {
     "noteOccurrencesInPiece", "measureSegment", "pieceMapSVG", "mapLegendHtml", "markSegmentSeen", "toggleSegmentFlag",
     "setSegmentFeel", "feelLabel", "beginSerie", "answer", "answerPos", "startPieceSegment", "renderResPiece", "nextQuestion", "finishSerie", "startRafale", "finishRafale",
     "beginClavier", "nextKbd", "kbdTap", "renderKbd", "recordKbdAnswer",
-    "STAFF", "staffSVG", "bonusStaffSVG", "clefSVG", "noteGlyph", "yOf", "previewNoteHtml",
+    "STAFF", "staffSVG", "staffAriaLabel", "bonusStaffSVG", "clefSVG", "noteGlyph", "yOf", "previewNoteHtml",
     "currentRecoveryCode", "mirrorIntro", "tone", "save", "readKey", "bestLocalState", "recognizableStoredState", "utf8ByteLength", "decodedBase64Bytes", "MAX_IMPORT_TEXT_BYTES",
     "MEMORY_HISTORY_SCHEMA", "memorySha256", "parseMemoryIndex", "createMemorySnapshot", "memorySnapshotList", "loadMemoryEnvelope", "validateMemoryEnvelope", "restoreMemorySnapshot", "memoryLocalIndexKey", "memoryLocalDataKey", "memoryLocalMetaKey", "memoryIndexKey", "detectMemoryOverlayType", "restoredMemoryOverlayType", "restoredMemoryOverlayCanBind", "captureMemoryOverlayControls", "restoreMemoryOverlayControls", "manualMemorySnapshot", "bindStartupRecoveryDialog", "bindPlayerEditorDialog",
     "normalizePlayerRegistry", "normalizePlayerName", "activePlayerMeta", "playerMetaById", "archivedPlayerMetaById", "createPlayer", "switchPlayer", "renamePlayer", "deletePlayer", "restoreArchivedPlayer", "playerInitial", "openPlayerSwitcher", "MAX_LOCAL_PLAYERS", "MAX_ARCHIVED_PLAYERS", "PLAYER_REGISTRY_KEY", "PLAYER_FALLBACK_PREFIX",
@@ -564,6 +564,12 @@ ok(E.segmentNotePool(segmentedPiece.segments[1], segmentedPiece).every(id => E.N
   "segment lié à une partition clé de sol : pool filtré sur la bonne clé");
 ok(E.pieceSegments(E.normalizePiece({ titre: "Sans découpe", clef: "fa" })).some(s => s.level === "P6"),
   "partition sans découpe manuelle : segments automatiques adaptés à la clé de fa");
+const utPersonalPiece=E.normalizePiece({id:"alto-ut",titre:"Étude alto",clef:"ut",melody:{measures:[["si3u3","do4u3","re4u3"]],beats:[[1,1,2]]},segments:[{id:"alto-ut-1",title:"Mesure 1",mesFrom:1,mesTo:1,level:"P1"}]});
+eq(E.pieceClef(utPersonalPiece),"ut","une partition personnelle conserve sa vraie clé d’ut 3e");
+eq(E.segmentNotePool(utPersonalPiece.segments[0],utPersonalPiece),["si3u3","do4u3","re4u3"],"son passage utilise uniquement les notes ut réellement encodées");
+eq(E.normalizePiece({id:"ut-inferree",titre:"Import ut",melody:{measures:[["do4u3","re4u3"]]}}).clef,"ut","un import mélodique ut sans métadonnée de clé est corrigé d’après ses notes, jamais affiché en sol");
+const utFallbackPiece=E.normalizePiece({id:"alto-scan",titre:"Scan alto",clef:"ut",segments:[{id:"alto-scan-1",title:"Début",level:"P1"}]});
+ok(E.segmentNotePool(utFallbackPiece.segments[0],utFallbackPiece).every(function(id){return E.NOTES[id].clef==="ut";}),"même un scan ut sans mélodie reçoit un vocabulaire ut, jamais des notes de clé de sol");
 freshDB();
 const personalLookPiece=E.normalizePiece({id:"regard-perso",titre:"Regard perso",clef:"sol",q:[]});
 E.getDB().pieces.push(personalLookPiece);
@@ -715,6 +721,9 @@ const tNat = E.pickKbdTarget("sol", false, null);
 ok(tNat.acc === null, "sans altérations : cible naturelle");
 ok(tNat.midi >= E.kbdRangeFor("sol")[0] && tNat.midi <= E.kbdRangeFor("sol")[1], "cible dans l'ambitus de la clé de sol");
 ok(E.NOTES[tNat.id] !== undefined, "cible naturelle adossée à une note du dictionnaire");
+eq(E.kbdRangeFor("ut"),[50,72],"le clavier de clé d’ut couvre exactement ré3 à do5");
+const tUt=E.pickKbdTarget("ut",false,null);
+ok(tUt.clef==="ut"&&tUt.midi>=50&&tUt.midi<=72,"une cible clavier ut reste jouable et écrite dans la vraie clé d’ut 3e");
 // cible altérée forcée (rnd déterministe : index 0 = do4, puis branche dièse)
 const queue = [0, 0.1, 0.9]; let qi = 0; const rnd = () => queue[qi++ % queue.length];
 const tAcc = E.pickKbdTarget("sol", true, null, rnd);
@@ -744,6 +753,11 @@ try {
   E.beginClavier({ clef: "fa", dir: "name", acc: true }); // l'autre sens, clé de fa, avec altérations
   kx = E.getKX();
   ok(kx && kx.cur, "beginClavier (touche→note, clé de fa, ♯♭) prépare une question");
+  kx.done = true;
+  E.beginClavier({ clef: "ut", dir: "read", acc: false });
+  kx = E.getKX();
+  ok(kx&&kx.cur&&kx.cur.clef==="ut"&&/Clé d’ut 3e/.test(E.getEl("kHead").textContent),"le module Clavier propose et annonce réellement la clé d’ut 3e");
+  ok(E.getEl("kKbd").children.some(function(key){return Number(key.getAttribute("data-midi"))===kx.cur.midi;}),"la bonne touche de chaque cible ut existe sur le clavier affiché");
   kx.done = true;
 } catch (e) { threw = e; }
 ok(threw === null, "le parcours clavier ne lève aucune exception" + (threw ? " — " + threw.message : ""));
@@ -835,6 +849,18 @@ ok(E.getEX().pendingDecouverte !== true && !!E.getEX().currentTask, "après la D
 ok(E.getDB().seen.P1 === true, "le palier est marqué découvert au moment où l'écran est réellement montré");
 E.haltEX();
 freshDB();
+E.beginSerie({ sessionMode: "course", n: 25, questionCap: 25, palier: E.PALIERS[0], pool: E.PALIERS[0].notes, mode: "zen", groupN: 1,
+  script: new Array(25).fill("sol4"), course: { itemId:"sol", itemLabel:"Clé de sol", stepId:"sol-01", stepIndex:0, stepTotal:10, newNote:"", seriesIndex:0, seriesNumber:1, seriesTotal:3 } });
+ok(E.getEX().pendingDecouverte === true && !E.getEX().currentTask,
+  "un parcours sur partitions présente aussi ses trois premiers repères avant de les interroger");
+E.haltEX();
+freshDB();
+E.beginSerie({ sessionMode: "courseReview", n: 25, questionCap: 25, palier: E.PALIERS[0], pool: E.PALIERS[0].notes, mode: "zen", groupN: 1,
+  script: new Array(25).fill("sol4"), course: { itemId:"sol", itemLabel:"Clé de sol", stepId:"sol-01", stepIndex:0, stepTotal:10, newNote:"", seriesIndex:-1, seriesNumber:0, seriesTotal:3, review:true } });
+ok(E.getEX().pendingDecouverte === true && !E.getEX().currentTask,
+  "un entraînement libre ne contourne pas la Découverte si ses notes n’ont encore jamais été lues");
+E.haltEX();
+freshDB();
 E.beginSerie({ sessionMode: "session", n: 6, palier: E.PALIERS[2], pool: E.PALIERS[2].notes, mode: "zen", groupN: 1, cold: false });
 eq(E.getEX().introducedIds.length, 6, "un palier de sept notes ne marque introduites que les six réellement affichées");
 if (typeof E.getEl("btnDecGo").onclick === "function") E.getEl("btnDecGo").onclick();
@@ -881,7 +907,7 @@ ok(skipEx.transferReached !== true, "une mission passée conserve l'indicateur s
 E.clearQTimers(); E.clearDailyTimer(); E.haltEX();
 
 /* 9septies-bis) Parcours d'acquisition — trois séries parfaites avant la nouveauté suivante */
-group("Parcours d’acquisition — cycles parfaits, plafond et variété");
+group("Parcours d’acquisition — étapes parfaites, plafond et variété");
 eq(E.COURSE_SERIES_PER_STEP, 3, "chaque nouveauté reste en place pendant trois séries validées");
 E.COURSES.forEach(function(course){
   ok(course.steps.length <= E.COURSE_MAX_EXERCISES && course.steps.length <= 12,
@@ -919,9 +945,114 @@ ok(E.getEX().done && E.getEX().promptCount === E.MAX_QUESTIONS_PER_EXERCISE,
   "même la Rafale s'arrête au plafond de 25 questions");
 
 const migratedCourse=E.normalizeCourseProgress({version:1,currentItem:"sol",steps:{sol:2,fa:0},exercises:{sol:2,fa:0}});
-eq(migratedCourse.version,3,"l’ancien parcours migre vers les cycles d’acquisition actuels");
+eq(migratedCourse.version,4,"l’ancien parcours migre vers les étapes d’acquisition actuelles");
 eq(migratedCourse.steps.sol,2,"la migration conserve le vocabulaire déjà atteint");
 eq(migratedCourse.cycles.sol,0,"la compétence courante repart au premier jalon sans perdre les notes acquises");
+
+const utCourse=E.COURSES.find(function(course){return course.id==="ut";});
+ok(!!utCourse&&utCourse.steps.length===12,"le niveau avancé possède un vrai parcours de 12 étapes en clé d’ut 3e");
+eq(utCourse.steps[0].notes,["si3u3","do4u3","re4u3"],"la clé d’ut commence avec trois repères autour du do médian");
+eq([E.NOTES.si3u3.p,E.NOTES.do4u3.p,E.NOTES.re4u3.p],[3,4,5],"les trois premiers repères encadrent réellement la troisième ligne");
+eq([E.NOTES.si3u3.midi,E.NOTES.do4u3.midi,E.NOTES.re4u3.midi],[59,60,62],"les sons de la clé d’ut correspondent aux hauteurs écrites");
+const utSvg=E.staffSVG("ut",[{p:4,color:"#000",x:200,big:1}]);
+ok(utSvg.indexOf('class="clef clef-ut"')>=0&&utSvg.indexOf('data-ref-p="4"')>=0,"la clé d’ut est vectorielle et ancrée sur la troisième ligne");
+ok(utSvg.indexOf('aria-label="Portée en clé d’ut 3e.')>=0&&utSvg.indexOf('clé d’ut 3e</text>')>=0,"la portée visuelle et le lecteur d’écran annoncent correctement la clé d’ut 3e");
+
+const coachLocal=makeLocalStorage(),Coach=loadEngine({localStorage:coachLocal});
+Coach.getDB().courseProgress=Coach.normalizeCourseProgress({version:4,currentItem:"sol",steps:{sol:2,fa:1,ut:0},cycles:{sol:1,fa:2,ut:0},exercises:{sol:2,fa:1,ut:0}});
+Coach.save({cloud:false});
+const coachProgressBefore=JSON.stringify(Coach.getDB().courseProgress),coachStatsBefore=JSON.stringify(Coach.getDB().noteStats),coachPaliersBefore=JSON.stringify(Coach.getDB().paliers);
+let coachSaved=null;
+Coach.saveCoachLevel("intermediaire",function(result){coachSaved=result;});
+ok(coachSaved&&coachSaved.ok&&coachSaved.meta&&coachSaved.meta.number>=2,"le bouton Enregistrer protège d’abord l’ancien niveau puis crée la sauvegarde complète numérotée");
+ok(/Clé de fa · étape 2\/10 · série 3\/3/.test(coachSaved.meta.context.levelLabel),"la sauvegarde nomme exactement la clé, l’étape et la série où se trouve le joueur");
+eq(Coach.getDB().profile.coachLevel,"intermediaire","le niveau choisi est conservé dans le profil du joueur");
+eq(Coach.courseDecision().course.itemId,"fa","le niveau intermédiaire affiche et lance réellement la clé de fa");
+eq(Coach.getDB().courseProgress.cycles.sol,1,"changer de clé conserve la série partielle déjà acquise en clé de sol");
+eq(Coach.getDB().courseProgress.cycles.fa,2,"changer de clé conserve aussi les deux séries parfaites déjà acquises en clé de fa");
+eq(JSON.stringify(Coach.getDB().noteStats),coachStatsBefore,"le choix du niveau ne réécrit aucune mémoire de note");
+eq(JSON.stringify(Coach.getDB().paliers),coachPaliersBefore,"le choix du niveau ne valide ni n’efface aucun palier");
+Coach.saveCoachLevel("avance",function(result){coachSaved=result;});
+ok(coachSaved&&coachSaved.ok&&Coach.courseDecision().course.itemId==="ut","le niveau avancé bascule sur la vraie clé d’ut 3e et la sauvegarde");
+Coach.getDB().sel="P7";Coach.getDB().seen.P1=false;
+Coach.startDailySession();
+ok(Coach.getEX()&&Coach.getEX().palier.courseOnly===true&&Coach.getEX().palier.id==="COURSE_UT","le parcours ut utilise un contexte indépendant des paliers sol/fa");
+eq(Coach.getDB().sel,"P7","commencer la clé d’ut ne ramène jamais silencieusement le repère sol/fa à P1");
+ok(Coach.getDB().seen.P1===false&&Coach.getEX().pendingDecouverte===true,"la découverte ut n’invente aucune visite du palier P1");
+Coach.returnToHomeFromExercise();
+Coach.saveCoachLevel("debutant",function(result){coachSaved=result;});
+ok(coachSaved&&coachSaved.ok&&Coach.courseDecision().course.itemId==="sol","le joueur peut revenir à la clé de sol sans course en avant imposée");
+eq(Coach.getDB().courseProgress.cycles.sol,1,"l’aller-retour de niveau restitue exactement la série partielle de sol");
+eq(JSON.stringify(Coach.getDB().courseProgress),coachProgressBefore,"un aller-retour complet ne modifie aucun jalon d’acquisition");
+
+const completedCoach=loadEngine(), completedUt=completedCoach.COURSES.find(function(course){return course.id==="ut";});
+completedCoach.getDB().profile=completedCoach.normalizeProfile(Object.assign({},completedCoach.getDB().profile,{coachLevel:"avance"}));
+completedCoach.getDB().courseProgress=completedCoach.normalizeCourseProgress({version:4,currentItem:"ut",steps:{sol:0,fa:0,ut:completedUt.steps.length},cycles:{sol:0,fa:0,ut:0},exercises:{sol:0,fa:0,ut:completedUt.steps.length}});
+completedCoach.getDB().sel="P7";completedCoach.getDB().seen.P1=false;
+const completedProgressBefore=JSON.stringify(completedCoach.getDB().courseProgress), continuousDecision=completedCoach.courseDecision();
+ok(continuousDecision&&continuousDecision.kind==="course"&&continuousDecision.course.review===true&&continuousDecision.course.continuous===true,
+  "un niveau explicitement terminé devient un entraînement continu au lieu de retomber sur un ancien palier");
+eq([continuousDecision.course.itemId,continuousDecision.course.stepIndex,continuousDecision.n],["ut",completedUt.steps.length-1,25],
+  "l’entraînement continu reprend la dernière étape de la clé choisie avec 25 nouvelles lectures");
+ok(completedCoach.startDailySession()===true&&completedCoach.getEX().sessionMode==="courseReview"&&completedCoach.getEX().course.continuous===true,
+  "le bouton principal lance réellement la reprise libre, jamais une fausse série 0/3");
+eq(completedCoach.getDB().sel,"P7","l’entraînement continu en clé d’ut ne modifie pas le palier sol/fa choisi");
+completedCoach.returnToHomeFromExercise();
+eq(JSON.stringify(completedCoach.getDB().courseProgress),completedProgressBefore,
+  "interrompre l’entraînement continu laisse chaque jalon officiel strictement inchangé");
+
+const blockedLocal=makeLocalStorage(),BlockedCoach=loadEngine({localStorage:blockedLocal}),blockedBefore=JSON.stringify(BlockedCoach.getDB());
+blockedLocal.failAfter(BlockedCoach.memoryLocalIndexKey(BlockedCoach.getActivePlayerId()),1);
+let blockedResult=null;BlockedCoach.saveCoachLevel("avance",function(result){blockedResult=result;});
+ok(blockedResult&&!blockedResult.ok,"si la protection préalable échoue, le changement de niveau est refusé");
+eq(JSON.stringify(BlockedCoach.getDB()),blockedBefore,"un échec de sauvegarde laisse l’état du joueur strictement inchangé");
+
+const candidateLocal=makeLocalStorage(),CandidateCoach=loadEngine({localStorage:candidateLocal});
+candidateLocal.failAfter("solfegeProto1",1);
+let candidateResult=null;CandidateCoach.saveCoachLevel("avance",function(result){candidateResult=result;});
+ok(candidateResult&&!candidateResult.ok&&candidateResult.rollbackPersisted===true,"si l’écriture du niveau candidat échoue, le niveau antérieur est réécrit et confirmé");
+eq(CandidateCoach.getDB().profile.coachLevel,"","un échec du niveau candidat ne reste jamais actif en mémoire");
+
+const postLocal=makeLocalStorage(),PostCoach=loadEngine({localStorage:postLocal});
+postLocal.failAfter(PostCoach.memoryLocalIndexKey(PostCoach.getActivePlayerId()),2);
+let postResult=null;PostCoach.saveCoachLevel("avance",function(result){postResult=result;});
+ok(postResult&&!postResult.ok&&postResult.rollbackPersisted===true,"si le snapshot final échoue, le choix précédent est restauré de façon persistante");
+eq(PostCoach.getDB().profile.coachLevel,"","un snapshot final incomplet n’active jamais silencieusement le nouveau niveau");
+let postRows=[];PostCoach.memorySnapshotList(function(rows){postRows=rows;});
+ok(postRows.length===1&&postRows[0].kind==="pre_level_change","le point préalable immuable reste disponible après l’échec du snapshot final");
+
+const concurrentLocal=makeLocalStorage(),concurrentSetItem=concurrentLocal.setItem.bind(concurrentLocal);
+let ConcurrentCoach=null,concurrentIndexKey="",concurrentIndexWrites=0;
+concurrentLocal.setItem=function(key,value){
+  if(key===concurrentIndexKey){
+    concurrentIndexWrites++;
+    if(concurrentIndexWrites===2){
+      ConcurrentCoach.getDB().themeMode="nocturne";
+      ConcurrentCoach.getDB().profile.displayName="Réglage concurrent conservé";
+      ConcurrentCoach.getDB().pieces.push(ConcurrentCoach.normalizePiece({id:"piece-concurrente",titre:"Partition ajoutée pendant la protection"}));
+      throw new Error("échec final simulé après une autre modification");
+    }
+  }
+  return concurrentSetItem(key,value);
+};
+ConcurrentCoach=loadEngine({localStorage:concurrentLocal});
+concurrentIndexKey=ConcurrentCoach.memoryLocalIndexKey(ConcurrentCoach.getActivePlayerId());
+let concurrentResult=null;ConcurrentCoach.saveCoachLevel("avance",function(result){concurrentResult=result;});
+ok(concurrentResult&&!concurrentResult.ok&&concurrentResult.rollbackPersisted===true,
+  "un échec final annule proprement le seul choix de niveau en cours");
+eq([ConcurrentCoach.getDB().profile.coachLevel,ConcurrentCoach.getDB().courseProgress.currentItem],["","sol"],
+  "le rollback ciblé remet uniquement le niveau et sa clé précédents");
+eq([ConcurrentCoach.getDB().themeMode,ConcurrentCoach.getDB().profile.displayName,ConcurrentCoach.getDB().pieces[0].id],["nocturne","Réglage concurrent conservé","piece-concurrente"],
+  "le rollback ne perd ni réglage, ni profil, ni partition modifiés pendant la protection");
+const ConcurrentReload=loadEngine({localStorage:concurrentLocal});
+eq([ConcurrentReload.getDB().themeMode,ConcurrentReload.getDB().profile.displayName,ConcurrentReload.getDB().pieces[0].id],["nocturne","Réglage concurrent conservé","piece-concurrente"],
+  "ces modifications concurrentes restent aussi présentes après rechargement");
+
+const hardLocal=makeLocalStorage(),HardCoach=loadEngine({localStorage:hardLocal});
+hardLocal.failAfter("solfegeProto1",1);hardLocal.failAfter(HardCoach.PLAYER_REGISTRY_KEY,2);
+let hardResult=null;HardCoach.saveCoachLevel("avance",function(result){hardResult=result;});
+ok(hardResult&&!hardResult.ok&&hardResult.rollbackPersisted===false&&/stockage actif n’a pas confirmé/.test(hardResult.message),"un double échec de stockage est annoncé honnêtement sans prétendre la restauration persistée");
+eq(HardCoach.getDB().profile.coachLevel,"","même lors du double échec, l’état affiché revient au niveau antérieur et le point préalable subsiste");
 
 const legacyP7Paliers={};
 ["P1","P2","P3","P4","P5","P6"].forEach(function(id){
@@ -943,32 +1074,39 @@ E.haltEX();
 
 freshDB();
 seedSeen(["sol4","la4","si4"]);
-function playCourseAttempt(withError){
+function playCourseAttempt(withError,errorAt){
   E.startDailySession();
   if(E.getEX().pendingDecouverte && typeof E.getEl("btnDecGo").onclick === "function") E.getEl("btnDecGo").onclick();
   let missed=false;
   for(let guard=0;guard<140&&!E.getEX().done;guard++){
     if(E.getEX().pendingDecouverte && typeof E.getEl("btnDecGo").onclick === "function") E.getEl("btnDecGo").onclick();
     else if(E.getEX().waiting) E.nextQuestion();
-    else if(withError&&!missed){ answerCurrentWrong(); missed=true; }
+    else if(withError&&!missed&&E.getEX().promptCount>=(errorAt||1)){ answerCurrentWrong(); missed=true; }
     else answerCurrentCorrect();
   }
   return E.getEX();
 }
 
 const firstSignature=E.courseDecision().course.signature;
-const failedFirst=playCourseAttempt(true);
+const failedFirst=playCourseAttempt(true,25);
 eq(failedFirst.promptCount,E.MAX_QUESTIONS_PER_EXERCISE,"même une tentative imparfaite va au bout de ses 25 questions utiles");
 eq(E.courseDecision().course.seriesNumber,1,"une erreur empêche la première série de remplir un jalon");
+const scriptedRepairId=failedFirst.errs[0];
+ok(!!scriptedRepairId&&E.getDB().repairQueue.some(function(item){return item.sourceId===scriptedRepairId;})&&E.getDB().noteStats[scriptedRepairId].needsRepair===true,
+  "une erreur à la 25e question reste protégée dans la file de réparation pour la tentative suivante");
+ok([].concat.apply([],failedFirst.promptHistory.map(function(row){return row.ids;})).every(function(id){return failedFirst.pool.indexOf(id)>=0;}),
+  "la réparation différée n’injecte aucune note hors du script de 25 questions");
 ok(!E.getDB().dailyProgress[E.todayStr()]||E.getDB().dailyProgress[E.todayStr()].session!==firstSignature,
   "une série avec erreur n’est jamais marquée validée dans le plan");
 
 const perfectOne=playCourseAttempt(false);
-eq(perfectOne.sessionMode, "course", "le bouton principal démarre le cycle d’acquisition");
+eq(perfectOne.sessionMode, "course", "le bouton principal démarre l’étape d’acquisition");
 eq(E.getEX().pool, ["sol4","la4","si4"], "le parcours commence bien avec SOL, LA, SI");
 eq(E.getEX().questionCap, E.MAX_QUESTIONS_PER_EXERCISE, "chaque séance du parcours comporte exactement 25 questions");
 eq(E.courseDecision().course.seriesNumber,2,"une première série parfaite ouvre seulement la série 2/3");
 eq(E.courseDecision().pool.length,3,"aucune nouvelle note n’arrive après une seule série parfaite");
+ok(!E.getDB().repairQueue.some(function(item){return item.sourceId===scriptedRepairId;})&&E.getDB().noteStats[scriptedRepairId].needsRepair===false&&E.getDB().noteStats[scriptedRepairId].lastRepairAt>0,
+  "les bonnes lectures naturellement espacées du script referment réellement la réparation antérieure");
 
 playCourseAttempt(true);
 eq(E.courseDecision().course.seriesNumber,2,"une erreur en série 2 impose de rejouer la série 2");
@@ -979,30 +1117,30 @@ eq(E.courseDecision().pool.length,3,"la troisième série travaille encore exact
 playCourseAttempt(false);
 const nextCourse=E.courseDecision();
 ok(nextCourse && nextCourse.pool.length === 4 && nextCourse.course.seriesNumber === 1,
-  "seules trois séries parfaites ouvrent le cycle suivant à quatre notes");
+  "seules trois séries parfaites ouvrent l’étape suivante à quatre notes");
 ok(E.getEl("btnReplayCourse").style.display==="block",
-  "le bilan officiel propose explicitement de rejouer le cycle terminé sans repartir en avant");
+  "le bilan officiel propose explicitement de rejouer l’étape terminée sans repartir en avant");
 ok(["sol4","la4","si4"].every(function(id){return nextCourse.pool.indexOf(id)>=0;}),
   "les trois repères initiaux restent actifs après l'arrivée de DO");
 const savedCourse=JSON.parse(E.compactSave());
 ok(!!savedCourse.courseProgress && savedCourse.courseProgress.steps.sol === 1 && savedCourse.courseProgress.cycles.sol === 0,
-  "le cycle d’acquisition suit la sauvegarde locale / QR");
+  "l’étape d’acquisition suit la sauvegarde locale / QR");
 ok(E.cloudDocument().progress.courseProgress.steps.sol === 1 && E.cloudDocument().progress.courseProgress.cycles.sol === 0,
-  "le cycle d’acquisition suit aussi la synchro cloud");
+  "l’étape d’acquisition suit aussi la synchro cloud");
 
 const reviewRows=E.reviewableCourseSteps();
 eq(reviewRows.map(function(row){return row.item.id+":"+row.index;}),["sol:0","sol:1"],
-  "le joueur peut choisir tous les cycles atteints, y compris revenir au précédent, jamais un cycle futur");
+  "le joueur peut choisir toutes les étapes atteintes, y compris revenir à la précédente, jamais une étape future");
 const previewReviewA=E.courseReviewDecision("sol",0), previewReviewB=E.courseReviewDecision("sol",0);
 ok(previewReviewA.pool.length===3 && E.courseReviewDecision("sol",2)===null,
-  "la reprise libre ouvre un acquis antérieur sans contourner le verrou du prochain cycle");
+  "la reprise libre ouvre un acquis antérieur sans contourner le verrou de la prochaine étape");
 eq(previewReviewA.practice.variantId,previewReviewB.practice.variantId,
   "consulter l’entraînement à venir ne consomme jamais sa variante");
 ok(previewReviewA.script.length===25&&previewReviewA.script.every(function(id){return previewReviewA.pool.indexOf(id)>=0;}),
-  "la reprise prépare 25 notes strictement contenues dans le cycle choisi");
+  "la reprise prépare 25 notes strictement contenues dans l’étape choisie");
 const progressBeforeReview=JSON.stringify(E.getDB().courseProgress);
 ok(E.startCourseReview("sol",0)===true && E.getEX().sessionMode==="courseReview",
-  "un cycle antérieur peut lancer immédiatement une lecture dans de vrais fragments");
+  "une étape antérieure peut lancer immédiatement une lecture dans de vrais fragments");
 eq(E.getEX().script,previewReviewA.script,"le moteur joue exactement le script musical annoncé");
 ok(E.getEX().practice&&E.getEX().practice.variantId===previewReviewA.practice.variantId&&E.getEX().currentPracticeCard&&E.getEX().currentPracticeCard.notes.length>=2,
   "chaque question place sa cible dans un fragment de partition visible");
@@ -1054,13 +1192,20 @@ const rhythmSvgCard={notes:["sol4","la4","si4"],beats:[4,.5,1.5],targetIndex:1,c
 E.drawPracticeCard(rhythmSvgCard,"");
 ok(/data-beats="4"/.test(E.getEl("staffbox").innerHTML)&&/data-beats="0.5"/.test(E.getEl("staffbox").innerHTML)&&/data-beats="1.5"/.test(E.getEl("staffbox").innerHTML)&&/fill="#fffdf8"/.test(E.getEl("staffbox").innerHTML),
   "la portée montre aussi blanche/ronde, croche et durée pointée au lieu d’aplatir le rythme");
+ok(/La note à répondre est la deuxième de gauche à droite, dans le premier interligne/.test(E.staffAriaLabel("sol",[{p:0,x:100},{p:1,x:200,target:true},{p:2,x:300}],null)),
+  "la cible VoiceOver est sémantique et ne dépend pas du dessin du caret");
+const targetAriaStates=["","good","bad"].map(function(state){
+  E.drawPracticeCard(rhythmSvgCard,state);const match=E.getEl("staffbox").innerHTML.match(/aria-label="([^"]+)"/);return match&&match[1];
+});
+ok(targetAriaStates.every(function(label){return label&&/La note à répondre est la deuxième de gauche à droite/.test(label)&&!/(^|\s)LA(\s|$)/.test(label);}),
+  "VoiceOver identifie la note dorée avant et après correction sans souffler son nom");
 
 E.COURSES.forEach(function(item){
   item.steps.forEach(function(step,stepIndex){
     let previous=null;
     for(let run=0;run<8;run++){
       const plan=E.partitionPracticePlan(item.id,stepIndex,run,previous&&previous.script,"review");
-      ok(!!plan&&plan.script.length===25,"chaque cycle "+step.id+" produit une étude complète de 25 notes (variante "+(run+1)+")");
+      ok(!!plan&&plan.script.length===25,"chaque étape "+step.id+" produit une étude complète de 25 notes (variante "+(run+1)+")");
       if(!plan) continue;
       ok(plan.sourceType==="exact-target-cards"&&/Mélodie et rythme sont conservés/.test(plan.sourceLabel)&&!/d’après/.test(plan.sourceLabel),
         "l’exercice annonce honnêtement des extraits rythmiques, jamais un faux air recomposé");
@@ -1122,17 +1267,33 @@ E.COURSES.forEach(function(item){
   });
 });
 ok(partitionStressOk,"950 séries déterministes respectent fidélité, vocabulaire, équilibre, anti-boucle et renouvellement");
+const practiceCache=E.partitionPracticeCacheStats(), maxCourseNotes=Math.max.apply(null,[].concat.apply([],E.COURSES.map(function(course){return course.steps.map(function(step){return step.notes.length;});})));
+ok(practiceCache.entries<=E.PARTITION_PRACTICE_CACHE_LIMIT&&practiceCache.entries<=2,
+  "le cache des fragments évince les anciennes étapes au lieu de retenir tout le parcours");
+ok(practiceCache.cards<=practiceCache.entries*maxCourseNotes*4*E.PARTITION_PRACTICE_CARD_LIMIT_PER_SOURCE&&practiceCache.cards<3000,
+  "le nombre de cartes conservées reste strictement borné pour la mémoire iPhone/iPad");
+const cacheStepA=E.COURSES[0].steps[0],cacheStepB=E.COURSES[0].steps[1],cacheStepC=E.COURSES[0].steps[2];
+const cacheA=E.partitionPracticeMotifs(cacheStepA),cacheB=E.partitionPracticeMotifs(cacheStepB),cacheAHit=E.partitionPracticeMotifs(cacheStepA);
+E.partitionPracticeMotifs(cacheStepC);
+const cacheBReload=E.partitionPracticeMotifs(cacheStepB);
+ok(cacheAHit===cacheA&&cacheBReload!==cacheB,"le cache est un vrai LRU : un accès protège A et l’arrivée de C évince B");
+eq(cacheBReload.map(function(card){return card.cardKey;}),cacheB.map(function(card){return card.cardKey;}),
+  "une étape évincée est régénérée de façon strictement déterministe");
+const isolatedPlan=E.partitionPracticePlan("sol",0,321,[],"cache-clone"),isolatedFirst=isolatedPlan.cards[0].notes[0];
+isolatedPlan.cards[0].notes[0]="re5";
+const isolatedAgain=E.partitionPracticePlan("sol",0,321,[],"cache-clone");
+eq(isolatedAgain.cards[0].notes[0],isolatedFirst,"modifier une carte de séance ne peut jamais corrompre les motifs conservés");
 const p7SiPlan=E.partitionPracticePlan("fa",1,0,[],"p7-test"), p7DoPlan=E.partitionPracticePlan("fa",2,0,[],"p7-test");
 eq(p7SiPlan.script.filter(function(id){return id==="si3";}).length,5,"P7 travaille SI cinq fois sans écraser FA, SOL et LA");
 ok(p7SiPlan.script.every(function(id){return ["fa3","sol3","la3","si3"].indexOf(id)>=0;}),"la première moitié de P7 reste intégralement en clé de fa");
 eq(p7DoPlan.script.filter(function(id){return id==="do4f";}).length,5,"la seconde moitié de P7 ajoute réellement le do médian cinq fois");
 ok(p7DoPlan.cards.every(function(card){return card.exact&&card.notes.every(function(id,index){return E.NOTES[id].midi-E.NOTES[card.sourceNotes[index]].midi===card.shiftSemitones;});}),
   "P7 ne porte plus le nom d’une œuvre si ses fragments n’en respectent pas exactement les notes");
-const cleanedReviewState=E.normalizeCourseReviewState({steps:{"sol-01":{run:999999999,recent:["a","b","c","d"],lastScript:Array(25).fill("re5")},"cycle-inconnu":{run:5},"__proto__":{run:8}}});
+const cleanedReviewState=E.normalizeCourseReviewState({steps:{"sol-01":{run:999999999,recent:["a","b","c","d"],lastScript:Array(25).fill("re5")},"etape-inconnue":{run:5},"__proto__":{run:8}}});
 eq(cleanedReviewState.steps["sol-01"].run,999999,"la rotation importée est bornée");
 eq(cleanedReviewState.steps["sol-01"].recent,["a","b","c"],"l’historique importé reste limité aux trois dernières variantes");
 eq(cleanedReviewState.steps["sol-01"].lastScript,[],"un ancien script contenant une note future est rejeté à l’import");
-ok(!cleanedReviewState.steps["cycle-inconnu"]&&!cleanedReviewState.steps["__proto__"],"les cycles inconnus ou dangereux sont rejetés à l’import");
+ok(!cleanedReviewState.steps["etape-inconnue"]&&!cleanedReviewState.steps["__proto__"],"les étapes inconnues ou dangereuses sont rejetées à l’import");
 
 E.startDailySession();
 if(E.getEX().pendingDecouverte && typeof E.getEl("btnDecGo").onclick === "function") E.getEl("btnDecGo").onclick();
@@ -1142,7 +1303,7 @@ E.returnToHomeFromExercise();
 ok(E.getEX().done===true && E.getEl("scrHome").classList.contains("active"),
   "Accueil interrompt immédiatement une partie en cours et ramène réellement à l’écran d’accueil");
 eq(JSON.stringify(E.getDB().courseProgress),progressBeforeHome,
-  "le retour Accueil en pleine série ne valide ni ne déplace le cycle");
+  "le retour Accueil en pleine série ne valide ni ne déplace l’étape");
 eq(E.courseDecision().course.seriesNumber,1,
   "après un retour Accueil, le joueur retrouve exactement la série officielle qu’il avait quittée");
 
@@ -1197,9 +1358,35 @@ ok(appSrcA4.indexOf("--dim:#5e777b") < 0 && appSrcA4.indexOf("--dim:#566e72") >=
 ok(appSrcA4.indexOf('id="btnExerciseHome"')>=0 && appSrcA4.indexOf('$("btnExerciseHome").onclick=returnToHomeFromExercise')>=0,
   "un bouton Accueil explicite reste disponible pendant chaque jeu");
 ok(appSrcA4.indexOf('id="courseReviewSelect"')>=0 && appSrcA4.indexOf('id="btnReplayCourse"')>=0,
-  "le retour aux cycles antérieurs et la répétition depuis le bilan sont visibles dans l’interface");
+  "le retour aux étapes antérieures et la répétition depuis le bilan sont visibles dans l’interface");
 ok(appSrcA4.indexOf('id="btnDecHome"')>=0,
   "même l’écran de découverte laisse revenir à l’accueil sans fermer l’application");
+ok(appSrcA4.indexOf('id="coachLevelSelect"')>=0&&appSrcA4.indexOf('id="btnCoachSave"')>=0&&appSrcA4.indexOf('function saveCoachLevel')>=0,
+  "le Coach invisible propose le niveau et son enregistrement simple sur la carte d’accueil");
+ok(appSrcA4.indexOf("button.disabled=false;select.disabled=false")>=0,
+  "le choix du niveau redevient immédiatement disponible après un enregistrement réussi");
+const coachSaveBodyA4=appSrcA4.slice(appSrcA4.indexOf("function saveCoachLevel"),appSrcA4.indexOf("function protectMemoryAction"));
+ok(coachSaveBodyA4.indexOf("save({cloud:false})")>=0&&coachSaveBodyA4.indexOf("queueCloudSync()")>=0,
+  "le cloud attend la confirmation de la sauvegarde complète avant de recevoir le nouveau niveau");
+ok(appSrcA4.indexOf("if(play)play.disabled=true")>=0&&appSrcA4.indexOf("Attends la confirmation de l’enregistrement avant de jouer")>=0,
+  "aucun exercice ne peut démarrer pendant la transaction protégée du niveau");
+const protectedStarts=["startCourseReview","startDailySession","startCoachPlay","startRepair","startSerie","beginSerie","startRafale","startRevision","startStarReview","startPieceSegment","startPieceGame","startPremierRegard","startClavier","beginClavier"];
+ok(protectedStarts.every(function(name){
+  const from=appSrcA4.indexOf("function "+name+"(");if(from<0)return false;
+  const next=appSrcA4.indexOf("\nfunction ",from+10),body=appSrcA4.slice(from,next<0?appSrcA4.length:next);
+  return body.indexOf("protectedGameStartBlocked()")>=0;
+}),"toutes les entrées de jeu attendent la fin d’une sauvegarde ou d’un changement de joueur");
+const protectedStartBody=appSrcA4.slice(appSrcA4.indexOf("function protectedGameStartBlocked"),appSrcA4.indexOf("function displayedCoachLevelId"));
+ok(protectedStartBody.indexOf("memoryProtectedActionBusy")>=0&&protectedStartBody.indexOf("memoryRestoreBusy")>=0&&protectedStartBody.indexOf("playerOperationBusy")>=0,
+  "le verrou de démarrage couvre sauvegarde, restauration et changement de joueur");
+const syncEnsureBodyA4=appSrcA4.slice(appSrcA4.indexOf("function syncEnsure"),appSrcA4.indexOf("let syncPendingRemote"));
+ok((syncEnsureBodyA4.match(/memoryProtectedActionBusy\|\|memoryRestoreBusy/g)||[]).length>=2&&syncEnsureBodyA4.indexOf("cloudSaveContent()")>=0,
+  "la création initiale du coffre cloud recontrôle aussi la protection avant de sérialiser la progression");
+const syncPushBodyA4=appSrcA4.slice(appSrcA4.indexOf("function syncPush"),appSrcA4.indexOf("function syncPull"));
+ok((syncPushBodyA4.match(/memoryProtectedActionBusy\|\|memoryRestoreBusy/g)||[]).length>=2&&syncPushBodyA4.indexOf("aucun état non confirmé n’a été envoyé")>=0,
+  "une synchronisation déjà planifiée ou en vol recontrôle la protection avant tout envoi cloud");
+ok(appSrcA4.indexOf("Cycle d’acquisition")<0&&appSrcA4.indexOf("Choisis un cycle déjà atteint")<0&&appSrcA4.indexOf("Rejouer ce cycle")<0,
+  "les étapes du jeu ne sont plus présentées comme des cycles du conservatoire");
 
 /* 9nonies) Finition — le trophée dit ce qu'il mesure (grille J24) */
 group("Partition — le libellé Maîtrisé précise sa portée réelle (J24)");
@@ -1533,6 +1720,7 @@ E.getDB().noteStats.sol4=E.normalizeNoteStat({v:3,e:0,coldV:1,coldE:0,last:40,la
 const cloud = E.cloudDocument();
 ok(cloud.progress && cloud.scores && cloud.settings && cloud.timestamp, "cloudDocument produit le fichier unique progress/scores/settings/timestamp");
 eq(cloud.schema, E.GIST_CLOUD_SCHEMA, "l'enveloppe cloud est versionnée pour protéger les nouveaux champs");
+eq(E.GIST_CLOUD_SCHEMA, 3, "la v38 protège niveau Coach et progression ut contre une réécriture par une ancienne application");
 ok(cloud.progress.curriculum && cloud.progress.curriculum.catalogVersion === E.CURRICULUM_CATALOG_VERSION, "le suivi de cursus voyage dans la sauvegarde cloud");
 eq(cloud.progress.curriculum.progress["c1-reading-landmarks"].proofs.recognition.attempts,3,"une nouvelle activité alimente immédiatement l'export cloud, sans ouvrir les stats ni recharger");
 ok(JSON.stringify(cloud).indexOf("tok_SECRET_123") < 0, "le token n'est jamais dans le document cloud");
@@ -1611,7 +1799,9 @@ eq(E.getDB().profile.parcours, "libre", "ancien joueur : parcours libre par déf
 eq(E.getDB().profile.dailyMinutes, 20, "durée de séance par défaut : 20 minutes");
 eq(E.getDB().profile.daysPerWeek, 5, "cadence par défaut : 5 jours par semaine");
 eq(E.getDB().profile.domains, E.PRACTICE_DOMAINS.map(d => d.id), "les six domaines sont proposés par défaut");
-eq(E.getDB()._sezam.schema, 13, "schéma local v13 pour le cursus versionné et les profils isolés");
+eq(E.getDB()._sezam.schema, 14, "schéma local v14 pour le niveau du Coach et la clé d’ut isolée");
+eq(E.getDB().profile.coachLevel, "", "un ancien joueur n’est jamais renvoyé de force au niveau débutant");
+eq(E.COACH_LEVELS.map(function(level){return level.courseId;}),["sol","fa","ut"],"les trois niveaux du Coach ciblent respectivement sol, fa et ut 3e");
 const sanitizedProfile = E.normalizeProfile({
   displayName: "  <Youcef>   Test  ", instrument: "inconnu", parcours: "rattrapage_a2",
   niveauDepart: "annee2", targetDate: "2026-02-30", dailyMinutes: 999, daysPerWeek: 0,
@@ -1980,6 +2170,9 @@ eq((map.match(/data-seg="aclair_p1"/g) || []).length, 2, "chaque mesure du passa
 ok(map.indexOf("\u{1D11E}") >= 0, "clé de sol dessinée sur chaque système");
 ok(E.pieceMapSVG(E.pieceById("aclairfa")).indexOf('class="clef clef-fa"') >= 0,
   "clé de fa géométrique dessinée pour la main gauche sur la carte");
+const utMapPiece=E.normalizePiece({id:"carte-ut",titre:"Carte ut",clef:"ut",melody:{measures:[["si3u3","do4u3","re4u3"]]},segments:[{id:"carte-ut-1",title:"Mesure 1",mesFrom:1,mesTo:1,level:"P1"}]});
+const utPieceMap=E.pieceMapSVG(utMapPiece);
+ok(utPieceMap.indexOf('class="clef clef-ut"')>=0&&utPieceMap.indexOf('data-ref-p="4"')>=0,"la carte d’une partition ut dessine sa clé complète, ancrée sur la troisième ligne");
 E.recordSegmentResult({ pieceId: "aclair", segmentId: "aclair_p1" }, 3, 5, 2);
 ok(E.pieceMapSVG(E.pieceById("aclair")).indexOf("#b45f4b") >= 0, "un passage fragile colore sa zone en rouge doux");
 ok(E.pieceMapSVG(E.pieceById("aclair"), { trained: ["sol4"] }).indexOf("rgba(216,169,77") >= 0,
