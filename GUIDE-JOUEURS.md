@@ -6,10 +6,25 @@ Bienvenue dans SEZAM, ton entraînement musical. L'idée est simple : **ta parti
 
 1. Ouvre [SEZAM](https://yoga0208.github.io/solado/) dans Safari, Chrome ou ton navigateur habituel.
 2. Si plusieurs personnes utilisent l'appareil, touche le prénom en haut de la carte **JOUER**, puis choisis ton profil. Les progressions restent séparées.
-3. Dans **Ta mission du jour**, indique comment tu arrives : **Concentré**, **Calme**, **Joueur** ou **Fatigué**.
-4. Choisis ton temps disponible : 10, 15, 20 ou 30 minutes. C'est un repère d'organisation ; le contrat quotidien reste fixé à 25 questions.
-5. Appuie sur **JOUER · 25 QUESTIONS**.
-6. Pour installer SEZAM sur iPhone ou iPad : ouvre le site dans Safari, touche **Partager**, puis **Sur l'écran d'accueil**. L'icône SEZAM se lancera ensuite comme une application et pourra fonctionner hors ligne.
+3. Dans **Famille et cycle**, choisis ton repère déclaré, puis ton **Année**.
+4. Dans **Ta mission du jour**, indique comment tu arrives : **Concentré**, **Calme**, **Joueur** ou **Fatigué**.
+5. Choisis ton temps disponible : 10, 15, 20 ou 30 minutes. C'est un repère d'organisation ; le contrat quotidien reste fixé à 25 questions.
+6. Appuie sur **JOUER · 25 QUESTIONS**.
+7. Pour installer SEZAM sur iPhone ou iPad : ouvre le site dans Safari, touche **Partager**, puis **Sur l'écran d'accueil**. L'icône SEZAM se lancera ensuite comme une application et pourra fonctionner hors ligne.
+
+## Familles, cycles et années
+
+SEZAM propose **14 classes musicales déclarées** :
+
+| Famille | Cycle | Années proposées | Durée habituelle du cycle | Clé travaillée en priorité |
+|---|---|---:|---:|---|
+| Débutant | Cycle 1 | 1 à 5 | 3 à 5 ans | clé de sol |
+| Intermédiaire | Cycle 2 | 1 à 5 | 3 à 5 ans | clé de fa |
+| Avancé | Cycle 3 | 1 à 4 | 2 à 4 ans | clé d'ut 3e |
+
+Par exemple, **Cycle 2 · 3e année · Intermédiaire** correspond à la classe C2.3 et ouvre le parcours de clé de fa. Les années 4 ou 5 existent parce qu'un même cycle peut durer différemment selon la personne et le conservatoire ; elles ne sont pas toutes obligatoires.
+
+Ce réglage indique d'où tu souhaites travailler. Il **ne certifie pas** ton niveau de conservatoire et ne remplace pas une évaluation de professeur. Choisir une famille ou une année ne valide aucune note, ne saute aucune étape et n'efface rien : les séries de 25, les trois réussites parfaites et toute ta progression restent inchangées. Une sauvegarde protégée est créée lors du changement.
 
 ## Ta mission du jour
 
@@ -52,9 +67,9 @@ Si tu rates le défi, il reste ouvert. Tu peux le rejouer autant que nécessaire
 
 ## Retour, Accueil et sortie d'une séance
 
-Sur chaque écran secondaire, le bouton fixe **Accueil** permet de revenir immédiatement au point de départ. Dans une fenêtre, **Retour** ferme seulement la fenêtre et **Accueil** revient au tableau de bord.
+Sur chaque écran secondaire, le bouton fixe **Accueil** permet de revenir au point de départ. Dans une fenêtre, **Retour** revient à la page précédente et **Accueil** revient au tableau de bord. Une scène ou une saisie en cours est d'abord protégée par un point : attends sa confirmation. Si l'enregistrement échoue, SEZAM reste sur place pour ne pas te faire perdre ton travail.
 
-Tu peux quitter une séance en cours. Les réponses déjà données et les erreurs utiles sont sauvegardées, mais une série inachevée ne valide aucune étape et une mission de moins de 25 questions ne reçoit pas encore son sceau. Tu ne dois jamais éteindre l'application pour revenir en arrière.
+Tu peux quitter une séance en cours. Pour reprendre la question laissée en suspens, ouvre **Coffre**, puis **Revenir à cette sauvegarde** sur le point créé avant la sortie. Une série inachevée ne valide aucune étape et une mission de moins de 25 questions ne reçoit pas encore son sceau. Tu ne dois jamais éteindre l'application pour revenir en arrière.
 
 ## Calendrier musical et iPhone/iPad
 
@@ -81,17 +96,28 @@ Sur l'accueil, la tuile **Ton œuvre en cours** ouvre la pièce :
 
 ## Où SEZAM se place dans le cursus
 
-Dans **Mon parcours · lecture musicale**, le volet « Repères du cursus » distingue clairement les Cycles 1, 2 et 3. SEZAM évalue aujourd'hui la lecture de notes : c'est une composante du Cycle 1, pas une certification complète. Il accompagne les entraînements à la maison ; il ne remplace ni le professeur, ni l'instrument ou la voix, ni le jeu collectif.
+Dans **Mon parcours · lecture musicale**, le volet « Repères du cursus » distingue clairement les Cycles 1, 2 et 3. La classe déclarée sur l'accueil sert seulement à choisir une famille de travail : clé de sol, clé de fa ou clé d'ut 3e. SEZAM évalue des exercices de lecture de notes ; il ne certifie ni une année ni un cycle complet. Il accompagne les entraînements à la maison et ne remplace ni le professeur, ni l'instrument ou la voix, ni le jeu collectif.
 
 ## Ta progression est en sécurité
 
 - Plusieurs joueurs peuvent partager un appareil sans mélanger XP, niveaux, erreurs, badges, rendez-vous, réglages ou partitions.
-- Tout est sauvegardé automatiquement sur l'appareil. Les fins de mission quotidienne et les victoires hebdomadaires créent aussi un point complet, daté et numéroté.
-- L'humeur, la mission figée, les sceaux, les Couronnes et les rendez-vous font partie de chaque sauvegarde.
-- **Code de secours** : à chaque fin de série, un code court apparaît ; collé dans *Restaurer*, il repositionne le niveau.
+- La progression courante est enregistrée automatiquement sur l'appareil. Les fins de niveau, de mission et les victoires hebdomadaires créent un point complet, daté et numéroté ; **Enregistrer** ou **Sauvegarder** en crée un à tout moment.
+- Les points s'ajoutent sans écraser les anciens. Chaque confirmation précise le nom, le niveau et l'état protégé. La question, les réponses, les réglages, les acquis, la scène, l'humeur, les sceaux, les Couronnes et les rendez-vous font partie du point.
+- Dans **Coffre**, consulte la date et le descriptif, puis touche **Revenir à cette sauvegarde**. Un nouveau point protège d'abord la situation actuelle : revenir en arrière ne supprime pas ton travail plus récent.
+- Le champ de commande du coffre comprend **sauvegarde**, **liste mes sauvegardes** et **reviens à 3** (ou le nom du point). Il s'agit de commandes écrites, pas de reconnaissance vocale.
+- **Code de secours** : le code court de fin de série repositionne le niveau ; il ne remplace pas le coffre complet ni une restauration exacte de la scène.
 - **Synchro entre appareils** : facultative et séparée pour chaque joueur, via un Gist GitHub secret. L'humeur et le calendrier n'y vont que si cette synchro est activée.
 - Le Coach invisible fonctionne dans l'application : aucune humeur ni date de rendez-vous n'est envoyée à une IA externe.
 - **Transfert QR** : permet de passer la progression sur un autre appareil sans internet.
+
+### Garder une copie sur iPad ou changer d'appareil
+
+1. Ouvre **Coffre**, puis **Télécharger le coffre complet**.
+2. Conserve le fichier `.sezam-memory.json` dans **Fichiers**, par exemple sur iCloud Drive. Si plusieurs parties sont proposées, télécharge-les toutes et garde-les ensemble.
+3. Sur l'autre appareil, ouvre SEZAM à la même adresse, puis importe le fichier dans le coffre. S'il y a plusieurs parties, importe-les une par une.
+4. Choisis le point à restaurer. Un import répété n'écrase pas les anciens points.
+
+Important : le navigateur peut supprimer ses données, et le mode privé n'est pas un lieu de conservation durable. SEZAM ne supprime pas volontairement ton historique, mais seule une copie externe te protège aussi contre la perte de l'appareil ou l'effacement du navigateur. La synchro GitHub et le QR ne sont pas une copie de tout le coffre historique. Ne partage pas ton fichier de coffre publiquement : il contient ta progression et tes données de jeu.
 
 ## Un problème, une idée ?
 

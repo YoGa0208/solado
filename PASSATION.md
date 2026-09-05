@@ -23,7 +23,7 @@ Remote `origin` configuré sur `https://github.com/YoGa0208/solado.git`. Toujour
 |---|---|
 | `index.html` | TOUTE l'application : HTML + CSS + JS vanilla, zéro framework, zéro build |
 | `prototype-solfege.html` | Copie **byte-identique** d'index.html (historique iOS ; un test impose l'égalité stricte) |
-| `sw.js` | Service worker : cache `sezam-solado-v39`, HTML réseau-d'abord, assets cache-d'abord |
+| `sw.js` | Service worker : cache `sezam-solado-v40`, HTML réseau-d'abord, assets cache-d'abord |
 | `manifest.json` | PWA installable (fond blanc, icônes SEZAM) |
 | `tests/engine.test.js` | 34 000+ contrôles : charge le VRAI script d'index.html dans un bac à sable Node |
 | `tests/bot_completion.cjs` | Bot qui finit le jeu à 100 % (QA de profondeur/équilibrage) |
@@ -41,8 +41,8 @@ Un seul gros `<script>` "use strict" (précédé d'un script qrcode-generator em
 
 1. **CSS** avec thèmes par variables : `:root` (Classique blanc) + `[data-theme=partition|nocturne|luthier]`. Palette : pétrole `#0f4c5c`, céramique `#7fb8c2`, or `#b8893a`.
 2. **Sécurité** : `esc()` — obligatoire sur TOUTE donnée utilisateur/importée avant `innerHTML`.
-3. **Dictionnaires** : `NOTES` (23 notes, `p` = position de portée, `midi`, `mn` = repère mnémotechnique), `PALIERS` (15 : P1–P10 puis boss B1–B5), `TIERS` (Zen, Bronze 2 notes/5 s, Argent 3/4 s, Vermeil 4/3 s, Or 5/2 s, Rhodium 6/1 s ; gemmes/étoiles `future:true`), `SEGMENT_STATES` (5 états), `PIECE_AMBITIONS` (4 ambitions), `CARDS`/`CARDS_TIER` (cartes-cadeaux culturelles).
-4. **État & normalisation** : `ensureStructure(db)` est le point unique de normalisation. La v39 utilise `_sezam.schema = 15`, `DB.v = 14` et ajoute trois racines protégées : `engagement`, `coachContext` et `calendar`. Leurs normaliseurs restent non destructifs : aucun sceau, check-in ou rendez-vous valide n'est tronqué. La migration d'un ancien `dailyProgress` ne s'exécute que si l'engagement v1 est absent.
+3. **Dictionnaires** : `NOTES` (sol, fa et ut 3e ; `p` = position de portée, `midi`, `mn` = repère mnémotechnique), `PALIERS` (15 : P1–P10 puis boss B1–B5), `COURSES` (sol, fa, ut 3e), `COACH_LEVELS` (3 familles/cycles) et `COACH_CLASSES` (14 classes déclarées), `TIERS` (Zen, Bronze 2 notes/5 s, Argent 3/4 s, Vermeil 4/3 s, Or 5/2 s, Rhodium 6/1 s ; gemmes/étoiles `future:true`), `SEGMENT_STATES` (5 états), `PIECE_AMBITIONS` (4 ambitions), `CARDS`/`CARDS_TIER` (cartes-cadeaux culturelles).
+4. **État & normalisation** : `ensureStructure(db)` est le point unique de normalisation. La v40 utilise `_sezam.schema = 16`, `DB.v = 15` et conserve les racines protégées `engagement`, `coachContext` et `calendar`. Le profil ajoute `coachYear`, normalisé uniquement lorsqu'il appartient au cycle déclaré. Les normaliseurs restent non destructifs : aucun acquis, sceau, check-in ou rendez-vous valide n'est tronqué. La migration d'un ancien `dailyProgress` ne s'exécute que si l'engagement v1 est absent.
 5. **Stockage 3 filets** : localStorage `solfegeProto1` + `_mirror` + `_checkpoint` forment le cache triple du joueur actif ; IndexedDB `soladoBackup` garde un coffre `save:<playerId>` pour chaque joueur et le registre familial ; le Gist GitHub optionnel est lui aussi isolé par joueur avec détection des divergences.
 6. **Moteurs** (voir §5) puis **écrans** : `scrHome` (cockpit), `scrEx` (jeu), `scrRes` (résultat + bilan partition), `scrStats`, `scrPieces` (liste), `scrPiece` (fiche d'une pièce), `scrKbd` (clavier, module isolé `KX`).
 7. **SVG** : `staffSVG` (portée de jeu) et `pieceMapSVG` (carte de conquête multi-systèmes, passages teintés par état, halos dorés sur notes travaillées, zones tactiles `data-seg`).
@@ -52,6 +52,8 @@ Un seul gros `<script>` "use strict" (précédé d'un script qrcode-generator em
 ## 5. Les moteurs de jeu
 
 **Coach (`coachDecision`)** — hiérarchie VERROUILLÉE par tests : ≥2 erreurs récentes ou ≥2 notes en réparation → RÉPARATION ; pause longue (>5 j, `LONG_BREAK_MS`) → FLASH ; sinon SESSION. Le bouton JOUER passe par `startCoachPlay(force?)`.
+
+**Familles, cycles et classes déclarées** — `COACH_LEVELS` décrit Cycle 1 · Débutant (années 1–5, durée habituelle 3–5 ans, clé de sol), Cycle 2 · Intermédiaire (années 1–5, 3–5 ans, clé de fa) et Cycle 3 · Avancé (années 1–4, 2–4 ans, clé d'ut 3e). `COACH_CLASSES` matérialise les **14 combinaisons** C1.1→C1.5, C2.1→C2.5 et C3.1→C3.4. `saveCoachLevel(levelId, coachYear, cb)` crée un point protégé avant le changement, persiste les deux champs puis sélectionne le `courseId` associé. C'est un repère déclaré : il ne modifie aucun compteur d'étape, ne valide aucun acquis, ne saute aucune série et ne constitue jamais une certification de conservatoire.
 
 **Parcours d'acquisition** — contrat verrouillé : `COURSE_QUESTION_BUDGET = 25`, `COURSE_SERIES_PER_STEP = 3`, `COURSE_MAX_EXERCISES = 12`. Une étape avance seulement après trois séries parfaites de 25. Une erreur ne valide pas la série et n'efface pas les séries parfaites antérieures. Une seule note nouvelle est ajoutée à la fois. Le vocabulaire public est « item → étape → série » ; ne jamais afficher la propriété interne `cycles` comme « Cycle 9 ».
 
@@ -81,8 +83,8 @@ Le moteur historique des paliers, le SRS Leitner et les étoiles restent présen
 ## 6. Invariants — à ne JAMAIS casser (tous testés)
 
 1. `index.html` strictement égal à `prototype-solfege.html` avant tout commit.
-2. `APP_VERSION` == `v39` et `CACHE_NAME` == `sezam-solado-v39`.
-3. Schémas de livraison : `_sezam.schema = 15`, `DB.v = 14`, `GIST_CLOUD_SCHEMA = 4`.
+2. `APP_VERSION` == `v40` et `CACHE_NAME` == `sezam-solado-v40`.
+3. Schémas de livraison : `_sezam.schema = 16`, `DB.v = 15`, `GIST_CLOUD_SCHEMA = 5`.
 4. Clés de stockage intouchables : `solfegeProto1*`, `soladoBackup`, `sezam_players_v1`, gists historiques et actuels. Une progression ne se réinitialise JAMAIS.
 5. Toute note d'un passage appartient au palier annoncé par ce passage (garde-fou pédagogique).
 6. Bibliothèque : domaine public uniquement, mélodies JUSTES (l'incipit d'Ode main gauche est verrouillé par test — on a déjà eu un mode lydien accidentel).
@@ -96,6 +98,7 @@ Le moteur historique des paliers, le SRS Leitner et les étoiles restent présen
 14. L'humeur et le calendrier peuvent changer la séance proposée, jamais les critères 25/25 × 3.
 15. Aucun rendez-vous, badge ou point de sauvegarde existant n'est supprimé ou écrasé automatiquement.
 16. Les contrôles Accueil/Retour/Sauvegarder des fenêtres restent statiques hors de `cardBox`.
+17. Les 14 classes sont des déclarations de profil. Elles associent C1→sol, C2→fa et C3→ut 3e, mais ne certifient jamais un cycle et ne modifient jamais les preuves du parcours d'acquisition.
 
 ## 7. Tests — comment ça marche
 
@@ -107,7 +110,7 @@ Le moteur historique des paliers, le SRS Leitner et les étoiles restent présen
 
 ## 9. Synchronisation (optionnelle, par joueur)
 
-Trois niveaux : cache local immédiat → coffre IndexedDB par joueur → Gist secret GitHub par joueur. Le cloud schema 4 inclut `engagement`, `coachContext` et `calendar` ; ces données ne quittent donc l'appareil que si le joueur active explicitement la synchro GitHub. Aucun endpoint d'IA ne reçoit l'humeur ou les rendez-vous. Le Gist n'est pas indexé mais reste accessible avec son lien et possède un historique. Les pièces jointes et le journal d'événements ne partent pas dans le cloud. Toute réponse réseau tardive d'un ancien joueur est ignorée et une divergence entre appareils bloque le remplacement.
+Trois niveaux : cache local immédiat → coffre IndexedDB par joueur → Gist secret GitHub par joueur. Le cloud schema 5 inclut le profil v40 (`coachLevel` et `coachYear`), `engagement`, `coachContext` et `calendar` ; ces données ne quittent donc l'appareil que si le joueur active explicitement la synchro GitHub. Aucun endpoint d'IA ne reçoit l'humeur ou les rendez-vous. Le Gist n'est pas indexé mais reste accessible avec son lien et possède un historique. Les pièces jointes et le journal d'événements ne partent pas dans le cloud. Toute réponse réseau tardive d'un ancien joueur est ignorée et une divergence entre appareils bloque le remplacement.
 
 ## 10. Veille culturelle
 
@@ -123,7 +126,7 @@ Le workflow Pages est prêt et testé. La livraison passe par une branche et une
 
 ## 13. Chiffres utiles pour décider (partie témoin, détail dans PARTIE-TEMOIN.md)
 
-La partie témoin historique v29 combinait 90 validations et 30 passages Maîtrisés : 330 séries, 3 208 écrans-question et 9 711 réponses. Son plancher mécanique de 2 356,48 s, soit 39,27 min, ainsi que ses estimations humaines de 10–14 h à 35–45 h sont conservés comme repères comparatifs, pas comme minimums v39. Le contrat v39 impose déjà 270 séries d'acquisition de 25, soit 6 750 réponses avant réparations et bibliothèque ; il doit faire l'objet d'une nouvelle partie témoin complète. La maîtrise des passages impose toujours au moins 20 h de calendrier et le prestige absolu arrive au plus tôt 672 jours après le dernier Rhodium. Voir `FICHE-COMPLETE-JEU.md` pour les hypothèses historiques.
+La partie témoin historique v29 combinait 90 validations et 30 passages Maîtrisés : 330 séries, 3 208 écrans-question et 9 711 réponses. Son plancher mécanique de 2 356,48 s, soit 39,27 min, ainsi que ses estimations humaines de 10–14 h à 35–45 h sont conservés comme repères comparatifs, pas comme minimums v40. Le contrat de 25 questions, actif depuis la v39, impose déjà 270 séries d'acquisition de 25, soit 6 750 réponses avant réparations et bibliothèque ; il doit faire l'objet d'une nouvelle partie témoin complète. La maîtrise des passages impose toujours au moins 20 h de calendrier et le prestige absolu arrive au plus tôt 672 jours après le dernier Rhodium. Voir `FICHE-COMPLETE-JEU.md` pour les hypothèses historiques.
 
 ## 14. Roadmap proposée (non engagée)
 

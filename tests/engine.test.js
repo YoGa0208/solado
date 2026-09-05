@@ -57,16 +57,19 @@ function makeLocalStorage(seed) {
       m.set(k, String(v));
     },
     removeItem(k) { m.delete(k); },
+    key(index) { return Array.from(m.keys())[index] === undefined ? null : Array.from(m.keys())[index]; },
+    get length() { return m.size; },
     failAfter(k, calls) { failures.set(k, Math.max(1, Number(calls) || 1)); },
     dump() { return Object.fromEntries(m.entries()); }
   };
 }
-function makeFakeIndexedDB(seed) {
+function makeFakeIndexedDB(seed, control) {
   const store = seed instanceof Map ? seed : new Map(Object.entries(seed || {}));
   const db = {
     createObjectStore() {},
     transaction(_name, mode) {
       const before = new Map(store);
+      const writeKeys = [];
       let depth = 0, completed = false, failed = false, aborted = false;
       let completeHandler = null, errorHandler = null, abortHandler = null;
       const tx = { mode: mode || "readonly", error: null };
@@ -85,7 +88,13 @@ function makeFakeIndexedDB(seed) {
       function complete() {
         if (depth || failed || aborted || completed) return;
         completed = true;
-        if (completeHandler) completeHandler(eventFor(tx));
+        if (completeHandler) dispatchComplete(completeHandler);
+      }
+      function dispatchComplete(handler) {
+        if (control && control.holdNextWriteKey && writeKeys.indexOf(control.holdNextWriteKey) >= 0) {
+          control.holdNextWriteKey = null;
+          (control.pendingCompletions || (control.pendingCompletions = [])).push(function() { handler(eventFor(tx)); });
+        } else handler(eventFor(tx));
       }
       function fail(error) {
         if (failed || aborted) return;
@@ -115,10 +124,12 @@ function makeFakeIndexedDB(seed) {
       }
       const objectStore = {
         put(value, key) {
+          writeKeys.push(key);
           if (!failed && !aborted) store.set(key, value);
           const rq = request(key, null); complete(); return rq;
         },
         add(value, key) {
+          writeKeys.push(key);
           if (store.has(key)) {
             const error = new Error("Key already exists: " + key);
             error.name = "ConstraintError";
@@ -130,7 +141,11 @@ function makeFakeIndexedDB(seed) {
         get(key) {
           return request(store.has(key) ? store.get(key) : undefined, null);
         },
+        getAllKeys() {
+          return request(Array.from(store.keys()), null);
+        },
         delete(key) {
+          writeKeys.push(key);
           if (!failed && !aborted) store.delete(key);
           const rq = request(undefined, null); complete(); return rq;
         }
@@ -138,7 +153,7 @@ function makeFakeIndexedDB(seed) {
       Object.defineProperties(tx, {
         oncomplete: {
           get() { return completeHandler; },
-          set(fn) { completeHandler = fn; if (completed && fn) fn(eventFor(tx)); }
+          set(fn) { completeHandler = fn; if (completed && fn) dispatchComplete(fn); }
         },
         onerror: {
           get() { return errorHandler; },
@@ -185,6 +200,8 @@ function loadEngine(runtime) {
   if (!src) throw new Error("Script principal introuvable dans index.html");
   src = src.replace(/^<script>/, "").replace(/<\/script>$/, "");
   const exportsList = [
+    "captureMemorySnapshotRecord", "enqueueMemorySnapshotRecord", "parsePendingMemoryRaw", "persistPendingMemoryRecord", "clearPendingMemoryRecord", "memorySceneHtmlSafe",
+    "openMusicProfile", "openMemoryVaultSection", "startPremierRegard", "showSeriePreview", "showDecouverte", "prAnswer", "clearKbdTimer",
     "esc", "checkValidation", "seriesCover", "recentCoveredIds", "validationMissingIds", "srs", "srsReview", "isDue", "coldRecallId", "ensureStructure", "cleanId", "isSafeId", "safeMap", "hasOwn",
     "importSave", "compactSave", "undoImport", "tierUnlocked", "tierComplete",
     "palierPlayable", "playableInMode", "visiblePaliers", "valProgress", "PALIERS", "TIERS", "TIER_IDS", "NOTES", "COURSES", "CLEF_META", "clefFullLabel", "clefShortLabel", "MAX_QUESTIONS_PER_EXERCISE", "COURSE_MAX_EXERCISES", "COURSE_SERIES_PER_STEP", "COURSE_NEW_NOTE_TARGET", "courseDecision", "currentCourseState", "normalizeCourseProgress", "courseProgressFloorFromPaliers", "reconcileCourseProgressWithPaliers", "advanceCourseExercise", "reviewableCourseSteps", "normalizeCourseReviewState", "partitionPracticeMotifs", "partitionPracticePredictability", "partitionPracticeMaxTrigram", "partitionPracticeTargets", "partitionPracticeCards", "partitionPracticePlan", "partitionPracticeCacheStats", "PARTITION_PRACTICE_CACHE_LIMIT", "PARTITION_PRACTICE_CARD_LIMIT_PER_SOURCE", "claimCourseReviewPlan", "claimCoursePracticePlan", "practiceCardTransposition", "practiceCardCreditHtml", "practiceCardPlaybackEvents", "practiceCardPlaybackMs", "drawPracticeCard", "courseReviewDecision", "startCourseReview", "returnToHomeFromExercise",
@@ -194,7 +211,7 @@ function loadEngine(runtime) {
     "longestStreak", "weekStats", "practiceTotals", "trophyDefs", "shownTrophyDefs", "trophiesEarned", "BONUS_EGG_DEFS", "awardEasterEgg",
     "writtenLabelOf", "kbdLabelOf", "recoveryCodeInfo", "applyRecoveryCode",
     "trainingFocusText", "stateTimestamp", "stateScore", "shouldAdopt", "backupToDb", "THEME_MODES", "themeModeLabel", "watchHomeItems", "memoryLevelContext", "renderStats",
-    "PROFILE_INSTRUMENTS", "PROFILE_PATHS", "PROFILE_LEVELS", "COACH_LEVELS", "coachLevelById", "coachLevelForCourse", "displayedCoachLevelId", "saveCoachLevel", "PRACTICE_DOMAINS", "normalizeProfile", "normalizeDailyProgress", "normalizeValidationDrafts", "validationDraftKey", "DAILY_MISSION_QUESTIONS", "DAILY_REWARD_XP", "WEEKLY_REWARD_XP", "DAILY_MOODS", "DAILY_TIME_CHOICES", "APPOINTMENT_TYPES", "MAX_CALENDAR_APPOINTMENTS", "normalizeCoachContext", "normalizeAppointment", "normalizeTrainingCalendar", "normalizeEngagement", "reconcileEngagement", "completedMissionKeys",
+    "PROFILE_INSTRUMENTS", "PROFILE_PATHS", "PROFILE_LEVELS", "COACH_LEVELS", "COACH_CLASSES", "coachLevelById", "coachLevelForCourse", "coachYearLabel", "coachClassId", "coachClassById", "validCoachYear", "coachClassLabel", "displayedCoachLevelId", "displayedCoachYear", "coachLevelProgressText", "saveCoachLevel", "renderCoachLevelControl", "PRACTICE_DOMAINS", "normalizeProfile", "normalizeDailyProgress", "normalizeValidationDrafts", "validationDraftKey", "DAILY_MISSION_QUESTIONS", "DAILY_REWARD_XP", "WEEKLY_REWARD_XP", "DAILY_MOODS", "DAILY_TIME_CHOICES", "APPOINTMENT_TYPES", "MAX_CALENDAR_APPOINTMENTS", "normalizeCoachContext", "normalizeAppointment", "normalizeTrainingCalendar", "normalizeEngagement", "reconcileEngagement", "completedMissionKeys",
     "CURRICULUM_CATALOG_VERSION", "CURRICULUM_SCOPE", "CURRICULUM_EVIDENCE_TYPES", "CURRICULUM_PROGRESS_STATUSES", "normalizeCurriculumProof", "normalizeCurriculumState", "validCurriculumCatalog", "curriculumCompetency", "curriculumStatusFromProofs", "setCurriculumCatalog", "backfillCurriculumFromGame", "curriculumScopeHtml",
     "profileStartPalier", "applyProfileStartPlacement", "profileStartText", "coachPalier", "coachDecision", "repairPool", "fragileNoteIds", "globalPrecision", "sessionCountToday",
     "dailyPlan", "splitPlanMinutes", "targetCadence", "dailyMission", "dailyFocusDomain", "DAILY_BLOCK_IDS", "runDailyBlock", "appointmentTimestamp", "activeAppointments", "nextTrainingAppointment", "dailyCoachContext", "ensureTodayMission", "freezeTodayMission", "setDailyCheckIn", "pendingWeeklyChallenge", "adaptDailyDecision", "dailyDecision", "grantDailyMissionReward", "grantWeeklyChallengeResult", "startWeeklyChallenge", "openTrainingCalendar", "exportTrainingCalendar",
@@ -212,17 +229,17 @@ function loadEngine(runtime) {
     "beginClavier", "nextKbd", "kbdTap", "renderKbd", "recordKbdAnswer",
     "STAFF", "staffSVG", "staffAriaLabel", "bonusStaffSVG", "clefSVG", "noteGlyph", "yOf", "previewNoteHtml",
     "currentRecoveryCode", "mirrorIntro", "tone", "save", "readKey", "bestLocalState", "recognizableStoredState", "utf8ByteLength", "decodedBase64Bytes", "MAX_IMPORT_TEXT_BYTES",
-    "MEMORY_HISTORY_SCHEMA", "memorySha256", "parseMemoryIndex", "createMemorySnapshot", "memorySnapshotList", "loadMemoryEnvelope", "validateMemoryEnvelope", "restoreMemorySnapshot", "memoryLocalIndexKey", "memoryLocalDataKey", "memoryLocalMetaKey", "memoryIndexKey", "detectMemoryOverlayType", "restoredMemoryOverlayType", "restoredMemoryOverlayCanBind", "captureMemoryOverlayControls", "restoreMemoryOverlayControls", "manualMemorySnapshot", "bindStartupRecoveryDialog", "bindPlayerEditorDialog",
+    "MEMORY_HISTORY_SCHEMA", "MEMORY_VAULT_SCHEMA", "MEMORY_VAULT_FORMAT", "memorySha256", "memoryMetaPayload", "memoryMetaSealValid", "memoryOriginId", "sameMemoryOriginPoint", "parseMemoryIndex", "createMemorySnapshot", "memorySnapshotList", "memorySnapshotListForPlayer", "loadMemoryEnvelope", "validateMemoryEnvelope", "validateMemoryEnvelopeForPlayer", "restoreMemorySnapshot", "memoryLocalIndexKey", "memoryLocalDataKey", "memoryLocalMetaKey", "memoryIndexKey", "buildMemoryVault", "parseMemoryVault", "importMemoryVault", "resumePendingMemorySnapshots", "executeMemoryCommand", "renderMemorySceneFrozen", "detectMemoryOverlayType", "restoredMemoryOverlayType", "restoredMemoryOverlayCanBind", "captureMemoryOverlayControls", "restoreMemoryOverlayControls", "manualMemorySnapshot", "bindStartupRecoveryDialog", "bindPlayerEditorDialog",
     "normalizePlayerRegistry", "normalizePlayerName", "activePlayerMeta", "playerMetaById", "archivedPlayerMetaById", "createPlayer", "switchPlayer", "renamePlayer", "deletePlayer", "restoreArchivedPlayer", "playerInitial", "openPlayerSwitcher", "MAX_LOCAL_PLAYERS", "MAX_ARCHIVED_PLAYERS", "PLAYER_REGISTRY_KEY", "PLAYER_FALLBACK_PREFIX",
     "syncDecision", "syncCfg", "syncSet", "syncClear", "syncEnabled", "syncPush", "syncPull", "parseRemote", "sessionTokenGet", "playerGistFile", "legacyPlayerGistFile", "GIST_CLOUD_SCHEMA", "syncStorageKey", "remoteFileName",
     "cloudDocument", "cloudSaveContent", "cloudPieces", "canonicalCloudJson", "cloudDeletePreflight", "looksLikeToken", "persistOnExit", "APP_VERSION"
   ];
   const footer = "\n;return {" + exportsList.map(n => n + ":(typeof " + n + "!=='undefined'?" + n + ":undefined)").join(",") +
-    ",getDB:function(){return DB;},setDB:function(x){DB=x;},getPlayerRegistry:function(){return JSON.parse(JSON.stringify(PLAYER_REGISTRY));},getActivePlayerId:function(){return ACTIVE_PLAYER_ID;},isIdbReady:function(){return idbReady;},getKX:function(){return KX;},getEX:function(){return EX;},getEl:function(id){return document.getElementById(id);},haltEX:function(){if(EX)EX.done=true;}};";
-  const fn = new Function("document", "localStorage", "navigator", "window", "sessionStorage", "indexedDB", src + footer);
+    ",getDB:function(){return DB;},setDB:function(x){DB=x;},getPlayerRegistry:function(){return JSON.parse(JSON.stringify(PLAYER_REGISTRY));},getActivePlayerId:function(){return ACTIVE_PLAYER_ID;},isIdbReady:function(){return idbReady;},getKX:function(){return KX;},getPR:function(){return PR;},getEX:function(){return EX;},getEl:function(id){return document.getElementById(id);},haltEX:function(){if(EX)EX.done=true;}};";
+  const fn = new Function("document", "localStorage", "navigator", "window", "sessionStorage", "indexedDB", "FileReader", src + footer);
   const local = runtime.localStorage || makeLocalStorage();
   const session = runtime.sessionStorage || makeLocalStorage();
-  const engine = fn(runtime.document || makeDocument(), local, runtime.navigator || navigatorStub, runtime.window || windowStub, session, runtime.indexedDB);
+  const engine = fn(runtime.document || makeDocument(), local, runtime.navigator || navigatorStub, runtime.window || windowStub, session, runtime.indexedDB, runtime.FileReader);
   engine.localStorage = local;
   return engine;
 }
@@ -233,6 +250,7 @@ function ok(cond, msg) { if (cond) { pass++; } else { fail++; failures.push(msg)
 function eq(a, b, msg) { ok(JSON.stringify(a) === JSON.stringify(b), msg + " (attendu " + JSON.stringify(b) + ", reçu " + JSON.stringify(a) + ")"); }
 function group(name) { console.log("\n• " + name); }
 
+async function runTests() {
 const E = loadEngine();
 console.log("Moteur chargé sans exception (smoke test du chargement de l'app). ✓");
 pass++;
@@ -958,21 +976,78 @@ const utSvg=E.staffSVG("ut",[{p:4,color:"#000",x:200,big:1}]);
 ok(utSvg.indexOf('class="clef clef-ut"')>=0&&utSvg.indexOf('data-ref-p="4"')>=0,"la clé d’ut est vectorielle et ancrée sur la troisième ligne");
 ok(utSvg.indexOf('aria-label="Portée en clé d’ut 3e.')>=0&&utSvg.indexOf('clé d’ut 3e</text>')>=0,"la portée visuelle et le lecteur d’écran annoncent correctement la clé d’ut 3e");
 
+eq(E.COACH_LEVELS.map(function(level){return [level.id,level.cycleId,level.cycleNumber,level.familyLabel,level.yearCount,level.courseId];}),[
+  ["debutant","c1",1,"Débutant",5,"sol"],
+  ["intermediaire","c2",2,"Intermédiaire",5,"fa"],
+  ["avance","c3",3,"Avancé",4,"ut"]
+],"les trois familles du Coach correspondent clairement aux Cycles 1, 2 et 3 et à leurs clés");
+eq(E.COACH_CLASSES.length,14,"les durées maximales 5 + 5 + 4 produisent exactement quatorze classes annuelles");
+eq(new Set(E.COACH_CLASSES.map(function(row){return row.id;})).size,14,"chaque classe annuelle possède un identifiant unique");
+eq(E.COACH_LEVELS.map(function(level){
+  return E.COACH_CLASSES.filter(function(row){return row.levelId===level.id;}).map(function(row){return row.year;});
+}),[[1,2,3,4,5],[1,2,3,4,5],[1,2,3,4]],"les années de chaque cycle sont continues, sans trou ni année inventée");
+ok(E.COACH_CLASSES.every(function(row){
+  const level=E.coachLevelById(row.levelId),resolved=E.coachClassById(row.id);
+  return !!level&&resolved===row&&row.cycleId===level.cycleId&&row.courseId===level.courseId&&
+    row.label.indexOf(level.cycleLabel)>=0&&row.label.indexOf(row.yearLabel)>=0&&
+    row.label.indexOf(level.familyLabel)>=0&&row.label.indexOf(level.keyLabel)>=0;
+}),"chaque classe relie sans ambiguïté cycle, année, famille et clé");
+eq([E.coachYearLabel(1),E.coachYearLabel(2),E.coachYearLabel(0)],["1re année","2e année","année à préciser"],"les années emploient un libellé français lisible et une migration non trompeuse");
+ok(E.validCoachYear(E.coachLevelById("debutant"),"5")&&E.validCoachYear(E.coachLevelById("avance"),4),"les bornes hautes des Cycles 1 et 3 sont acceptées, y compris après lecture d’un ancien JSON");
+ok(!E.validCoachYear(E.coachLevelById("debutant"),0)&&!E.validCoachYear(E.coachLevelById("debutant"),6)&&
+  !E.validCoachYear(E.coachLevelById("avance"),5)&&!E.validCoachYear(E.coachLevelById("avance"),1.5),
+  "zéro, dépassement de cycle et année décimale sont refusés comme choix explicites");
+eq([E.coachClassId(E.coachLevelById("debutant"),0),E.coachClassId(E.coachLevelById("debutant"),6),E.coachClassId(E.coachLevelById("debutant"),1.5)],["","",""],
+  "aucun identifiant de classe n’est fabriqué à partir d’une année invalide");
+
+const legacyCoachProfiles=[
+  ["debutant","sol"],
+  ["intermediaire","fa"],
+  ["avance","ut"]
+];
+legacyCoachProfiles.forEach(function(row){
+  const profile=E.normalizeProfile({coachLevel:row[0]});
+  eq([profile.coachLevel,profile.coachYear,E.coachLevelById(profile.coachLevel).courseId],[row[0],0,row[1]],
+    "migration de l’ancien niveau "+row[0]+" : famille et clé conservées, année laissée à préciser");
+});
+eq(E.normalizeProfile({coachLevel:"debutant",coachYear:"5"}).coachYear,5,"une année valide sérialisée en texte redevient un entier");
+eq([
+  E.normalizeProfile({coachLevel:"debutant",coachYear:6}).coachYear,
+  E.normalizeProfile({coachLevel:"avance",coachYear:5}).coachYear,
+  E.normalizeProfile({coachLevel:"avance",coachYear:2.5}).coachYear,
+  E.normalizeProfile({coachLevel:"inconnu",coachYear:2}).coachYear
+],[0,0,0,0],"les années invalides ou sans famille connue migrent vers « à préciser », jamais vers une fausse classe");
+const legacyCoachState=E.ensureStructure({xp:432,profile:{coachLevel:"intermediaire"},courseProgress:{version:4,currentItem:"fa",steps:{sol:3,fa:2,ut:0},cycles:{sol:1,fa:2,ut:0},exercises:{sol:3,fa:2,ut:0}},noteStats:{sol4:{v:7,e:1,box:2,due:42,last:41}},paliers:{P1:{zen:{ok:true,best:100,series:[]}}}});
+eq([legacyCoachState.profile.coachLevel,legacyCoachState.profile.coachYear,legacyCoachState.xp],["intermediaire",0,432],"un joueur v39 conserve sa famille et son XP sans se voir attribuer une année arbitraire");
+eq([legacyCoachState.courseProgress.steps.sol,legacyCoachState.courseProgress.steps.fa,legacyCoachState.courseProgress.cycles.sol,legacyCoachState.courseProgress.cycles.fa],[3,2,1,2],
+  "la migration v40 ne saute ni étape ni série déjà acquise");
+eq([legacyCoachState.noteStats.sol4.v,legacyCoachState.noteStats.sol4.e,legacyCoachState.paliers.P1.zen.ok],[7,1,true],
+  "la migration de classe ne réécrit ni mémoire de note ni ancien palier");
+
+E.COACH_CLASSES.forEach(function(row){
+  E.setDB(E.ensureStructure({profile:{coachLevel:row.levelId,coachYear:row.year},courseProgress:{version:4,currentItem:row.courseId,steps:{sol:0,fa:0,ut:0},cycles:{sol:0,fa:0,ut:0},exercises:{sol:0,fa:0,ut:0}}}));
+  const decision=E.courseDecision();
+  eq([decision.course.itemId,decision.n],[row.courseId,25],row.label+" lance réellement la bonne clé avec 25 questions");
+});
+freshDB();
+
 const coachLocal=makeLocalStorage(),Coach=loadEngine({localStorage:coachLocal});
 Coach.getDB().courseProgress=Coach.normalizeCourseProgress({version:4,currentItem:"sol",steps:{sol:2,fa:1,ut:0},cycles:{sol:1,fa:2,ut:0},exercises:{sol:2,fa:1,ut:0}});
 Coach.save({cloud:false});
 const coachProgressBefore=JSON.stringify(Coach.getDB().courseProgress),coachStatsBefore=JSON.stringify(Coach.getDB().noteStats),coachPaliersBefore=JSON.stringify(Coach.getDB().paliers);
 let coachSaved=null;
-Coach.saveCoachLevel("intermediaire",function(result){coachSaved=result;});
+Coach.saveCoachLevel("intermediaire",4,function(result){coachSaved=result;});
 ok(coachSaved&&coachSaved.ok&&coachSaved.meta&&coachSaved.meta.number>=2,"le bouton Enregistrer protège d’abord l’ancien niveau puis crée la sauvegarde complète numérotée");
 ok(/Clé de fa · étape 2\/10 · série 3\/3/.test(coachSaved.meta.context.levelLabel),"la sauvegarde nomme exactement la clé, l’étape et la série où se trouve le joueur");
-eq(Coach.getDB().profile.coachLevel,"intermediaire","le niveau choisi est conservé dans le profil du joueur");
+ok(/Cycle 2 · 4e année · Intermédiaire · clé de fa/.test(coachSaved.meta.context.milestone)&&/Cycle 2 · 4e année · Intermédiaire · clé de fa/.test(coachSaved.message),
+  "la sauvegarde et sa confirmation utilisent le libellé humain complet, jamais un identifiant technique");
+eq([Coach.getDB().profile.coachLevel,Coach.getDB().profile.coachYear,coachSaved.coachYear],["intermediaire",4,4],"la famille et l’année choisies sont conservées dans le profil et confirmées au joueur");
 eq(Coach.courseDecision().course.itemId,"fa","le niveau intermédiaire affiche et lance réellement la clé de fa");
 eq(Coach.getDB().courseProgress.cycles.sol,1,"changer de clé conserve la série partielle déjà acquise en clé de sol");
 eq(Coach.getDB().courseProgress.cycles.fa,2,"changer de clé conserve aussi les deux séries parfaites déjà acquises en clé de fa");
 eq(JSON.stringify(Coach.getDB().noteStats),coachStatsBefore,"le choix du niveau ne réécrit aucune mémoire de note");
 eq(JSON.stringify(Coach.getDB().paliers),coachPaliersBefore,"le choix du niveau ne valide ni n’efface aucun palier");
-Coach.saveCoachLevel("avance",function(result){coachSaved=result;});
+Coach.saveCoachLevel("avance",2,function(result){coachSaved=result;});
 ok(coachSaved&&coachSaved.ok&&Coach.courseDecision().course.itemId==="ut","le niveau avancé bascule sur la vraie clé d’ut 3e et la sauvegarde");
 Coach.getDB().sel="P7";Coach.getDB().seen.P1=false;
 Coach.startDailySession();
@@ -980,13 +1055,33 @@ ok(Coach.getEX()&&Coach.getEX().palier.courseOnly===true&&Coach.getEX().palier.i
 eq(Coach.getDB().sel,"P7","commencer la clé d’ut ne ramène jamais silencieusement le repère sol/fa à P1");
 ok(Coach.getDB().seen.P1===false&&Coach.getEX().pendingDecouverte===true,"la découverte ut n’invente aucune visite du palier P1");
 Coach.returnToHomeFromExercise();
-Coach.saveCoachLevel("debutant",function(result){coachSaved=result;});
+Coach.saveCoachLevel("debutant",5,function(result){coachSaved=result;});
 ok(coachSaved&&coachSaved.ok&&Coach.courseDecision().course.itemId==="sol","le joueur peut revenir à la clé de sol sans course en avant imposée");
 eq(Coach.getDB().courseProgress.cycles.sol,1,"l’aller-retour de niveau restitue exactement la série partielle de sol");
 eq(JSON.stringify(Coach.getDB().courseProgress),coachProgressBefore,"un aller-retour complet ne modifie aucun jalon d’acquisition");
+eq([JSON.parse(Coach.compactSave()).profile.coachLevel,JSON.parse(Coach.compactSave()).profile.coachYear],["debutant",5],"la classe annuelle suit le transfert compact / QR");
+eq([Coach.cloudDocument().settings.profile.coachLevel,Coach.cloudDocument().settings.profile.coachYear],["debutant",5],"la classe annuelle suit la sauvegarde cloud");
+const coachCloudRoundTrip=Coach.ensureStructure(Coach.backupToDb(Coach.cloudDocument()));
+eq([coachCloudRoundTrip.profile.coachLevel,coachCloudRoundTrip.profile.coachYear,JSON.stringify(coachCloudRoundTrip.courseProgress)],["debutant",5,coachProgressBefore],
+  "un aller-retour cloud restitue la classe et chaque jalon d’acquisition sans décalage");
+const coachReload=loadEngine({localStorage:coachLocal});
+eq([coachReload.getDB().profile.coachLevel,coachReload.getDB().profile.coachYear,JSON.stringify(coachReload.getDB().courseProgress)],["debutant",5,coachProgressBefore],
+  "un rechargement local restitue la classe annuelle et la progression exacte");
+
+const sameFamilyLocal=makeLocalStorage(),SameFamilyCoach=loadEngine({localStorage:sameFamilyLocal});
+SameFamilyCoach.getDB().profile=SameFamilyCoach.normalizeProfile(Object.assign({},SameFamilyCoach.getDB().profile,{coachLevel:"intermediaire",coachYear:2}));
+SameFamilyCoach.getDB().courseProgress=SameFamilyCoach.normalizeCourseProgress({version:4,currentItem:"fa",steps:{sol:4,fa:3,ut:1},cycles:{sol:2,fa:1,ut:2},exercises:{sol:4,fa:3,ut:1}});
+SameFamilyCoach.getDB().noteStats.sol4=SameFamilyCoach.normalizeNoteStat({v:17,e:2,box:3,due:55,last:44});
+SameFamilyCoach.getDB().paliers.P2.zen.ok=true;SameFamilyCoach.save({cloud:false});
+const sameFamilyProgress=JSON.stringify(SameFamilyCoach.getDB().courseProgress),sameFamilyStats=JSON.stringify(SameFamilyCoach.getDB().noteStats),sameFamilyPaliers=JSON.stringify(SameFamilyCoach.getDB().paliers);
+let sameFamilyResult=null;SameFamilyCoach.saveCoachLevel("intermediaire",5,function(result){sameFamilyResult=result;});
+ok(sameFamilyResult&&sameFamilyResult.ok,"changer seulement d’année dans un même cycle crée une sauvegarde complète");
+eq([SameFamilyCoach.getDB().profile.coachLevel,SameFamilyCoach.getDB().profile.coachYear],["intermediaire",5],"la nouvelle année est persistée sans changer de famille");
+eq([JSON.stringify(SameFamilyCoach.getDB().courseProgress),JSON.stringify(SameFamilyCoach.getDB().noteStats),JSON.stringify(SameFamilyCoach.getDB().paliers)],[sameFamilyProgress,sameFamilyStats,sameFamilyPaliers],
+  "passer de la 2e à la 5e année du même cycle ne saute aucune étape, série, note ou validation");
 
 const completedCoach=loadEngine(), completedUt=completedCoach.COURSES.find(function(course){return course.id==="ut";});
-completedCoach.getDB().profile=completedCoach.normalizeProfile(Object.assign({},completedCoach.getDB().profile,{coachLevel:"avance"}));
+completedCoach.getDB().profile=completedCoach.normalizeProfile(Object.assign({},completedCoach.getDB().profile,{coachLevel:"avance",coachYear:4}));
 completedCoach.getDB().courseProgress=completedCoach.normalizeCourseProgress({version:4,currentItem:"ut",steps:{sol:0,fa:0,ut:completedUt.steps.length},cycles:{sol:0,fa:0,ut:0},exercises:{sol:0,fa:0,ut:completedUt.steps.length}});
 completedCoach.getDB().sel="P7";completedCoach.getDB().seen.P1=false;
 const completedProgressBefore=JSON.stringify(completedCoach.getDB().courseProgress), continuousDecision=completedCoach.courseDecision();
@@ -1001,23 +1096,34 @@ completedCoach.returnToHomeFromExercise();
 eq(JSON.stringify(completedCoach.getDB().courseProgress),completedProgressBefore,
   "interrompre l’entraînement continu laisse chaque jalon officiel strictement inchangé");
 
+const invalidYearCoach=loadEngine(),invalidYearBefore=JSON.stringify(invalidYearCoach.getDB());
+let invalidYearResult=null;invalidYearCoach.saveCoachLevel("avance",5,function(result){invalidYearResult=result;});
+ok(invalidYearResult&&!invalidYearResult.ok&&/année disponible/.test(invalidYearResult.message),"une 5e année de Cycle 3 est refusée explicitement");
+eq(JSON.stringify(invalidYearCoach.getDB()),invalidYearBefore,"une année hors cycle ne crée ni classe, ni progression, ni sauvegarde");
+invalidYearCoach.saveCoachLevel("avance",function(result){invalidYearResult=result;});
+ok(invalidYearResult&&!invalidYearResult.ok,"un changement de famille sans année est refusé au lieu de perdre le repère annuel");
+eq(JSON.stringify(invalidYearCoach.getDB()),invalidYearBefore,"un appel sans année conserve exactement la famille, l’année et la progression précédentes");
+invalidYearCoach.saveCoachLevel("debutant",0,function(result){invalidYearResult=result;});
+ok(invalidYearResult&&!invalidYearResult.ok,"l’année zéro de migration doit être précisée avant un nouvel enregistrement volontaire");
+eq(JSON.stringify(invalidYearCoach.getDB()),invalidYearBefore,"le refus de l’année zéro laisse l’état exact du joueur inchangé");
+
 const blockedLocal=makeLocalStorage(),BlockedCoach=loadEngine({localStorage:blockedLocal}),blockedBefore=JSON.stringify(BlockedCoach.getDB());
 blockedLocal.failAfter(BlockedCoach.memoryLocalIndexKey(BlockedCoach.getActivePlayerId()),1);
-let blockedResult=null;BlockedCoach.saveCoachLevel("avance",function(result){blockedResult=result;});
+let blockedResult=null;BlockedCoach.saveCoachLevel("avance",3,function(result){blockedResult=result;});
 ok(blockedResult&&!blockedResult.ok,"si la protection préalable échoue, le changement de niveau est refusé");
 eq(JSON.stringify(BlockedCoach.getDB()),blockedBefore,"un échec de sauvegarde laisse l’état du joueur strictement inchangé");
 
 const candidateLocal=makeLocalStorage(),CandidateCoach=loadEngine({localStorage:candidateLocal});
 candidateLocal.failAfter("solfegeProto1",1);
-let candidateResult=null;CandidateCoach.saveCoachLevel("avance",function(result){candidateResult=result;});
+let candidateResult=null;CandidateCoach.saveCoachLevel("avance",3,function(result){candidateResult=result;});
 ok(candidateResult&&!candidateResult.ok&&candidateResult.rollbackPersisted===true,"si l’écriture du niveau candidat échoue, le niveau antérieur est réécrit et confirmé");
-eq(CandidateCoach.getDB().profile.coachLevel,"","un échec du niveau candidat ne reste jamais actif en mémoire");
+eq([CandidateCoach.getDB().profile.coachLevel,CandidateCoach.getDB().profile.coachYear],["",0],"un échec du niveau candidat ne laisse ni famille ni année actives en mémoire");
 
 const postLocal=makeLocalStorage(),PostCoach=loadEngine({localStorage:postLocal});
 postLocal.failAfter(PostCoach.memoryLocalIndexKey(PostCoach.getActivePlayerId()),2);
-let postResult=null;PostCoach.saveCoachLevel("avance",function(result){postResult=result;});
+let postResult=null;PostCoach.saveCoachLevel("avance",3,function(result){postResult=result;});
 ok(postResult&&!postResult.ok&&postResult.rollbackPersisted===true,"si le snapshot final échoue, le choix précédent est restauré de façon persistante");
-eq(PostCoach.getDB().profile.coachLevel,"","un snapshot final incomplet n’active jamais silencieusement le nouveau niveau");
+eq([PostCoach.getDB().profile.coachLevel,PostCoach.getDB().profile.coachYear],["",0],"un snapshot final incomplet n’active jamais silencieusement la nouvelle classe");
 let postRows=[];PostCoach.memorySnapshotList(function(rows){postRows=rows;});
 ok(postRows.length===1&&postRows[0].kind==="pre_level_change","le point préalable immuable reste disponible après l’échec du snapshot final");
 
@@ -1037,11 +1143,11 @@ concurrentLocal.setItem=function(key,value){
 };
 ConcurrentCoach=loadEngine({localStorage:concurrentLocal});
 concurrentIndexKey=ConcurrentCoach.memoryLocalIndexKey(ConcurrentCoach.getActivePlayerId());
-let concurrentResult=null;ConcurrentCoach.saveCoachLevel("avance",function(result){concurrentResult=result;});
+let concurrentResult=null;ConcurrentCoach.saveCoachLevel("avance",3,function(result){concurrentResult=result;});
 ok(concurrentResult&&!concurrentResult.ok&&concurrentResult.rollbackPersisted===true,
   "un échec final annule proprement le seul choix de niveau en cours");
-eq([ConcurrentCoach.getDB().profile.coachLevel,ConcurrentCoach.getDB().courseProgress.currentItem],["","sol"],
-  "le rollback ciblé remet uniquement le niveau et sa clé précédents");
+eq([ConcurrentCoach.getDB().profile.coachLevel,ConcurrentCoach.getDB().profile.coachYear,ConcurrentCoach.getDB().courseProgress.currentItem],["",0,"sol"],
+  "le rollback ciblé remet uniquement la famille, l’année et la clé précédentes");
 eq([ConcurrentCoach.getDB().themeMode,ConcurrentCoach.getDB().profile.displayName,ConcurrentCoach.getDB().pieces[0].id],["nocturne","Réglage concurrent conservé","piece-concurrente"],
   "le rollback ne perd ni réglage, ni profil, ni partition modifiés pendant la protection");
 const ConcurrentReload=loadEngine({localStorage:concurrentLocal});
@@ -1050,9 +1156,9 @@ eq([ConcurrentReload.getDB().themeMode,ConcurrentReload.getDB().profile.displayN
 
 const hardLocal=makeLocalStorage(),HardCoach=loadEngine({localStorage:hardLocal});
 hardLocal.failAfter("solfegeProto1",1);hardLocal.failAfter(HardCoach.PLAYER_REGISTRY_KEY,2);
-let hardResult=null;HardCoach.saveCoachLevel("avance",function(result){hardResult=result;});
+let hardResult=null;HardCoach.saveCoachLevel("avance",3,function(result){hardResult=result;});
 ok(hardResult&&!hardResult.ok&&hardResult.rollbackPersisted===false&&/stockage actif n’a pas confirmé/.test(hardResult.message),"un double échec de stockage est annoncé honnêtement sans prétendre la restauration persistée");
-eq(HardCoach.getDB().profile.coachLevel,"","même lors du double échec, l’état affiché revient au niveau antérieur et le point préalable subsiste");
+eq([HardCoach.getDB().profile.coachLevel,HardCoach.getDB().profile.coachYear],["",0],"même lors du double échec, l’état affiché revient à la classe antérieure et le point préalable subsiste");
 
 const legacyP7Paliers={};
 ["P1","P2","P3","P4","P5","P6"].forEach(function(id){
@@ -1361,10 +1467,28 @@ ok(appSrcA4.indexOf('id="courseReviewSelect"')>=0 && appSrcA4.indexOf('id="btnRe
   "le retour aux étapes antérieures et la répétition depuis le bilan sont visibles dans l’interface");
 ok(appSrcA4.indexOf('id="btnDecHome"')>=0,
   "même l’écran de découverte laisse revenir à l’accueil sans fermer l’application");
-ok(appSrcA4.indexOf('id="coachLevelSelect"')>=0&&appSrcA4.indexOf('id="btnCoachSave"')>=0&&appSrcA4.indexOf('function saveCoachLevel')>=0,
-  "le Coach invisible propose le niveau et son enregistrement simple sur la carte d’accueil");
-ok(appSrcA4.indexOf("button.disabled=false;select.disabled=false")>=0,
-  "le choix du niveau redevient immédiatement disponible après un enregistrement réussi");
+ok(appSrcA4.indexOf('id="coachLevelSelect"')>=0&&appSrcA4.indexOf('id="coachYearSelect"')>=0&&appSrcA4.indexOf('id="coachClassSummary"')>=0&&
+  appSrcA4.indexOf('id="btnCoachSave"')>=0&&appSrcA4.indexOf('function saveCoachLevel')>=0,
+  "le Coach invisible distingue famille/cycle, année et résumé de classe sur la carte d’accueil");
+const coachRender=loadEngine();coachRender.renderCoachLevelControl();
+const coachFamilySelect=coachRender.getEl("coachLevelSelect"),coachYearSelect=coachRender.getEl("coachYearSelect"),coachClassSummary=coachRender.getEl("coachClassSummary"),coachClassSave=coachRender.getEl("btnCoachSave");
+eq((coachFamilySelect.innerHTML.match(/<option /g)||[]).length,3,"le premier sélecteur rend exactement les trois familles/cycles");
+ok(["Cycle 1","Cycle 2","Cycle 3","Débutant","Intermédiaire","Avancé"].every(function(label){return coachFamilySelect.innerHTML.indexOf(label)>=0;}),
+  "les trois cycles et les trois familles sont lisibles sans ouvrir une documentation");
+eq((coachYearSelect.innerHTML.match(/<option /g)||[]).length,6,"le Cycle 1 rend cinq années et le choix de migration « à préciser »");
+eq([coachFamilySelect.value,coachYearSelect.value,coachClassSave.disabled],["debutant","0",true],
+  "un ancien joueur reste dans sa famille mais doit préciser son année avant d’enregistrer");
+ok(/C1\.\?/.test(coachClassSummary.innerHTML)&&/Cycle 1/.test(coachClassSummary.innerHTML)&&/année à préciser/.test(coachClassSummary.innerHTML),
+  "le résumé rend honnêtement une ancienne classe dont l’année n’est pas encore connue");
+coachFamilySelect.value="avance";coachFamilySelect.onchange();
+eq((coachYearSelect.innerHTML.match(/<option /g)||[]).length,5,"le Cycle 3 rend quatre années et le choix « à préciser », jamais une 5e année");
+ok(coachYearSelect.innerHTML.indexOf('value="5"')<0&&coachYearSelect.value==="0"&&coachClassSave.disabled,
+  "changer de famille remet l’année à préciser au lieu de fabriquer une progression");
+coachYearSelect.value="4";coachYearSelect.onchange();
+ok(/C3\.4/.test(coachClassSummary.innerHTML)&&["Cycle 3","4e année","Avancé","clé d’ut 3e"].every(function(label){return coachClassSummary.innerHTML.indexOf(label)>=0;})&&!coachClassSave.disabled,
+  "le second sélecteur produit un résumé humain complet et active Enregistrer seulement pour une vraie classe");
+ok(appSrcA4.indexOf("button.disabled=false;select.disabled=false;yearSelect.disabled=false")>=0,
+  "les deux sélecteurs redeviennent immédiatement disponibles après un échec d’enregistrement");
 const coachSaveBodyA4=appSrcA4.slice(appSrcA4.indexOf("function saveCoachLevel"),appSrcA4.indexOf("function protectMemoryAction"));
 ok(coachSaveBodyA4.indexOf("save({cloud:false})")>=0&&coachSaveBodyA4.indexOf("queueCloudSync()")>=0,
   "le cloud attend la confirmation de la sauvegarde complète avant de recevoir le nouveau niveau");
@@ -1387,6 +1511,20 @@ ok((syncPushBodyA4.match(/memoryProtectedActionBusy\|\|memoryRestoreBusy/g)||[])
   "une synchronisation déjà planifiée ou en vol recontrôle la protection avant tout envoi cloud");
 ok(appSrcA4.indexOf("Cycle d’acquisition")<0&&appSrcA4.indexOf("Choisis un cycle déjà atteint")<0&&appSrcA4.indexOf("Rejouer ce cycle")<0,
   "les étapes du jeu ne sont plus présentées comme des cycles du conservatoire");
+coachRender.getDB().profile=coachRender.normalizeProfile(Object.assign({},coachRender.getDB().profile,{coachLevel:"avance",coachYear:4}));
+coachRender.getDB().courseProgress=coachRender.normalizeCourseProgress({version:4,currentItem:"ut",steps:{sol:8,fa:8,ut:8},cycles:{sol:2,fa:2,ut:2},exercises:{sol:8,fa:8,ut:8}});
+const coachHumanContext=coachRender.memoryLevelContext({milestone:"Contrôle classe humaine"}),coachPublicText=[
+  coachFamilySelect.innerHTML,coachYearSelect.innerHTML,coachClassSummary.innerHTML,
+  coachRender.coachLevelProgressText(coachRender.coachLevelById("avance"),4),
+  coachHumanContext.choices,coachHumanContext.summary,coachRender.curriculumScopeHtml()
+].join("\n");
+ok(/classe musicale Cycle 3 · 4e année · Avancé · clé d’ut 3e/.test(coachHumanContext.choices)&&
+  coachHumanContext.choices.indexOf("niveau Coach avance")<0&&coachHumanContext.choices.indexOf("c3-a4")<0,
+  "le résumé exact des sauvegardes emploie le libellé humain, jamais l’ancien id ni un id de classe technique");
+ok(!/\bCycle\s+(?:[4-9]|[1-9]\d+)\b/i.test(coachPublicText),
+  "aucune surface publique ne transforme une étape ou la propriété interne cycles en « Cycle 9 »");
+ok(/étape 9\/12 · série 3\/3/.test(coachRender.coachLevelProgressText(coachRender.coachLevelById("avance"),4)),
+  "une neuvième étape reste clairement une étape à l’intérieur du Cycle 3");
 
 /* 9nonies) Finition — le trophée dit ce qu'il mesure (grille J24) */
 group("Partition — le libellé Maîtrisé précise sa portée réelle (J24)");
@@ -1513,7 +1651,9 @@ largeOverlayRuntime.overlayOn=true;largeOverlayRuntime.overlayType="training_cal
 largeOverlayRuntime.overlayControls=Array.from({length:405},function(_,index){return {index:index,id:"calendar-control-"+index,tag:"button",disabled:false};});
 largeOverlayEnvelope.runtimeRaw=JSON.stringify(largeOverlayRuntime);
 const largeOverlayMeta=Object.assign({},memoryCreate1.meta,{runtimeBytes:Memory.utf8ByteLength(largeOverlayEnvelope.runtimeRaw),runtimeSha256:Memory.memorySha256(largeOverlayEnvelope.runtimeRaw)});
+largeOverlayMeta.metaSha256=Memory.memorySha256(Memory.memoryMetaPayload(largeOverlayMeta));
 largeOverlayEnvelope.meta=Object.assign({},largeOverlayEnvelope.meta,{runtimeBytes:largeOverlayMeta.runtimeBytes,runtimeSha256:largeOverlayMeta.runtimeSha256});
+largeOverlayEnvelope.meta.metaSha256=largeOverlayMeta.metaSha256;
 ok(Memory.validateMemoryEnvelope(JSON.stringify(largeOverlayEnvelope),largeOverlayMeta).ok,
   "une fenêtre Calendrier de plus de 400 contrôles reste intégralement restaurable");
 eq(memoryEnvelope1.stateRaw, memoryRaw1, "le premier point contient la chaîne JSON exacte, octet pour octet");
@@ -1613,7 +1753,6 @@ eq(Memory.restoredMemoryOverlayType({overlayType:"other",scene:{cardBox:{html:'<
 ok(!Memory.restoredMemoryOverlayCanBind({overlayOn:true,scene:{cardBox:{html:'<button data-goal="passage">Passage</button>'}}},"piece_goal"), "une ancienne ambition sans identifiant de pièce est fermée au lieu de devenir un modal inerte");
 ok(!Memory.restoredMemoryOverlayCanBind({overlayOn:true,scene:{cardBox:{html:'<div id="prChoices"></div>'}},pr:null},"first_look_quiz"), "un ancien Premier regard sans contexte PR est fermé au lieu de bloquer le joueur");
 ok(memoryAppSource.indexOf("ferme d’abord ce formulaire puis touche") < 0, "aucune fenêtre du jeu n’oblige désormais à être fermée avant une sauvegarde manuelle");
-ok(/function manualMemorySnapshot\(source\)\{\s*if\(memoryProtectedActionBusy\|\|memoryRestoreBusy\|\|playerOperationBusy\)/.test(memoryAppSource), "une demande manuelle ne capture jamais un verrou transitoire d’import, de restauration ou de changement de joueur");
 
 const overlayField={tagName:"INPUT",id:"draftName",value:"Brouillon exact",checked:true,disabled:false,scrollTop:7,selectionStart:3,selectionEnd:8,setSelectionRange(a,b){this.selectionStart=a;this.selectionEnd=b;}};
 const overlayDetails={tagName:"DETAILS",id:"detailsExact",disabled:false,open:true,scrollTop:11};
@@ -1639,6 +1778,457 @@ staleEditorForm.id="playerEditForm";staleEditorBack.disabled=true;staleEditorSav
 Memory.bindPlayerEditorDialog("joueur-archive-introuvable");
 ok(typeof staleEditorBack.onclick==="function"&&!staleEditorBack.disabled, "l’éditeur restauré d’un joueur archivé garde toujours un bouton Retour actif");
 ok(staleEditorSave.disabled&&staleEditorDelete.disabled&&/Reviens à la liste/.test(staleEditorMsg.textContent), "les actions devenues invalides sont neutralisées sans bloquer ni toucher aux autres coffres");
+
+group("Mémoire v41 — coffre complet, index réparable et commandes directes");
+const sealedMetaTamper=Object.assign({},memoryCreate1.meta,{name:"Fausse date et faux niveau"});
+ok(!Memory.memoryMetaSealValid(sealedMetaTamper), "une métadonnée scellée modifiée est détectée avant affichage ou restauration");
+ok(Memory.validateMemoryEnvelope(memoryEnvelopeRaw1,sealedMetaTamper).ok===false,
+  "modifier seulement l'index descriptif ne permet pas de restaurer sous une fausse description");
+
+const vaultSourceIdb=makeFakeIndexedDB(),vaultSourceLocal=makeLocalStorage();
+const VaultSource=loadEngine({localStorage:vaultSourceLocal,indexedDB:vaultSourceIdb.indexedDB});
+const vaultPlayer=VaultSource.getActivePlayerId();
+VaultSource.getDB().xp=41;
+VaultSource.getDB().noteStats.sol4=VaultSource.normalizeNoteStat({v:7,e:1,box:2,last:Date.now()});
+VaultSource.getDB().futureVaultField={keep:"octet pour octet",unicode:"été 🎼"};
+const vaultRaw1=JSON.stringify(VaultSource.getDB());
+let vaultPoint1=null;VaultSource.createMemorySnapshot("manual",{milestone:"Coffre point 1",notify:false},function(result){vaultPoint1=result;});
+VaultSource.getDB().xp=84;VaultSource.getDB().futureVaultField.keep="toujours exact";
+const vaultRaw2=JSON.stringify(VaultSource.getDB());
+let vaultPoint2=null;VaultSource.createMemorySnapshot("level_complete",{milestone:"Coffre point 2",notify:false},function(result){vaultPoint2=result;});
+ok(vaultPoint1&&vaultPoint1.ok&&vaultPoint2&&vaultPoint2.ok,"deux points sources sont prêts pour le coffre complet");
+ok(!Array.from(vaultSourceIdb.store.keys()).some(function(key){return String(key).indexOf("history:pending:")===0;}),
+  "le journal d'écriture est retiré seulement après confirmation des deux points");
+const builtVault=await new Promise(function(resolve){VaultSource.buildMemoryVault(resolve);});
+ok(builtVault&&builtVault.ok&&builtVault.count===2,"l'export vérifie et contient tous les points du joueur");
+const parsedVault=VaultSource.parseMemoryVault(builtVault.text);
+ok(parsedVault.ok&&parsedVault.items.length===2,"le coffre global signé se relit intégralement");
+eq(parsedVault.items[0].env.stateRaw,vaultRaw1,"le premier stateRaw quitte le navigateur sans changer un octet");
+eq(parsedVault.items[1].env.stateRaw,vaultRaw2,"le second stateRaw quitte le navigateur sans changer un octet");
+const tamperedVault=JSON.parse(builtVault.text);tamperedVault.payloadRaw+=" ";
+ok(!VaultSource.parseMemoryVault(JSON.stringify(tamperedVault)).ok,"une altération du fichier global est refusée avant toute écriture");
+
+const vaultTargetSeed=vaultSourceLocal.dump();
+Object.keys(vaultTargetSeed).forEach(function(key){if(key.indexOf("sezam_history_head_")===0||key.indexOf("sezam_history:")===0)delete vaultTargetSeed[key];});
+const vaultTargetIdb=makeFakeIndexedDB(),vaultTargetLocal=makeLocalStorage(vaultTargetSeed);
+const VaultTarget=loadEngine({localStorage:vaultTargetLocal,indexedDB:vaultTargetIdb.indexedDB});
+eq(VaultTarget.getActivePlayerId(),vaultPlayer,"la cible de test conserve l'identité du joueur sans copier son historique");
+let targetOwnPoint=null;VaultTarget.createMemorySnapshot("manual",{milestone:"Point local avant import",notify:false},function(result){targetOwnPoint=result;});
+eq(targetOwnPoint.meta.number,1,"la cible possède déjà son propre point n°1 : collision de numéro préparée");
+const targetStateBeforeImport=JSON.stringify(VaultTarget.getDB());
+let vaultImport1=null;VaultTarget.importMemoryVault(builtVault.text,function(result){vaultImport1=result;});
+ok(vaultImport1&&vaultImport1.ok&&vaultImport1.added===2&&vaultImport1.skipped===0,
+  "les deux origines sont ajoutées sans remplacer le point n°1 déjà présent");
+eq(JSON.stringify(VaultTarget.getDB()),targetStateBeforeImport,"importer le coffre ne remplace pas l'état actif du joueur");
+let targetVaultRows=[];VaultTarget.memorySnapshotList(function(rows){targetVaultRows=rows;});
+eq(targetVaultRows.map(function(row){return row.number;}),[3,2,1],"une collision réalloue uniquement de nouveaux numéros append-only");
+const importedFirst=targetVaultRows.find(function(row){return VaultTarget.memoryOriginId(row)===VaultSource.memoryOriginId(vaultPoint1.meta);});
+let importedFirstRaw=null;VaultTarget.loadMemoryEnvelope(importedFirst,function(raw){importedFirstRaw=raw;});
+eq(JSON.parse(importedFirstRaw).stateRaw,vaultRaw1,"un point importé conserve son état source exact malgré son nouveau numéro");
+let vaultImport2=null;VaultTarget.importMemoryVault(builtVault.text,function(result){vaultImport2=result;});
+ok(vaultImport2&&vaultImport2.ok&&vaultImport2.added===0&&vaultImport2.skipped===2,
+  "réimporter le même coffre est idempotent et n'ajoute aucun doublon");
+
+vaultTargetIdb.store.set(VaultTarget.memoryIndexKey(vaultPlayer),"{index-corrompu");
+let repairedRows=[];VaultTarget.memorySnapshotList(function(rows){repairedRows=rows;});
+eq(repairedRows.map(function(row){return row.number;}),[3,2,1],"un index IndexedDB corrompu est reconstruit depuis les métadonnées immuables");
+ok(!!VaultTarget.parseMemoryIndex(vaultTargetIdb.store.get(VaultTarget.memoryIndexKey(vaultPlayer))),
+  "l'index reconstruit est de nouveau valide sans modifier les enveloppes");
+vaultTargetIdb.store.delete(VaultTarget.memoryIndexKey(vaultPlayer));
+VaultTarget.memorySnapshotList(function(rows){repairedRows=rows;});
+eq(repairedRows.length,3,"un index entièrement absent est lui aussi recréé sans perdre un point");
+
+const pendingSource=parsedVault.items[0],pendingCapture="pending-restart-v41";
+function sealedPending(engine,record){const recordRaw=JSON.stringify(record);return JSON.stringify({schema:engine.MEMORY_HISTORY_SCHEMA,recordRaw,recordSha256:engine.memorySha256(recordRaw)});}
+const pendingRecord={playerId:vaultPlayer,userId:pendingSource.meta.userId,kind:"level_complete",createdAt:Date.now()+1,captureId:pendingCapture,dbVersion:15,stateRaw:pendingSource.env.stateRaw,runtimeRaw:pendingSource.env.runtimeRaw,context:pendingSource.meta.context};
+vaultTargetIdb.store.set("history:pending:"+vaultPlayer+":"+pendingCapture,sealedPending(VaultTarget,pendingRecord));
+VaultTarget.resumePendingMemorySnapshots();
+VaultTarget.memorySnapshotList(function(rows){repairedRows=rows;});
+eq(repairedRows.length,4,"une sauvegarde automatique interrompue et journalisée est reprise au démarrage");
+ok(!vaultTargetIdb.store.has("history:pending:"+vaultPlayer+":"+pendingCapture),"le journal repris disparaît seulement après l'ajout confirmé");
+
+const beforeCommandCount=repairedRows.length;
+ok(VaultTarget.executeMemoryCommand("sauvegarde")===true,"la commande littérale « sauvegarde » crée un point manuel");
+VaultTarget.memorySnapshotList(function(rows){repairedRows=rows;});
+eq(repairedRows.length,beforeCommandCount+1,"la commande textuelle ajoute exactement un nouveau point");
+const frozenBefore=JSON.stringify(VaultTarget.getDB());
+VaultTarget.renderMemorySceneFrozen(function(){VaultTarget.getDB().xp=999999;VaultTarget.getDB().engagement.daily["2099-01-01"]={invented:true};});
+eq(JSON.stringify(VaultTarget.getDB()),frozenBefore,"le rendu d'une scène restaurée ne peut plus muter l'état brut restauré");
+
+const foreignIdb=makeFakeIndexedDB(),foreignLocal=makeLocalStorage(),ForeignVault=loadEngine({localStorage:foreignLocal,indexedDB:foreignIdb.indexedDB});
+const foreignBefore=JSON.stringify(ForeignVault.getDB());let foreignVaultImport=null;
+ForeignVault.importMemoryVault(builtVault.text,function(result){foreignVaultImport=result;});
+ok(foreignVaultImport&&foreignVaultImport.ok&&foreignVaultImport.playerCreated===true,
+  "sur un appareil vierge, l'identité source devient un nouveau joueur au lieu de réécrire les octets");
+eq(JSON.stringify(ForeignVault.getDB()),foreignBefore,"le joueur présent sur l'appareil vierge n'est pas remplacé par l'import");
+let foreignRows=[];ForeignVault.memorySnapshotListForPlayer(vaultPlayer,function(rows){foreignRows=rows;});
+eq(foreignRows.length,2,"le nouveau joueur retrouve les deux points exacts de son coffre");
+eq(foreignIdb.store.get("save:"+vaultPlayer),vaultRaw2,"le coffre actif préparé pour ce nouveau joueur reprend les octets du dernier point");
+
+group("Mémoire v41 — données hostiles, reprises interrompues et effets de bord");
+const cloneJson=function(value){return JSON.parse(JSON.stringify(value));};
+const nodeCrypto=require("crypto");
+["", "abc", "été 🎼 東京", "\ud800", "\udc00", "x\ud800y\udc00z"].concat([55,56,63,64,65,127,128,129,1024].map(function(n){return "é"+"a".repeat(n)+"🎼";})).forEach(function(raw,index){
+  eq(VaultSource.memorySha256(raw),nodeCrypto.createHash("sha256").update(raw,"utf8").digest("hex"),"empreinte UTF-8 conforme à crypto Node, y compris frontières de blocs et substituts Unicode isolés (cas "+index+")");
+});
+function rewriteVault(engine,text,change){
+  const outer=JSON.parse(text),payload=JSON.parse(outer.payloadRaw);
+  const unpacked=payload.snapshots.map(function(item){return {item,env:JSON.parse(item.envelopeRaw)};});
+  change(payload,unpacked);
+  unpacked.forEach(function(row){
+    const meta=row.env.meta;meta.stateBytes=engine.utf8ByteLength(row.env.stateRaw);meta.runtimeBytes=engine.utf8ByteLength(row.env.runtimeRaw);
+    meta.stateSha256=engine.memorySha256(row.env.stateRaw);meta.runtimeSha256=engine.memorySha256(row.env.runtimeRaw);
+    meta.metaSha256=engine.memorySha256(engine.memoryMetaPayload(meta));row.item.meta=cloneJson(meta);
+    row.item.envelopeRaw=JSON.stringify(row.env);row.item.envelopeSha256=engine.memorySha256(row.item.envelopeRaw);
+  });
+  outer.payloadRaw=JSON.stringify(payload);outer.payloadSha256=engine.memorySha256(outer.payloadRaw);return JSON.stringify(outer);
+}
+for(const invalidSeal of ["",null,false]){
+  ok(!VaultSource.memoryMetaSealValid(Object.assign({},vaultPoint1.meta,{metaSha256:invalidSeal})),"un sceau présent mais vide ou invalide n'est jamais accepté comme ancien format : "+String(invalidSeal));
+}
+const legacyUnsealed=cloneJson(vaultPoint1.meta);delete legacyUnsealed.metaSha256;
+ok(VaultSource.memoryMetaSealValid(legacyUnsealed),"une véritable ancienne métadonnée sans propriété de sceau reste lisible");
+const wrongPlayerUser=rewriteVault(VaultSource,builtVault.text,function(payload){payload.player.userId="user_intrus";});
+ok(!VaultSource.parseMemoryVault(wrongPlayerUser).ok,"même recalculé, un coffre dont l'identité globale diffère des points est refusé");
+const wrongStateUser=rewriteVault(VaultSource,builtVault.text,function(_payload,rows){const state=JSON.parse(rows[0].env.stateRaw);state._sezam.userId="user_intrus";rows[0].env.stateRaw=JSON.stringify(state);});
+ok(!VaultSource.parseMemoryVault(wrongStateUser).ok,"une identité modifiée dans les octets de l'état est refusée malgré tous les contrôles recalculés");
+const wrongMetaUser=rewriteVault(VaultSource,builtVault.text,function(_payload,rows){rows[0].env.meta.userId="user_intrus";});
+ok(!VaultSource.parseMemoryVault(wrongMetaUser).ok,"une identité modifiée seulement dans les métadonnées est refusée");
+const wrongRegistryUser=rewriteVault(VaultSource,builtVault.text,function(payload,rows){payload.player.userId="user_identite_differente";rows.forEach(function(row){row.env.meta.userId=payload.player.userId;const state=JSON.parse(row.env.stateRaw);state._sezam.userId=payload.player.userId;row.env.stateRaw=JSON.stringify(state);});});
+const identityLocalBefore=JSON.stringify(vaultTargetLocal.dump()),identityIdbBefore=JSON.stringify(Array.from(vaultTargetIdb.store.entries()));
+let wrongIdentityImport=null;VaultTarget.importMemoryVault(wrongRegistryUser,function(result){wrongIdentityImport=result;});
+ok(wrongIdentityImport&&!wrongIdentityImport.ok,"une identité cohérente dans le fichier mais différente du joueur local homonyme ne fusionne pas les coffres");
+eq(JSON.stringify(vaultTargetLocal.dump()),identityLocalBefore,"le refus d'identité laisse le stockage local exact");
+eq(JSON.stringify(Array.from(vaultTargetIdb.store.entries())),identityIdbBefore,"le refus d'identité laisse IndexedDB exact");
+
+const orphanIdb=makeFakeIndexedDB(),Orphan=loadEngine({indexedDB:orphanIdb.indexedDB});
+const orphanState=JSON.parse(vaultRaw2);orphanState.xp=999;orphanState.orphanExtra="État plus récent sans registre";const orphanRaw=JSON.stringify(orphanState);
+orphanIdb.store.set("save:"+vaultPlayer,orphanRaw);let orphanImport=null;Orphan.importMemoryVault(builtVault.text,function(result){orphanImport=result;});
+ok(orphanImport&&orphanImport.ok,"un coffre orphelin de même identité est retrouvé lors de l'import");
+ok(orphanIdb.store.get("save:"+vaultPlayer)===orphanRaw,"retrouver le registre ne remplace pas un état orphelin plus récent par le dernier point importé");
+const invalidOrphanIdb=makeFakeIndexedDB(),InvalidOrphan=loadEngine({indexedDB:invalidOrphanIdb.indexedDB});
+invalidOrphanIdb.store.set("save:"+vaultPlayer,"{octets-orphelins-illisibles");let invalidOrphanImport=null;
+InvalidOrphan.importMemoryVault(builtVault.text,function(result){invalidOrphanImport=result;});
+ok(invalidOrphanImport&&!invalidOrphanImport.ok,"l'import refuse de remplacer un coffre orphelin impossible à vérifier");
+eq(invalidOrphanIdb.store.get("save:"+vaultPlayer),"{octets-orphelins-illisibles","même illisibles, les octets orphelins restent intacts");
+const fallbackOrphanIdb=makeFakeIndexedDB(),fallbackOrphanLocal=makeLocalStorage(),FallbackOrphan=loadEngine({indexedDB:fallbackOrphanIdb.indexedDB,localStorage:fallbackOrphanLocal});
+const fallbackOrphanKey=FallbackOrphan.PLAYER_FALLBACK_PREFIX+vaultPlayer;fallbackOrphanLocal.setItem(fallbackOrphanKey,"{copie-locale-orpheline-illisible");
+let invalidFallbackImport=null;FallbackOrphan.importMemoryVault(builtVault.text,function(result){invalidFallbackImport=result;});
+ok(invalidFallbackImport&&!invalidFallbackImport.ok,"un repli local orphelin illisible bloque l'import avant toute création de coffre");
+ok(fallbackOrphanLocal.getItem(fallbackOrphanKey)==="{copie-locale-orpheline-illisible"&&!fallbackOrphanIdb.store.has("save:"+vaultPlayer),"l'import ne masque pas une copie locale illisible en créant un état IndexedDB concurrent");
+fallbackOrphanLocal.setItem(fallbackOrphanKey,orphanRaw);let validFallbackImport=null;
+FallbackOrphan.importMemoryVault(builtVault.text,function(result){validFallbackImport=result;});
+ok(validFallbackImport&&validFallbackImport.ok,"une copie locale orpheline de même identité peut retrouver son registre");
+ok(fallbackOrphanLocal.getItem(fallbackOrphanKey)===orphanRaw||fallbackOrphanIdb.store.get("save:"+vaultPlayer)===orphanRaw,"retrouver l'orphelin local conserve ses octets plus récents");
+
+const legacyIndexIdb=makeFakeIndexedDB(),LegacyIndex=loadEngine({indexedDB:legacyIndexIdb.indexedDB});let legacyIndexPoint=null;
+LegacyIndex.createMemorySnapshot("manual",{notify:false},function(result){legacyIndexPoint=result;});
+const legacyEnvelope=JSON.parse(legacyIndexIdb.store.get(legacyIndexPoint.meta.dataKey));delete legacyEnvelope.meta.metaSha256;
+legacyIndexIdb.store.set(legacyIndexPoint.meta.dataKey,JSON.stringify(legacyEnvelope));legacyIndexIdb.store.set(legacyIndexPoint.meta.metaKey,JSON.stringify(legacyEnvelope.meta));
+const falseLegacyMeta=Object.assign({},legacyEnvelope.meta,{name:"Description inventée dans l'index mutable"});legacyIndexIdb.store.set(LegacyIndex.memoryIndexKey(LegacyIndex.getActivePlayerId()),JSON.stringify([falseLegacyMeta]));
+let recoveredLegacyRows=[];LegacyIndex.memorySnapshotList(function(rows){recoveredLegacyRows=rows;});
+eq(recoveredLegacyRows[0]&&recoveredLegacyRows[0].name,legacyEnvelope.meta.name,"les octets immuables ont priorité sur un index historique non scellé de même longueur");
+eq(JSON.parse(legacyIndexIdb.store.get(LegacyIndex.memoryIndexKey(LegacyIndex.getActivePlayerId())))[0].name,legacyEnvelope.meta.name,"l'index divergant est réparé avant la fin de la lecture");
+
+const unsafeScenes=[
+  '<img src=x onerror="window.__memoryAttack=1">',
+  '<svg onload="window.__memoryAttack=1"></svg>',
+  '<button onclick="tone(NOTES[\'sol4\'].midi);window.__memoryAttack=1">Note</button>',
+  '<iframe srcdoc="attaque"></iframe>',
+  '<a href="&#106;avascript:window.__memoryAttack=1">Lien</a>',
+  '<input formaction=https://example.invalid/collect>',
+  '<svg><a xlink:href="javascript:window.__memoryAttack=1">X</a></svg>'
+];
+unsafeScenes.forEach(function(html,index){
+  const hostile=rewriteVault(VaultSource,builtVault.text,function(_payload,rows){const runtime=JSON.parse(rows[0].env.runtimeRaw);runtime.scene.cardBox.html=html;rows[0].env.runtimeRaw=JSON.stringify(runtime);});
+  ok(!VaultSource.parseMemoryVault(hostile).ok,"le coffre refuse un fragment HTML actif même avec les empreintes recalculées (cas "+(index+1)+")");
+});
+ok(VaultSource.memorySceneHtmlSafe('<button onclick="tone(NOTES[\'sol4\'].midi)">Écouter</button>'),"l'écoute d'une note reconnue dans une scène du jeu reste restaurable");
+ok(VaultSource.memorySceneHtmlSafe('<svg viewBox="0 0 100 50"><path d="M0 5 L100 5"/></svg><strong>Partition 🎼</strong>'),"une portée SVG et son texte musical restent restaurables");
+
+const pendingIdb=makeFakeIndexedDB(),pendingLocal=makeLocalStorage(),Pending=loadEngine({localStorage:pendingLocal,indexedDB:pendingIdb.indexedDB});
+const pCapture=Pending.captureMemorySnapshotRecord("level_complete",{milestone:"Point à reprendre"}).record;
+const pKey="history:pending:"+pCapture.playerId+":"+pCapture.captureId;
+const pRaw=sealedPending(Pending,pCapture),pTampered=JSON.parse(pRaw);pTampered.recordRaw=pTampered.recordRaw.replace('Point à reprendre','Contenu altéré');
+ok(Pending.parsePendingMemoryRaw(pRaw)!==null,"un journal scellé cohérent est accepté");
+ok(Pending.parsePendingMemoryRaw(JSON.stringify(pTampered))===null,"un journal modifié sans recalcul d'empreinte est refusé");
+pendingIdb.store.set(pKey,JSON.stringify(pTampered));Pending.resumePendingMemorySnapshots();
+ok(pendingIdb.store.get(pKey)===JSON.stringify(pTampered),"la reprise n'efface jamais un journal corrompu");
+let pRows=[];Pending.memorySnapshotList(function(rows){pRows=rows;});eq(pRows.length,0,"un journal corrompu ne fabrique pas de sauvegarde");
+pendingIdb.store.set(pKey,pRaw);
+const pConflicting=cloneJson(pCapture),pConflictState=JSON.parse(pConflicting.stateRaw);pConflictState.xp+=1;pConflicting.stateRaw=JSON.stringify(pConflictState);
+const pConflictRaw=sealedPending(Pending,pConflicting);pendingLocal.setItem("sezam_"+pKey,pConflictRaw);
+Pending.resumePendingMemorySnapshots();Pending.memorySnapshotList(function(rows){pRows=rows;});
+eq(pRows.length,0,"deux journaux de même identifiant mais de contenu différent ne sont pas arbitrairement départagés");
+ok(pendingIdb.store.get(pKey)===pRaw&&pendingLocal.getItem("sezam_"+pKey)===pConflictRaw,"les deux copies en conflit restent strictement intactes");
+pendingLocal.removeItem("sezam_"+pKey);Pending.resumePendingMemorySnapshots();Pending.memorySnapshotList(function(rows){pRows=rows;});
+eq(pRows.length,1,"un journal valide est ajouté exactement une fois après résolution explicite du conflit de test");
+const pSavedRaw=pendingIdb.store.get(pRows[0].dataKey);
+pendingIdb.store.set(pKey,pRaw);Pending.resumePendingMemorySnapshots();Pending.memorySnapshotList(function(rows){pRows=rows;});
+eq(pRows.length,1,"la reprise d'un point déjà écrit n'ajoute pas de doublon");
+ok(!pendingIdb.store.has(pKey),"une reprise strictement identique est acquittée après vérification du point existant");
+pendingIdb.store.set(pKey,pConflictRaw);Pending.resumePendingMemorySnapshots();Pending.memorySnapshotList(function(rows){pRows=rows;});
+eq(pRows.length,1,"un captureId déjà enregistré avec un autre état n'ajoute ni ne remplace de point");
+ok(pendingIdb.store.get(pKey)===pConflictRaw&&pendingIdb.store.get(pRows[0].dataKey)===pSavedRaw,"collision d'identifiant : le journal concurrent et le point original sont tous deux préservés");
+Pending.clearPendingMemoryRecord(pKey,pCapture);
+eq(pendingIdb.store.get(pKey),pConflictRaw,"un acquittement tardif ne supprime pas le journal d'un autre contenu");
+
+const quotaLocal=makeLocalStorage(),QuotaMemory=loadEngine({localStorage:quotaLocal});let quotaFirst=null;
+QuotaMemory.createMemorySnapshot("manual",{notify:false},function(result){quotaFirst=result;});
+const quotaOriginalRaw=quotaLocal.getItem("sezam_"+quotaFirst.meta.dataKey);
+QuotaMemory.getDB().xp=210;const quotaCapture=QuotaMemory.captureMemorySnapshotRecord("level_complete",{milestone:"Quota temporaire"}).record;
+const quotaPendingKey="sezam_history:pending:"+quotaCapture.playerId+":"+quotaCapture.captureId;
+quotaLocal.failAfter(QuotaMemory.memoryLocalIndexKey(quotaCapture.playerId),1);let quotaFailed=null;
+QuotaMemory.enqueueMemorySnapshotRecord(quotaCapture,{notify:false},function(result){quotaFailed=result;});
+ok(quotaFailed&&!quotaFailed.ok,"un refus du quota local remonte un échec explicite");
+ok(quotaLocal.getItem("sezam_"+quotaFirst.meta.dataKey)===quotaOriginalRaw,"un quota insuffisant ne réécrit pas le point local précédent");
+ok(QuotaMemory.parsePendingMemoryRaw(quotaLocal.getItem(quotaPendingKey))!==null,"le point refusé par quota garde son journal complet pour reprise");
+let quotaRows=[];QuotaMemory.memorySnapshotList(function(rows){quotaRows=rows;});eq(quotaRows.length,1,"l'écriture partielle n'est pas annoncée comme un second point valide");
+QuotaMemory.resumePendingMemorySnapshots();QuotaMemory.memorySnapshotList(function(rows){quotaRows=rows;});
+eq(quotaRows.length,2,"après retour du stockage, le point journalisé est repris exactement une fois");
+ok(!quotaLocal.getItem(quotaPendingKey),"le journal de quota n'est acquitté qu'après ajout complet");
+let quotaRestoredRaw=null;QuotaMemory.loadMemoryEnvelope(quotaRows[0],function(raw){quotaRestoredRaw=JSON.parse(raw).stateRaw;});
+ok(quotaRestoredRaw===quotaCapture.stateRaw,"la reprise après quota conserve les octets de la demande initiale");
+
+const frozenLocalBefore=JSON.stringify(vaultTargetLocal.dump()),frozenIdbBefore=JSON.stringify(Array.from(vaultTargetIdb.store.entries())),frozenRegistryBefore=JSON.stringify(VaultTarget.getPlayerRegistry());
+let frozenSnapshotResult=null;
+VaultTarget.renderMemorySceneFrozen(function(){VaultTarget.getDB().xp=123456;VaultTarget.save({cloud:false});VaultTarget.createMemorySnapshot("level_complete",{notify:false},function(result){frozenSnapshotResult=result;});});
+eq(JSON.stringify(VaultTarget.getDB()),frozenBefore,"un renderer qui appelle save et crée un niveau ne modifie pas les octets actifs restaurés");
+eq(JSON.stringify(vaultTargetLocal.dump()),frozenLocalBefore,"le rendu gelé ne modifie aucune copie locale, aucun checkpoint ni registre");
+eq(JSON.stringify(Array.from(vaultTargetIdb.store.entries())),frozenIdbBefore,"le rendu gelé ne modifie ni coffre actif, ni historique, ni journal IndexedDB");
+eq(JSON.stringify(VaultTarget.getPlayerRegistry()),frozenRegistryBefore,"le registre familial reste exact après rendu gelé");
+ok(frozenSnapshotResult&&frozenSnapshotResult.skipped,"le résultat d'un snapshot déclenché seulement par le rendu indique explicitement l'absence d'écriture");
+
+const asyncControl={},asyncIdb=makeFakeIndexedDB(null,asyncControl),asyncLocal=makeLocalStorage(),AsyncRestore=loadEngine({indexedDB:asyncIdb.indexedDB,localStorage:asyncLocal});
+AsyncRestore.getDB().xp=11;let asyncPoint=null;AsyncRestore.createMemorySnapshot("manual",{notify:false},function(result){asyncPoint=result;});
+const asyncTargetRaw=JSON.stringify(AsyncRestore.getDB());AsyncRestore.getDB().xp=22;AsyncRestore.save({cloud:false});
+asyncControl.holdNextWriteKey="save:"+AsyncRestore.getActivePlayerId();let asyncRestoreResult=null;
+AsyncRestore.restoreMemorySnapshot(asyncPoint.meta,function(result){asyncRestoreResult=result;});
+ok(!asyncRestoreResult&&asyncControl.pendingCompletions&&asyncControl.pendingCompletions.length===1,"la restauration attend réellement la confirmation différée du coffre actif");
+ok(AsyncRestore.getEl("app").inert&&AsyncRestore.getEl("overlay").inert,"pendant l'écriture finale, écran et fenêtre sont verrouillés ensemble");
+const asyncLocalDuring=JSON.stringify(asyncLocal.dump()),asyncIdbDuring=JSON.stringify(Array.from(asyncIdb.store.entries()));
+ok(AsyncRestore.save({cloud:false})===false,"un save tardif refuse de concurrencer l'activation exacte");
+ok(JSON.stringify(asyncLocal.dump())===asyncLocalDuring&&JSON.stringify(Array.from(asyncIdb.store.entries()))===asyncIdbDuring,"le save concurrent refusé n'écrit aucune copie intermédiaire");
+AsyncRestore.getDB().xp=33;AsyncRestore.getDB().arrivePendantActivation="retour asynchrone";const asyncNewerRaw=JSON.stringify(AsyncRestore.getDB());
+asyncControl.pendingCompletions.shift()();
+ok(asyncRestoreResult&&!asyncRestoreResult.ok,"une mutation asynchrone pendant l'activation annule le retour pour préserver l'état plus récent");
+ok(JSON.stringify(AsyncRestore.getDB())===asyncNewerRaw&&asyncIdb.store.get("save:"+AsyncRestore.getActivePlayerId())===asyncNewerRaw,"le nouvel état asynchrone reste exact dans le jeu et dans son coffre actif");
+ok(asyncLocal.getItem("solfegeProto1")===asyncNewerRaw&&asyncLocal.getItem("solfegeProto1_mirror")===asyncNewerRaw&&asyncLocal.getItem("solfegeProto1_checkpoint")===asyncNewerRaw,"les trois copies locales retrouvent le nouvel état conservé");
+ok(!AsyncRestore.getEl("app").inert&&!AsyncRestore.getEl("overlay").inert,"une restauration annulée déverrouille les deux zones de jeu");
+let asyncRows=[];AsyncRestore.memorySnapshotList(function(rows){asyncRows=rows;});
+eq(asyncRows.length,2,"le point demandé et le filet avant restauration demeurent tous deux disponibles après l'annulation");
+let asyncOriginalRaw=null;AsyncRestore.loadMemoryEnvelope(asyncPoint.meta,function(raw){asyncOriginalRaw=JSON.parse(raw).stateRaw;});
+ok(asyncOriginalRaw===asyncTargetRaw,"la concurrence n'altère jamais la sauvegarde d'origine");
+const asyncIndexKey=AsyncRestore.memoryIndexKey(AsyncRestore.getActivePlayerId());asyncIdb.store.set(asyncIndexKey,"{index interrompu");
+asyncControl.holdNextWriteKey=asyncIndexKey;let asyncRepairedRows=null;
+AsyncRestore.memorySnapshotList(function(rows){asyncRepairedRows=rows;});
+ok(asyncRepairedRows===null&&asyncControl.pendingCompletions.length===1,"la lecture d'un index réparé attend la confirmation d'écriture au lieu d'annoncer une réparation encore en vol");
+asyncControl.pendingCompletions.shift()();
+eq(asyncRepairedRows&&asyncRepairedRows.length,2,"les deux points deviennent disponibles après confirmation de la réparation asynchrone");
+
+const commandWindow=Object.assign({},windowStub,{confirm:function(){return false;}}),commandIdb=makeFakeIndexedDB(),Commands=loadEngine({indexedDB:commandIdb.indexedDB,window:commandWindow});
+Commands.getDB().xp=12;let commandFirst=null;Commands.createMemorySnapshot("manual",{milestone:"Été — début exact",notify:false},function(result){commandFirst=result;});
+const commandRaw1=JSON.stringify(Commands.getDB());Commands.getDB().xp=55;let commandSecond=null;Commands.createMemorySnapshot("manual",{notify:false},function(result){commandSecond=result;});
+const commandBeforeCancel=JSON.stringify(Commands.getDB()),commandStoreBeforeCancel=JSON.stringify(Array.from(commandIdb.store.entries()));
+ok(Commands.executeMemoryCommand("reviens à 1"),"la commande de restauration accepte l'accent de « à »");
+eq(JSON.stringify(Commands.getDB()),commandBeforeCancel,"annuler la confirmation d'une commande ne modifie pas l'état actif");
+eq(JSON.stringify(Array.from(commandIdb.store.entries())),commandStoreBeforeCancel,"annuler n'ajoute pas de point et ne touche pas à IndexedDB");
+commandWindow.confirm=function(){return true;};Commands.executeMemoryCommand("reviens à 1");
+ok(JSON.stringify(Commands.getDB())===commandRaw1,"la commande par numéro restaure l'état complet exact");
+let commandRows=[];Commands.memorySnapshotList(function(rows){commandRows=rows;});
+eq(commandRows.length,3,"la restauration par commande conserve d'abord l'état quitté dans un troisième point");
+Commands.getDB().xp=99;Commands.executeMemoryCommand("reviens à "+commandSecond.meta.name);
+eq(Commands.getDB().xp,55,"la commande accepte le nom exact accentué d'une sauvegarde");
+Commands.executeMemoryCommand("liste mes sauvegardes");
+ok(/5 sauvegardes disponibles/.test(Commands.getEl("memoryMsg").textContent),"la commande de liste compte les deux points de restauration et le point de navigation créé avant l'ouverture du Coffre");
+const beforeAmbiguous=JSON.stringify(Commands.getDB()),storeBeforeAmbiguous=JSON.stringify(Array.from(commandIdb.store.entries()));
+Commands.executeMemoryCommand("reviens à sauvegarde");
+ok(/Plusieurs sauvegardes/.test(Commands.getEl("memoryMsg").textContent),"un nom partiel ambigu demande le numéro précis au lieu de choisir un point arbitraire");
+ok(JSON.stringify(Commands.getDB())===beforeAmbiguous&&JSON.stringify(Array.from(commandIdb.store.entries()))===storeBeforeAmbiguous,"une commande ambiguë laisse l'état et l'historique intacts");
+Commands.executeMemoryCommand("reviens au point 1");
+ok(JSON.stringify(Commands.getDB())===commandRaw1,"la variante « reviens au point 1 » restaure le même point exact");
+const beforeUnknown=JSON.stringify(Commands.getDB());Commands.executeMemoryCommand("reviens à 999999");
+ok(/n’existe pas/.test(Commands.getEl("memoryMsg").textContent)&&JSON.stringify(Commands.getDB())===beforeUnknown,"un numéro inconnu ne déplace pas le joueur et est expliqué clairement");
+
+const fileReaders=[];class DeferredMemoryFileReader{readAsDataURL(file){this.file=file;fileReaders.push(this);}}
+const fileDoc=makeDocument(),fileIdb=makeFakeIndexedDB(),FileMemory=loadEngine({document:fileDoc,indexedDB:fileIdb.indexedDB,FileReader:DeferredMemoryFileReader});
+fileDoc.querySelectorAll=function(selector){return selector===".screen.active"?[{id:"scrPieces"}]:[];};
+const filePlayer=FileMemory.getActivePlayerId();FileMemory.getDB().xp=707;FileMemory.getEl("pcTitle").value="Partition à l'instant du clic";
+const selectedFile={name:"étude.pdf",type:"application/pdf",size:4,lastModified:101};FileMemory.getEl("pcFile").files=[selectedFile];
+const fileClickRaw=JSON.stringify(FileMemory.getDB());
+ok(FileMemory.manualMemorySnapshot("header"),"la sauvegarde d'une partition sélectionnée commence sans quitter sa scène");
+eq(fileReaders.length,1,"le fichier est lu une fois avant de sceller le point");
+FileMemory.getDB().xp=808;FileMemory.getEl("pcTitle").value="Saisie après le clic";
+let fileChild=null;FileMemory.createPlayer("Autre joueur pendant la lecture",function(created){if(created)fileChild=FileMemory.getActivePlayerId();});
+if(fileReaders[0]){fileReaders[0].result="data:application/pdf;base64,JVBERg==";fileReaders[0].onload();}
+let fileRows=[];FileMemory.memorySnapshotListForPlayer(filePlayer,function(rows){fileRows=rows;});
+const fileSaved=fileRows.find(function(meta){return meta.kind==="manual";});let fileEnvelope=null;if(fileSaved)FileMemory.loadMemoryEnvelope(fileSaved,function(raw){fileEnvelope=JSON.parse(raw);});
+ok(fileEnvelope&&fileEnvelope.stateRaw===fileClickRaw,"une lecture différée conserve les octets et l'identité du clic même après changement de joueur");
+const fileRuntime=fileEnvelope&&JSON.parse(fileEnvelope.runtimeRaw);
+ok(fileRuntime&&fileRuntime.scene.pcTitle.value==="Partition à l'instant du clic","les champs de formulaire sont capturés avant la lecture asynchrone");
+ok(fileRuntime&&fileRuntime.fileDraft.attachment.dataUrl==="data:application/pdf;base64,JVBERg==","le fichier lu rejoint le bon point sans reconstituer son état");
+ok(fileChild&&FileMemory.getActivePlayerId()===fileChild,"la confirmation tardive ne réactive jamais le joueur source");
+FileMemory.switchPlayer(filePlayer,function(){});FileMemory.getEl("pcFile").files=[Object.assign({},selectedFile,{lastModified:202})];
+FileMemory.manualMemorySnapshot("header");eq(fileReaders.length,2,"un fichier homonyme de même taille mais de date différente est relu");
+if(fileReaders[1]){fileReaders[1].result="data:application/pdf;base64,QUJDRA==";fileReaders[1].onload();}
+FileMemory.memorySnapshotListForPlayer(filePlayer,function(rows){fileRows=rows;});
+const latestFilePoint=fileRows.find(function(meta){return meta.kind==="manual"&&fileSaved&&meta.id!==fileSaved.id;});let latestFileRuntime=null;if(latestFilePoint)FileMemory.loadMemoryEnvelope(latestFilePoint,function(raw){latestFileRuntime=JSON.parse(JSON.parse(raw).runtimeRaw);});
+ok(latestFileRuntime&&latestFileRuntime.fileDraft.attachment.dataUrl==="data:application/pdf;base64,QUJDRA==","la nouvelle partition n'est jamais remplacée par le brouillon homonyme précédent");
+FileMemory.getEl("pcFile").files=[Object.assign({},selectedFile,{lastModified:303})];FileMemory.manualMemorySnapshot("header");
+eq(fileReaders.length,3,"un fichier sélectionné de même nom et taille est relu même si son joueur n'a pas changé");
+if(fileReaders[2]){fileReaders[2].result="data:application/pdf;base64,RUZHSA==";fileReaders[2].onload();}
+FileMemory.memorySnapshotListForPlayer(filePlayer,function(rows){fileRows=rows;});
+let thirdFileRuntime=null;if(fileRows[0])FileMemory.loadMemoryEnvelope(fileRows[0],function(raw){thirdFileRuntime=JSON.parse(JSON.parse(raw).runtimeRaw);});
+ok(thirdFileRuntime&&thirdFileRuntime.fileDraft.attachment.dataUrl==="data:application/pdf;base64,RUZHSA==","le brouillon en cache ne remplace jamais le contenu du fichier effectivement sélectionné");
+
+group("Mémoire v41 — sorties clavier, fenêtres et Premier regard restaurables");
+function navigationEngine(withIdb,extras){
+  const document=makeDocument(),screenIds=["scrHome","scrEx","scrKbd","scrRes","scrStats","scrPieces","scrPiece"];
+  const screens=screenIds.map(function(id){const el=document.getElementById(id);el.id=id;return el;});
+  document.querySelectorAll=function(selector){if(selector===".screen")return screens;if(selector===".screen.active")return screens.filter(function(el){return el.classList.contains("active");});return [];};
+  const local=makeLocalStorage(),idb=withIdb===false?null:makeFakeIndexedDB(),engine=loadEngine(Object.assign({document,localStorage:local,indexedDB:idb?idb.indexedDB:undefined},extras||{}));return {engine,document,local,idb};
+}
+function latestNavigationPoint(engine){let rows=[];engine.memorySnapshotList(function(found){rows=found;});return rows[0]||null;}
+function pointContents(engine,meta){let envelope=null;if(meta)engine.loadMemoryEnvelope(meta,function(raw){envelope=JSON.parse(raw);});return envelope?{stateRaw:envelope.stateRaw,runtime:JSON.parse(envelope.runtimeRaw)}:null;}
+const keyboardNav=navigationEngine(),KeyboardNav=keyboardNav.engine;
+KeyboardNav.beginClavier({clef:"sol",dir:"read",acc:false});const keyboardCurBefore=cloneJson(KeyboardNav.getKX().cur);
+KeyboardNav.openMusicProfile();const draftField=KeyboardNav.getEl("profName");draftField.id="profName";draftField.tagName="INPUT";draftField.value="Brouillon inachevé — Zoé";
+KeyboardNav.getEl("cardBox").querySelectorAll=function(selector){return selector==="input,select,textarea,button,details"?[draftField]:[];};
+const draftHtml=KeyboardNav.getEl("cardBox").innerHTML;
+ok(KeyboardNav.overlayBack()===true&&!KeyboardNav.getEl("overlay").classList.contains("on"),"Retour ferme le vrai formulaire de profil après protection de son brouillon");
+ok(KeyboardNav.getKX()&&!KeyboardNav.getKX().done&&!KeyboardNav.getKX().backgroundPausedAt&&KeyboardNav.getEl("scrKbd").classList.contains("active"),"Retour de fenêtre reprend le clavier sous-jacent sans le terminer ni renvoyer à l'accueil");
+eq(KeyboardNav.getKX().cur,keyboardCurBefore,"fermer une fenêtre ne change pas la note du clavier en cours");
+const draftPoint=latestNavigationPoint(KeyboardNav),draftContents=pointContents(KeyboardNav,draftPoint);
+ok(draftPoint&&draftPoint.kind==="pre_exit"&&draftContents.runtime.overlayOn&&draftContents.runtime.overlayType==="profile","le point de sortie conserve le type et l'ouverture du formulaire");
+ok(draftContents&&draftContents.runtime.scene.cardBox.html===draftHtml&&draftContents.runtime.overlayControls[0].value==="Brouillon inachevé — Zoé","le contenu de fenêtre et les caractères saisis sont conservés avant fermeture");
+draftField.value="modifié après fermeture";let draftRestored=null;KeyboardNav.restoreMemorySnapshot(draftPoint,function(result){draftRestored=result;});
+ok(draftRestored&&draftRestored.ok&&KeyboardNav.getEl("overlay").classList.contains("on")&&draftField.value==="Brouillon inachevé — Zoé","restaurer le point de sortie rouvre le formulaire avec sa saisie exacte");
+KeyboardNav.overlayBack();KeyboardNav.getEl("kQuit").onclick();
+ok(!KeyboardNav.getKX()&&KeyboardNav.getEl("scrHome").classList.contains("active"),"le bouton Quitter du clavier atteint l'accueil après avoir conservé la question");
+const keyboardExitPoint=latestNavigationPoint(KeyboardNav),keyboardExit=pointContents(KeyboardNav,keyboardExitPoint);
+ok(keyboardExitPoint.kind==="pre_exit"&&keyboardExit.runtime.screen==="scrKbd"&&keyboardExit.runtime.kx&&!keyboardExit.runtime.kx.done,"Quitter capture le clavier actif avant sa remise à null");
+let keyboardRestored=null;KeyboardNav.restoreMemorySnapshot(keyboardExitPoint,function(result){keyboardRestored=result;});
+ok(keyboardRestored&&keyboardRestored.ok&&KeyboardNav.getKX()&&!KeyboardNav.getKX().done&&!KeyboardNav.getKX().backgroundPausedAt,"restaurer le clavier sort de la pause de protection sans blocage");
+eq(KeyboardNav.getKX().cur,keyboardCurBefore,"le clavier restauré redemande exactement la note quittée");
+const keyboardStep=KeyboardNav.getKX().i;KeyboardNav.kbdTap(KeyboardNav.getKX().cur.midi);
+eq(KeyboardNav.getKX().i,keyboardStep+1,"la réponse du clavier restauré fonctionne et est comptée une seule fois");
+KeyboardNav.clearKbdTimer();KeyboardNav.getEl("kQuit").onclick();
+
+const CompletedKeyboard=navigationEngine().engine;CompletedKeyboard.beginClavier({clef:"fa",dir:"read",acc:true});
+for(let step=0;step<10;step++){CompletedKeyboard.kbdTap(CompletedKeyboard.getKX().cur.midi);CompletedKeyboard.clearKbdTimer();CompletedKeyboard.nextKbd();}
+ok(CompletedKeyboard.getKX()&&CompletedKeyboard.getKX().done&&CompletedKeyboard.getEl("overlay").classList.contains("on"),"terminer dix questions de clavier ouvre réellement le bilan");
+const completedKeyboardPoint=latestNavigationPoint(CompletedKeyboard),completedKeyboardContents=pointContents(CompletedKeyboard,completedKeyboardPoint);
+ok(completedKeyboardPoint&&completedKeyboardPoint.kind==="session_complete"&&completedKeyboardContents.runtime.overlayOn&&completedKeyboardContents.runtime.overlayType==="keyboard_result","le bilan complet du clavier est automatiquement protégé avant Refaire");
+eq(completedKeyboardContents&&[completedKeyboardContents.runtime.kx.i,completedKeyboardContents.runtime.kx.ok,completedKeyboardContents.runtime.kx.hist.length],[10,10,10],"le point du bilan contient les dix réponses et le score final");
+CompletedKeyboard.getEl("kAgain").onclick();
+ok(CompletedKeyboard.getKX()&&!CompletedKeyboard.getKX().done&&CompletedKeyboard.getKX().i===0,"Refaire prépare un nouveau clavier après protection du bilan précédent");
+let completedKeyboardRestore=null;CompletedKeyboard.restoreMemorySnapshot(completedKeyboardPoint,function(result){completedKeyboardRestore=result;});
+ok(completedKeyboardRestore&&completedKeyboardRestore.ok&&CompletedKeyboard.getKX().done&&CompletedKeyboard.getEl("overlay").classList.contains("on"),"le bilan précédent se restaure même après avoir lancé Refaire");
+eq([CompletedKeyboard.getDB().kbdStats.total,CompletedKeyboard.getDB().kbdStats.ok],[10,10],"revenir au bilan ne recompte aucune des dix réponses");
+CompletedKeyboard.clearKbdTimer();CompletedKeyboard.universalHome();
+
+const vaultReaders=[];class VaultNavigationReader{readAsDataURL(file){this.file=file;vaultReaders.push(this);}}
+const VaultNavigation=navigationEngine(true,{FileReader:VaultNavigationReader}).engine;
+VaultNavigation.getEl("scrHome").classList.remove("active");VaultNavigation.getEl("scrPieces").classList.add("active");
+VaultNavigation.getEl("pcTitle").value="Partition avant ouverture du Coffre";VaultNavigation.getEl("pcFile").files=[{name:"étude.pdf",type:"application/pdf",size:4,lastModified:404}];VaultNavigation.getEl("impArea").value="Brouillon import non validé";
+ok(VaultNavigation.openMemoryVaultSection()===true&&vaultReaders.length===1,"ouvrir le Coffre depuis une partition sélectionnée commence sa protection complète");
+ok(VaultNavigation.getEl("scrPieces").classList.contains("active")&&!VaultNavigation.getEl("scrStats").classList.contains("active"),"la navigation attend la lecture du fichier avant de quitter la page des partitions");
+vaultReaders[0].result="data:application/pdf;base64,JVBERg==";vaultReaders[0].onload();
+const vaultNavigationPoint=latestNavigationPoint(VaultNavigation),vaultNavigationContents=pointContents(VaultNavigation,vaultNavigationPoint);
+ok(VaultNavigation.getEl("scrStats").classList.contains("active")&&!VaultNavigation.getEl("app").inert,"le Coffre s'ouvre et se déverrouille une fois la scène réellement protégée");
+ok(vaultNavigationContents&&vaultNavigationContents.runtime.screen==="scrPieces"&&vaultNavigationContents.runtime.scene.pcTitle.value==="Partition avant ouverture du Coffre"&&vaultNavigationContents.runtime.fileDraft.attachment.dataUrl==="data:application/pdf;base64,JVBERg==","le point de navigation contient la page, sa saisie et les octets de sa partition");
+eq(VaultNavigation.getEl("impArea").value,"Brouillon import non validé","ouvrir les statistiques ne vide plus le brouillon d'import du joueur");
+
+const firstLookNav=navigationEngine(),FirstLook=firstLookNav.engine;
+const firstLookPiece=FirstLook.PIECES_BUILTIN.find(function(piece){return piece.q&&piece.q.length>1;});
+FirstLook.startPremierRegard(firstLookPiece.id);FirstLook.prAnswer(firstLookPiece.q[0].rep);FirstLook.getEl("prNext").onclick();
+const firstLookBefore=cloneJson({pieceId:FirstLook.getPR().piece.id,i:FirstLook.getPR().i,ok:FirstLook.getPR().ok});
+const firstLookHtml=FirstLook.getEl("cardBox").innerHTML;FirstLook.overlayBack();
+ok(FirstLook.getPR()===null&&!FirstLook.getEl("overlay").classList.contains("on"),"Retour termine le contexte actif de Premier regard seulement après sa sauvegarde");
+const firstLookPoint=latestNavigationPoint(FirstLook),firstLookContents=pointContents(FirstLook,firstLookPoint);
+ok(firstLookContents&&firstLookContents.runtime.overlayOn&&firstLookContents.runtime.scene.cardBox.html===firstLookHtml,"la question de Premier regard est figée avant la fermeture de sa fenêtre");
+eq(firstLookContents&&{pieceId:firstLookContents.runtime.pr.pieceId,i:firstLookContents.runtime.pr.i,ok:firstLookContents.runtime.pr.ok},firstLookBefore,"position et score de Premier regard sont complets dans le point de sortie");
+let firstLookRestored=null;FirstLook.restoreMemorySnapshot(firstLookPoint,function(result){firstLookRestored=result;});
+ok(firstLookRestored&&firstLookRestored.ok&&FirstLook.getPR()&&FirstLook.getEl("overlay").classList.contains("on"),"Premier regard se rouvre depuis son point sans contexte manquant ni blocage");
+eq({pieceId:FirstLook.getPR().piece.id,i:FirstLook.getPR().i,ok:FirstLook.getPR().ok},firstLookBefore,"la restauration reprend la même question avec le même score");
+FirstLook.prAnswer(FirstLook.getPR().piece.q[FirstLook.getPR().i].rep);eq(FirstLook.getPR().ok,firstLookBefore.ok+1,"Premier regard accepte encore une réponse après restauration");
+FirstLook.overlayBack();
+
+for(const introType of ["preview","discovery"]){
+  const Intro=navigationEngine().engine;Intro.beginSerie({n:25,questionCap:25,mode:"libre",cold:false});
+  if(introType==="preview")Intro.showSeriePreview("P1",function(){});else Intro.showDecouverte("P1",function(){},Intro.PALIERS[0].notes.slice(0,3));
+  const homeId=introType==="preview"?"btnPrepHome":"btnDecHome",introHtml=Intro.getEl("cardBox").innerHTML;
+  Intro.getEl(homeId).onclick();const introPoint=latestNavigationPoint(Intro),introContents=pointContents(Intro,introPoint);
+  ok(introContents&&introContents.runtime.overlayOn&&introContents.runtime.overlayType===introType&&introContents.runtime.scene.cardBox.html===introHtml,"Accueil conserve la fenêtre "+introType+" avant de la fermer");
+  ok(Intro.getEl("scrHome").classList.contains("active")&&!Intro.getEl("overlay").classList.contains("on"),"Accueil quitte correctement "+introType+" sans fenêtre bloquante");
+  let introRestored=null;Intro.restoreMemorySnapshot(introPoint,function(result){introRestored=result;});
+  ok(introRestored&&introRestored.ok&&Intro.getEl("overlay").classList.contains("on")&&Intro.getEX()&&!Intro.getEX().done,"la fenêtre "+introType+" restaurée possède encore son exercice actif");
+  Intro.getEl(homeId).onclick();const reboundContents=pointContents(Intro,latestNavigationPoint(Intro));
+  ok(reboundContents&&reboundContents.runtime.overlayOn&&reboundContents.runtime.overlayType===introType&&!Intro.getEl("overlay").classList.contains("on"),"Accueil relié après restauration protège encore "+introType+" avant de fermer");
+  Intro.clearQTimers();Intro.clearDailyTimer();Intro.haltEX();
+}
+
+const failedExitNav=navigationEngine(false),FailedExit=failedExitNav.engine;FailedExit.openMusicProfile();
+const failedExitHtml=FailedExit.getEl("cardBox").innerHTML,failedExitRaw=JSON.stringify(FailedExit.getDB());
+failedExitNav.local.failAfter(FailedExit.memoryLocalIndexKey(FailedExit.getActivePlayerId()),1);FailedExit.overlayBack();
+ok(FailedExit.getEl("overlay").classList.contains("on")&&FailedExit.getEl("cardBox").innerHTML===failedExitHtml,"si le stockage refuse la sauvegarde, Retour garde la fenêtre exacte ouverte");
+ok(JSON.stringify(FailedExit.getDB())===failedExitRaw&&!FailedExit.getEl("app").inert&&!FailedExit.getEl("overlay").inert,"l'échec de sortie ne modifie pas la progression et libère tous les verrous d'interface");
+FailedExit.overlayBack();
+ok(!FailedExit.getEl("overlay").classList.contains("on")&&latestNavigationPoint(FailedExit),"après un refus de stockage, Retour peut être retenté avec succès sans recharger le jeu");
+
+group("Mémoire v41 — démarrage interrompu sans remplacement par un joueur vierge");
+const rescueIdb=makeFakeIndexedDB(),rescueLocal=makeLocalStorage(),RescueSource=loadEngine({indexedDB:rescueIdb.indexedDB,localStorage:rescueLocal});
+const rescuePlayer=RescueSource.getActivePlayerId();RescueSource.getDB().xp=9876;RescueSource.getDB().protectedFutureField="acquis conservés pendant la panne";RescueSource.save({cloud:false});
+let rescuePoint=null;RescueSource.createMemorySnapshot("manual",{notify:false},function(result){rescuePoint=result;});
+const rescueStoredRaw=rescueIdb.store.get("save:"+rescuePlayer),rescueHistoricalRaw=rescueIdb.store.get(rescuePoint.meta.dataKey);
+const registryOnlyLocal=makeLocalStorage({[RescueSource.PLAYER_REGISTRY_KEY]:rescueLocal.getItem(RescueSource.PLAYER_REGISTRY_KEY)});
+const temporarilyUnavailableIdb={open:function(){const request={};Object.defineProperty(request,"onerror",{set:function(handler){handler();}});return request;}};
+const RescueDuringOutage=loadEngine({indexedDB:temporarilyUnavailableIdb,localStorage:registryOnlyLocal});
+ok(RescueDuringOutage.save({cloud:false})===false,"un registre connu sans état lisible interdit de persister un joueur vierge pendant la panne");
+ok(!registryOnlyLocal.getItem("solfegeProto1")&&!registryOnlyLocal.getItem("solfegeProto1_mirror")&&!registryOnlyLocal.getItem("solfegeProto1_checkpoint"),"la panne de lecture ne crée aucune copie locale vide prioritaire sur les acquis");
+ok(RescueDuringOutage.beginSerie({n:25,questionCap:25})===false,"tant que son coffre connu n'est pas relu, le joueur ne peut pas commencer une progression vierge accidentelle");
+ok(rescueIdb.store.get("save:"+rescuePlayer)===rescueStoredRaw&&rescueIdb.store.get(rescuePoint.meta.dataKey)===rescueHistoricalRaw,"le coffre actif et son point historique restent strictement inchangés pendant l'indisponibilité");
+const RescueAfterOutage=loadEngine({indexedDB:rescueIdb.indexedDB,localStorage:registryOnlyLocal});
+eq(RescueAfterOutage.getActivePlayerId(),rescuePlayer,"au retour du stockage, le registre reprend la même identité de joueur");
+eq(RescueAfterOutage.getDB().xp,9876,"le redémarrage après panne retrouve le score antérieur au lieu d'adopter la copie vierge");
+eq(RescueAfterOutage.getDB().protectedFutureField,"acquis conservés pendant la panne","le redémarrage retrouve aussi les éléments inconnus du schéma courant");
+ok(rescueIdb.store.get(rescuePoint.meta.dataKey)===rescueHistoricalRaw,"le point historique reste identique après la reprise du démarrage");
+const noRegistryLocal=makeLocalStorage(),NoRegistryOutage=loadEngine({indexedDB:temporarilyUnavailableIdb,localStorage:noRegistryLocal});
+ok(NoRegistryOutage.save({cloud:false})===false&&!noRegistryLocal.getItem(NoRegistryOutage.PLAYER_REGISTRY_KEY),"une première ouverture sans données locales ne crée aucun faux registre lorsque le coffre est inaccessible");
+ok(!noRegistryLocal.getItem("solfegeProto1")&&!noRegistryLocal.getItem("solfegeProto1_mirror")&&!noRegistryLocal.getItem("solfegeProto1_checkpoint"),"le premier échec de lecture ne laisse aucun faux état prioritaire au prochain démarrage");
+let outageCreateAllowed=null;NoRegistryOutage.createPlayer("Joueur prématuré",function(created){outageCreateAllowed=created;});
+ok(outageCreateAllowed===false&&!noRegistryLocal.getItem(NoRegistryOutage.PLAYER_REGISTRY_KEY),"créer un joueur pendant le blocage ne peut pas occulter un registre familial encore inaccessible");
+const SecondNoRegistryOutage=loadEngine({indexedDB:temporarilyUnavailableIdb,localStorage:noRegistryLocal});
+ok(SecondNoRegistryOutage.save({cloud:false})===false&&!noRegistryLocal.getItem(SecondNoRegistryOutage.PLAYER_REGISTRY_KEY),"un second démarrage en panne n'adopte pas le joueur provisoire du premier essai");
+const NoRegistryRecovered=loadEngine({indexedDB:rescueIdb.indexedDB,localStorage:noRegistryLocal});
+eq(NoRegistryRecovered.getActivePlayerId(),rescuePlayer,"après deux échecs sans registre local, le vrai registre IndexedDB reprend sa place");
+eq(NoRegistryRecovered.getDB().xp,9876,"après deux échecs à vide, le joueur retrouve encore tous ses XP");
+ok(rescueIdb.store.get(rescuePoint.meta.dataKey)===rescueHistoricalRaw,"les redémarrages à vide n'ont jamais modifié le point historique du vrai joueur");
+const corruptStartupSeed={solfegeProto1:"{progression locale corrompue",solfegeProto1_mirror:"{miroir corrompu",solfegeProto1_checkpoint:"{checkpoint corrompu",[RescueSource.PLAYER_REGISTRY_KEY]:"{registre corrompu"};
+const corruptStartupLocal=makeLocalStorage(corruptStartupSeed),corruptStartupIdb=makeFakeIndexedDB(),CorruptStartup=loadEngine({indexedDB:corruptStartupIdb.indexedDB,localStorage:corruptStartupLocal});
+ok(CorruptStartup.save({cloud:false})===false,"des octets locaux illisibles interdisent de créer une nouvelle progression même si IndexedDB est vide");
+eq(corruptStartupLocal.dump(),corruptStartupSeed,"le démarrage conserve au bit près les copies et le registre locaux corrompus au lieu de les écraser");
+ok(!Array.from(corruptStartupIdb.store.keys()).some(function(key){return key==="players"||String(key).indexOf("save:")===0;}),"aucun nouveau coffre ni faux registre IndexedDB ne masque les octets locaux à récupérer");
+
+group("Mémoire v41 — coffre volumineux fractionné sans perte");
+{
+  const splitIdb=makeFakeIndexedDB(),SplitVault=loadEngine({indexedDB:splitIdb.indexedDB});
+  SplitVault.getDB().longTermMemory="m".repeat(8*1024*1024+4096);let firstLarge=null,secondLarge=null;
+  SplitVault.createMemorySnapshot("manual",{notify:false},function(result){firstLarge=result;});
+  SplitVault.getDB().xp=2;SplitVault.createMemorySnapshot("level_complete",{notify:false},function(result){secondLarge=result;});
+  ok(firstLarge&&firstLarge.ok&&secondLarge&&secondLarge.ok,"deux états réels de plus de 8 Mo chacun sont conservés dans l'historique");
+  const completeLargeVault=await new Promise(function(resolve){SplitVault.buildMemoryVault(resolve);});
+  ok(completeLargeVault.ok&&completeLargeVault.count===2&&completeLargeVault.files.length===2,"un historique dépassant 16 Mo est exporté intégralement en deux parties");
+  ok(completeLargeVault.text===null,"un export fractionné ne se présente jamais comme un unique fichier complet");
+  const largeOrigins=[];
+  (completeLargeVault.files||[]).forEach(function(file,index){
+    ok(SplitVault.utf8ByteLength(file.text)<=16*1024*1024,"la partie "+(index+1)+" respecte la limite réelle de 16 Mo");
+    const parsed=SplitVault.parseMemoryVault(file.text);
+    ok(parsed.ok&&parsed.items.length===1,"la partie "+(index+1)+" se vérifie indépendamment et contient son point complet");
+    if(parsed.ok){largeOrigins.push(parsed.items[0].originId);eq(parsed.payload.part,{number:index+1,total:2},"la partie porte son numéro et le nombre total de fichiers");}
+  });
+  eq(largeOrigins,[SplitVault.memoryOriginId(firstLarge.meta),SplitVault.memoryOriginId(secondLarge.meta)],"les origines montrent que chaque point est exporté une fois, sans omission ni doublon");
+}
 
 /* 12) Miroir musical — intro comportementale */
 group("Miroir musical — intro liée au comportement réel");
@@ -1728,7 +2318,7 @@ E.getDB().noteStats.sol4=E.normalizeNoteStat({v:3,e:0,coldV:1,coldE:0,last:40,la
 const cloud = E.cloudDocument();
 ok(cloud.progress && cloud.scores && cloud.settings && cloud.timestamp, "cloudDocument produit le fichier unique progress/scores/settings/timestamp");
 eq(cloud.schema, E.GIST_CLOUD_SCHEMA, "l'enveloppe cloud est versionnée pour protéger les nouveaux champs");
-eq(E.GIST_CLOUD_SCHEMA, 4, "la v39 protège missions, humeur et calendrier contre une réécriture par une ancienne application");
+eq(E.GIST_CLOUD_SCHEMA, 5, "la v40 protège la classe annuelle, les missions, l’humeur et le calendrier contre une réécriture par une ancienne application");
 ok(cloud.progress.curriculum && cloud.progress.curriculum.catalogVersion === E.CURRICULUM_CATALOG_VERSION, "le suivi de cursus voyage dans la sauvegarde cloud");
 eq(cloud.progress.curriculum.progress["c1-reading-landmarks"].proofs.recognition.attempts,3,"une nouvelle activité alimente immédiatement l'export cloud, sans ouvrir les stats ni recharger");
 ok(JSON.stringify(cloud).indexOf("tok_SECRET_123") < 0, "le token n'est jamais dans le document cloud");
@@ -1807,8 +2397,10 @@ eq(E.getDB().profile.parcours, "libre", "ancien joueur : parcours libre par déf
 eq(E.getDB().profile.dailyMinutes, 20, "durée de séance par défaut : 20 minutes");
 eq(E.getDB().profile.daysPerWeek, 5, "cadence par défaut : 5 jours par semaine");
 eq(E.getDB().profile.domains, E.PRACTICE_DOMAINS.map(d => d.id), "les six domaines sont proposés par défaut");
-eq(E.getDB()._sezam.schema, 15, "schéma local v15 pour les missions, badges, humeur et calendrier");
+eq(E.getDB()._sezam.schema, 16, "schéma local v16 pour les classes annuelles, missions, badges, humeur et calendrier");
+eq(E.getDB().v, 15, "base joueur v15 après migration non destructive vers les classes annuelles");
 eq(E.getDB().profile.coachLevel, "", "un ancien joueur n’est jamais renvoyé de force au niveau débutant");
+eq(E.getDB().profile.coachYear, 0, "sans information historique, l’année reste à préciser au lieu d’être inventée");
 eq(E.COACH_LEVELS.map(function(level){return level.courseId;}),["sol","fa","ut"],"les trois niveaux du Coach ciblent respectivement sol, fa et ut 3e");
 const sanitizedProfile = E.normalizeProfile({
   displayName: "  <Youcef>   Test  ", instrument: "inconnu", parcours: "rattrapage_a2",
@@ -2031,16 +2623,17 @@ ok(overlayBackPos>=0&&overlayHomePos>=0&&overlayBackPos<overlayCardPos&&overlayH
   "Retour et Accueil appartiennent à la barre permanente de la fenêtre, hors du contenu remplaçable");
 ok(idx.indexOf('.dialogTools button')>=0&&idx.indexOf('min-height:44px',idx.indexOf('.dialogTools button'))>=0,
   "les commandes universelles de fenêtre gardent une cible tactile d’au moins 44 px");
-freshDB();
-if(E.getEX())E.haltEX();E.clearQTimers();E.clearDailyTimer();
-E.getEl("overlay").classList.add("on");E.getEl("cardBox").innerHTML="<h2>Fenêtre quelconque</h2>";
-ok(E.overlayBack()===true&&!E.getEl("overlay").classList.contains("on"),
+const NavMemory=loadEngine();
+NavMemory.getEl("overlay").classList.add("on");NavMemory.getEl("cardBox").innerHTML="<h2>Fenêtre quelconque</h2>";
+ok(NavMemory.overlayBack()===true&&!NavMemory.getEl("overlay").classList.contains("on"),
   "Retour ferme aussi une fenêtre dont le contenu vient d’être remplacé");
-E.getEl("overlay").classList.add("on");E.getEl("btnGlobalHome").hidden=false;
-ok(E.universalHome()===true&&E.getEl("scrHome").classList.contains("active"),
+NavMemory.getEl("overlay").classList.add("on");NavMemory.getEl("btnGlobalHome").hidden=false;
+ok(NavMemory.universalHome()===true&&NavMemory.getEl("scrHome").classList.contains("active"),
   "Accueil ramène effectivement à l’écran principal depuis n’importe quel écran");
-ok(!E.getEl("overlay").classList.contains("on")&&E.getEl("btnGlobalHome").hidden===true,
+ok(!NavMemory.getEl("overlay").classList.contains("on")&&NavMemory.getEl("btnGlobalHome").hidden===true,
   "le retour universel referme la fenêtre et masque son propre bouton une fois à l’accueil");
+let navPoints=[];NavMemory.memorySnapshotList(function(rows){navPoints=rows;});
+ok(navPoints.some(function(meta){return meta.kind==="pre_exit";}),"revenir à l'accueil ajoute d'abord un point de la scène quittée");
 
 group("v39 — humeur et calendrier adaptent sans effacer ni injecter du HTML");
 freshDB();
@@ -2796,3 +3389,5 @@ console.log("\n─────────────────────�
 console.log("Réussis : " + pass + "   Échecs : " + fail);
 if (fail) { console.log("ÉCHECS :"); failures.forEach(f => console.log("  - " + f)); process.exit(1); }
 else { console.log("Tous les tests passent. ✓"); process.exit(0); }
+}
+runTests().catch(function(error){console.error(error);process.exit(1);});

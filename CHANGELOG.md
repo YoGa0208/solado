@@ -1,5 +1,52 @@
 # Journal des changements
 
+## v41 — Coffre mémoire complet et sorties protégées
+
+- Sauvegardes manuelles et automatiques datées et numérotées, ajoutées sans remplacer les points existants.
+- État sérialisé complet du joueur et de la scène : question, score, session, choix, formulaires et pièce jointe sélectionnée. Restauration vérifiée par SHA‑256, sans reconstitution des acquis ; compensation du temps passé en pause à la reprise.
+- Point de protection avant restauration, import, changement de classe et sortie de séance. Accueil, sortie du clavier et Retour des fenêtres conservent un point avant de fermer la scène.
+- Commandes écrites « sauvegarde », « liste mes sauvegardes », « reviens à [numéro ou nom] » ; ambiguïtés refusées sans choisir un point arbitraire.
+- Coffre exportable/importable entre appareils, fractionné si nécessaire en parties de 16 Mio maximum ; ajouts idempotents et points locaux conservés en cas de refus d'export.
+- Journaux scellés, index reconstruisible, collisions et identités contrôlées ; récupération sans écrasement en cas de panne de stockage. Protection des callbacks tardifs et changements de joueur pendant les opérations asynchrones.
+- Démarrage protégé : si le stockage est momentanément inaccessible ou illisible, aucune partie ni aucun registre vierge ne remplace les données existantes. Réessayer et Accueil restent proposés, les écritures et la synchro attendent la récupération.
+- Validation stricte des scènes importées avant rendu, contrôle d'intégrité et connexions IndexedDB refermées.
+- Affichage mobile corrigé : sept sceaux visibles dès 320 pixels et commandes de sauvegarde accessibles.
+- Tests moteur renforcés et QA WebKit reproductible couvrant sauvegarde/restauration, import/export et vrai chargement sans serveur accessible.
+- Version applicative v41 et cache PWA `sezam-solado-v41`. Les copies externes restent nécessaires contre la suppression des données du navigateur ; aucune promesse de stockage local indestructible.
+
+Résultats et limites : [rapport de validation v41](RAPPORT-VALIDATION-v41.md).
+
+## v40 — Familles, cycles et 14 classes musicales
+
+### Positionnement lisible
+
+- Le réglage unique Débutant / Intermédiaire / Avancé devient un choix en deux temps : **Famille et cycle**, puis **Année**.
+- Cycle 1 · Débutant propose les années 1 à 5, avec une durée habituelle de référence de 3 à 5 ans.
+- Cycle 2 · Intermédiaire propose les années 1 à 5, avec une durée habituelle de référence de 3 à 5 ans.
+- Cycle 3 · Avancé propose les années 1 à 4, avec une durée habituelle de référence de 2 à 4 ans.
+- Les 5 + 5 + 4 possibilités forment **14 classes déclarées**, de C1.1 à C3.4.
+
+### Trois familles de lecture
+
+- Le Cycle 1 est associé au parcours de clé de sol.
+- Le Cycle 2 est associé au parcours de clé de fa.
+- Le Cycle 3 est associé au nouveau parcours de clé d'ut 3e.
+- La documentation ne limite donc plus SEZAM aux seules clés de sol et de fa ; elle distingue la campagne arcade historique sol/fa du parcours d'acquisition d'ut 3e.
+
+### Aucune certification ni progression sautée
+
+- La famille, le cycle et l'année sont un **repère déclaré par le joueur**, pas une validation de conservatoire.
+- Changer de classe ne crédite aucune note, aucune série parfaite, aucune étape et aucun cycle.
+- Le choix ne contourne jamais le contrat de trois séries de 25 sans erreur et n'efface aucun acquis antérieur.
+- Une sauvegarde complète protégée est créée avant tout changement ; en cas d'échec, le profil précédent et sa progression restent actifs.
+- Les années proposées représentent les bornes possibles d'un cycle, pas un nombre d'années obligatoire ni un passage automatique au cycle suivant.
+
+### Technique et compatibilité
+
+- Version applicative v40 et cache PWA `sezam-solado-v40`.
+- Schémas de stockage local 16, base joueur 15 et sauvegarde cloud 5.
+- Le profil conserve désormais `coachLevel` et `coachYear` ; les anciens profils restent lisibles sans niveau ou année inventés.
+
 ## v39 — Missions quotidiennes, récompenses et calendrier musical
 
 ### Progression pédagogique
