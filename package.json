@@ -8,6 +8,7 @@
   "scripts": {
     "build:watch": "node scripts/build_music_watch.js",
     "test": "node tests/engine.test.js",
+    "test:browser": "SEZAM_QA_OWN_SERVER=1 node scripts/qa_memory_browser.cjs",
     "serve": "python3 -m http.server 4173"
   }
 }

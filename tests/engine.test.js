@@ -57,16 +57,19 @@ function makeLocalStorage(seed) {
       m.set(k, String(v));
     },
     removeItem(k) { m.delete(k); },
+    key(index) { return Array.from(m.keys())[index] === undefined ? null : Array.from(m.keys())[index]; },
+    get length() { return m.size; },
     failAfter(k, calls) { failures.set(k, Math.max(1, Number(calls) || 1)); },
     dump() { return Object.fromEntries(m.entries()); }
   };
 }
-function makeFakeIndexedDB(seed) {
+function makeFakeIndexedDB(seed, control) {
   const store = seed instanceof Map ? seed : new Map(Object.entries(seed || {}));
   const db = {
     createObjectStore() {},
     transaction(_name, mode) {
       const before = new Map(store);
+      const writeKeys = [];
       let depth = 0, completed = false, failed = false, aborted = false;
       let completeHandler = null, errorHandler = null, abortHandler = null;
       const tx = { mode: mode || "readonly", error: null };
@@ -85,7 +88,13 @@ function makeFakeIndexedDB(seed) {
       function complete() {
         if (depth || failed || aborted || completed) return;
         completed = true;
-        if (completeHandler) completeHandler(eventFor(tx));
+        if (completeHandler) dispatchComplete(completeHandler);
+      }
+      function dispatchComplete(handler) {
+        if (control && control.holdNextWriteKey && writeKeys.indexOf(control.holdNextWriteKey) >= 0) {
+          control.holdNextWriteKey = null;
+          (control.pendingCompletions || (control.pendingCompletions = [])).push(function() { handler(eventFor(tx)); });
+        } else handler(eventFor(tx));
       }
       function fail(error) {
         if (failed || aborted) return;
@@ -115,10 +124,12 @@ function makeFakeIndexedDB(seed) {
       }
       const objectStore = {
         put(value, key) {
+          writeKeys.push(key);
           if (!failed && !aborted) store.set(key, value);
           const rq = request(key, null); complete(); return rq;
         },
         add(value, key) {
+          writeKeys.push(key);
           if (store.has(key)) {
             const error = new Error("Key already exists: " + key);
             error.name = "ConstraintError";
@@ -130,7 +141,11 @@ function makeFakeIndexedDB(seed) {
         get(key) {
           return request(store.has(key) ? store.get(key) : undefined, null);
         },
+        getAllKeys() {
+          return request(Array.from(store.keys()), null);
+        },
         delete(key) {
+          writeKeys.push(key);
           if (!failed && !aborted) store.delete(key);
           const rq = request(undefined, null); complete(); return rq;
         }
@@ -138,7 +153,7 @@ function makeFakeIndexedDB(seed) {
       Object.defineProperties(tx, {
         oncomplete: {
           get() { return completeHandler; },
-          set(fn) { completeHandler = fn; if (completed && fn) fn(eventFor(tx)); }
+          set(fn) { completeHandler = fn; if (completed && fn) dispatchComplete(fn); }
         },
         onerror: {
           get() { return errorHandler; },
@@ -185,6 +200,8 @@ function loadEngine(runtime) {
   if (!src) throw new Error("Script principal introuvable dans index.html");
   src = src.replace(/^<script>/, "").replace(/<\/script>$/, "");
   const exportsList = [
+    "captureMemorySnapshotRecord", "enqueueMemorySnapshotRecord", "parsePendingMemoryRaw", "persistPendingMemoryRecord", "clearPendingMemoryRecord", "memorySceneHtmlSafe",
+    "openMusicProfile", "openMemoryVaultSection", "startPremierRegard", "showSeriePreview", "showDecouverte", "prAnswer", "clearKbdTimer",
     "esc", "checkValidation", "seriesCover", "recentCoveredIds", "validationMissingIds", "srs", "srsReview", "isDue", "coldRecallId", "ensureStructure", "cleanId", "isSafeId", "safeMap", "hasOwn",
     "importSave", "compactSave", "undoImport", "tierUnlocked", "tierComplete",
     "palierPlayable", "playableInMode", "visiblePaliers", "valProgress", "PALIERS", "TIERS", "TIER_IDS", "NOTES", "COURSES", "CLEF_META", "clefFullLabel", "clefShortLabel", "MAX_QUESTIONS_PER_EXERCISE", "COURSE_MAX_EXERCISES", "COURSE_SERIES_PER_STEP", "COURSE_NEW_NOTE_TARGET", "courseDecision", "currentCourseState", "normalizeCourseProgress", "courseProgressFloorFromPaliers", "reconcileCourseProgressWithPaliers", "advanceCourseExercise", "reviewableCourseSteps", "normalizeCourseReviewState", "partitionPracticeMotifs", "partitionPracticePredictability", "partitionPracticeMaxTrigram", "partitionPracticeTargets", "partitionPracticeCards", "partitionPracticePlan", "partitionPracticeCacheStats", "PARTITION_PRACTICE_CACHE_LIMIT", "PARTITION_PRACTICE_CARD_LIMIT_PER_SOURCE", "claimCourseReviewPlan", "claimCoursePracticePlan", "practiceCardTransposition", "practiceCardCreditHtml", "practiceCardPlaybackEvents", "practiceCardPlaybackMs", "drawPracticeCard", "courseReviewDecision", "startCourseReview", "returnToHomeFromExercise",
@@ -212,17 +229,17 @@ function loadEngine(runtime) {
     "beginClavier", "nextKbd", "kbdTap", "renderKbd", "recordKbdAnswer",
     "STAFF", "staffSVG", "staffAriaLabel", "bonusStaffSVG", "clefSVG", "noteGlyph", "yOf", "previewNoteHtml",
     "currentRecoveryCode", "mirrorIntro", "tone", "save", "readKey", "bestLocalState", "recognizableStoredState", "utf8ByteLength", "decodedBase64Bytes", "MAX_IMPORT_TEXT_BYTES",
-    "MEMORY_HISTORY_SCHEMA", "memorySha256", "parseMemoryIndex", "createMemorySnapshot", "memorySnapshotList", "loadMemoryEnvelope", "validateMemoryEnvelope", "restoreMemorySnapshot", "memoryLocalIndexKey", "memoryLocalDataKey", "memoryLocalMetaKey", "memoryIndexKey", "detectMemoryOverlayType", "restoredMemoryOverlayType", "restoredMemoryOverlayCanBind", "captureMemoryOverlayControls", "restoreMemoryOverlayControls", "manualMemorySnapshot", "bindStartupRecoveryDialog", "bindPlayerEditorDialog",
+    "MEMORY_HISTORY_SCHEMA", "MEMORY_VAULT_SCHEMA", "MEMORY_VAULT_FORMAT", "memorySha256", "memoryMetaPayload", "memoryMetaSealValid", "memoryOriginId", "sameMemoryOriginPoint", "parseMemoryIndex", "createMemorySnapshot", "memorySnapshotList", "memorySnapshotListForPlayer", "loadMemoryEnvelope", "validateMemoryEnvelope", "validateMemoryEnvelopeForPlayer", "restoreMemorySnapshot", "memoryLocalIndexKey", "memoryLocalDataKey", "memoryLocalMetaKey", "memoryIndexKey", "buildMemoryVault", "parseMemoryVault", "importMemoryVault", "resumePendingMemorySnapshots", "executeMemoryCommand", "renderMemorySceneFrozen", "detectMemoryOverlayType", "restoredMemoryOverlayType", "restoredMemoryOverlayCanBind", "captureMemoryOverlayControls", "restoreMemoryOverlayControls", "manualMemorySnapshot", "bindStartupRecoveryDialog", "bindPlayerEditorDialog",
     "normalizePlayerRegistry", "normalizePlayerName", "activePlayerMeta", "playerMetaById", "archivedPlayerMetaById", "createPlayer", "switchPlayer", "renamePlayer", "deletePlayer", "restoreArchivedPlayer", "playerInitial", "openPlayerSwitcher", "MAX_LOCAL_PLAYERS", "MAX_ARCHIVED_PLAYERS", "PLAYER_REGISTRY_KEY", "PLAYER_FALLBACK_PREFIX",
     "syncDecision", "syncCfg", "syncSet", "syncClear", "syncEnabled", "syncPush", "syncPull", "parseRemote", "sessionTokenGet", "playerGistFile", "legacyPlayerGistFile", "GIST_CLOUD_SCHEMA", "syncStorageKey", "remoteFileName",
     "cloudDocument", "cloudSaveContent", "cloudPieces", "canonicalCloudJson", "cloudDeletePreflight", "looksLikeToken", "persistOnExit", "APP_VERSION"
   ];
   const footer = "\n;return {" + exportsList.map(n => n + ":(typeof " + n + "!=='undefined'?" + n + ":undefined)").join(",") +
-    ",getDB:function(){return DB;},setDB:function(x){DB=x;},getPlayerRegistry:function(){return JSON.parse(JSON.stringify(PLAYER_REGISTRY));},getActivePlayerId:function(){return ACTIVE_PLAYER_ID;},isIdbReady:function(){return idbReady;},getKX:function(){return KX;},getEX:function(){return EX;},getEl:function(id){return document.getElementById(id);},haltEX:function(){if(EX)EX.done=true;}};";
-  const fn = new Function("document", "localStorage", "navigator", "window", "sessionStorage", "indexedDB", src + footer);
+    ",getDB:function(){return DB;},setDB:function(x){DB=x;},getPlayerRegistry:function(){return JSON.parse(JSON.stringify(PLAYER_REGISTRY));},getActivePlayerId:function(){return ACTIVE_PLAYER_ID;},isIdbReady:function(){return idbReady;},getKX:function(){return KX;},getPR:function(){return PR;},getEX:function(){return EX;},getEl:function(id){return document.getElementById(id);},haltEX:function(){if(EX)EX.done=true;}};";
+  const fn = new Function("document", "localStorage", "navigator", "window", "sessionStorage", "indexedDB", "FileReader", src + footer);
   const local = runtime.localStorage || makeLocalStorage();
   const session = runtime.sessionStorage || makeLocalStorage();
-  const engine = fn(runtime.document || makeDocument(), local, runtime.navigator || navigatorStub, runtime.window || windowStub, session, runtime.indexedDB);
+  const engine = fn(runtime.document || makeDocument(), local, runtime.navigator || navigatorStub, runtime.window || windowStub, session, runtime.indexedDB, runtime.FileReader);
   engine.localStorage = local;
   return engine;
 }
@@ -233,6 +250,7 @@ function ok(cond, msg) { if (cond) { pass++; } else { fail++; failures.push(msg)
 function eq(a, b, msg) { ok(JSON.stringify(a) === JSON.stringify(b), msg + " (attendu " + JSON.stringify(b) + ", reçu " + JSON.stringify(a) + ")"); }
 function group(name) { console.log("\n• " + name); }
 
+async function runTests() {
 const E = loadEngine();
 console.log("Moteur chargé sans exception (smoke test du chargement de l'app). ✓");
 pass++;
@@ -1633,7 +1651,9 @@ largeOverlayRuntime.overlayOn=true;largeOverlayRuntime.overlayType="training_cal
 largeOverlayRuntime.overlayControls=Array.from({length:405},function(_,index){return {index:index,id:"calendar-control-"+index,tag:"button",disabled:false};});
 largeOverlayEnvelope.runtimeRaw=JSON.stringify(largeOverlayRuntime);
 const largeOverlayMeta=Object.assign({},memoryCreate1.meta,{runtimeBytes:Memory.utf8ByteLength(largeOverlayEnvelope.runtimeRaw),runtimeSha256:Memory.memorySha256(largeOverlayEnvelope.runtimeRaw)});
+largeOverlayMeta.metaSha256=Memory.memorySha256(Memory.memoryMetaPayload(largeOverlayMeta));
 largeOverlayEnvelope.meta=Object.assign({},largeOverlayEnvelope.meta,{runtimeBytes:largeOverlayMeta.runtimeBytes,runtimeSha256:largeOverlayMeta.runtimeSha256});
+largeOverlayEnvelope.meta.metaSha256=largeOverlayMeta.metaSha256;
 ok(Memory.validateMemoryEnvelope(JSON.stringify(largeOverlayEnvelope),largeOverlayMeta).ok,
   "une fenêtre Calendrier de plus de 400 contrôles reste intégralement restaurable");
 eq(memoryEnvelope1.stateRaw, memoryRaw1, "le premier point contient la chaîne JSON exacte, octet pour octet");
@@ -1733,7 +1753,6 @@ eq(Memory.restoredMemoryOverlayType({overlayType:"other",scene:{cardBox:{html:'<
 ok(!Memory.restoredMemoryOverlayCanBind({overlayOn:true,scene:{cardBox:{html:'<button data-goal="passage">Passage</button>'}}},"piece_goal"), "une ancienne ambition sans identifiant de pièce est fermée au lieu de devenir un modal inerte");
 ok(!Memory.restoredMemoryOverlayCanBind({overlayOn:true,scene:{cardBox:{html:'<div id="prChoices"></div>'}},pr:null},"first_look_quiz"), "un ancien Premier regard sans contexte PR est fermé au lieu de bloquer le joueur");
 ok(memoryAppSource.indexOf("ferme d’abord ce formulaire puis touche") < 0, "aucune fenêtre du jeu n’oblige désormais à être fermée avant une sauvegarde manuelle");
-ok(/function manualMemorySnapshot\(source\)\{\s*if\(memoryProtectedActionBusy\|\|memoryRestoreBusy\|\|playerOperationBusy\)/.test(memoryAppSource), "une demande manuelle ne capture jamais un verrou transitoire d’import, de restauration ou de changement de joueur");
 
 const overlayField={tagName:"INPUT",id:"draftName",value:"Brouillon exact",checked:true,disabled:false,scrollTop:7,selectionStart:3,selectionEnd:8,setSelectionRange(a,b){this.selectionStart=a;this.selectionEnd=b;}};
 const overlayDetails={tagName:"DETAILS",id:"detailsExact",disabled:false,open:true,scrollTop:11};
@@ -1759,6 +1778,457 @@ staleEditorForm.id="playerEditForm";staleEditorBack.disabled=true;staleEditorSav
 Memory.bindPlayerEditorDialog("joueur-archive-introuvable");
 ok(typeof staleEditorBack.onclick==="function"&&!staleEditorBack.disabled, "l’éditeur restauré d’un joueur archivé garde toujours un bouton Retour actif");
 ok(staleEditorSave.disabled&&staleEditorDelete.disabled&&/Reviens à la liste/.test(staleEditorMsg.textContent), "les actions devenues invalides sont neutralisées sans bloquer ni toucher aux autres coffres");
+
+group("Mémoire v41 — coffre complet, index réparable et commandes directes");
+const sealedMetaTamper=Object.assign({},memoryCreate1.meta,{name:"Fausse date et faux niveau"});
+ok(!Memory.memoryMetaSealValid(sealedMetaTamper), "une métadonnée scellée modifiée est détectée avant affichage ou restauration");
+ok(Memory.validateMemoryEnvelope(memoryEnvelopeRaw1,sealedMetaTamper).ok===false,
+  "modifier seulement l'index descriptif ne permet pas de restaurer sous une fausse description");
+
+const vaultSourceIdb=makeFakeIndexedDB(),vaultSourceLocal=makeLocalStorage();
+const VaultSource=loadEngine({localStorage:vaultSourceLocal,indexedDB:vaultSourceIdb.indexedDB});
+const vaultPlayer=VaultSource.getActivePlayerId();
+VaultSource.getDB().xp=41;
+VaultSource.getDB().noteStats.sol4=VaultSource.normalizeNoteStat({v:7,e:1,box:2,last:Date.now()});
+VaultSource.getDB().futureVaultField={keep:"octet pour octet",unicode:"été 🎼"};
+const vaultRaw1=JSON.stringify(VaultSource.getDB());
+let vaultPoint1=null;VaultSource.createMemorySnapshot("manual",{milestone:"Coffre point 1",notify:false},function(result){vaultPoint1=result;});
+VaultSource.getDB().xp=84;VaultSource.getDB().futureVaultField.keep="toujours exact";
+const vaultRaw2=JSON.stringify(VaultSource.getDB());
+let vaultPoint2=null;VaultSource.createMemorySnapshot("level_complete",{milestone:"Coffre point 2",notify:false},function(result){vaultPoint2=result;});
+ok(vaultPoint1&&vaultPoint1.ok&&vaultPoint2&&vaultPoint2.ok,"deux points sources sont prêts pour le coffre complet");
+ok(!Array.from(vaultSourceIdb.store.keys()).some(function(key){return String(key).indexOf("history:pending:")===0;}),
+  "le journal d'écriture est retiré seulement après confirmation des deux points");
+const builtVault=await new Promise(function(resolve){VaultSource.buildMemoryVault(resolve);});
+ok(builtVault&&builtVault.ok&&builtVault.count===2,"l'export vérifie et contient tous les points du joueur");
+const parsedVault=VaultSource.parseMemoryVault(builtVault.text);
+ok(parsedVault.ok&&parsedVault.items.length===2,"le coffre global signé se relit intégralement");
+eq(parsedVault.items[0].env.stateRaw,vaultRaw1,"le premier stateRaw quitte le navigateur sans changer un octet");
+eq(parsedVault.items[1].env.stateRaw,vaultRaw2,"le second stateRaw quitte le navigateur sans changer un octet");
+const tamperedVault=JSON.parse(builtVault.text);tamperedVault.payloadRaw+=" ";
+ok(!VaultSource.parseMemoryVault(JSON.stringify(tamperedVault)).ok,"une altération du fichier global est refusée avant toute écriture");
+
+const vaultTargetSeed=vaultSourceLocal.dump();
+Object.keys(vaultTargetSeed).forEach(function(key){if(key.indexOf("sezam_history_head_")===0||key.indexOf("sezam_history:")===0)delete vaultTargetSeed[key];});
+const vaultTargetIdb=makeFakeIndexedDB(),vaultTargetLocal=makeLocalStorage(vaultTargetSeed);
+const VaultTarget=loadEngine({localStorage:vaultTargetLocal,indexedDB:vaultTargetIdb.indexedDB});
+eq(VaultTarget.getActivePlayerId(),vaultPlayer,"la cible de test conserve l'identité du joueur sans copier son historique");
+let targetOwnPoint=null;VaultTarget.createMemorySnapshot("manual",{milestone:"Point local avant import",notify:false},function(result){targetOwnPoint=result;});
+eq(targetOwnPoint.meta.number,1,"la cible possède déjà son propre point n°1 : collision de numéro préparée");
+const targetStateBeforeImport=JSON.stringify(VaultTarget.getDB());
+let vaultImport1=null;VaultTarget.importMemoryVault(builtVault.text,function(result){vaultImport1=result;});
+ok(vaultImport1&&vaultImport1.ok&&vaultImport1.added===2&&vaultImport1.skipped===0,
+  "les deux origines sont ajoutées sans remplacer le point n°1 déjà présent");
+eq(JSON.stringify(VaultTarget.getDB()),targetStateBeforeImport,"importer le coffre ne remplace pas l'état actif du joueur");
+let targetVaultRows=[];VaultTarget.memorySnapshotList(function(rows){targetVaultRows=rows;});
+eq(targetVaultRows.map(function(row){return row.number;}),[3,2,1],"une collision réalloue uniquement de nouveaux numéros append-only");
+const importedFirst=targetVaultRows.find(function(row){return VaultTarget.memoryOriginId(row)===VaultSource.memoryOriginId(vaultPoint1.meta);});
+let importedFirstRaw=null;VaultTarget.loadMemoryEnvelope(importedFirst,function(raw){importedFirstRaw=raw;});
+eq(JSON.parse(importedFirstRaw).stateRaw,vaultRaw1,"un point importé conserve son état source exact malgré son nouveau numéro");
+let vaultImport2=null;VaultTarget.importMemoryVault(builtVault.text,function(result){vaultImport2=result;});
+ok(vaultImport2&&vaultImport2.ok&&vaultImport2.added===0&&vaultImport2.skipped===2,
+  "réimporter le même coffre est idempotent et n'ajoute aucun doublon");
+
+vaultTargetIdb.store.set(VaultTarget.memoryIndexKey(vaultPlayer),"{index-corrompu");
+let repairedRows=[];VaultTarget.memorySnapshotList(function(rows){repairedRows=rows;});
+eq(repairedRows.map(function(row){return row.number;}),[3,2,1],"un index IndexedDB corrompu est reconstruit depuis les métadonnées immuables");
+ok(!!VaultTarget.parseMemoryIndex(vaultTargetIdb.store.get(VaultTarget.memoryIndexKey(vaultPlayer))),
+  "l'index reconstruit est de nouveau valide sans modifier les enveloppes");
+vaultTargetIdb.store.delete(VaultTarget.memoryIndexKey(vaultPlayer));
+VaultTarget.memorySnapshotList(function(rows){repairedRows=rows;});
+eq(repairedRows.length,3,"un index entièrement absent est lui aussi recréé sans perdre un point");
+
+const pendingSource=parsedVault.items[0],pendingCapture="pending-restart-v41";
+function sealedPending(engine,record){const recordRaw=JSON.stringify(record);return JSON.stringify({schema:engine.MEMORY_HISTORY_SCHEMA,recordRaw,recordSha256:engine.memorySha256(recordRaw)});}
+const pendingRecord={playerId:vaultPlayer,userId:pendingSource.meta.userId,kind:"level_complete",createdAt:Date.now()+1,captureId:pendingCapture,dbVersion:15,stateRaw:pendingSource.env.stateRaw,runtimeRaw:pendingSource.env.runtimeRaw,context:pendingSource.meta.context};
+vaultTargetIdb.store.set("history:pending:"+vaultPlayer+":"+pendingCapture,sealedPending(VaultTarget,pendingRecord));
+VaultTarget.resumePendingMemorySnapshots();
+VaultTarget.memorySnapshotList(function(rows){repairedRows=rows;});
+eq(repairedRows.length,4,"une sauvegarde automatique interrompue et journalisée est reprise au démarrage");
+ok(!vaultTargetIdb.store.has("history:pending:"+vaultPlayer+":"+pendingCapture),"le journal repris disparaît seulement après l'ajout confirmé");
+
+const beforeCommandCount=repairedRows.length;
+ok(VaultTarget.executeMemoryCommand("sauvegarde")===true,"la commande littérale « sauvegarde » crée un point manuel");
+VaultTarget.memorySnapshotList(function(rows){repairedRows=rows;});
+eq(repairedRows.length,beforeCommandCount+1,"la commande textuelle ajoute exactement un nouveau point");
+const frozenBefore=JSON.stringify(VaultTarget.getDB());
+VaultTarget.renderMemorySceneFrozen(function(){VaultTarget.getDB().xp=999999;VaultTarget.getDB().engagement.daily["2099-01-01"]={invented:true};});
+eq(JSON.stringify(VaultTarget.getDB()),frozenBefore,"le rendu d'une scène restaurée ne peut plus muter l'état brut restauré");
+
+const foreignIdb=makeFakeIndexedDB(),foreignLocal=makeLocalStorage(),ForeignVault=loadEngine({localStorage:foreignLocal,indexedDB:foreignIdb.indexedDB});
+const foreignBefore=JSON.stringify(ForeignVault.getDB());let foreignVaultImport=null;
+ForeignVault.importMemoryVault(builtVault.text,function(result){foreignVaultImport=result;});
+ok(foreignVaultImport&&foreignVaultImport.ok&&foreignVaultImport.playerCreated===true,
+  "sur un appareil vierge, l'identité source devient un nouveau joueur au lieu de réécrire les octets");
+eq(JSON.stringify(ForeignVault.getDB()),foreignBefore,"le joueur présent sur l'appareil vierge n'est pas remplacé par l'import");
+let foreignRows=[];ForeignVault.memorySnapshotListForPlayer(vaultPlayer,function(rows){foreignRows=rows;});
+eq(foreignRows.length,2,"le nouveau joueur retrouve les deux points exacts de son coffre");
+eq(foreignIdb.store.get("save:"+vaultPlayer),vaultRaw2,"le coffre actif préparé pour ce nouveau joueur reprend les octets du dernier point");
+
+group("Mémoire v41 — données hostiles, reprises interrompues et effets de bord");
+const cloneJson=function(value){return JSON.parse(JSON.stringify(value));};
+const nodeCrypto=require("crypto");
+["", "abc", "été 🎼 東京", "\ud800", "\udc00", "x\ud800y\udc00z"].concat([55,56,63,64,65,127,128,129,1024].map(function(n){return "é"+"a".repeat(n)+"🎼";})).forEach(function(raw,index){
+  eq(VaultSource.memorySha256(raw),nodeCrypto.createHash("sha256").update(raw,"utf8").digest("hex"),"empreinte UTF-8 conforme à crypto Node, y compris frontières de blocs et substituts Unicode isolés (cas "+index+")");
+});
+function rewriteVault(engine,text,change){
+  const outer=JSON.parse(text),payload=JSON.parse(outer.payloadRaw);
+  const unpacked=payload.snapshots.map(function(item){return {item,env:JSON.parse(item.envelopeRaw)};});
+  change(payload,unpacked);
+  unpacked.forEach(function(row){
+    const meta=row.env.meta;meta.stateBytes=engine.utf8ByteLength(row.env.stateRaw);meta.runtimeBytes=engine.utf8ByteLength(row.env.runtimeRaw);
+    meta.stateSha256=engine.memorySha256(row.env.stateRaw);meta.runtimeSha256=engine.memorySha256(row.env.runtimeRaw);
+    meta.metaSha256=engine.memorySha256(engine.memoryMetaPayload(meta));row.item.meta=cloneJson(meta);
+    row.item.envelopeRaw=JSON.stringify(row.env);row.item.envelopeSha256=engine.memorySha256(row.item.envelopeRaw);
+  });
+  outer.payloadRaw=JSON.stringify(payload);outer.payloadSha256=engine.memorySha256(outer.payloadRaw);return JSON.stringify(outer);
+}
+for(const invalidSeal of ["",null,false]){
+  ok(!VaultSource.memoryMetaSealValid(Object.assign({},vaultPoint1.meta,{metaSha256:invalidSeal})),"un sceau présent mais vide ou invalide n'est jamais accepté comme ancien format : "+String(invalidSeal));
+}
+const legacyUnsealed=cloneJson(vaultPoint1.meta);delete legacyUnsealed.metaSha256;
+ok(VaultSource.memoryMetaSealValid(legacyUnsealed),"une véritable ancienne métadonnée sans propriété de sceau reste lisible");
+const wrongPlayerUser=rewriteVault(VaultSource,builtVault.text,function(payload){payload.player.userId="user_intrus";});
+ok(!VaultSource.parseMemoryVault(wrongPlayerUser).ok,"même recalculé, un coffre dont l'identité globale diffère des points est refusé");
+const wrongStateUser=rewriteVault(VaultSource,builtVault.text,function(_payload,rows){const state=JSON.parse(rows[0].env.stateRaw);state._sezam.userId="user_intrus";rows[0].env.stateRaw=JSON.stringify(state);});
+ok(!VaultSource.parseMemoryVault(wrongStateUser).ok,"une identité modifiée dans les octets de l'état est refusée malgré tous les contrôles recalculés");
+const wrongMetaUser=rewriteVault(VaultSource,builtVault.text,function(_payload,rows){rows[0].env.meta.userId="user_intrus";});
+ok(!VaultSource.parseMemoryVault(wrongMetaUser).ok,"une identité modifiée seulement dans les métadonnées est refusée");
+const wrongRegistryUser=rewriteVault(VaultSource,builtVault.text,function(payload,rows){payload.player.userId="user_identite_differente";rows.forEach(function(row){row.env.meta.userId=payload.player.userId;const state=JSON.parse(row.env.stateRaw);state._sezam.userId=payload.player.userId;row.env.stateRaw=JSON.stringify(state);});});
+const identityLocalBefore=JSON.stringify(vaultTargetLocal.dump()),identityIdbBefore=JSON.stringify(Array.from(vaultTargetIdb.store.entries()));
+let wrongIdentityImport=null;VaultTarget.importMemoryVault(wrongRegistryUser,function(result){wrongIdentityImport=result;});
+ok(wrongIdentityImport&&!wrongIdentityImport.ok,"une identité cohérente dans le fichier mais différente du joueur local homonyme ne fusionne pas les coffres");
+eq(JSON.stringify(vaultTargetLocal.dump()),identityLocalBefore,"le refus d'identité laisse le stockage local exact");
+eq(JSON.stringify(Array.from(vaultTargetIdb.store.entries())),identityIdbBefore,"le refus d'identité laisse IndexedDB exact");
+
+const orphanIdb=makeFakeIndexedDB(),Orphan=loadEngine({indexedDB:orphanIdb.indexedDB});
+const orphanState=JSON.parse(vaultRaw2);orphanState.xp=999;orphanState.orphanExtra="État plus récent sans registre";const orphanRaw=JSON.stringify(orphanState);
+orphanIdb.store.set("save:"+vaultPlayer,orphanRaw);let orphanImport=null;Orphan.importMemoryVault(builtVault.text,function(result){orphanImport=result;});
+ok(orphanImport&&orphanImport.ok,"un coffre orphelin de même identité est retrouvé lors de l'import");
+ok(orphanIdb.store.get("save:"+vaultPlayer)===orphanRaw,"retrouver le registre ne remplace pas un état orphelin plus récent par le dernier point importé");
+const invalidOrphanIdb=makeFakeIndexedDB(),InvalidOrphan=loadEngine({indexedDB:invalidOrphanIdb.indexedDB});
+invalidOrphanIdb.store.set("save:"+vaultPlayer,"{octets-orphelins-illisibles");let invalidOrphanImport=null;
+InvalidOrphan.importMemoryVault(builtVault.text,function(result){invalidOrphanImport=result;});
+ok(invalidOrphanImport&&!invalidOrphanImport.ok,"l'import refuse de remplacer un coffre orphelin impossible à vérifier");
+eq(invalidOrphanIdb.store.get("save:"+vaultPlayer),"{octets-orphelins-illisibles","même illisibles, les octets orphelins restent intacts");
+const fallbackOrphanIdb=makeFakeIndexedDB(),fallbackOrphanLocal=makeLocalStorage(),FallbackOrphan=loadEngine({indexedDB:fallbackOrphanIdb.indexedDB,localStorage:fallbackOrphanLocal});
+const fallbackOrphanKey=FallbackOrphan.PLAYER_FALLBACK_PREFIX+vaultPlayer;fallbackOrphanLocal.setItem(fallbackOrphanKey,"{copie-locale-orpheline-illisible");
+let invalidFallbackImport=null;FallbackOrphan.importMemoryVault(builtVault.text,function(result){invalidFallbackImport=result;});
+ok(invalidFallbackImport&&!invalidFallbackImport.ok,"un repli local orphelin illisible bloque l'import avant toute création de coffre");
+ok(fallbackOrphanLocal.getItem(fallbackOrphanKey)==="{copie-locale-orpheline-illisible"&&!fallbackOrphanIdb.store.has("save:"+vaultPlayer),"l'import ne masque pas une copie locale illisible en créant un état IndexedDB concurrent");
+fallbackOrphanLocal.setItem(fallbackOrphanKey,orphanRaw);let validFallbackImport=null;
+FallbackOrphan.importMemoryVault(builtVault.text,function(result){validFallbackImport=result;});
+ok(validFallbackImport&&validFallbackImport.ok,"une copie locale orpheline de même identité peut retrouver son registre");
+ok(fallbackOrphanLocal.getItem(fallbackOrphanKey)===orphanRaw||fallbackOrphanIdb.store.get("save:"+vaultPlayer)===orphanRaw,"retrouver l'orphelin local conserve ses octets plus récents");
+
+const legacyIndexIdb=makeFakeIndexedDB(),LegacyIndex=loadEngine({indexedDB:legacyIndexIdb.indexedDB});let legacyIndexPoint=null;
+LegacyIndex.createMemorySnapshot("manual",{notify:false},function(result){legacyIndexPoint=result;});
+const legacyEnvelope=JSON.parse(legacyIndexIdb.store.get(legacyIndexPoint.meta.dataKey));delete legacyEnvelope.meta.metaSha256;
+legacyIndexIdb.store.set(legacyIndexPoint.meta.dataKey,JSON.stringify(legacyEnvelope));legacyIndexIdb.store.set(legacyIndexPoint.meta.metaKey,JSON.stringify(legacyEnvelope.meta));
+const falseLegacyMeta=Object.assign({},legacyEnvelope.meta,{name:"Description inventée dans l'index mutable"});legacyIndexIdb.store.set(LegacyIndex.memoryIndexKey(LegacyIndex.getActivePlayerId()),JSON.stringify([falseLegacyMeta]));
+let recoveredLegacyRows=[];LegacyIndex.memorySnapshotList(function(rows){recoveredLegacyRows=rows;});
+eq(recoveredLegacyRows[0]&&recoveredLegacyRows[0].name,legacyEnvelope.meta.name,"les octets immuables ont priorité sur un index historique non scellé de même longueur");
+eq(JSON.parse(legacyIndexIdb.store.get(LegacyIndex.memoryIndexKey(LegacyIndex.getActivePlayerId())))[0].name,legacyEnvelope.meta.name,"l'index divergant est réparé avant la fin de la lecture");
+
+const unsafeScenes=[
+  '<img src=x onerror="window.__memoryAttack=1">',
+  '<svg onload="window.__memoryAttack=1"></svg>',
+  '<button onclick="tone(NOTES[\'sol4\'].midi);window.__memoryAttack=1">Note</button>',
+  '<iframe srcdoc="attaque"></iframe>',
+  '<a href="&#106;avascript:window.__memoryAttack=1">Lien</a>',
+  '<input formaction=https://example.invalid/collect>',
+  '<svg><a xlink:href="javascript:window.__memoryAttack=1">X</a></svg>'
+];
+unsafeScenes.forEach(function(html,index){
+  const hostile=rewriteVault(VaultSource,builtVault.text,function(_payload,rows){const runtime=JSON.parse(rows[0].env.runtimeRaw);runtime.scene.cardBox.html=html;rows[0].env.runtimeRaw=JSON.stringify(runtime);});
+  ok(!VaultSource.parseMemoryVault(hostile).ok,"le coffre refuse un fragment HTML actif même avec les empreintes recalculées (cas "+(index+1)+")");
+});
+ok(VaultSource.memorySceneHtmlSafe('<button onclick="tone(NOTES[\'sol4\'].midi)">Écouter</button>'),"l'écoute d'une note reconnue dans une scène du jeu reste restaurable");
+ok(VaultSource.memorySceneHtmlSafe('<svg viewBox="0 0 100 50"><path d="M0 5 L100 5"/></svg><strong>Partition 🎼</strong>'),"une portée SVG et son texte musical restent restaurables");
+
+const pendingIdb=makeFakeIndexedDB(),pendingLocal=makeLocalStorage(),Pending=loadEngine({localStorage:pendingLocal,indexedDB:pendingIdb.indexedDB});
+const pCapture=Pending.captureMemorySnapshotRecord("level_complete",{milestone:"Point à reprendre"}).record;
+const pKey="history:pending:"+pCapture.playerId+":"+pCapture.captureId;
+const pRaw=sealedPending(Pending,pCapture),pTampered=JSON.parse(pRaw);pTampered.recordRaw=pTampered.recordRaw.replace('Point à reprendre','Contenu altéré');
+ok(Pending.parsePendingMemoryRaw(pRaw)!==null,"un journal scellé cohérent est accepté");
+ok(Pending.parsePendingMemoryRaw(JSON.stringify(pTampered))===null,"un journal modifié sans recalcul d'empreinte est refusé");
+pendingIdb.store.set(pKey,JSON.stringify(pTampered));Pending.resumePendingMemorySnapshots();
+ok(pendingIdb.store.get(pKey)===JSON.stringify(pTampered),"la reprise n'efface jamais un journal corrompu");
+let pRows=[];Pending.memorySnapshotList(function(rows){pRows=rows;});eq(pRows.length,0,"un journal corrompu ne fabrique pas de sauvegarde");
+pendingIdb.store.set(pKey,pRaw);
+const pConflicting=cloneJson(pCapture),pConflictState=JSON.parse(pConflicting.stateRaw);pConflictState.xp+=1;pConflicting.stateRaw=JSON.stringify(pConflictState);
+const pConflictRaw=sealedPending(Pending,pConflicting);pendingLocal.setItem("sezam_"+pKey,pConflictRaw);
+Pending.resumePendingMemorySnapshots();Pending.memorySnapshotList(function(rows){pRows=rows;});
+eq(pRows.length,0,"deux journaux de même identifiant mais de contenu différent ne sont pas arbitrairement départagés");
+ok(pendingIdb.store.get(pKey)===pRaw&&pendingLocal.getItem("sezam_"+pKey)===pConflictRaw,"les deux copies en conflit restent strictement intactes");
+pendingLocal.removeItem("sezam_"+pKey);Pending.resumePendingMemorySnapshots();Pending.memorySnapshotList(function(rows){pRows=rows;});
+eq(pRows.length,1,"un journal valide est ajouté exactement une fois après résolution explicite du conflit de test");
+const pSavedRaw=pendingIdb.store.get(pRows[0].dataKey);
+pendingIdb.store.set(pKey,pRaw);Pending.resumePendingMemorySnapshots();Pending.memorySnapshotList(function(rows){pRows=rows;});
+eq(pRows.length,1,"la reprise d'un point déjà écrit n'ajoute pas de doublon");
+ok(!pendingIdb.store.has(pKey),"une reprise strictement identique est acquittée après vérification du point existant");
+pendingIdb.store.set(pKey,pConflictRaw);Pending.resumePendingMemorySnapshots();Pending.memorySnapshotList(function(rows){pRows=rows;});
+eq(pRows.length,1,"un captureId déjà enregistré avec un autre état n'ajoute ni ne remplace de point");
+ok(pendingIdb.store.get(pKey)===pConflictRaw&&pendingIdb.store.get(pRows[0].dataKey)===pSavedRaw,"collision d'identifiant : le journal concurrent et le point original sont tous deux préservés");
+Pending.clearPendingMemoryRecord(pKey,pCapture);
+eq(pendingIdb.store.get(pKey),pConflictRaw,"un acquittement tardif ne supprime pas le journal d'un autre contenu");
+
+const quotaLocal=makeLocalStorage(),QuotaMemory=loadEngine({localStorage:quotaLocal});let quotaFirst=null;
+QuotaMemory.createMemorySnapshot("manual",{notify:false},function(result){quotaFirst=result;});
+const quotaOriginalRaw=quotaLocal.getItem("sezam_"+quotaFirst.meta.dataKey);
+QuotaMemory.getDB().xp=210;const quotaCapture=QuotaMemory.captureMemorySnapshotRecord("level_complete",{milestone:"Quota temporaire"}).record;
+const quotaPendingKey="sezam_history:pending:"+quotaCapture.playerId+":"+quotaCapture.captureId;
+quotaLocal.failAfter(QuotaMemory.memoryLocalIndexKey(quotaCapture.playerId),1);let quotaFailed=null;
+QuotaMemory.enqueueMemorySnapshotRecord(quotaCapture,{notify:false},function(result){quotaFailed=result;});
+ok(quotaFailed&&!quotaFailed.ok,"un refus du quota local remonte un échec explicite");
+ok(quotaLocal.getItem("sezam_"+quotaFirst.meta.dataKey)===quotaOriginalRaw,"un quota insuffisant ne réécrit pas le point local précédent");
+ok(QuotaMemory.parsePendingMemoryRaw(quotaLocal.getItem(quotaPendingKey))!==null,"le point refusé par quota garde son journal complet pour reprise");
+let quotaRows=[];QuotaMemory.memorySnapshotList(function(rows){quotaRows=rows;});eq(quotaRows.length,1,"l'écriture partielle n'est pas annoncée comme un second point valide");
+QuotaMemory.resumePendingMemorySnapshots();QuotaMemory.memorySnapshotList(function(rows){quotaRows=rows;});
+eq(quotaRows.length,2,"après retour du stockage, le point journalisé est repris exactement une fois");
+ok(!quotaLocal.getItem(quotaPendingKey),"le journal de quota n'est acquitté qu'après ajout complet");
+let quotaRestoredRaw=null;QuotaMemory.loadMemoryEnvelope(quotaRows[0],function(raw){quotaRestoredRaw=JSON.parse(raw).stateRaw;});
+ok(quotaRestoredRaw===quotaCapture.stateRaw,"la reprise après quota conserve les octets de la demande initiale");
+
+const frozenLocalBefore=JSON.stringify(vaultTargetLocal.dump()),frozenIdbBefore=JSON.stringify(Array.from(vaultTargetIdb.store.entries())),frozenRegistryBefore=JSON.stringify(VaultTarget.getPlayerRegistry());
+let frozenSnapshotResult=null;
+VaultTarget.renderMemorySceneFrozen(function(){VaultTarget.getDB().xp=123456;VaultTarget.save({cloud:false});VaultTarget.createMemorySnapshot("level_complete",{notify:false},function(result){frozenSnapshotResult=result;});});
+eq(JSON.stringify(VaultTarget.getDB()),frozenBefore,"un renderer qui appelle save et crée un niveau ne modifie pas les octets actifs restaurés");
+eq(JSON.stringify(vaultTargetLocal.dump()),frozenLocalBefore,"le rendu gelé ne modifie aucune copie locale, aucun checkpoint ni registre");
+eq(JSON.stringify(Array.from(vaultTargetIdb.store.entries())),frozenIdbBefore,"le rendu gelé ne modifie ni coffre actif, ni historique, ni journal IndexedDB");
+eq(JSON.stringify(VaultTarget.getPlayerRegistry()),frozenRegistryBefore,"le registre familial reste exact après rendu gelé");
+ok(frozenSnapshotResult&&frozenSnapshotResult.skipped,"le résultat d'un snapshot déclenché seulement par le rendu indique explicitement l'absence d'écriture");
+
+const asyncControl={},asyncIdb=makeFakeIndexedDB(null,asyncControl),asyncLocal=makeLocalStorage(),AsyncRestore=loadEngine({indexedDB:asyncIdb.indexedDB,localStorage:asyncLocal});
+AsyncRestore.getDB().xp=11;let asyncPoint=null;AsyncRestore.createMemorySnapshot("manual",{notify:false},function(result){asyncPoint=result;});
+const asyncTargetRaw=JSON.stringify(AsyncRestore.getDB());AsyncRestore.getDB().xp=22;AsyncRestore.save({cloud:false});
+asyncControl.holdNextWriteKey="save:"+AsyncRestore.getActivePlayerId();let asyncRestoreResult=null;
+AsyncRestore.restoreMemorySnapshot(asyncPoint.meta,function(result){asyncRestoreResult=result;});
+ok(!asyncRestoreResult&&asyncControl.pendingCompletions&&asyncControl.pendingCompletions.length===1,"la restauration attend réellement la confirmation différée du coffre actif");
+ok(AsyncRestore.getEl("app").inert&&AsyncRestore.getEl("overlay").inert,"pendant l'écriture finale, écran et fenêtre sont verrouillés ensemble");
+const asyncLocalDuring=JSON.stringify(asyncLocal.dump()),asyncIdbDuring=JSON.stringify(Array.from(asyncIdb.store.entries()));
+ok(AsyncRestore.save({cloud:false})===false,"un save tardif refuse de concurrencer l'activation exacte");
+ok(JSON.stringify(asyncLocal.dump())===asyncLocalDuring&&JSON.stringify(Array.from(asyncIdb.store.entries()))===asyncIdbDuring,"le save concurrent refusé n'écrit aucune copie intermédiaire");
+AsyncRestore.getDB().xp=33;AsyncRestore.getDB().arrivePendantActivation="retour asynchrone";const asyncNewerRaw=JSON.stringify(AsyncRestore.getDB());
+asyncControl.pendingCompletions.shift()();
+ok(asyncRestoreResult&&!asyncRestoreResult.ok,"une mutation asynchrone pendant l'activation annule le retour pour préserver l'état plus récent");
+ok(JSON.stringify(AsyncRestore.getDB())===asyncNewerRaw&&asyncIdb.store.get("save:"+AsyncRestore.getActivePlayerId())===asyncNewerRaw,"le nouvel état asynchrone reste exact dans le jeu et dans son coffre actif");
+ok(asyncLocal.getItem("solfegeProto1")===asyncNewerRaw&&asyncLocal.getItem("solfegeProto1_mirror")===asyncNewerRaw&&asyncLocal.getItem("solfegeProto1_checkpoint")===asyncNewerRaw,"les trois copies locales retrouvent le nouvel état conservé");
+ok(!AsyncRestore.getEl("app").inert&&!AsyncRestore.getEl("overlay").inert,"une restauration annulée déverrouille les deux zones de jeu");
+let asyncRows=[];AsyncRestore.memorySnapshotList(function(rows){asyncRows=rows;});
+eq(asyncRows.length,2,"le point demandé et le filet avant restauration demeurent tous deux disponibles après l'annulation");
+let asyncOriginalRaw=null;AsyncRestore.loadMemoryEnvelope(asyncPoint.meta,function(raw){asyncOriginalRaw=JSON.parse(raw).stateRaw;});
+ok(asyncOriginalRaw===asyncTargetRaw,"la concurrence n'altère jamais la sauvegarde d'origine");
+const asyncIndexKey=AsyncRestore.memoryIndexKey(AsyncRestore.getActivePlayerId());asyncIdb.store.set(asyncIndexKey,"{index interrompu");
+asyncControl.holdNextWriteKey=asyncIndexKey;let asyncRepairedRows=null;
+AsyncRestore.memorySnapshotList(function(rows){asyncRepairedRows=rows;});
+ok(asyncRepairedRows===null&&asyncControl.pendingCompletions.length===1,"la lecture d'un index réparé attend la confirmation d'écriture au lieu d'annoncer une réparation encore en vol");
+asyncControl.pendingCompletions.shift()();
+eq(asyncRepairedRows&&asyncRepairedRows.length,2,"les deux points deviennent disponibles après confirmation de la réparation asynchrone");
+
+const commandWindow=Object.assign({},windowStub,{confirm:function(){return false;}}),commandIdb=makeFakeIndexedDB(),Commands=loadEngine({indexedDB:commandIdb.indexedDB,window:commandWindow});
+Commands.getDB().xp=12;let commandFirst=null;Commands.createMemorySnapshot("manual",{milestone:"Été — début exact",notify:false},function(result){commandFirst=result;});
+const commandRaw1=JSON.stringify(Commands.getDB());Commands.getDB().xp=55;let commandSecond=null;Commands.createMemorySnapshot("manual",{notify:false},function(result){commandSecond=result;});
+const commandBeforeCancel=JSON.stringify(Commands.getDB()),commandStoreBeforeCancel=JSON.stringify(Array.from(commandIdb.store.entries()));
+ok(Commands.executeMemoryCommand("reviens à 1"),"la commande de restauration accepte l'accent de « à »");
+eq(JSON.stringify(Commands.getDB()),commandBeforeCancel,"annuler la confirmation d'une commande ne modifie pas l'état actif");
+eq(JSON.stringify(Array.from(commandIdb.store.entries())),commandStoreBeforeCancel,"annuler n'ajoute pas de point et ne touche pas à IndexedDB");
+commandWindow.confirm=function(){return true;};Commands.executeMemoryCommand("reviens à 1");
+ok(JSON.stringify(Commands.getDB())===commandRaw1,"la commande par numéro restaure l'état complet exact");
+let commandRows=[];Commands.memorySnapshotList(function(rows){commandRows=rows;});
+eq(commandRows.length,3,"la restauration par commande conserve d'abord l'état quitté dans un troisième point");
+Commands.getDB().xp=99;Commands.executeMemoryCommand("reviens à "+commandSecond.meta.name);
+eq(Commands.getDB().xp,55,"la commande accepte le nom exact accentué d'une sauvegarde");
+Commands.executeMemoryCommand("liste mes sauvegardes");
+ok(/5 sauvegardes disponibles/.test(Commands.getEl("memoryMsg").textContent),"la commande de liste compte les deux points de restauration et le point de navigation créé avant l'ouverture du Coffre");
+const beforeAmbiguous=JSON.stringify(Commands.getDB()),storeBeforeAmbiguous=JSON.stringify(Array.from(commandIdb.store.entries()));
+Commands.executeMemoryCommand("reviens à sauvegarde");
+ok(/Plusieurs sauvegardes/.test(Commands.getEl("memoryMsg").textContent),"un nom partiel ambigu demande le numéro précis au lieu de choisir un point arbitraire");
+ok(JSON.stringify(Commands.getDB())===beforeAmbiguous&&JSON.stringify(Array.from(commandIdb.store.entries()))===storeBeforeAmbiguous,"une commande ambiguë laisse l'état et l'historique intacts");
+Commands.executeMemoryCommand("reviens au point 1");
+ok(JSON.stringify(Commands.getDB())===commandRaw1,"la variante « reviens au point 1 » restaure le même point exact");
+const beforeUnknown=JSON.stringify(Commands.getDB());Commands.executeMemoryCommand("reviens à 999999");
+ok(/n’existe pas/.test(Commands.getEl("memoryMsg").textContent)&&JSON.stringify(Commands.getDB())===beforeUnknown,"un numéro inconnu ne déplace pas le joueur et est expliqué clairement");
+
+const fileReaders=[];class DeferredMemoryFileReader{readAsDataURL(file){this.file=file;fileReaders.push(this);}}
+const fileDoc=makeDocument(),fileIdb=makeFakeIndexedDB(),FileMemory=loadEngine({document:fileDoc,indexedDB:fileIdb.indexedDB,FileReader:DeferredMemoryFileReader});
+fileDoc.querySelectorAll=function(selector){return selector===".screen.active"?[{id:"scrPieces"}]:[];};
+const filePlayer=FileMemory.getActivePlayerId();FileMemory.getDB().xp=707;FileMemory.getEl("pcTitle").value="Partition à l'instant du clic";
+const selectedFile={name:"étude.pdf",type:"application/pdf",size:4,lastModified:101};FileMemory.getEl("pcFile").files=[selectedFile];
+const fileClickRaw=JSON.stringify(FileMemory.getDB());
+ok(FileMemory.manualMemorySnapshot("header"),"la sauvegarde d'une partition sélectionnée commence sans quitter sa scène");
+eq(fileReaders.length,1,"le fichier est lu une fois avant de sceller le point");
+FileMemory.getDB().xp=808;FileMemory.getEl("pcTitle").value="Saisie après le clic";
+let fileChild=null;FileMemory.createPlayer("Autre joueur pendant la lecture",function(created){if(created)fileChild=FileMemory.getActivePlayerId();});
+if(fileReaders[0]){fileReaders[0].result="data:application/pdf;base64,JVBERg==";fileReaders[0].onload();}
+let fileRows=[];FileMemory.memorySnapshotListForPlayer(filePlayer,function(rows){fileRows=rows;});
+const fileSaved=fileRows.find(function(meta){return meta.kind==="manual";});let fileEnvelope=null;if(fileSaved)FileMemory.loadMemoryEnvelope(fileSaved,function(raw){fileEnvelope=JSON.parse(raw);});
+ok(fileEnvelope&&fileEnvelope.stateRaw===fileClickRaw,"une lecture différée conserve les octets et l'identité du clic même après changement de joueur");
+const fileRuntime=fileEnvelope&&JSON.parse(fileEnvelope.runtimeRaw);
+ok(fileRuntime&&fileRuntime.scene.pcTitle.value==="Partition à l'instant du clic","les champs de formulaire sont capturés avant la lecture asynchrone");
+ok(fileRuntime&&fileRuntime.fileDraft.attachment.dataUrl==="data:application/pdf;base64,JVBERg==","le fichier lu rejoint le bon point sans reconstituer son état");
+ok(fileChild&&FileMemory.getActivePlayerId()===fileChild,"la confirmation tardive ne réactive jamais le joueur source");
+FileMemory.switchPlayer(filePlayer,function(){});FileMemory.getEl("pcFile").files=[Object.assign({},selectedFile,{lastModified:202})];
+FileMemory.manualMemorySnapshot("header");eq(fileReaders.length,2,"un fichier homonyme de même taille mais de date différente est relu");
+if(fileReaders[1]){fileReaders[1].result="data:application/pdf;base64,QUJDRA==";fileReaders[1].onload();}
+FileMemory.memorySnapshotListForPlayer(filePlayer,function(rows){fileRows=rows;});
+const latestFilePoint=fileRows.find(function(meta){return meta.kind==="manual"&&fileSaved&&meta.id!==fileSaved.id;});let latestFileRuntime=null;if(latestFilePoint)FileMemory.loadMemoryEnvelope(latestFilePoint,function(raw){latestFileRuntime=JSON.parse(JSON.parse(raw).runtimeRaw);});
+ok(latestFileRuntime&&latestFileRuntime.fileDraft.attachment.dataUrl==="data:application/pdf;base64,QUJDRA==","la nouvelle partition n'est jamais remplacée par le brouillon homonyme précédent");
+FileMemory.getEl("pcFile").files=[Object.assign({},selectedFile,{lastModified:303})];FileMemory.manualMemorySnapshot("header");
+eq(fileReaders.length,3,"un fichier sélectionné de même nom et taille est relu même si son joueur n'a pas changé");
+if(fileReaders[2]){fileReaders[2].result="data:application/pdf;base64,RUZHSA==";fileReaders[2].onload();}
+FileMemory.memorySnapshotListForPlayer(filePlayer,function(rows){fileRows=rows;});
+let thirdFileRuntime=null;if(fileRows[0])FileMemory.loadMemoryEnvelope(fileRows[0],function(raw){thirdFileRuntime=JSON.parse(JSON.parse(raw).runtimeRaw);});
+ok(thirdFileRuntime&&thirdFileRuntime.fileDraft.attachment.dataUrl==="data:application/pdf;base64,RUZHSA==","le brouillon en cache ne remplace jamais le contenu du fichier effectivement sélectionné");
+
+group("Mémoire v41 — sorties clavier, fenêtres et Premier regard restaurables");
+function navigationEngine(withIdb,extras){
+  const document=makeDocument(),screenIds=["scrHome","scrEx","scrKbd","scrRes","scrStats","scrPieces","scrPiece"];
+  const screens=screenIds.map(function(id){const el=document.getElementById(id);el.id=id;return el;});
+  document.querySelectorAll=function(selector){if(selector===".screen")return screens;if(selector===".screen.active")return screens.filter(function(el){return el.classList.contains("active");});return [];};
+  const local=makeLocalStorage(),idb=withIdb===false?null:makeFakeIndexedDB(),engine=loadEngine(Object.assign({document,localStorage:local,indexedDB:idb?idb.indexedDB:undefined},extras||{}));return {engine,document,local,idb};
+}
+function latestNavigationPoint(engine){let rows=[];engine.memorySnapshotList(function(found){rows=found;});return rows[0]||null;}
+function pointContents(engine,meta){let envelope=null;if(meta)engine.loadMemoryEnvelope(meta,function(raw){envelope=JSON.parse(raw);});return envelope?{stateRaw:envelope.stateRaw,runtime:JSON.parse(envelope.runtimeRaw)}:null;}
+const keyboardNav=navigationEngine(),KeyboardNav=keyboardNav.engine;
+KeyboardNav.beginClavier({clef:"sol",dir:"read",acc:false});const keyboardCurBefore=cloneJson(KeyboardNav.getKX().cur);
+KeyboardNav.openMusicProfile();const draftField=KeyboardNav.getEl("profName");draftField.id="profName";draftField.tagName="INPUT";draftField.value="Brouillon inachevé — Zoé";
+KeyboardNav.getEl("cardBox").querySelectorAll=function(selector){return selector==="input,select,textarea,button,details"?[draftField]:[];};
+const draftHtml=KeyboardNav.getEl("cardBox").innerHTML;
+ok(KeyboardNav.overlayBack()===true&&!KeyboardNav.getEl("overlay").classList.contains("on"),"Retour ferme le vrai formulaire de profil après protection de son brouillon");
+ok(KeyboardNav.getKX()&&!KeyboardNav.getKX().done&&!KeyboardNav.getKX().backgroundPausedAt&&KeyboardNav.getEl("scrKbd").classList.contains("active"),"Retour de fenêtre reprend le clavier sous-jacent sans le terminer ni renvoyer à l'accueil");
+eq(KeyboardNav.getKX().cur,keyboardCurBefore,"fermer une fenêtre ne change pas la note du clavier en cours");
+const draftPoint=latestNavigationPoint(KeyboardNav),draftContents=pointContents(KeyboardNav,draftPoint);
+ok(draftPoint&&draftPoint.kind==="pre_exit"&&draftContents.runtime.overlayOn&&draftContents.runtime.overlayType==="profile","le point de sortie conserve le type et l'ouverture du formulaire");
+ok(draftContents&&draftContents.runtime.scene.cardBox.html===draftHtml&&draftContents.runtime.overlayControls[0].value==="Brouillon inachevé — Zoé","le contenu de fenêtre et les caractères saisis sont conservés avant fermeture");
+draftField.value="modifié après fermeture";let draftRestored=null;KeyboardNav.restoreMemorySnapshot(draftPoint,function(result){draftRestored=result;});
+ok(draftRestored&&draftRestored.ok&&KeyboardNav.getEl("overlay").classList.contains("on")&&draftField.value==="Brouillon inachevé — Zoé","restaurer le point de sortie rouvre le formulaire avec sa saisie exacte");
+KeyboardNav.overlayBack();KeyboardNav.getEl("kQuit").onclick();
+ok(!KeyboardNav.getKX()&&KeyboardNav.getEl("scrHome").classList.contains("active"),"le bouton Quitter du clavier atteint l'accueil après avoir conservé la question");
+const keyboardExitPoint=latestNavigationPoint(KeyboardNav),keyboardExit=pointContents(KeyboardNav,keyboardExitPoint);
+ok(keyboardExitPoint.kind==="pre_exit"&&keyboardExit.runtime.screen==="scrKbd"&&keyboardExit.runtime.kx&&!keyboardExit.runtime.kx.done,"Quitter capture le clavier actif avant sa remise à null");
+let keyboardRestored=null;KeyboardNav.restoreMemorySnapshot(keyboardExitPoint,function(result){keyboardRestored=result;});
+ok(keyboardRestored&&keyboardRestored.ok&&KeyboardNav.getKX()&&!KeyboardNav.getKX().done&&!KeyboardNav.getKX().backgroundPausedAt,"restaurer le clavier sort de la pause de protection sans blocage");
+eq(KeyboardNav.getKX().cur,keyboardCurBefore,"le clavier restauré redemande exactement la note quittée");
+const keyboardStep=KeyboardNav.getKX().i;KeyboardNav.kbdTap(KeyboardNav.getKX().cur.midi);
+eq(KeyboardNav.getKX().i,keyboardStep+1,"la réponse du clavier restauré fonctionne et est comptée une seule fois");
+KeyboardNav.clearKbdTimer();KeyboardNav.getEl("kQuit").onclick();
+
+const CompletedKeyboard=navigationEngine().engine;CompletedKeyboard.beginClavier({clef:"fa",dir:"read",acc:true});
+for(let step=0;step<10;step++){CompletedKeyboard.kbdTap(CompletedKeyboard.getKX().cur.midi);CompletedKeyboard.clearKbdTimer();CompletedKeyboard.nextKbd();}
+ok(CompletedKeyboard.getKX()&&CompletedKeyboard.getKX().done&&CompletedKeyboard.getEl("overlay").classList.contains("on"),"terminer dix questions de clavier ouvre réellement le bilan");
+const completedKeyboardPoint=latestNavigationPoint(CompletedKeyboard),completedKeyboardContents=pointContents(CompletedKeyboard,completedKeyboardPoint);
+ok(completedKeyboardPoint&&completedKeyboardPoint.kind==="session_complete"&&completedKeyboardContents.runtime.overlayOn&&completedKeyboardContents.runtime.overlayType==="keyboard_result","le bilan complet du clavier est automatiquement protégé avant Refaire");
+eq(completedKeyboardContents&&[completedKeyboardContents.runtime.kx.i,completedKeyboardContents.runtime.kx.ok,completedKeyboardContents.runtime.kx.hist.length],[10,10,10],"le point du bilan contient les dix réponses et le score final");
+CompletedKeyboard.getEl("kAgain").onclick();
+ok(CompletedKeyboard.getKX()&&!CompletedKeyboard.getKX().done&&CompletedKeyboard.getKX().i===0,"Refaire prépare un nouveau clavier après protection du bilan précédent");
+let completedKeyboardRestore=null;CompletedKeyboard.restoreMemorySnapshot(completedKeyboardPoint,function(result){completedKeyboardRestore=result;});
+ok(completedKeyboardRestore&&completedKeyboardRestore.ok&&CompletedKeyboard.getKX().done&&CompletedKeyboard.getEl("overlay").classList.contains("on"),"le bilan précédent se restaure même après avoir lancé Refaire");
+eq([CompletedKeyboard.getDB().kbdStats.total,CompletedKeyboard.getDB().kbdStats.ok],[10,10],"revenir au bilan ne recompte aucune des dix réponses");
+CompletedKeyboard.clearKbdTimer();CompletedKeyboard.universalHome();
+
+const vaultReaders=[];class VaultNavigationReader{readAsDataURL(file){this.file=file;vaultReaders.push(this);}}
+const VaultNavigation=navigationEngine(true,{FileReader:VaultNavigationReader}).engine;
+VaultNavigation.getEl("scrHome").classList.remove("active");VaultNavigation.getEl("scrPieces").classList.add("active");
+VaultNavigation.getEl("pcTitle").value="Partition avant ouverture du Coffre";VaultNavigation.getEl("pcFile").files=[{name:"étude.pdf",type:"application/pdf",size:4,lastModified:404}];VaultNavigation.getEl("impArea").value="Brouillon import non validé";
+ok(VaultNavigation.openMemoryVaultSection()===true&&vaultReaders.length===1,"ouvrir le Coffre depuis une partition sélectionnée commence sa protection complète");
+ok(VaultNavigation.getEl("scrPieces").classList.contains("active")&&!VaultNavigation.getEl("scrStats").classList.contains("active"),"la navigation attend la lecture du fichier avant de quitter la page des partitions");
+vaultReaders[0].result="data:application/pdf;base64,JVBERg==";vaultReaders[0].onload();
+const vaultNavigationPoint=latestNavigationPoint(VaultNavigation),vaultNavigationContents=pointContents(VaultNavigation,vaultNavigationPoint);
+ok(VaultNavigation.getEl("scrStats").classList.contains("active")&&!VaultNavigation.getEl("app").inert,"le Coffre s'ouvre et se déverrouille une fois la scène réellement protégée");
+ok(vaultNavigationContents&&vaultNavigationContents.runtime.screen==="scrPieces"&&vaultNavigationContents.runtime.scene.pcTitle.value==="Partition avant ouverture du Coffre"&&vaultNavigationContents.runtime.fileDraft.attachment.dataUrl==="data:application/pdf;base64,JVBERg==","le point de navigation contient la page, sa saisie et les octets de sa partition");
+eq(VaultNavigation.getEl("impArea").value,"Brouillon import non validé","ouvrir les statistiques ne vide plus le brouillon d'import du joueur");
+
+const firstLookNav=navigationEngine(),FirstLook=firstLookNav.engine;
+const firstLookPiece=FirstLook.PIECES_BUILTIN.find(function(piece){return piece.q&&piece.q.length>1;});
+FirstLook.startPremierRegard(firstLookPiece.id);FirstLook.prAnswer(firstLookPiece.q[0].rep);FirstLook.getEl("prNext").onclick();
+const firstLookBefore=cloneJson({pieceId:FirstLook.getPR().piece.id,i:FirstLook.getPR().i,ok:FirstLook.getPR().ok});
+const firstLookHtml=FirstLook.getEl("cardBox").innerHTML;FirstLook.overlayBack();
+ok(FirstLook.getPR()===null&&!FirstLook.getEl("overlay").classList.contains("on"),"Retour termine le contexte actif de Premier regard seulement après sa sauvegarde");
+const firstLookPoint=latestNavigationPoint(FirstLook),firstLookContents=pointContents(FirstLook,firstLookPoint);
+ok(firstLookContents&&firstLookContents.runtime.overlayOn&&firstLookContents.runtime.scene.cardBox.html===firstLookHtml,"la question de Premier regard est figée avant la fermeture de sa fenêtre");
+eq(firstLookContents&&{pieceId:firstLookContents.runtime.pr.pieceId,i:firstLookContents.runtime.pr.i,ok:firstLookContents.runtime.pr.ok},firstLookBefore,"position et score de Premier regard sont complets dans le point de sortie");
+let firstLookRestored=null;FirstLook.restoreMemorySnapshot(firstLookPoint,function(result){firstLookRestored=result;});
+ok(firstLookRestored&&firstLookRestored.ok&&FirstLook.getPR()&&FirstLook.getEl("overlay").classList.contains("on"),"Premier regard se rouvre depuis son point sans contexte manquant ni blocage");
+eq({pieceId:FirstLook.getPR().piece.id,i:FirstLook.getPR().i,ok:FirstLook.getPR().ok},firstLookBefore,"la restauration reprend la même question avec le même score");
+FirstLook.prAnswer(FirstLook.getPR().piece.q[FirstLook.getPR().i].rep);eq(FirstLook.getPR().ok,firstLookBefore.ok+1,"Premier regard accepte encore une réponse après restauration");
+FirstLook.overlayBack();
+
+for(const introType of ["preview","discovery"]){
+  const Intro=navigationEngine().engine;Intro.beginSerie({n:25,questionCap:25,mode:"libre",cold:false});
+  if(introType==="preview")Intro.showSeriePreview("P1",function(){});else Intro.showDecouverte("P1",function(){},Intro.PALIERS[0].notes.slice(0,3));
+  const homeId=introType==="preview"?"btnPrepHome":"btnDecHome",introHtml=Intro.getEl("cardBox").innerHTML;
+  Intro.getEl(homeId).onclick();const introPoint=latestNavigationPoint(Intro),introContents=pointContents(Intro,introPoint);
+  ok(introContents&&introContents.runtime.overlayOn&&introContents.runtime.overlayType===introType&&introContents.runtime.scene.cardBox.html===introHtml,"Accueil conserve la fenêtre "+introType+" avant de la fermer");
+  ok(Intro.getEl("scrHome").classList.contains("active")&&!Intro.getEl("overlay").classList.contains("on"),"Accueil quitte correctement "+introType+" sans fenêtre bloquante");
+  let introRestored=null;Intro.restoreMemorySnapshot(introPoint,function(result){introRestored=result;});
+  ok(introRestored&&introRestored.ok&&Intro.getEl("overlay").classList.contains("on")&&Intro.getEX()&&!Intro.getEX().done,"la fenêtre "+introType+" restaurée possède encore son exercice actif");
+  Intro.getEl(homeId).onclick();const reboundContents=pointContents(Intro,latestNavigationPoint(Intro));
+  ok(reboundContents&&reboundContents.runtime.overlayOn&&reboundContents.runtime.overlayType===introType&&!Intro.getEl("overlay").classList.contains("on"),"Accueil relié après restauration protège encore "+introType+" avant de fermer");
+  Intro.clearQTimers();Intro.clearDailyTimer();Intro.haltEX();
+}
+
+const failedExitNav=navigationEngine(false),FailedExit=failedExitNav.engine;FailedExit.openMusicProfile();
+const failedExitHtml=FailedExit.getEl("cardBox").innerHTML,failedExitRaw=JSON.stringify(FailedExit.getDB());
+failedExitNav.local.failAfter(FailedExit.memoryLocalIndexKey(FailedExit.getActivePlayerId()),1);FailedExit.overlayBack();
+ok(FailedExit.getEl("overlay").classList.contains("on")&&FailedExit.getEl("cardBox").innerHTML===failedExitHtml,"si le stockage refuse la sauvegarde, Retour garde la fenêtre exacte ouverte");
+ok(JSON.stringify(FailedExit.getDB())===failedExitRaw&&!FailedExit.getEl("app").inert&&!FailedExit.getEl("overlay").inert,"l'échec de sortie ne modifie pas la progression et libère tous les verrous d'interface");
+FailedExit.overlayBack();
+ok(!FailedExit.getEl("overlay").classList.contains("on")&&latestNavigationPoint(FailedExit),"après un refus de stockage, Retour peut être retenté avec succès sans recharger le jeu");
+
+group("Mémoire v41 — démarrage interrompu sans remplacement par un joueur vierge");
+const rescueIdb=makeFakeIndexedDB(),rescueLocal=makeLocalStorage(),RescueSource=loadEngine({indexedDB:rescueIdb.indexedDB,localStorage:rescueLocal});
+const rescuePlayer=RescueSource.getActivePlayerId();RescueSource.getDB().xp=9876;RescueSource.getDB().protectedFutureField="acquis conservés pendant la panne";RescueSource.save({cloud:false});
+let rescuePoint=null;RescueSource.createMemorySnapshot("manual",{notify:false},function(result){rescuePoint=result;});
+const rescueStoredRaw=rescueIdb.store.get("save:"+rescuePlayer),rescueHistoricalRaw=rescueIdb.store.get(rescuePoint.meta.dataKey);
+const registryOnlyLocal=makeLocalStorage({[RescueSource.PLAYER_REGISTRY_KEY]:rescueLocal.getItem(RescueSource.PLAYER_REGISTRY_KEY)});
+const temporarilyUnavailableIdb={open:function(){const request={};Object.defineProperty(request,"onerror",{set:function(handler){handler();}});return request;}};
+const RescueDuringOutage=loadEngine({indexedDB:temporarilyUnavailableIdb,localStorage:registryOnlyLocal});
+ok(RescueDuringOutage.save({cloud:false})===false,"un registre connu sans état lisible interdit de persister un joueur vierge pendant la panne");
+ok(!registryOnlyLocal.getItem("solfegeProto1")&&!registryOnlyLocal.getItem("solfegeProto1_mirror")&&!registryOnlyLocal.getItem("solfegeProto1_checkpoint"),"la panne de lecture ne crée aucune copie locale vide prioritaire sur les acquis");
+ok(RescueDuringOutage.beginSerie({n:25,questionCap:25})===false,"tant que son coffre connu n'est pas relu, le joueur ne peut pas commencer une progression vierge accidentelle");
+ok(rescueIdb.store.get("save:"+rescuePlayer)===rescueStoredRaw&&rescueIdb.store.get(rescuePoint.meta.dataKey)===rescueHistoricalRaw,"le coffre actif et son point historique restent strictement inchangés pendant l'indisponibilité");
+const RescueAfterOutage=loadEngine({indexedDB:rescueIdb.indexedDB,localStorage:registryOnlyLocal});
+eq(RescueAfterOutage.getActivePlayerId(),rescuePlayer,"au retour du stockage, le registre reprend la même identité de joueur");
+eq(RescueAfterOutage.getDB().xp,9876,"le redémarrage après panne retrouve le score antérieur au lieu d'adopter la copie vierge");
+eq(RescueAfterOutage.getDB().protectedFutureField,"acquis conservés pendant la panne","le redémarrage retrouve aussi les éléments inconnus du schéma courant");
+ok(rescueIdb.store.get(rescuePoint.meta.dataKey)===rescueHistoricalRaw,"le point historique reste identique après la reprise du démarrage");
+const noRegistryLocal=makeLocalStorage(),NoRegistryOutage=loadEngine({indexedDB:temporarilyUnavailableIdb,localStorage:noRegistryLocal});
+ok(NoRegistryOutage.save({cloud:false})===false&&!noRegistryLocal.getItem(NoRegistryOutage.PLAYER_REGISTRY_KEY),"une première ouverture sans données locales ne crée aucun faux registre lorsque le coffre est inaccessible");
+ok(!noRegistryLocal.getItem("solfegeProto1")&&!noRegistryLocal.getItem("solfegeProto1_mirror")&&!noRegistryLocal.getItem("solfegeProto1_checkpoint"),"le premier échec de lecture ne laisse aucun faux état prioritaire au prochain démarrage");
+let outageCreateAllowed=null;NoRegistryOutage.createPlayer("Joueur prématuré",function(created){outageCreateAllowed=created;});
+ok(outageCreateAllowed===false&&!noRegistryLocal.getItem(NoRegistryOutage.PLAYER_REGISTRY_KEY),"créer un joueur pendant le blocage ne peut pas occulter un registre familial encore inaccessible");
+const SecondNoRegistryOutage=loadEngine({indexedDB:temporarilyUnavailableIdb,localStorage:noRegistryLocal});
+ok(SecondNoRegistryOutage.save({cloud:false})===false&&!noRegistryLocal.getItem(SecondNoRegistryOutage.PLAYER_REGISTRY_KEY),"un second démarrage en panne n'adopte pas le joueur provisoire du premier essai");
+const NoRegistryRecovered=loadEngine({indexedDB:rescueIdb.indexedDB,localStorage:noRegistryLocal});
+eq(NoRegistryRecovered.getActivePlayerId(),rescuePlayer,"après deux échecs sans registre local, le vrai registre IndexedDB reprend sa place");
+eq(NoRegistryRecovered.getDB().xp,9876,"après deux échecs à vide, le joueur retrouve encore tous ses XP");
+ok(rescueIdb.store.get(rescuePoint.meta.dataKey)===rescueHistoricalRaw,"les redémarrages à vide n'ont jamais modifié le point historique du vrai joueur");
+const corruptStartupSeed={solfegeProto1:"{progression locale corrompue",solfegeProto1_mirror:"{miroir corrompu",solfegeProto1_checkpoint:"{checkpoint corrompu",[RescueSource.PLAYER_REGISTRY_KEY]:"{registre corrompu"};
+const corruptStartupLocal=makeLocalStorage(corruptStartupSeed),corruptStartupIdb=makeFakeIndexedDB(),CorruptStartup=loadEngine({indexedDB:corruptStartupIdb.indexedDB,localStorage:corruptStartupLocal});
+ok(CorruptStartup.save({cloud:false})===false,"des octets locaux illisibles interdisent de créer une nouvelle progression même si IndexedDB est vide");
+eq(corruptStartupLocal.dump(),corruptStartupSeed,"le démarrage conserve au bit près les copies et le registre locaux corrompus au lieu de les écraser");
+ok(!Array.from(corruptStartupIdb.store.keys()).some(function(key){return key==="players"||String(key).indexOf("save:")===0;}),"aucun nouveau coffre ni faux registre IndexedDB ne masque les octets locaux à récupérer");
+
+group("Mémoire v41 — coffre volumineux fractionné sans perte");
+{
+  const splitIdb=makeFakeIndexedDB(),SplitVault=loadEngine({indexedDB:splitIdb.indexedDB});
+  SplitVault.getDB().longTermMemory="m".repeat(8*1024*1024+4096);let firstLarge=null,secondLarge=null;
+  SplitVault.createMemorySnapshot("manual",{notify:false},function(result){firstLarge=result;});
+  SplitVault.getDB().xp=2;SplitVault.createMemorySnapshot("level_complete",{notify:false},function(result){secondLarge=result;});
+  ok(firstLarge&&firstLarge.ok&&secondLarge&&secondLarge.ok,"deux états réels de plus de 8 Mo chacun sont conservés dans l'historique");
+  const completeLargeVault=await new Promise(function(resolve){SplitVault.buildMemoryVault(resolve);});
+  ok(completeLargeVault.ok&&completeLargeVault.count===2&&completeLargeVault.files.length===2,"un historique dépassant 16 Mo est exporté intégralement en deux parties");
+  ok(completeLargeVault.text===null,"un export fractionné ne se présente jamais comme un unique fichier complet");
+  const largeOrigins=[];
+  (completeLargeVault.files||[]).forEach(function(file,index){
+    ok(SplitVault.utf8ByteLength(file.text)<=16*1024*1024,"la partie "+(index+1)+" respecte la limite réelle de 16 Mo");
+    const parsed=SplitVault.parseMemoryVault(file.text);
+    ok(parsed.ok&&parsed.items.length===1,"la partie "+(index+1)+" se vérifie indépendamment et contient son point complet");
+    if(parsed.ok){largeOrigins.push(parsed.items[0].originId);eq(parsed.payload.part,{number:index+1,total:2},"la partie porte son numéro et le nombre total de fichiers");}
+  });
+  eq(largeOrigins,[SplitVault.memoryOriginId(firstLarge.meta),SplitVault.memoryOriginId(secondLarge.meta)],"les origines montrent que chaque point est exporté une fois, sans omission ni doublon");
+}
 
 /* 12) Miroir musical — intro comportementale */
 group("Miroir musical — intro liée au comportement réel");
@@ -2153,16 +2623,17 @@ ok(overlayBackPos>=0&&overlayHomePos>=0&&overlayBackPos<overlayCardPos&&overlayH
   "Retour et Accueil appartiennent à la barre permanente de la fenêtre, hors du contenu remplaçable");
 ok(idx.indexOf('.dialogTools button')>=0&&idx.indexOf('min-height:44px',idx.indexOf('.dialogTools button'))>=0,
   "les commandes universelles de fenêtre gardent une cible tactile d’au moins 44 px");
-freshDB();
-if(E.getEX())E.haltEX();E.clearQTimers();E.clearDailyTimer();
-E.getEl("overlay").classList.add("on");E.getEl("cardBox").innerHTML="<h2>Fenêtre quelconque</h2>";
-ok(E.overlayBack()===true&&!E.getEl("overlay").classList.contains("on"),
+const NavMemory=loadEngine();
+NavMemory.getEl("overlay").classList.add("on");NavMemory.getEl("cardBox").innerHTML="<h2>Fenêtre quelconque</h2>";
+ok(NavMemory.overlayBack()===true&&!NavMemory.getEl("overlay").classList.contains("on"),
   "Retour ferme aussi une fenêtre dont le contenu vient d’être remplacé");
-E.getEl("overlay").classList.add("on");E.getEl("btnGlobalHome").hidden=false;
-ok(E.universalHome()===true&&E.getEl("scrHome").classList.contains("active"),
+NavMemory.getEl("overlay").classList.add("on");NavMemory.getEl("btnGlobalHome").hidden=false;
+ok(NavMemory.universalHome()===true&&NavMemory.getEl("scrHome").classList.contains("active"),
   "Accueil ramène effectivement à l’écran principal depuis n’importe quel écran");
-ok(!E.getEl("overlay").classList.contains("on")&&E.getEl("btnGlobalHome").hidden===true,
+ok(!NavMemory.getEl("overlay").classList.contains("on")&&NavMemory.getEl("btnGlobalHome").hidden===true,
   "le retour universel referme la fenêtre et masque son propre bouton une fois à l’accueil");
+let navPoints=[];NavMemory.memorySnapshotList(function(rows){navPoints=rows;});
+ok(navPoints.some(function(meta){return meta.kind==="pre_exit";}),"revenir à l'accueil ajoute d'abord un point de la scène quittée");
 
 group("v39 — humeur et calendrier adaptent sans effacer ni injecter du HTML");
 freshDB();
@@ -2918,3 +3389,5 @@ console.log("\n─────────────────────�
 console.log("Réussis : " + pass + "   Échecs : " + fail);
 if (fail) { console.log("ÉCHECS :"); failures.forEach(f => console.log("  - " + f)); process.exit(1); }
 else { console.log("Tous les tests passent. ✓"); process.exit(0); }
+}
+runTests().catch(function(error){console.error(error);process.exit(1);});

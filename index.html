@@ -56,11 +56,11 @@
   header{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:5px;padding:6px 2px 14px;position:relative}
   header:after{content:"";position:absolute;left:2px;right:42px;bottom:3px;height:15px;border-bottom:2px solid var(--or);border-radius:0 0 55% 42%;opacity:.9}
   header h1{flex:1 1 100%;text-align:center;font-size:15px;margin:0;font-weight:700;letter-spacing:1.6px;color:var(--petrole);font-family:var(--serif)}
-  .hstats{width:100%;display:flex;gap:8px;justify-content:center;align-items:center;font-size:13px;color:var(--dim)}
+  .hstats{width:100%;display:flex;flex-wrap:wrap;gap:8px;justify-content:center;align-items:center;font-size:13px;color:var(--dim)}
   .hstats b{color:var(--ink)}
-  #btnSound,#btnQuickSave,#btnGlobalHome{background:linear-gradient(135deg,var(--paper),var(--ceramique2));border:1px solid rgba(184,137,58,.55);color:var(--petrole);
+  #btnSound,#btnQuickSave,#btnMemoryVault,#btnGlobalHome{background:linear-gradient(135deg,var(--paper),var(--ceramique2));border:1px solid rgba(184,137,58,.55);color:var(--petrole);
     border-radius:999px;min-height:44px;padding:6px 11px;font-size:12.5px}
-  #btnQuickSave{min-width:44px;min-height:44px;padding:4px 8px;font-size:16px;font-weight:800}
+  #btnQuickSave,#btnMemoryVault{min-height:44px;padding:5px 10px;font-size:12px;font-weight:900}
   #btnGlobalHome{font-weight:900;min-width:84px}
   #btnGlobalHome:not([hidden]){position:fixed;top:max(8px,env(safe-area-inset-top));left:max(8px,env(safe-area-inset-left));z-index:8;box-shadow:0 6px 18px rgba(8,57,71,.2);background:var(--paper)}
   #btnGlobalHome[hidden]{display:none}
@@ -162,8 +162,8 @@
   .missionContract{margin-top:10px;padding:11px;background:rgba(255,255,255,.7);border:1px solid rgba(15,76,92,.12);border-radius:18px 7px 18px 7px;position:relative;z-index:1}
   .missionContract b{display:block;color:var(--petrole);font-size:14px}
   .missionContract span{display:block;color:var(--dim);font-size:12px;line-height:1.35;margin-top:3px}
-  .weekSeals{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin:10px 0 7px;position:relative;z-index:1}
-  .weekSeal{aspect-ratio:1;border-radius:50%;display:flex;align-items:center;justify-content:center;border:1px dashed rgba(15,76,92,.35);background:rgba(255,255,255,.54);color:var(--dim);font-size:11px;font-weight:900}
+  .weekSeals{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px;margin:10px 0 7px;position:relative;z-index:1}
+  .weekSeal{min-width:0;min-height:0;aspect-ratio:1;border-radius:50%;display:flex;align-items:center;justify-content:center;border:1px dashed rgba(15,76,92,.35);background:rgba(255,255,255,.54);color:var(--dim);font-size:11px;font-weight:900}
   .weekSeal.on{border-style:solid;border-color:var(--or);background:radial-gradient(circle at 35% 30%,#fff8dc,#e2bc68);color:var(--petrole2)}
   .journeyActions{display:grid;grid-template-columns:1fr 1fr;gap:7px;position:relative;z-index:1}
   .journeyActions button{min-height:44px;border:1px solid rgba(15,76,92,.2);border-radius:999px;background:var(--paper);color:var(--petrole);font-size:12px;font-weight:800}
@@ -264,9 +264,18 @@
   .memoryPoint button{width:100%;min-height:44px;margin-top:8px;border:1px solid rgba(15,76,92,.2);border-radius:10px;background:var(--ceramique2);color:var(--petrole);font-weight:800}
   .memoryPoint button:disabled,#btnManualSave:disabled,#btnQuickSave:disabled{opacity:.55;cursor:wait}
   .memoryProof{background:rgba(129,157,112,.12);border:1px solid rgba(129,157,112,.28);border-radius:14px;padding:9px 10px;margin:0 0 12px;color:var(--good);font-size:12.5px;line-height:1.45;text-align:left}
+  #memoryNotice{display:none;align-items:flex-start;gap:8px;margin:0 0 10px;padding:10px 11px;border:1px solid rgba(129,157,112,.42);border-radius:16px 7px 16px 7px;background:rgba(255,253,247,.98);color:var(--good);font-size:12px;line-height:1.4;box-shadow:0 6px 18px rgba(8,57,71,.1);position:relative;z-index:7}
+  #memoryNotice.on{display:flex}#memoryNotice.bad{border-color:rgba(180,95,75,.45);color:var(--bad)}
+  #memoryNoticeText{flex:1;min-width:0;-webkit-user-select:text;user-select:text}
+  #memoryNotice button{flex:none;min-height:44px;border:1px solid rgba(15,76,92,.2);border-radius:999px;background:var(--paper);color:var(--petrole);padding:7px 10px;font-size:11px;font-weight:800}
+  #btnMemoryNoticeClose{min-width:44px;font-size:17px!important;padding:3px!important}
+  .memoryCommand{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px;margin:10px 0 2px}
+  .memoryCommand label{grid-column:1/-1;color:var(--petrole);font-size:12px;font-weight:800}
+  .memoryCommand input{min-width:0;min-height:44px;border:1px solid rgba(15,76,92,.22);border-radius:10px;background:var(--paper);color:var(--petrole);padding:8px 10px;font-size:13px;-webkit-user-select:text;user-select:text}
+  .memoryCommand button{min-height:44px;border:1px solid var(--petrole);border-radius:10px;background:var(--petrole);color:#fff;padding:8px 11px;font-weight:800}
   #memoryToast{position:fixed;left:50%;bottom:max(16px,env(safe-area-inset-bottom));width:min(402px,calc(100vw - 24px));transform:translateX(-50%) translateY(18px);z-index:60;background:var(--petrole2);color:#fff;border:1px solid rgba(216,169,77,.72);border-radius:18px 8px 18px 8px;padding:11px 13px;font-size:12.5px;line-height:1.4;box-shadow:0 10px 28px rgba(8,57,71,.28);opacity:0;pointer-events:none;transition:opacity .18s,transform .18s}
   #memoryToast.on{opacity:1;transform:translateX(-50%) translateY(0)}
-  @media(max-width:390px){.hstats{gap:6px}.hstats>span{font-size:11px}#btnSound{padding:5px 9px;font-size:11px}header h1{font-size:13px;letter-spacing:1px}}
+  @media(max-width:390px){.hstats{gap:5px}.hstats>span{font-size:10.5px}#btnSound,#btnQuickSave,#btnMemoryVault{padding:5px 8px;font-size:10.5px}header h1{font-size:13px;letter-spacing:1px}.savebox .row{flex-wrap:wrap}.savebox .row button{flex:1 1 145px}#memoryNotice{flex-wrap:wrap}#memoryNoticeText{flex:1 1 calc(100% - 54px)}#btnMemoryNoticeOpen{order:3;flex:1 1 100%!important}}
   @media(max-width:600px){
     input,select,textarea,.segmentForm .field,.savebox textarea{font-size:16px!important}
     .coachLevelPanel{grid-template-columns:1fr}
@@ -485,10 +494,13 @@
       <span>XP <b id="hXp">0</b></span>
       <span>Jours <b id="hStreak">0</b></span>
       <button id="btnGlobalHome" hidden aria-label="Revenir immédiatement à l’accueil">⌂ Accueil</button>
-      <button id="btnQuickSave" aria-label="Créer maintenant une sauvegarde complète" title="Sauvegarder maintenant">💾</button>
+      <button id="btnQuickSave" aria-label="Créer maintenant une sauvegarde complète" title="Sauvegarder maintenant">💾 Sauvegarder</button>
+      <button id="btnMemoryVault" aria-label="Ouvrir la liste de mes sauvegardes">☰ Coffre</button>
       <button id="btnSound">♪ chant</button>
     </div>
   </header>
+
+  <div id="memoryNotice"><span id="memoryNoticeText" role="status" aria-live="polite" aria-atomic="true"></span><button type="button" id="btnMemoryNoticeOpen">Mes sauvegardes</button><button type="button" id="btnMemoryNoticeClose" aria-label="Masquer cette confirmation">×</button></div>
 
   <div class="screen active" id="scrHome">
     <section class="cockpit" id="cockpitBox">
@@ -581,12 +593,17 @@
       <div class="themeModes" id="themeModes"></div>
       <div class="savemsg" id="themeMsg"></div>
     </div>
-    <div class="savebox">
+    <div class="savebox" id="memorySection" tabindex="-1">
       <h4>Mémoire protégée — points de restauration</h4>
-      <p class="memoryIntro">Chaque point contient l’état complet du joueur et, si une partie est en cours, la question exacte. Les points s’ajoutent : SEZAM n’en remplace et n’en supprime aucun. Ils restent sur cet appareil tant que les données du site y sont conservées ; exporte aussi un fichier pour te protéger d’une perte ou d’un changement d’appareil.</p>
+      <p class="memoryIntro">Chaque point contient l’état complet du joueur et, si une partie est en cours, la question exacte. Les points s’ajoutent : SEZAM n’en remplace et n’en supprime aucun. Ils restent sur cet appareil tant que les données du site y sont conservées ; télécharge le coffre complet pour garder aussi tous les anciens points hors du navigateur.</p>
       <div class="row"><button id="btnManualSave" style="background:var(--vert);color:var(--petrole2);font-weight:800">Créer une sauvegarde maintenant</button></div>
+      <form class="memoryCommand" id="memoryCommandForm"><label for="memoryCommand">Commande mémoire</label><input id="memoryCommand" autocomplete="off" placeholder="sauvegarde · liste mes sauvegardes · reviens à 3"><button type="submit">Exécuter</button></form>
       <div class="savemsg" id="memoryMsg" role="status" aria-live="polite"></div>
       <div class="memoryList" id="memoryList"></div>
+      <div class="row"><button id="btnDownloadMemoryVault">Télécharger le coffre complet</button><button id="btnImportMemoryVault">Importer un coffre</button></div>
+      <input type="file" id="memoryVaultInput" accept="application/json,.json,.sezam-memory.json" style="display:none">
+      <div class="savemsg" id="memoryVaultMsg" role="status" aria-live="polite"></div>
+      <div id="memoryVaultDownloads" class="memoryList"></div>
     </div>
     <div class="savebox">
       <h4 id="saveExportTitle">Sauvegarde — exporter</h4>
@@ -683,7 +700,7 @@ function esc(s){
   });
 }
 /* ================= DONNÉES ================= */
-const APP_VERSION="v40"; // garder aligné avec CACHE_NAME de sw.js (testé)
+const APP_VERSION="v41"; // garder aligné avec CACHE_NAME de sw.js (testé)
 const NOTES = {
   do4 :{n:"do", clef:"sol", p:-2, midi:60, mn:"Le do du milieu est transpercé par sa petite ligne, rien qu'à lui."},
   re4 :{n:"ré", clef:"sol", p:-1, midi:62, mn:"Collé juste sous la portée."},
@@ -2246,8 +2263,8 @@ function ensureStructure(db){
   return backfillCurriculumFromGame(db);
 }
 const LS_KEY="solfegeProto1", LS_MIRROR="solfegeProto1_mirror", LS_PREIMPORT="solfegeProto1_preimport", LS_CHECKPOINT="solfegeProto1_checkpoint";
-const PLAYER_REGISTRY_KEY="sezam_players_v1", PLAYER_FALLBACK_PREFIX="sezam_player_slot_", MAX_LOCAL_PLAYERS=8, MAX_ARCHIVED_PLAYERS=32;
-let saveFailed=false, PLAYER_REGISTRY=null, ACTIVE_PLAYER_ID="", PLAYER_EPOCH=0, hadPlayerRegistryLocal=false, playerOperationBusy=false;
+const PLAYER_REGISTRY_KEY="sezam_players_v1", PLAYER_FALLBACK_PREFIX="sezam_player_slot_", MAX_LOCAL_PLAYERS=8, MAX_ARCHIVED_PLAYERS=Number.MAX_SAFE_INTEGER;
+let saveFailed=false, PLAYER_REGISTRY=null, ACTIVE_PLAYER_ID="", PLAYER_EPOCH=0, hadPlayerRegistryLocal=false, hadUnrecognizedLocalBytes=false, playerOperationBusy=false;
 function readKey(k){ try{ const s=localStorage.getItem(k); return s?JSON.parse(s):null; }catch(e){ return null; } }
 function recognizableStoredState(value){ return isRecord(value)&&isRecord(value.paliers); }
 function normalizePlayerName(value,def){ return cleanText(value,40,def===undefined?"Joueur":def); }
@@ -2316,6 +2333,7 @@ function bestLocalState(){
   return stateBelongsToPlayer(candidate,ACTIVE_PLAYER_ID)?candidate:null;
 }
 function writePlayerRegistry(skipIdb){
+  if(memoryStartupBlocked)return false;
   if(!PLAYER_REGISTRY) return false;
   PLAYER_REGISTRY=normalizePlayerRegistry(PLAYER_REGISTRY);
   if(!PLAYER_REGISTRY.players.length) return false;
@@ -2326,6 +2344,8 @@ function writePlayerRegistry(skipIdb){
   return true;
 }
 function initializePlayerRegistry(){
+  hadUnrecognizedLocalBytes=false;
+  [PLAYER_REGISTRY_KEY,LS_KEY,LS_MIRROR,LS_CHECKPOINT].forEach(function(key){try{const raw=localStorage.getItem(key);if(raw===null)return;let parsed=null;try{parsed=JSON.parse(raw);}catch(e){}const valid=key===PLAYER_REGISTRY_KEY?normalizePlayerRegistry(parsed).players.length>0:recognizableStoredState(parsed);if(!valid)hadUnrecognizedLocalBytes=true;}catch(e){hadUnrecognizedLocalBytes=true;}});
   const stored=readKey(PLAYER_REGISTRY_KEY), normalized=normalizePlayerRegistry(stored);
   hadPlayerRegistryLocal=normalized.players.length>0;
   if(hadPlayerRegistryLocal){
@@ -2340,15 +2360,15 @@ function initializePlayerRegistry(){
   const name=normalizePlayerName(candidate.profile&&candidate.profile.displayName,"Joueur 1");
   candidate.profile=normalizeProfile(Object.assign({},candidate.profile||{},{displayName:name}));
   PLAYER_REGISTRY={schema:1,activeId:id,players:[{id:id,userId:candidate._sezam.userId,name:name,createdAt:Date.now(),lastPlayedAt:Date.now(),xp:candidate.xp||0,sel:candidate.sel||"P1",legacyCloud:true}]};
-  ACTIVE_PLAYER_ID=id; writePlayerRegistry(true);
+  ACTIVE_PLAYER_ID=id;if(legacy)writePlayerRegistry(true);
   return {raw:candidate,hadState:!!legacy,migrated:!!legacy};
 }
 /* ---- Niveau 2 IndexedDB : un coffre distinct par joueur, plus le registre familial. ---- */
 const IDB_NAME="soladoBackup", IDB_STORE="kv";
-let idbReady=false, idbQueuedSave=safeMap(), hadRecognizableLocal=false;
+let idbReady=false, idbQueuedSave=safeMap(), hadRecognizableLocal=false, memoryStartupBlocked=false;
 function idbOpen(cb){
   let settled=false,timer=null;
-  const done=function(db){if(settled)return;settled=true;if(timer)clearTimeout(timer);cb(db);};
+  const done=function(db){if(settled){if(db)try{db.close();}catch(e){}return;}settled=true;if(timer)clearTimeout(timer);cb(db);};
   try{
     if(typeof indexedDB==="undefined"){ done(null); return; }
     const rq=indexedDB.open(IDB_NAME,1);timer=setTimeout(function(){done(null);},8000);
@@ -2361,23 +2381,58 @@ function idbPut(str,key,cb){
   if(!idbReady){idbQueuedSave[key]=str;if(cb)cb(true);return;}
   idbOpen(function(db){
     if(!db){if(cb)cb(false);return;}
+    let tx=null,settled=false,timer=null;
+    const done=function(ok){if(settled)return;settled=true;if(timer)clearTimeout(timer);try{db.close();}catch(e){}if(cb)cb(ok);};
     try{
-      const tx=db.transaction(IDB_STORE,"readwrite");let settled=false,timer=setTimeout(function(){try{tx.abort();}catch(e){}done(false);},8000);
-      const done=function(ok){if(settled)return;settled=true;clearTimeout(timer);if(cb)cb(ok);};
+      tx=db.transaction(IDB_STORE,"readwrite");timer=setTimeout(function(){try{tx.abort();}catch(e){}done(false);},8000);
       tx.oncomplete=function(){done(true);};tx.onerror=function(){done(false);};tx.onabort=function(){done(false);};
       tx.objectStore(IDB_STORE).put(str,key);
-    }catch(e){if(cb)cb(false);}
+    }catch(e){if(tx)try{tx.abort();}catch(x){}done(false);}
   });
 }
 function idbGet(key,cb){
   idbOpen(function(db){
     if(!db){ cb(null); return; }
+    let settled=false,timer=null;
+    const done=function(value){if(settled)return;settled=true;if(timer)clearTimeout(timer);try{db.close();}catch(e){}cb(value);};
     try{
-      const rq=db.transaction(IDB_STORE,"readonly").objectStore(IDB_STORE).get(key);let settled=false,timer=setTimeout(function(){done(null);},8000);
-      const done=function(value){if(settled)return;settled=true;clearTimeout(timer);cb(value);};
+      const rq=db.transaction(IDB_STORE,"readonly").objectStore(IDB_STORE).get(key);timer=setTimeout(function(){done(null);},8000);
       rq.onsuccess=function(){ done(rq.result||null); };
       rq.onerror=function(){ done(null); };
-    }catch(e){ cb(null); }
+    }catch(e){done(null);}
+  });
+}
+function idbKeys(prefix,cb){
+  idbEntries(prefix,function(rows){cb(rows.map(function(row){return row.key;}));});
+}
+function idbValues(keys,cb){
+  keys=Array.isArray(keys)?keys.slice():[];if(!keys.length){cb([]);return;}
+  const out=new Array(keys.length);let left=keys.length;
+  keys.forEach(function(key,index){idbGet(key,function(raw){out[index]=raw||null;left--;if(!left)cb(out);});});
+}
+/* Une seule transaction bornée pour scanner un préfixe : évite des centaines
+   d'ouvertures concurrentes sur Safari quand l'historique devient long. */
+function idbEntries(prefix,cb,keysOnly){
+  idbOpen(function(db){
+    if(!db){cb([],false);return;}
+    let tx=null,settled=false,timer=null,rows=[];
+    const done=function(ok){if(settled)return;settled=true;if(timer)clearTimeout(timer);try{if(typeof db.close==="function")db.close();}catch(e){}cb(ok?rows:[],!!ok);};
+    try{
+      tx=db.transaction(IDB_STORE,"readonly");const store=tx.objectStore(IDB_STORE);
+      timer=setTimeout(function(){try{tx.abort();}catch(e){}done(false);},8000);
+      tx.onerror=function(){done(false);};tx.onabort=function(){done(false);};
+      if(typeof store.openCursor==="function"){
+        const range=typeof IDBKeyRange!=="undefined"?IDBKeyRange.bound(prefix,prefix+"\uffff"):undefined;
+        const rq=keysOnly&&typeof store.openKeyCursor==="function"?store.openKeyCursor(range):store.openCursor(range);rq.onerror=function(){done(false);};rq.onsuccess=function(ev){const cursor=ev.target.result;if(!cursor){done(true);return;}if(typeof cursor.key==="string"&&cursor.key.indexOf(prefix)===0)rows.push({key:cursor.key,value:keysOnly?undefined:cursor.value});cursor.continue();};return;
+      }
+      if(typeof store.getAllKeys==="function"){
+        const keysRq=store.getAllKeys();keysRq.onerror=function(){done(false);};keysRq.onsuccess=function(){
+          const keys=(keysRq.result||[]).filter(function(key){return typeof key==="string"&&key.indexOf(prefix)===0;});if(keysOnly){rows=keys.map(function(key){return {key:key};});done(true);return;}if(!keys.length){done(true);return;}
+          let left=keys.length;keys.forEach(function(key){const rq=store.get(key);rq.onerror=function(){done(false);};rq.onsuccess=function(){rows.push({key:key,value:rq.result});left--;if(!left)done(true);};});
+        };return;
+      }
+      done(false);
+    }catch(e){done(false);}
   });
 }
 function idbSave(str,playerId,cb){
@@ -2403,8 +2458,8 @@ function idbLoadRegistry(cb){ idbGet("players",cb); }
    clés data/meta sont écrites avec add() : une collision ne remplace jamais
    une sauvegarde existante. Aucun mécanisme de purge automatique n'existe.
    ======================================================================== */
-const MEMORY_HISTORY_SCHEMA=1, MEMORY_INDEX_PREFIX="history:index:", MEMORY_META_PREFIX="history:meta:", MEMORY_DATA_PREFIX="history:data:", MEMORY_HEAD_PREFIX="sezam_history_head_";
-let memorySnapshotQueue=[], memorySnapshotWriting=false, memoryToastTimer=null, memoryRestoreBusy=false, memoryProtectedActionBusy=false, memorySyncChoiceRemote=null;
+const MEMORY_HISTORY_SCHEMA=1, MEMORY_VAULT_SCHEMA=1, MEMORY_VAULT_FORMAT="sezam-memory-vault", MAX_MEMORY_VAULT_BYTES=16777216, MEMORY_INDEX_PREFIX="history:index:", MEMORY_META_PREFIX="history:meta:", MEMORY_DATA_PREFIX="history:data:", MEMORY_PENDING_PREFIX="history:pending:", MEMORY_HEAD_PREFIX="sezam_history_head_";
+let memorySnapshotQueue=[], memorySnapshotWriting=false, memoryToastTimer=null, memoryRestoreBusy=false, memoryProtectedActionBusy=false, memorySyncChoiceRemote=null, memoryFileDraft=null, memorySceneRenderFrozen=false;
 function memoryActionToken(){return {playerId:ACTIVE_PLAYER_ID,epoch:PLAYER_EPOCH};}
 function memoryActionCurrent(token){return !!token&&token.playerId===ACTIVE_PLAYER_ID&&token.epoch===PLAYER_EPOCH;}
 function memoryIndexKey(playerId){return MEMORY_INDEX_PREFIX+(isSafeId(playerId)?playerId:"invalid");}
@@ -2418,48 +2473,57 @@ function parseMemoryIndex(raw){
   let v=null;try{v=typeof raw==="string"?JSON.parse(raw):raw;}catch(e){return null;}
   if(!Array.isArray(v))return null;
   const valid=v.every(function(m){
-    return isRecord(m)&&m.schema===MEMORY_HISTORY_SCHEMA&&isSafeId(m.playerId)&&Number.isInteger(m.number)&&m.number>0&&typeof m.id==="string"&&m.id.length>3&&
+    return isRecord(m)&&m.schema===MEMORY_HISTORY_SCHEMA&&isSafeId(m.playerId)&&isSafeId(m.userId)&&Number.isSafeInteger(m.number)&&m.number>0&&typeof m.id==="string"&&m.id.length>3&&
       typeof m.name==="string"&&Number.isFinite(m.createdAt)&&typeof m.kind==="string"&&typeof m.kindLabel==="string"&&
       Number.isInteger(m.stateBytes)&&m.stateBytes>=0&&Number.isInteger(m.runtimeBytes)&&m.runtimeBytes>=0&&/^[a-f0-9]{64}$/.test(m.stateSha256||"")&&/^[a-f0-9]{64}$/.test(m.runtimeSha256||"")&&
       isRecord(m.context)&&Number.isInteger(m.context.level)&&typeof m.context.levelLabel==="string"&&Number.isFinite(m.context.xp)&&typeof m.context.summary==="string"&&
-      (m.storage==="idb"||m.storage==="local")&&typeof m.dataKey==="string"&&typeof m.metaKey==="string";
+      (m.storage==="idb"||m.storage==="local")&&typeof m.dataKey==="string"&&typeof m.metaKey==="string"&&
+      (!hasOwn(m,"originId")||(typeof m.originId==="string"&&m.originId.length>3&&m.originId.length<=240))&&
+      (!hasOwn(m,"captureId")||(typeof m.captureId==="string"&&m.captureId.length>3&&m.captureId.length<=160))&&memoryMetaSealValid(m);
   });
   return valid?v:null;
 }
+function memoryMetaPayload(meta){
+  const copy={};Object.keys(meta||{}).filter(function(key){return key!=="metaSha256";}).sort().forEach(function(key){copy[key]=meta[key];});return JSON.stringify(copy);
+}
+function memoryMetaSealValid(meta){return !!meta&&(!hasOwn(meta,"metaSha256")||(/^[a-f0-9]{64}$/.test(meta.metaSha256)&&memorySha256(memoryMetaPayload(meta))===meta.metaSha256));}
+function memoryOriginId(meta){return meta&&typeof meta.originId==="string"&&meta.originId?meta.originId:(meta&&meta.id||"");}
+function sameMemoryOriginPoint(a,b){return !!a&&!!b&&a.playerId===b.playerId&&a.userId===b.userId&&memoryOriginId(a)===memoryOriginId(b)&&a.stateSha256===b.stateSha256&&a.runtimeSha256===b.runtimeSha256&&a.stateBytes===b.stateBytes&&a.runtimeBytes===b.runtimeBytes&&a.createdAt===b.createdAt&&a.kind===b.kind&&JSON.stringify(a.context)===JSON.stringify(b.context);}
 function memoryHead(playerId){
-  try{const n=Number(localStorage.getItem(memoryHeadKey(playerId)));return Number.isInteger(n)&&n>0?n:0;}catch(e){return 0;}
+  try{const n=Number(localStorage.getItem(memoryHeadKey(playerId)));return Number.isSafeInteger(n)&&n>0?n:0;}catch(e){return 0;}
 }
 function advanceMemoryHead(playerId,number){try{localStorage.setItem(memoryHeadKey(playerId),String(Math.max(memoryHead(playerId),number)));}catch(e){}}
-function utf8BytesForMemory(value){
+function utf8BytesForMemory(value,emit){
   const s=String(value==null?"":value);
-  if(typeof TextEncoder!=="undefined")try{return Array.from(new TextEncoder().encode(s));}catch(e){}
-  const out=[];
+  // Le hash consomme les octets au fil de l’eau, sans tableau géant sur mobile.
+  const out=typeof emit==="function"?null:[],put=out?function(byte){out.push(byte);}:emit;
   for(let i=0;i<s.length;i++){
     let cp=s.charCodeAt(i);
-    if(cp>=0xD800&&cp<=0xDBFF&&i+1<s.length){const lo=s.charCodeAt(i+1);if(lo>=0xDC00&&lo<=0xDFFF){cp=0x10000+((cp-0xD800)<<10)+(lo-0xDC00);i++;}else cp=0xFFFD;}
+    if(cp>=0xD800&&cp<=0xDBFF){const lo=s.charCodeAt(i+1);if(lo>=0xDC00&&lo<=0xDFFF){cp=0x10000+((cp-0xD800)<<10)+(lo-0xDC00);i++;}else cp=0xFFFD;}
     else if(cp>=0xDC00&&cp<=0xDFFF)cp=0xFFFD;
-    if(cp<0x80)out.push(cp);
-    else if(cp<0x800)out.push(0xC0|(cp>>6),0x80|(cp&63));
-    else if(cp<0x10000)out.push(0xE0|(cp>>12),0x80|((cp>>6)&63),0x80|(cp&63));
-    else out.push(0xF0|(cp>>18),0x80|((cp>>12)&63),0x80|((cp>>6)&63),0x80|(cp&63));
+    if(cp<0x80)put(cp);
+    else if(cp<0x800){put(0xC0|(cp>>6));put(0x80|(cp&63));}
+    else if(cp<0x10000){put(0xE0|(cp>>12));put(0x80|((cp>>6)&63));put(0x80|(cp&63));}
+    else {put(0xF0|(cp>>18));put(0x80|((cp>>12)&63));put(0x80|((cp>>6)&63));put(0x80|(cp&63));}
   }
   return out;
 }
 function memorySha256(value){
-  const bytes=utf8BytesForMemory(value), originalLength=bytes.length;
   const K=[0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];
   const H=[0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19];
-  bytes.push(0x80);while(bytes.length%64!==56)bytes.push(0);
-  const high=Math.floor(originalLength/0x20000000),low=(originalLength<<3)>>>0;
-  bytes.push((high>>>24)&255,(high>>>16)&255,(high>>>8)&255,high&255,(low>>>24)&255,(low>>>16)&255,(low>>>8)&255,low&255);
-  const rotr=function(x,n){return (x>>>n)|(x<<(32-n));},w=new Array(64);
-  for(let off=0;off<bytes.length;off+=64){
-    for(let i=0;i<16;i++){const j=off+i*4;w[i]=((bytes[j]<<24)|(bytes[j+1]<<16)|(bytes[j+2]<<8)|bytes[j+3])>>>0;}
+  const rotr=function(x,n){return (x>>>n)|(x<<(32-n));},w=new Uint32Array(64),block=new Uint8Array(64);let used=0,originalLength=0;
+  const compress=function(){
+    for(let i=0;i<16;i++){const j=i*4;w[i]=((block[j]<<24)|(block[j+1]<<16)|(block[j+2]<<8)|block[j+3])>>>0;}
     for(let i=16;i<64;i++){const a=w[i-15],b=w[i-2],s0=rotr(a,7)^rotr(a,18)^(a>>>3),s1=rotr(b,17)^rotr(b,19)^(b>>>10);w[i]=(w[i-16]+s0+w[i-7]+s1)>>>0;}
     let a=H[0],b=H[1],c=H[2],d=H[3],e=H[4],f=H[5],g=H[6],h=H[7];
     for(let i=0;i<64;i++){const S1=rotr(e,6)^rotr(e,11)^rotr(e,25),ch=(e&f)^((~e)&g),t1=(h+S1+ch+K[i]+w[i])>>>0,S0=rotr(a,2)^rotr(a,13)^rotr(a,22),maj=(a&b)^(a&c)^(b&c),t2=(S0+maj)>>>0;h=g;g=f;f=e;e=(d+t1)>>>0;d=c;c=b;b=a;a=(t1+t2)>>>0;}
     H[0]=(H[0]+a)>>>0;H[1]=(H[1]+b)>>>0;H[2]=(H[2]+c)>>>0;H[3]=(H[3]+d)>>>0;H[4]=(H[4]+e)>>>0;H[5]=(H[5]+f)>>>0;H[6]=(H[6]+g)>>>0;H[7]=(H[7]+h)>>>0;
   }
+  const put=function(byte){block[used++]=byte;if(used===64){compress();used=0;}};
+  utf8BytesForMemory(value,function(byte){originalLength++;put(byte);});
+  put(0x80);while(used!==56)put(0);
+  const high=Math.floor(originalLength/0x20000000),low=(originalLength<<3)>>>0;
+  [high>>>24,high>>>16,high>>>8,high,low>>>24,low>>>16,low>>>8,low].forEach(function(byte){put(byte&255);});
   return H.map(function(n){return n.toString(16).padStart(8,"0");}).join("");
 }
 function activeMemoryScreen(){
@@ -2496,12 +2560,21 @@ function capturePremierRegardRuntime(){
   try{if(typeof PR!=="undefined"&&PR&&PR.piece&&isSafeId(PR.piece.id))return {pieceId:PR.piece.id,i:clampInt(PR.i,0,9999,0),ok:clampInt(PR.ok,0,9999,0),segmentId:isSafeId(PR.segmentId)?PR.segmentId:""};}catch(e){}
   return null;
 }
+const MEMORY_FORM_IDS=["coachLevelSelect","coachYearSelect","courseReviewSelect","homeOptions","impArea","memoryCommand"];
+function captureMemoryForms(){
+  const rows=[];MEMORY_FORM_IDS.forEach(function(id){const el=document.getElementById(id);if(!el)return;rows.push({id:id,value:typeof el.value==="string"?el.value:null,open:typeof el.open==="boolean"?el.open:null});});return rows;
+}
+function restoreMemoryForms(runtime){
+  const rows=runtime&&Array.isArray(runtime.forms)?runtime.forms:[];
+  rows.forEach(function(row){if(!row||MEMORY_FORM_IDS.indexOf(row.id)<0)return;const el=document.getElementById(row.id);if(!el)return;if(typeof row.value==="string"&&typeof el.value==="string"){el.value=row.value;if((row.id==="coachLevelSelect"||row.id==="coachYearSelect")&&typeof el.onchange==="function")el.onchange();}if(typeof row.open==="boolean")el.open=row.open;});
+}
 function captureMemoryRuntime(){
   const now=Date.now(),screen=activeMemoryScreen(),scene=safeMap();
   MEMORY_SCENE_IDS.forEach(function(id){const v=captureMemoryElement(id);if(v)scene[id]=v;});
   const cardHtml=scene.cardBox?scene.cardBox.html:"",overlayType=detectMemoryOverlayType(cardHtml);
   const overlayControls=captureMemoryOverlayControls();
-  const runtime={schema:1,capturedAt:now,screen:screen,scrollY:Number(window.scrollY)||0,cardScrollTop:Number($("cardDialog")&&$("cardDialog").scrollTop)||0,pieceId:$("scrPiece")&&$("scrPiece").getAttribute("data-piece-id")||"",overlayOn:!!($("overlay")&&$("overlay").classList.contains("on")),overlayType:overlayType,overlayLabelledBy:$("cardDialog")&&$("cardDialog").getAttribute("aria-labelledby")||"",overlayControls:overlayControls,overlayFocusIndex:captureMemoryOverlayFocus(overlayControls),scene:scene,ex:null,kx:null,pr:capturePremierRegardRuntime(),syncRemote:overlayType==="sync_choice"&&memorySyncChoiceRemote?JSON.parse(JSON.stringify(memorySyncChoiceRemote)):null};
+  const runtime={schema:1,capturedAt:now,screen:screen,scrollY:Number(window.scrollY)||0,cardScrollTop:Number($("cardDialog")&&$("cardDialog").scrollTop)||0,pieceId:$("scrPiece")&&$("scrPiece").getAttribute("data-piece-id")||"",overlayOn:!!($("overlay")&&$("overlay").classList.contains("on")),overlayType:overlayType,overlayLabelledBy:$("cardDialog")&&$("cardDialog").getAttribute("aria-labelledby")||"",overlayControls:overlayControls,overlayFocusIndex:captureMemoryOverlayFocus(overlayControls),scene:scene,ex:null,kx:null,pr:capturePremierRegardRuntime(),syncRemote:overlayType==="sync_choice"&&memorySyncChoiceRemote?JSON.parse(JSON.stringify(memorySyncChoiceRemote)):null,fileDraft:memoryFileDraft?JSON.parse(JSON.stringify(memoryFileDraft)):null};
+  runtime.forms=captureMemoryForms();
   if(typeof EX!=="undefined"&&EX&&(screen==="scrEx"||screen==="scrRes"||runtime.overlayOn))runtime.ex=JSON.parse(JSON.stringify(EX));
   if(typeof KX!=="undefined"&&KX&&(screen==="scrKbd"||runtime.overlayOn))runtime.kx=JSON.parse(JSON.stringify(KX));
   return JSON.stringify(runtime);
@@ -2559,6 +2632,21 @@ function memoryCourseContext(){
   const reached=progress.steps[item.id]||0,completed=reached>=item.steps.length,index=Math.max(0,Math.min(item.steps.length-1,reached));
   return {itemId:item.id,itemLabel:item.label,stepIndex:index,stepTotal:item.steps.length,seriesNumber:completed?COURSE_SERIES_PER_STEP:((progress.cycles[item.id]||0)+1),seriesTotal:COURSE_SERIES_PER_STEP,completed:completed};
 }
+function memoryCurrentSceneDetail(){
+  const screen=activeMemoryScreen();
+  if(typeof EX!=="undefined"&&EX&&!EX.done){
+    const ids=uniq((EX.seq||[]).concat(EX.cur&&EX.cur.id?[EX.cur.id]:[])).filter(function(id){return !!NOTES[id];});
+    const labels=ids.map(function(id){return NOTES[id].n.toUpperCase()+" ("+clefShortLabel(NOTES[id].clef)+")";});
+    const task=EX.currentTask&&isRecord(EX.currentTask)?cleanText(JSON.stringify(EX.currentTask),420,""):"";
+    return "Question "+((EX.i||0)+1)+"/"+(EX.n||EX.questionCap||"?")+" · type "+(EX.qtype||EX.kind||"lecture")+" · phase "+(EX.phase||EX.currentPhase||"non indiquée")+" · notes "+(labels.join(", ")||"aucune")+" · réponse "+((EX.k||0)+1)+"/"+Math.max(1,(EX.seq||[]).length)+(task?" · tâche "+task:"");
+  }
+  if(typeof KX!=="undefined"&&KX&&!KX.done){
+    const cur=KX.cur&&KX.cur.id&&NOTES[KX.cur.id]?NOTES[KX.cur.id]:null;
+    return "Clavier "+((KX.i||0)+1)+"/"+(KX.n||"?")+" · "+(KX.dir||"lecture")+" · "+(cur?(cur.n.toUpperCase()+" ("+clefShortLabel(cur.clef)+")"):"cible non affichée");
+  }
+  const overlay=$('overlay')&&$('overlay').classList.contains('on')?detectMemoryOverlayType($('cardBox')&&$('cardBox').innerHTML||""):"aucune fenêtre";
+  return "Écran "+screen+" · "+overlay;
+}
 function memoryLevelContext(extra){
   extra=extra||{};
   const sel=PALIERS.find(function(p){return p.id===DB.sel;})||PALIERS[0],pi=Math.max(0,PALIERS.findIndex(function(p){return p.id===sel.id;}));
@@ -2566,9 +2654,10 @@ function memoryLevelContext(extra){
   const level=course?course.stepIndex+1:pi+1;
   const levelLabel=course?(course.itemLabel+" · étape "+(course.stepIndex+1)+"/"+course.stepTotal+(course.review?(course.continuous?" · entraînement continu":" · entraînement libre"):(course.completed?" · acquise":" · série "+course.seriesNumber+"/"+course.seriesTotal))):(sel.id+" · "+sel.t);
   const noteIds=Object.keys(DB.noteStats||{}).filter(function(id){const s=DB.noteStats[id]||{};return NOTES[id]&&((s.v||0)>0||(s.box||0)>0||(s.last||0)>0);}).sort();
+  const noteLabels=noteIds.map(function(id){return NOTES[id].n.toUpperCase()+" "+clefShortLabel(NOTES[id].clef);});
   let attempts=0,errors=0;noteIds.forEach(function(id){attempts+=DB.noteStats[id].v||0;errors+=DB.noteStats[id].e||0;});
-  let validations=0;PALIERS.forEach(function(p){TIER_IDS.forEach(function(t){if(DB.paliers[p.id]&&DB.paliers[p.id][t]&&DB.paliers[p.id][t].ok)validations++;});});
-  const scene=activeMemoryScreen(),current=typeof EX!=="undefined"&&EX&&!EX.done?("question "+((EX.i||0)+1)+"/"+(EX.n||EX.questionCap||"?")):(typeof KX!=="undefined"&&KX&&!KX.done?("clavier "+((KX.i||0)+1)+"/"+KX.n):"écran "+scene);
+  let validations=0;const acquired=[];PALIERS.forEach(function(p){TIER_IDS.forEach(function(t){if(DB.paliers[p.id]&&DB.paliers[p.id][t]&&DB.paliers[p.id][t].ok){validations++;acquired.push(p.id+" "+modeLabel(t));}});});
+  const scene=activeMemoryScreen(),current=memoryCurrentSceneDetail();
   const engagement=normalizeEngagement(DB.engagement),missionKeys=completedMissionKeys(engagement),todayMission=engagement.daily[todayStr()]||null;
   const crowns=Object.keys(engagement.weekly).filter(function(key){return !!engagement.weekly[key].completedAt;}).length;
   const finals=missionKeys.filter(function(key){return engagement.daily[key].badgeId==="mission_ten";}).length;
@@ -2577,20 +2666,191 @@ function memoryLevelContext(extra){
   const coachLevel=coachLevelById(displayedCoachLevelId?displayedCoachLevelId():""),coachYear=displayedCoachYear?displayedCoachYear():0;
   const choices="mode "+DB.mode+" · thème "+(DB.themeMode||"classique")+" · parcours "+((DB.profile&&DB.profile.parcours)||"libre")+" · classe musicale "+(coachLevel?coachClassLabel(coachLevel,coachYear):"non choisie")+" · œuvre "+(DB.activePiece||"aucune");
   const engagementSummary=missionKeys.length+" sceaux · "+finals+" finales de dix jours · "+crowns+" couronnes · mission du jour "+missionState+" · "+appointments.length+" rendez-vous actifs"+(nextAppointment?(", prochain « "+nextAppointment.title+" » le "+nextAppointment.date+" à "+nextAppointment.time):"");
-  const summary="Niveau "+level+" ("+levelLabel+") · "+(DB.xp||0)+" XP · "+noteIds.length+" notes mémorisées · "+attempts+" réponses, "+errors+" erreurs · "+validations+" validations · "+(DB.repairQueue||[]).length+" réparations en cours · "+(DB.pieces||[]).length+" partitions personnelles · "+engagementSummary+" · "+current+" · "+choices+".";
-  return {level:level,levelLabel:levelLabel,palier:sel.id,xp:DB.xp||0,noteIds:noteIds,attempts:attempts,errors:errors,validations:validations,repairs:(DB.repairQueue||[]).length,pieces:(DB.pieces||[]).length,missionDays:missionKeys.length,missionFinals:finals,weeklyCrowns:crowns,appointments:appointments.length,missionState:missionState,scene:scene,current:current,choices:choices,summary:summary,milestone:cleanText(extra.milestone,180,"")};
+  const summary="Niveau "+level+" ("+levelLabel+") · "+(DB.xp||0)+" XP · notes mémorisées : "+(noteLabels.join(", ")||"aucune")+" · "+attempts+" réponses, "+errors+" erreurs · acquis validés : "+(acquired.join(", ")||"aucun")+" · "+(DB.repairQueue||[]).length+" réparations en cours · "+(DB.pieces||[]).length+" partitions personnelles · "+engagementSummary+" · "+current+" · "+choices+".";
+  return {level:level,levelLabel:levelLabel,palier:sel.id,xp:DB.xp||0,noteIds:noteIds,noteLabels:noteLabels,attempts:attempts,errors:errors,validations:validations,acquired:acquired,repairs:(DB.repairQueue||[]).length,pieces:(DB.pieces||[]).length,missionDays:missionKeys.length,missionFinals:finals,weeklyCrowns:crowns,appointments:appointments.length,missionState:missionState,scene:scene,current:current,choices:choices,summary:summary,milestone:cleanText(extra.milestone,180,"")};
 }
-function memoryKindLabel(kind){return {manual:"Manuelle",level_complete:"Niveau terminé",daily_complete:"Mission quotidienne",weekly_complete:"Défi hebdomadaire",pre_level_change:"Avant changement de classe",pre_restore:"Avant restauration",pre_import:"Avant import",pre_recovery:"Avant code de reprise",pre_cloud:"Avant synchro cloud",pre_delete_cloud:"Avant suppression cloud",pre_delete:"Avant suppression",legacy_preimport:"Ancienne protection"}[kind]||"Protection automatique";}
+function memoryKindLabel(kind){return {manual:"Manuelle",level_complete:"Niveau terminé",session_complete:"Série terminée",daily_complete:"Mission quotidienne",weekly_complete:"Défi hebdomadaire",pre_exit:"Avant retour ou fermeture",pre_level_change:"Avant changement de classe",pre_restore:"Avant restauration",pre_import:"Avant import",pre_recovery:"Avant code de reprise",pre_cloud:"Avant synchro cloud",pre_delete_cloud:"Avant suppression cloud",pre_delete:"Avant suppression",legacy_preimport:"Ancienne protection"}[kind]||"Protection automatique";}
 function formatMemoryDate(ts){try{return new Date(ts).toLocaleString("fr-FR",{dateStyle:"short",timeStyle:"medium"});}catch(e){return new Date(ts).toLocaleString("fr-FR");}}
 function finalizedMemoryMeta(record,number,storage){
   const createdAt=record.createdAt,id=record.playerId+"-"+String(number).padStart(12,"0")+"-"+record.captureId;
   const localSuffix=storage==="local"?(":"+record.captureId):"";
-  return {schema:MEMORY_HISTORY_SCHEMA,id:id,playerId:record.playerId,userId:record.userId,number:number,kind:record.kind,kindLabel:memoryKindLabel(record.kind),createdAt:createdAt,name:"Sauvegarde n°"+number+" — Niveau "+record.context.level+" — "+formatMemoryDate(createdAt),appVersion:APP_VERSION,dbVersion:record.dbVersion||0,stateBytes:utf8ByteLength(record.stateRaw),runtimeBytes:utf8ByteLength(record.runtimeRaw),stateSha256:memorySha256(record.stateRaw),runtimeSha256:memorySha256(record.runtimeRaw),context:record.context,storage:storage,dataKey:memoryNumberKey(MEMORY_DATA_PREFIX,record.playerId,number)+localSuffix,metaKey:memoryNumberKey(MEMORY_META_PREFIX,record.playerId,number)+localSuffix};
+  const meta={schema:MEMORY_HISTORY_SCHEMA,id:id,originId:record.originId||id,captureId:record.captureId,playerId:record.playerId,userId:record.userId,number:number,kind:record.kind,kindLabel:memoryKindLabel(record.kind),createdAt:createdAt,name:"Sauvegarde n°"+number+" — Niveau "+record.context.level+" — "+formatMemoryDate(createdAt),appVersion:APP_VERSION,dbVersion:record.dbVersion||0,stateBytes:utf8ByteLength(record.stateRaw),runtimeBytes:utf8ByteLength(record.runtimeRaw),stateSha256:memorySha256(record.stateRaw),runtimeSha256:memorySha256(record.runtimeRaw),context:record.context,storage:storage,dataKey:memoryNumberKey(MEMORY_DATA_PREFIX,record.playerId,number)+localSuffix,metaKey:memoryNumberKey(MEMORY_META_PREFIX,record.playerId,number)+localSuffix};
+  meta.metaSha256=memorySha256(memoryMetaPayload(meta));return meta;
+}
+function memoryDecodeAttribute(value){
+  const named={quot:'"',apos:"'",amp:"&",lt:"<",gt:">",colon:":",Tab:"\t",NewLine:"\n"};
+  return String(value||"").replace(/&(?:#(x[0-9a-f]+|[0-9]+);?|([a-z]+);)/gi,function(all,num,name){if(num){const cp=parseInt(num.charAt(0).toLowerCase()==="x"?num.slice(1):num,num.charAt(0).toLowerCase()==="x"?16:10);return cp>0&&cp<=0x10ffff?String.fromCodePoint(cp):"\ufffd";}return hasOwn(named,name)?named[name]:all;}).trim();
+}
+function memorySafeInlineHandler(value){
+  const code=memoryDecodeAttribute(value).replace(/\s+/g,"");
+  if(/^document\.getElementById\((['"])overlay\1\)\.classList\.remove\((['"])on\2\)$/.test(code))return true;
+  return /^tone\(NOTES\[(['"])[A-Za-z0-9_-]{1,80}\1\]\.midi(?:,3\.2)?\)$/.test(code);
+}
+const MEMORY_SAFE_HTML_TAGS="a abbr article b br button caption code col colgroup dd details div dl dt em fieldset figcaption figure form g h1 h2 h3 h4 h5 h6 hr i img input label legend li line main ol optgroup option p path polygon polyline pre rect section select small span strong sub summary sup svg table tbody td text textarea th thead title tr tspan u ul circle ellipse defs desc description lineargradient radialgradient stop clippath".split(" ");
+function memoryHtmlAttributeSafe(tag,name,value){
+  name=String(name||"").toLowerCase();const decoded=memoryDecodeAttribute(value),compact=decoded.replace(/[\u0000-\u0020\u007f]+/g,"");
+  if(/^on/.test(name))return name==="onclick"&&memorySafeInlineHandler(value);
+  if(["srcdoc","srcset","ping","is","formaction","action","background","poster","contenteditable"].indexOf(name)>=0)return false;
+  if(name==="src")return tag==="img"&&/^data:image\/(?:png|jpeg|gif|webp);base64,[a-z0-9+/=\s]+$/i.test(decoded);
+  if(name==="href"||name==="xlink:href")return !compact||/^#[a-z0-9_.:-]*$/i.test(compact)||(tag==="a"&&/^https?:\/\/[^\s<>"'`]+$/i.test(decoded));
+  if(name==="style"||["fill","stroke","filter","clip-path","mask"].indexOf(name)>=0)return !/[\\\u0000]|@import|url\s*\(|expression\s*\(|-moz-binding|(?:java|vb)script\s*:/i.test(decoded);
+  if(name.indexOf(":")>=0&&name!=="xml:space"&&name!=="xmlns:xlink")return false;
+  return /^[a-z_:][a-z0-9:_.-]*$/i.test(name);
+}
+function memorySceneHtmlSafe(html){
+  html=String(html==null?"":html);let cursor=0;
+  // Lecture stricte de chaque balise/attribut, y compris svg/onload et les URL
+  // encodées. Le texte brut reste conservé dans le point de restauration.
+  while((cursor=html.indexOf("<",cursor))>=0){
+    if(html.slice(cursor,cursor+4)==="<!--"){const end=html.indexOf("-->",cursor+4);if(end<0)return false;cursor=end+3;continue;}
+    const opening=/^<\/?([a-z][a-z0-9]*)\b/i.exec(html.slice(cursor));
+    if(!opening){if(/[a-z!/?]/i.test(html.charAt(cursor+1)))return false;cursor++;continue;}
+    const tag=opening[1].toLowerCase();if(MEMORY_SAFE_HTML_TAGS.indexOf(tag)<0)return false;
+    cursor+=opening[0].length;
+    while(cursor<html.length){
+      const spacing=/^[\s/]*/.exec(html.slice(cursor))[0];cursor+=spacing.length;
+      if(html.charAt(cursor)===">"){cursor++;break;}
+      const attr=/^([a-z_:][a-z0-9:_.-]*)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s'"=<>`]+)))?/i.exec(html.slice(cursor));
+      if(!attr||!memoryHtmlAttributeSafe(tag,attr[1],attr[2]!==undefined?attr[2]:attr[3]!==undefined?attr[3]:attr[4]||""))return false;
+      cursor+=attr[0].length;
+      if(cursor>=html.length)return false;
+    }
+  }
+  return true;
+}
+function memoryRenderableHtml(html){
+  html=String(html||"");if(!memorySceneHtmlSafe(html))throw new Error("Scène HTML non sûre");
+  if(typeof document!=="undefined"&&typeof document.createElement==="function"){
+    const template=document.createElement("template");
+    if(template.content&&typeof template.content.querySelectorAll==="function"){
+      template.innerHTML=html;
+      Array.from(template.content.querySelectorAll("*")).forEach(function(el){const tag=String(el.localName||el.tagName||"").toLowerCase();if(MEMORY_SAFE_HTML_TAGS.indexOf(tag)<0||Array.from(el.attributes).some(function(attr){return !memoryHtmlAttributeSafe(tag,attr.name,attr.value);}))throw new Error("Scène HTML non sûre après lecture");if(tag==="a")el.setAttribute("rel","noopener noreferrer");});
+      return template.innerHTML;
+    }
+  }
+  return html;
+}
+function validMemoryRuntime(runtime){
+  const validScreens={scrHome:1,scrEx:1,scrKbd:1,scrRes:1,scrStats:1,scrPieces:1,scrPiece:1};
+  const validOverlays={other:1,inline_only:1,player_switch:1,player_add:1,player_edit:1,profile:1,discovery:1,preview:1,keyboard_config:1,keyboard_result:1,watch:1,startup_recovery:1,piece_goal:1,piece_goal_segment:1,first_look_self:1,first_look_quiz:1,first_look_answer:1,sync_choice:1,training_calendar:1,celebration:1};
+  if(!isRecord(runtime)||runtime.schema!==1||!isRecord(runtime.scene)||!hasOwn(validScreens,runtime.screen)||!Number.isFinite(runtime.capturedAt)||!hasOwn(validOverlays,runtime.overlayType||"other"))return false;
+  const sceneOk=Object.keys(runtime.scene).every(function(id){const row=runtime.scene[id];return MEMORY_SCENE_IDS.indexOf(id)>=0&&isRecord(row)&&typeof row.html==="string"&&memorySceneHtmlSafe(row.html)&&typeof row.className==="string"&&(row.value===null||typeof row.value==="string")&&typeof row.disabled==="boolean"&&isRecord(row.style)&&Object.keys(row.style).every(function(key){return ["display","width","visibility"].indexOf(key)>=0&&typeof row.style[key]==="string"&&memoryHtmlAttributeSafe("div","style",row.style[key]);});});
+  const controlsOk=!hasOwn(runtime,"overlayControls")||(Array.isArray(runtime.overlayControls)&&runtime.overlayControls.every(function(row,index){return isRecord(row)&&row.index===index&&typeof row.id==="string"&&row.id.length<=120&&typeof row.tag==="string";}));
+  const formIds=safeMap(),formsOk=!hasOwn(runtime,"forms")||(Array.isArray(runtime.forms)&&runtime.forms.every(function(row){if(!isRecord(row)||MEMORY_FORM_IDS.indexOf(row.id)<0||formIds[row.id]||!(row.value===null||typeof row.value==="string")||!(row.open===null||typeof row.open==="boolean"))return false;formIds[row.id]=true;return true;}));
+  const prOk=!runtime.pr||(isRecord(runtime.pr)&&isSafeId(runtime.pr.pieceId)&&Number.isInteger(runtime.pr.i)&&runtime.pr.i>=0&&Number.isInteger(runtime.pr.ok)&&runtime.pr.ok>=0&&(!runtime.pr.segmentId||isSafeId(runtime.pr.segmentId)));
+  const syncOk=runtime.overlayType!=="sync_choice"||runtime.syncRemote===null||recognizableStoredState(runtime.syncRemote);
+  const fileDraftOk=!runtime.fileDraft||(isRecord(runtime.fileDraft)&&runtime.fileDraft.inputId==="pcFile"&&!!normalizeAttachment(runtime.fileDraft.attachment));
+  return sceneOk&&controlsOk&&formsOk&&prOk&&syncOk&&fileDraftOk&&(!((runtime.screen==="scrEx"||runtime.screen==="scrRes")&&!isRecord(runtime.ex)))&&!(runtime.screen==="scrKbd"&&!isRecord(runtime.kx))&&!(runtime.screen==="scrPiece"&&!isSafeId(runtime.pieceId));
+}
+function validPendingMemoryRecord(record){
+  if(!isRecord(record)||!isSafeId(record.playerId)||!isSafeId(record.userId)||typeof record.captureId!=="string"||record.captureId.length<4||record.captureId.length>160||typeof record.kind!=="string"||record.kind.length>80||!Number.isFinite(record.createdAt)||typeof record.stateRaw!=="string"||typeof record.runtimeRaw!=="string"||!isRecord(record.context)||!Number.isInteger(record.context.level)||!Number.isFinite(record.context.xp)||typeof record.context.levelLabel!=="string"||typeof record.context.summary!=="string"||hasOwn(record,"originId")&&(typeof record.originId!=="string"||record.originId.length<4||record.originId.length>240))return false;
+  let state=null,runtime=null;try{state=JSON.parse(record.stateRaw);runtime=JSON.parse(record.runtimeRaw);}catch(e){return false;}
+  return recognizableStoredState(state)&&isRecord(state._sezam)&&state._sezam.playerId===record.playerId&&state._sezam.userId===record.userId&&validMemoryRuntime(runtime);
+}
+function memoryPendingFingerprint(record){return memorySha256(JSON.stringify(record));}
+function memoryPendingKey(record){return MEMORY_PENDING_PREFIX+record.playerId+":"+record.captureId;}
+function persistPendingMemoryRecord(record,cb){
+  if(!validPendingMemoryRecord(record)){cb("","","État de sauvegarde incohérent : demande refusée sans toucher aux anciens points.");return;}
+  const key=memoryPendingKey(record),recordRaw=JSON.stringify(record),recordSha256=memorySha256(recordRaw),raw=JSON.stringify({schema:MEMORY_HISTORY_SCHEMA,recordRaw:recordRaw,recordSha256:recordSha256});
+  try{const localPrior=localStorage.getItem("sezam_"+key);if(localPrior!==null){const parsedPrior=parsePendingMemoryRaw(localPrior);if(!parsedPrior||memoryPendingFingerprint(parsedPrior)!==recordSha256){cb("","","Une autre demande porte le même identifiant. Le journal existant reste intact ; ce nouveau point n’a pas été ajouté.");return;}}}catch(e){}
+  const fallback=function(){try{const localKey="sezam_"+key,existing=localStorage.getItem(localKey);if(existing!==null){const prior=parsePendingMemoryRaw(existing);if(!prior||memoryPendingFingerprint(prior)!==recordSha256){cb("","","Une autre demande porte le même identifiant. Le journal existant reste intact ; ce nouveau point n’a pas été ajouté.");return;}}else localStorage.setItem(localKey,raw);cb(key,"local","");}catch(e){cb(key,"","Journal de reprise indisponible.");}};
+  if(typeof indexedDB==="undefined"){fallback();return;}
+  idbOpen(function(db){
+    if(!db){fallback();return;}
+    let tx=null,settled=false,conflict="",timer=null;
+    const done=function(ok){if(settled)return;settled=true;if(timer)clearTimeout(timer);try{db.close();}catch(e){}if(ok)cb(key,"idb","");else if(conflict)cb("","",conflict);else fallback();};
+    try{
+      tx=db.transaction(IDB_STORE,"readwrite");const store=tx.objectStore(IDB_STORE);timer=setTimeout(function(){try{tx.abort();}catch(e){}done(false);},8000);
+      tx.oncomplete=function(){done(true);};tx.onerror=function(){done(false);};tx.onabort=function(){done(false);};
+      const rq=store.get(key);rq.onerror=function(){try{tx.abort();}catch(e){done(false);}};rq.onsuccess=function(){
+        if(rq.result!==undefined&&rq.result!==null){const prior=parsePendingMemoryRaw(rq.result);if(!prior||memoryPendingFingerprint(prior)!==recordSha256){conflict="Une autre demande porte le même identifiant. Aucun journal n’a été remplacé.";try{tx.abort();}catch(e){done(false);}return;}}
+        else try{store.add(raw,key);}catch(e){try{tx.abort();}catch(x){done(false);}}
+      };
+    }catch(e){if(tx)try{tx.abort();}catch(x){}done(false);}
+  });
+}
+function clearPendingMemoryRecord(key,record){
+  if(!key||!record)return;const fingerprint=memoryPendingFingerprint(record);
+  try{const localKey="sezam_"+key,prior=parsePendingMemoryRaw(localStorage.getItem(localKey));if(prior&&memoryPendingFingerprint(prior)===fingerprint)localStorage.removeItem(localKey);}catch(e){}
+  if(typeof indexedDB!=="undefined")idbOpen(function(db){if(!db)return;const close=function(){try{db.close();}catch(e){}};try{const tx=db.transaction(IDB_STORE,"readwrite"),store=tx.objectStore(IDB_STORE),rq=store.get(key);tx.oncomplete=close;tx.onerror=close;tx.onabort=close;rq.onsuccess=function(){const prior=parsePendingMemoryRaw(rq.result);if(prior&&memoryPendingFingerprint(prior)===fingerprint)store.delete(key);};}catch(e){close();}});
+}
+function parsePendingMemoryRaw(raw){let box=null,record=null;try{box=JSON.parse(String(raw||""));if(!box||box.schema!==MEMORY_HISTORY_SCHEMA||typeof box.recordRaw!=="string"||!(/^[a-f0-9]{64}$/.test(box.recordSha256||""))||memorySha256(box.recordRaw)!==box.recordSha256)return null;record=JSON.parse(box.recordRaw);}catch(e){return null;}return validPendingMemoryRecord(record)?record:null;}
+function scanLocalPendingMemory(){
+  const rows=[];try{for(let i=0;i<localStorage.length;i++){const key=localStorage.key(i);if(!key||key.indexOf("sezam_"+MEMORY_PENDING_PREFIX)!==0)continue;const raw=localStorage.getItem(key),record=parsePendingMemoryRaw(raw);if(record)rows.push({key:key.slice(6),record:record,fingerprint:memoryPendingFingerprint(record)});}}catch(e){}return rows;
+}
+function resumePendingMemorySnapshots(){
+  const local=scanLocalPendingMemory(),finish=function(remote){
+    const grouped=safeMap();local.concat(remote||[]).forEach(function(row){if(!row||!validPendingMemoryRecord(row.record))return;if(row.key!==memoryPendingKey(row.record)){memoryNoticeForPlayer(row.record.playerId,"Un journal porte un emplacement incohérent : reprise suspendue, contenu intact.",true);return;}(grouped[row.key]||(grouped[row.key]=[])).push(row);});
+    Object.keys(grouped).forEach(function(key){const rows=grouped[key],first=rows[0],conflict=rows.some(function(row){return row.fingerprint!==first.fingerprint;});if(conflict){memoryNoticeForPlayer(first.record.playerId,"Deux journaux différents portent le même identifiant : reprise suspendue, aucun octet n’a été supprimé.",true);return;}memorySnapshotQueue.push({record:first.record,notify:false,cb:null,pendingKey:key,pendingStored:true,dedupe:true});});pumpMemorySnapshots();
+  };
+  if(typeof indexedDB==="undefined"){finish([]);return;}
+  idbEntries(MEMORY_PENDING_PREFIX,function(entries){const rows=[];entries.forEach(function(entry){const record=parsePendingMemoryRaw(entry.value);if(record)rows.push({key:entry.key,record:record,fingerprint:memoryPendingFingerprint(record)});});finish(rows);});
 }
 function scanLocalMemoryMetas(playerId){
-  const rows=[],prefix="sezam_"+MEMORY_META_PREFIX+playerId+":";
-  try{for(let i=0;i<localStorage.length;i++){const key=localStorage.key(i);if(!key||key.indexOf(prefix)!==0)continue;const raw=localStorage.getItem(key),parsed=parseMemoryIndex("["+raw+"]");if(parsed&&parsed[0]&&parsed[0].playerId===playerId)rows.push(parsed[0]);}}catch(e){}
+  const rows=[],dataPrefix="sezam_"+MEMORY_DATA_PREFIX+playerId+":",metaPrefix="sezam_"+MEMORY_META_PREFIX+playerId+":";
+  try{
+    for(let pass=0;pass<2;pass++)for(let i=0;i<localStorage.length;i++){
+      const key=localStorage.key(i),prefix=pass===0?dataPrefix:metaPrefix;if(!key||key.indexOf(prefix)!==0)continue;const raw=localStorage.getItem(key);
+      if(pass===0){let env=null;try{env=JSON.parse(String(raw||""));}catch(e){}const parsed=env&&parseMemoryIndex(JSON.stringify([env.meta]));if(parsed&&parsed[0]&&validateMemoryEnvelopeForPlayer(raw,parsed[0],playerId,parsed[0].userId).ok)rows.push(parsed[0]);}
+      else {const parsed=parseMemoryIndex("["+raw+"]");if(parsed&&parsed[0]&&parsed[0].playerId===playerId)rows.push(parsed[0]);}
+    }
+  }catch(e){}
   return rows;
+}
+function scanIdbMemoryMetas(playerId,cb){
+  const rows=[],metas=[],known=safeMap();idbEntries(MEMORY_META_PREFIX+playerId+":",function(metaEntries,metaOk){
+    metaEntries.forEach(function(entry){const parsed=parseMemoryIndex("["+String(entry.value||"")+"]");if(parsed&&parsed[0]&&parsed[0].playerId===playerId&&parsed[0].metaKey===entry.key){metas.push(parsed[0]);if(hasOwn(parsed[0],"metaSha256"))known[parsed[0].dataKey]=parsed[0];}});
+    idbEntries(MEMORY_DATA_PREFIX+playerId+":",function(dataKeys,dataOk){
+      const missing=dataKeys.filter(function(entry){return !known[entry.key];});let index=0;
+      const next=function(){if(index>=missing.length){cb(rows.concat(metas),!!dataOk&&!!metaOk);return;}
+        const entry=missing[index++];idbGet(entry.key,function(raw){let env=null;try{env=JSON.parse(String(raw||""));}catch(e){}const parsed=env&&parseMemoryIndex(JSON.stringify([env.meta]));if(parsed&&parsed[0]&&parsed[0].dataKey===entry.key&&validateMemoryEnvelopeForPlayer(raw,parsed[0],playerId,parsed[0].userId).ok)rows.push(parsed[0]);next();});
+      };next();
+    },true);
+  });
+}
+function mergeMemoryMetas(rows,playerId){
+  const byId=safeMap(),byOrigin=safeMap(),all=[];
+  (rows||[]).forEach(function(meta){
+    if(!meta||meta.playerId!==playerId||byId[meta.id])return;
+    const origin=memoryOriginId(meta),prior=byOrigin[origin];
+    if(prior&&sameMemoryOriginPoint(prior,meta))return;
+    byId[meta.id]=1;if(!prior)byOrigin[origin]=meta;all.push(meta);
+  });
+  all.sort(function(a,b){return b.number-a.number||(b.createdAt||0)-(a.createdAt||0)||String(b.id).localeCompare(String(a.id));});return all;
+}
+function memoryIndexEquivalent(a,b){
+  if(!Array.isArray(a)||!Array.isArray(b)||a.length!==b.length)return false;
+  const sort=function(rows){return rows.slice().sort(function(x,y){return x.number-y.number||String(x.id).localeCompare(String(y.id));});},aa=sort(a),bb=sort(b);
+  return aa.every(function(meta,index){return memoryMetaPayload(meta)===memoryMetaPayload(bb[index]);});
+}
+function memoryIndexFullySealed(rows){return Array.isArray(rows)&&rows.every(function(meta){return hasOwn(meta,"metaSha256")&&memoryMetaSealValid(meta);});}
+function repairMemoryIdbIndex(playerId,scanned,cb){
+  idbOpen(function(db){
+    if(!db){cb(scanned,false);return;}
+    let tx=null,settled=false,timer=null,merged=scanned;
+    const done=function(ok){if(settled)return;settled=true;if(timer)clearTimeout(timer);try{db.close();}catch(e){}cb(merged,!!ok);};
+    try{
+      tx=db.transaction(IDB_STORE,"readwrite");const store=tx.objectStore(IDB_STORE),rq=store.get(memoryIndexKey(playerId));
+      timer=setTimeout(function(){try{tx.abort();}catch(e){}done(false);},8000);
+      tx.oncomplete=function(){done(true);};tx.onerror=function(){done(false);};tx.onabort=function(){done(false);};rq.onerror=function(){try{tx.abort();}catch(e){done(false);}};
+      rq.onsuccess=function(){const current=parseMemoryIndex(rq.result);merged=mergeMemoryMetas(scanned.concat(current||[]),playerId);if(current===null||!memoryIndexEquivalent(merged,current))try{store.put(JSON.stringify(merged.slice().sort(function(a,b){return a.number-b.number;})),memoryIndexKey(playerId));}catch(e){try{tx.abort();}catch(x){done(false);}}};
+    }catch(e){if(tx)try{tx.abort();}catch(x){}done(false);}
+  });
+}
+function memorySnapshotListForPlayer(playerId,cb){
+  if(!isSafeId(playerId)){cb([]);return;}
+  let localRaw=null;try{localRaw=localStorage.getItem(memoryLocalIndexKey(playerId));}catch(e){}
+  const localParsed=parseMemoryIndex(localRaw),localScanned=scanLocalMemoryMetas(playerId),localRows=mergeMemoryMetas(localScanned.concat(localParsed||[]),playerId);
+  if(localParsed===null||!memoryIndexEquivalent(localRows,localParsed||[])){try{localStorage.setItem(memoryLocalIndexKey(playerId),JSON.stringify(localRows.slice().sort(function(a,b){return a.number-b.number;})));}catch(e){}}
+  if(typeof indexedDB==="undefined"){cb(localRows);return;}
+  idbGet(memoryIndexKey(playerId),function(idbRaw){
+    const indexed=parseMemoryIndex(idbRaw);
+    scanIdbMemoryMetas(playerId,function(scanned,scanOk){
+      let idbRows=mergeMemoryMetas((scanOk?scanned:[]).concat(indexed||[]),playerId);const finish=function(){cb(mergeMemoryMetas(idbRows.concat(localRows),playerId));};
+      if(scanOk&&(indexed===null||!memoryIndexEquivalent(idbRows,indexed||[]))){repairMemoryIdbIndex(playerId,idbRows,function(repaired){idbRows=repaired;finish();});return;}
+      finish();
+    });
+  });
 }
 function appendMemoryLocalCore(record,cb){
   let pid=record.playerId,indexKey=memoryLocalIndexKey(pid),index=null,number=0,meta=null,envelope="",metaRaw="",dataKey="",metaKey="",ok=false,error="";
@@ -2600,8 +2860,10 @@ function appendMemoryLocalCore(record,cb){
     else {
       const seen=safeMap(),known=[];index.concat(scanLocalMemoryMetas(pid)).forEach(function(row){if(!seen[row.id]){seen[row.id]=1;known.push(row);}});index=known;
       number=Math.max(memoryHead(pid),index.reduce(function(m,x){return Math.max(m,x.number||0);},0))+1;
-      while(localStorage.getItem(memoryLocalDataKey(pid,number))||localStorage.getItem(memoryLocalMetaKey(pid,number)))number++;
+      while(Number.isSafeInteger(number)&&(localStorage.getItem(memoryLocalDataKey(pid,number))!==null||localStorage.getItem(memoryLocalMetaKey(pid,number))!==null))number++;
+      if(!Number.isSafeInteger(number)){cb(false,null,"La numérotation du coffre a atteint sa limite. Les anciens points restent intacts.");return;}
       meta=finalizedMemoryMeta(record,number,"local");envelope=JSON.stringify({schema:MEMORY_HISTORY_SCHEMA,meta:meta,stateRaw:record.stateRaw,runtimeRaw:record.runtimeRaw});metaRaw=JSON.stringify(meta);dataKey="sezam_"+meta.dataKey;metaKey="sezam_"+meta.metaKey;
+      if(localStorage.getItem(dataKey)!==null||localStorage.getItem(metaKey)!==null){cb(false,null,"Collision refusée : une sauvegarde occupe déjà cet emplacement. Aucun octet n’a été remplacé.");return;}
       localStorage.setItem(dataKey,envelope);
       localStorage.setItem(metaKey,metaRaw);
       localStorage.setItem(indexKey,JSON.stringify(index.concat([meta])));
@@ -2626,7 +2888,8 @@ function appendMemoryIdb(record,cb){
   idbOpen(function(db){
     if(!db){appendMemoryLocal(record,cb);return;}
     let tx,store,settled=false,resultMeta=null,watchdog=setTimeout(function(){try{if(tx)tx.abort();}catch(e){}done(false,"Le coffre a cessé de répondre : ajout annulé, historique existant intact.");},12000);
-    const done=function(ok,msg){if(settled)return;settled=true;clearTimeout(watchdog);if(ok&&resultMeta)advanceMemoryHead(record.playerId,resultMeta.number);cb(ok,resultMeta,msg||"");};
+    const done=function(ok,msg){if(settled)return;settled=true;clearTimeout(watchdog);try{db.close();}catch(e){}if(ok&&resultMeta)advanceMemoryHead(record.playerId,resultMeta.number);cb(ok,resultMeta,msg||"");};
+    const fallback=function(){if(settled)return;settled=true;clearTimeout(watchdog);try{db.close();}catch(e){}appendMemoryLocal(record,cb);};
     try{
       tx=db.transaction(IDB_STORE,"readwrite");store=tx.objectStore(IDB_STORE);
       tx.oncomplete=function(){done(true,"");};
@@ -2637,6 +2900,7 @@ function appendMemoryIdb(record,cb){
       rq.onsuccess=function(){
         const index=parseMemoryIndex(rq.result);if(index===null){try{tx.abort();}catch(e){done(false,"Index de sauvegardes illisible.");}return;}
         const number=Math.max(memoryHead(record.playerId),index.reduce(function(m,x){return Math.max(m,x.number||0);},0))+1;
+        if(!Number.isSafeInteger(number)){try{tx.abort();}catch(e){done(false,"Numérotation maximale atteinte ; historique intact.");}return;}
         resultMeta=finalizedMemoryMeta(record,number,"idb");
         const envelope=JSON.stringify({schema:MEMORY_HISTORY_SCHEMA,meta:resultMeta,stateRaw:record.stateRaw,runtimeRaw:record.runtimeRaw});
         try{
@@ -2645,17 +2909,31 @@ function appendMemoryIdb(record,cb){
           store.put(JSON.stringify(index.concat([resultMeta])),memoryIndexKey(record.playerId));
         }catch(e){try{tx.abort();}catch(x){done(false,"Collision refusée : aucun point existant n’a été écrasé.");}}
       };
-    }catch(e){appendMemoryLocal(record,cb);}
+    }catch(e){fallback();}
   });
 }
 function appendMemoryRecord(record,cb){
-  if(typeof indexedDB!=="undefined")appendMemoryIdb(record,cb);else appendMemoryLocal(record,cb);
+  if(!validPendingMemoryRecord(record)){cb(false,null,"État de sauvegarde incohérent : aucun point n’a été ajouté.");return;}
+  memorySnapshotListForPlayer(record.playerId,function(){if(typeof indexedDB!=="undefined")appendMemoryIdb(record,cb);else appendMemoryLocal(record,cb);});
 }
 function memoryToast(message,bad){
   const box=$("memoryToast");if(!box)return;
   box.textContent=message;box.style.background=bad?"#7a1d24":"";box.classList.add("on");
   if(memoryToastTimer)clearTimeout(memoryToastTimer);
   memoryToastTimer=setTimeout(function(){box.classList.remove("on");memoryToastTimer=null;},bad?6500:5200);
+}
+function memoryNoticeForPlayer(playerId,message,bad){
+  playerId=isSafeId(playerId)?playerId:ACTIVE_PLAYER_ID;try{sessionStorage.setItem("sezam_memory_notice_"+playerId,JSON.stringify({message:String(message||""),bad:!!bad}));}catch(e){}
+  if(playerId!==ACTIVE_PLAYER_ID)return;
+  const box=$("memoryNotice"),textBox=$("memoryNoticeText");if(!box||!textBox)return;textBox.textContent=String(message||"");box.classList.add("on");box.classList.toggle("bad",!!bad);
+}
+function memoryNotice(message,bad){memoryNoticeForPlayer(ACTIVE_PLAYER_ID,message,bad);}
+function restoreMemoryNotice(){
+  let saved=null;try{saved=JSON.parse(sessionStorage.getItem("sezam_memory_notice_"+ACTIVE_PLAYER_ID)||"null");}catch(e){}if(saved&&saved.message)memoryNotice(saved.message,!!saved.bad);
+}
+function openMemoryVaultSection(){
+  const screen=activeMemoryScreen();if(screen!=="scrStats"||($("overlay")&&$("overlay").classList.contains("on")))return leaveMemoryScene("vault");
+  renderStats();setTimeout(function(){try{$("memorySection").scrollIntoView({behavior:"smooth",block:"start"});$("memorySection").focus();}catch(e){}},0);return true;
 }
 function checkMemoryStoragePressure(){
   if(!navigator.storage||typeof navigator.storage.estimate!=="function")return;
@@ -2665,35 +2943,55 @@ function checkMemoryStoragePressure(){
     memoryToast(msg,true);if($("memoryMsg"))$("memoryMsg").textContent=msg;
   }).catch(function(){});}catch(e){}
 }
+function memoryConfirmationText(meta){const context=meta&&meta.context||{},notes=Array.isArray(context.noteIds)?context.noteIds.length:0,acquired=Array.isArray(context.acquired)?context.acquired.length:(context.validations||0);return meta.name+" créée — "+context.levelLabel+" · "+notes+" note"+(notes>1?"s":"")+" mémorisée"+(notes>1?"s":"")+" · "+acquired+" acquis · scène "+(context.scene||"conservée")+" · contrôle "+meta.stateSha256.slice(0,12)+"…. Rien n’a été écrasé.";}
 function pumpMemorySnapshots(){
   if(memorySnapshotWriting||!memorySnapshotQueue.length)return;
   memorySnapshotWriting=true;const job=memorySnapshotQueue.shift();
-  try{appendMemoryRecord(job.record,function(ok,meta,error){
+  const write=function(){try{appendMemoryRecord(job.record,function(ok,meta,error){
     memorySnapshotWriting=false;
-    const result={ok:!!ok,meta:meta||null,message:ok?(meta.name+" créée. "+meta.context.summary):(error||"Sauvegarde impossible. Rien n’a été effacé.")};
-    if(job.notify!==false)memoryToast(ok?(meta.name+" créée. "+meta.context.summary+" Rien n’a été écrasé."):result.message,!ok);
+    const retryMessage=job.pendingStored?" La demande reste inscrite et sera reprise automatiquement au prochain démarrage.":" Aucun ancien point n’a été effacé ; exporte le coffre avant de fermer cette page.";
+    const result={ok:!!ok,meta:meta||null,message:ok?memoryConfirmationText(meta):((error||"Sauvegarde impossible. Rien n’a été effacé.")+retryMessage)};
+    if(ok)clearPendingMemoryRecord(job.pendingKey,job.record);
+    memoryNoticeForPlayer(job.record.playerId,result.message,!ok);
+    if(job.notify!==false&&job.record.playerId===ACTIVE_PLAYER_ID)memoryToast(result.message,!ok);
     if(ok)checkMemoryStoragePressure();
     try{if(typeof job.cb==="function")job.cb(result);}finally{pumpMemorySnapshots();}
-  });}catch(e){memorySnapshotWriting=false;const result={ok:false,meta:null,message:"Sauvegarde interrompue sans effacer aucun ancien point."};try{if(job.cb)job.cb(result);}finally{pumpMemorySnapshots();}}
+  });}catch(e){memorySnapshotWriting=false;const result={ok:false,meta:null,message:"Sauvegarde interrompue sans effacer aucun ancien point."+(job.pendingStored?" La demande reste en attente pour le prochain démarrage.":" Exporte le coffre avant de fermer la page.")};memoryNoticeForPlayer(job.record.playerId,result.message,true);try{if(job.cb)job.cb(result);}finally{pumpMemorySnapshots();}}};
+  if(job.dedupe){memorySnapshotListForPlayer(job.record.playerId,function(rows){
+    const candidates=rows.filter(function(meta){return meta.captureId===job.record.captureId||(job.record.originId&&memoryOriginId(meta)===job.record.originId);}),hit=candidates.find(function(meta){return memoryRecordMatchesMeta(job.record,meta);});
+    if(hit){memorySnapshotWriting=false;clearPendingMemoryRecord(job.pendingKey,job.record);if(typeof job.cb==="function")job.cb({ok:true,meta:hit,message:hit.name+" était déjà protégée."});pumpMemorySnapshots();return;}
+    if(candidates.length){memorySnapshotWriting=false;const result={ok:false,meta:null,message:"Conflit de sauvegarde : un identifiant identique protège un autre contenu. Le journal reste intact et rien n’a été écrasé."};memoryNoticeForPlayer(job.record.playerId,result.message,true);if(typeof job.cb==="function")job.cb(result);pumpMemorySnapshots();return;}
+    write();
+  });}else write();
 }
-function createMemorySnapshot(kind,options,cb){
+function memoryRecordMatchesMeta(record,meta){
+  return !!record&&!!meta&&record.playerId===meta.playerId&&record.userId===meta.userId&&record.createdAt===meta.createdAt&&record.kind===meta.kind&&utf8ByteLength(record.stateRaw)===meta.stateBytes&&utf8ByteLength(record.runtimeRaw)===meta.runtimeBytes&&memorySha256(record.stateRaw)===meta.stateSha256&&memorySha256(record.runtimeRaw)===meta.runtimeSha256&&JSON.stringify(record.context)===JSON.stringify(meta.context)&&(!record.originId||memoryOriginId(meta)===record.originId);
+}
+function captureMemorySnapshotRecord(kind,options){
+  if(memoryStartupBlocked)return {ok:false,message:"La progression enregistrée n’a pas encore pu être relue. Réessaie son chargement avant de créer une sauvegarde ; aucun état neuf ne remplacera ta mémoire."};
   options=options||{};let stateRaw="",runtimeRaw="",context=null;
-  try{stateRaw=JSON.stringify(DB);runtimeRaw=captureMemoryRuntime();context=memoryLevelContext(options);}catch(e){const r={ok:false,meta:null,message:"Sauvegarde impossible : l’état complet n’a pas pu être sérialisé. Rien n’a été modifié."};memoryToast(r.message,true);if(cb)cb(r);return false;}
+  try{stateRaw=JSON.stringify(DB);runtimeRaw=captureMemoryRuntime();context=memoryLevelContext(options);}catch(e){return {ok:false,message:"Sauvegarde impossible : l’état complet n’a pas pu être sérialisé. Rien n’a été modifié."};}
   const sezam=DB&&isRecord(DB._sezam)?DB._sezam:{};
-  if(!stateRaw||!recognizableStoredState(DB)||sezam.playerId!==ACTIVE_PLAYER_ID){const r={ok:false,meta:null,message:"Sauvegarde refusée : l’identité du joueur actif n’est pas vérifiable. Rien n’a été modifié."};memoryToast(r.message,true);if(cb)cb(r);return false;}
+  if(!stateRaw||!recognizableStoredState(DB)||sezam.playerId!==ACTIVE_PLAYER_ID||!isSafeId(sezam.userId)){return {ok:false,message:"Sauvegarde refusée : l’identité du joueur actif n’est pas vérifiable. Rien n’a été modifié."};}
   let parsedVersion=0;try{parsedVersion=JSON.parse(stateRaw).v||0;}catch(e){}
   const createdAt=Date.now(),captureId=createdAt.toString(36)+Math.random().toString(36).slice(2,9);
-  memorySnapshotQueue.push({record:{playerId:ACTIVE_PLAYER_ID,userId:sezam.userId||ACTIVE_PLAYER_ID,kind:kind||"manual",createdAt:createdAt,captureId:captureId,dbVersion:parsedVersion,stateRaw:stateRaw,runtimeRaw:runtimeRaw,context:context},notify:options.notify!==false,cb:cb});pumpMemorySnapshots();return true;
+  const record={playerId:ACTIVE_PLAYER_ID,userId:sezam.userId,kind:kind||"manual",createdAt:createdAt,captureId:captureId,dbVersion:parsedVersion,stateRaw:stateRaw,runtimeRaw:runtimeRaw,context:context};
+  return validPendingMemoryRecord(record)?{ok:true,record:record}:{ok:false,message:"Sauvegarde refusée : la scène complète n’est pas cohérente. Rien n’a été modifié."};
+}
+function enqueueMemorySnapshotRecord(record,options,cb){
+  options=options||{};persistPendingMemoryRecord(record,function(pendingKey,pendingStorage,pendingError){
+    if(!pendingKey){const result={ok:false,meta:null,message:pendingError||"Le journal protégé n’a pas pu être créé. Aucun ancien point n’a été modifié."};memoryToast(result.message,true);if(cb)cb(result);return;}
+    memorySnapshotQueue.push({record:record,notify:options.notify!==false,cb:cb,pendingKey:pendingKey,pendingStored:!!pendingStorage,dedupe:!!options.dedupe});pumpMemorySnapshots();
+  });return true;
+}
+function createMemorySnapshot(kind,options,cb){
+  if(memorySceneRenderFrozen){if(cb)cb({ok:true,meta:null,skipped:true,message:"Rendu restauré sans écriture."});return true;}
+  const captured=captureMemorySnapshotRecord(kind,options);if(!captured.ok){const result={ok:false,meta:null,message:captured.message};memoryToast(result.message,true);if(cb)cb(result);return false;}
+  return enqueueMemorySnapshotRecord(captured.record,options,cb);
 }
 function memorySnapshotList(cb){
-  const pid=ACTIVE_PLAYER_ID,epoch=PLAYER_EPOCH,local=(parseMemoryIndex((function(){try{return localStorage.getItem(memoryLocalIndexKey(pid));}catch(e){return null;}})())||[]).concat(scanLocalMemoryMetas(pid));
-  const finish=function(idbRaw){
-    if(pid!==ACTIVE_PLAYER_ID||epoch!==PLAYER_EPOCH)return;
-    const remote=parseMemoryIndex(idbRaw)||[],seen=safeMap(),all=[];
-    remote.concat(local).forEach(function(m){if(m.playerId===pid&&!seen[m.id]){seen[m.id]=1;all.push(m);}});
-    all.sort(function(a,b){return b.number-a.number;});cb(all);
-  };
-  if(typeof indexedDB!=="undefined")idbGet(memoryIndexKey(pid),finish);else finish(null);
+  const pid=ACTIVE_PLAYER_ID,epoch=PLAYER_EPOCH;
+  memorySnapshotListForPlayer(pid,function(rows){if(pid===ACTIVE_PLAYER_ID&&epoch===PLAYER_EPOCH)cb(rows);});
 }
 function loadMemoryEnvelope(meta,cb){
   const localKey="sezam_"+meta.dataKey,legacyKey=memoryLocalDataKey(meta.playerId,meta.number);
@@ -2701,22 +2999,143 @@ function loadMemoryEnvelope(meta,cb){
   if(meta.storage==="local"){fromLocal();return;}
   idbGet(meta.dataKey,function(raw){if(raw)cb(raw);else fromLocal();});
 }
-function validateMemoryEnvelope(raw,meta){
+function validateMemoryEnvelopeForPlayer(raw,meta,expectedPlayerId,expectedUserId){
+  expectedPlayerId=isSafeId(expectedPlayerId)?expectedPlayerId:ACTIVE_PLAYER_ID;
+  const registryMeta=playerMetaById(expectedPlayerId)||archivedPlayerMetaById(expectedPlayerId);expectedUserId=isSafeId(expectedUserId)?expectedUserId:(registryMeta&&registryMeta.userId||meta&&meta.userId);
   let env=null,state=null,runtime=null;try{env=JSON.parse(String(raw||""));}catch(e){return {ok:false,message:"Point illisible : restauration annulée, état actuel intact."};}
-  if(!isRecord(env)||env.schema!==MEMORY_HISTORY_SCHEMA||!isRecord(env.meta)||env.meta.id!==meta.id||env.meta.number!==meta.number||env.meta.playerId!==ACTIVE_PLAYER_ID||meta.playerId!==ACTIVE_PLAYER_ID)return {ok:false,message:"Ce point n’appartient pas au joueur actif. Rien n’a été modifié."};
+  if(!isRecord(env)||env.schema!==MEMORY_HISTORY_SCHEMA||!isRecord(env.meta)||env.meta.id!==meta.id||env.meta.number!==meta.number||env.meta.playerId!==expectedPlayerId||meta.playerId!==expectedPlayerId||!isSafeId(expectedUserId)||env.meta.userId!==expectedUserId||meta.userId!==expectedUserId)return {ok:false,message:"Ce point n’appartient pas à l’identité du joueur attendu. Rien n’a été modifié."};
+  if(memoryMetaPayload(env.meta)!==memoryMetaPayload(meta)||!memoryMetaSealValid(env.meta))return {ok:false,message:"Métadonnées incohérentes : restauration annulée, contenu historique intact."};
   if(env.meta.stateSha256!==meta.stateSha256||env.meta.runtimeSha256!==meta.runtimeSha256||env.meta.stateBytes!==meta.stateBytes||env.meta.runtimeBytes!==meta.runtimeBytes||typeof env.stateRaw!=="string"||typeof env.runtimeRaw!=="string"||utf8ByteLength(env.stateRaw)!==meta.stateBytes||memorySha256(env.stateRaw)!==meta.stateSha256||utf8ByteLength(env.runtimeRaw)!==meta.runtimeBytes||memorySha256(env.runtimeRaw)!==meta.runtimeSha256)return {ok:false,message:"Contrôle d’intégrité refusé : le point a changé ou est incomplet. État actuel intact."};
   try{state=JSON.parse(env.stateRaw);runtime=JSON.parse(env.runtimeRaw);}catch(e){return {ok:false,message:"Contenu incomplet : restauration annulée."};}
-  if(!recognizableStoredState(state)||!isRecord(state._sezam)||state._sezam.playerId!==ACTIVE_PLAYER_ID)return {ok:false,message:"Identité de sauvegarde incohérente : restauration annulée."};
-  const validScreens={scrHome:1,scrEx:1,scrKbd:1,scrRes:1,scrStats:1,scrPieces:1,scrPiece:1};
-  const validOverlays={other:1,inline_only:1,player_switch:1,player_add:1,player_edit:1,profile:1,discovery:1,preview:1,keyboard_config:1,keyboard_result:1,watch:1,startup_recovery:1,piece_goal:1,piece_goal_segment:1,first_look_self:1,first_look_quiz:1,first_look_answer:1,sync_choice:1,training_calendar:1,celebration:1};
-  const controlsOk=runtime&&(!hasOwn(runtime,"overlayControls")||(Array.isArray(runtime.overlayControls)&&runtime.overlayControls.every(function(row,index){return isRecord(row)&&row.index===index&&typeof row.id==="string"&&row.id.length<=120&&typeof row.tag==="string";})));
-  const prOk=runtime&&(!runtime.pr||(isRecord(runtime.pr)&&isSafeId(runtime.pr.pieceId)&&Number.isInteger(runtime.pr.i)&&runtime.pr.i>=0&&Number.isInteger(runtime.pr.ok)&&runtime.pr.ok>=0&&(!runtime.pr.segmentId||isSafeId(runtime.pr.segmentId))));
-  const syncOk=!!runtime&&(runtime.overlayType!=="sync_choice"||runtime.syncRemote===null||recognizableStoredState(runtime.syncRemote));
-  if(!isRecord(runtime)||runtime.schema!==1||!isRecord(runtime.scene)||!validScreens[runtime.screen]||!Number.isFinite(runtime.capturedAt)||!validOverlays[runtime.overlayType||"other"]||!controlsOk||!prOk||!syncOk||((runtime.screen==="scrEx"||runtime.screen==="scrRes")&&!isRecord(runtime.ex))||(runtime.screen==="scrKbd"&&!isRecord(runtime.kx))||(runtime.screen==="scrPiece"&&(!isSafeId(runtime.pieceId)||!runtime.pieceId)))return {ok:false,message:"Contexte de scène illisible : restauration annulée, état actuel intact."};
+  if(!recognizableStoredState(state)||!isRecord(state._sezam)||state._sezam.playerId!==expectedPlayerId||state._sezam.userId!==expectedUserId)return {ok:false,message:"Identité de sauvegarde incohérente : restauration annulée."};
+  if(!validMemoryRuntime(runtime))return {ok:false,message:"Contexte de scène illisible ou non sûr : restauration annulée, état actuel intact."};
   return {ok:true,env:env,state:state,runtime:runtime};
 }
+function validateMemoryEnvelope(raw,meta){const player=activePlayerMeta();return validateMemoryEnvelopeForPlayer(raw,meta,ACTIVE_PLAYER_ID,player&&player.userId);}
+function buildMemoryVaultForPlayer(playerId,player,cb){
+  if(!isSafeId(playerId)||!player||player.id!==playerId||!isSafeId(player.userId)){cb({ok:false,message:"Identité du joueur à exporter non vérifiable."});return;}
+  memorySnapshotListForPlayer(playerId,function(rows){
+    rows=rows.slice().sort(function(a,b){return a.number-b.number;});
+    const exportedAt=Date.now(),chunks=[],files=[];let snapshots=[],index=0,pointsBytes=0,totalCount=0;
+    const payloadFor=function(points,part,total){return {format:MEMORY_VAULT_FORMAT,schema:MEMORY_VAULT_SCHEMA,exportedAt:exportedAt,appVersion:APP_VERSION,player:{id:playerId,userId:player.userId,name:player.name||"Joueur"},part:{number:part,total:total},snapshots:points};};
+    const vaultText=function(payload,seal){const payloadRaw=JSON.stringify(payload);return JSON.stringify({format:MEMORY_VAULT_FORMAT,schema:MEMORY_VAULT_SCHEMA,payloadRaw:payloadRaw,payloadSha256:seal?memorySha256(payloadRaw):"0".repeat(64)});};
+    const baseBytes=utf8ByteLength(vaultText(payloadFor([],1,1),false))+128;
+    const next=function(){
+      if(index>=rows.length){
+        if(snapshots.length||!chunks.length)chunks.push(snapshots);snapshots=[];
+        let part=0;const finalize=function(){
+          if(part>=chunks.length){cb({ok:true,text:files.length===1?files[0].text:null,files:files,count:totalCount,playerId:playerId,playerName:player.name});return;}
+          const points=chunks[part],text=vaultText(payloadFor(points,part+1,chunks.length),true);
+          if(utf8ByteLength(text,MAX_MEMORY_VAULT_BYTES)>MAX_MEMORY_VAULT_BYTES){cb({ok:false,message:"Un point dépasse la taille transportable sur cet appareil. Aucun export partiel n’a été créé ; tout l’historique reste dans le coffre."});return;}
+          files.push({text:text,count:points.length,index:part+1,total:chunks.length});chunks[part++]=null;
+          if(part<chunks.length&&typeof setTimeout==="function")setTimeout(finalize,0);else finalize();
+        };finalize();return;
+      }
+      const meta=rows[index++];loadMemoryEnvelope(meta,function(raw){
+        const checked=validateMemoryEnvelopeForPlayer(raw,meta,playerId,player.userId);
+        if(!checked.ok){cb({ok:false,message:"Coffre non exporté : "+meta.name+" est incomplet ou altéré. Aucun export partiel n’a été créé."});return;}
+        const item={originId:memoryOriginId(meta),meta:meta,envelopeRaw:String(raw),envelopeSha256:memorySha256(String(raw))},itemBytes=utf8ByteLength(JSON.stringify(JSON.stringify(item)))-2;
+        if(baseBytes+itemBytes>MAX_MEMORY_VAULT_BYTES){cb({ok:false,message:meta.name+" dépasse à elle seule 16 Mo dans le fichier de transport. Aucun export partiel n’a été créé ; ce point et tout l’historique restent intacts."});return;}
+        if(snapshots.length&&baseBytes+pointsBytes+itemBytes+snapshots.length>MAX_MEMORY_VAULT_BYTES){chunks.push(snapshots);snapshots=[];pointsBytes=0;}
+        snapshots.push(item);pointsBytes+=itemBytes;totalCount++;if(index%20===0&&typeof setTimeout==="function")setTimeout(next,0);else next();
+      });
+    };next();
+  });
+}
+function buildMemoryVault(cb){return buildMemoryVaultForPlayer(ACTIVE_PLAYER_ID,activePlayerMeta(),cb);}
+function parseMemoryVault(text){
+  text=String(text==null?"":text);if(!text.trim())return {ok:false,message:"Coffre vide. Rien n’a été importé."};
+  if(utf8ByteLength(text,MAX_MEMORY_VAULT_BYTES)>MAX_MEMORY_VAULT_BYTES)return {ok:false,message:"Coffre trop volumineux pour cet appareil (limite 16 Mo). Rien n’a été importé."};
+  let vault=null,payload=null;try{vault=JSON.parse(text);if(!isRecord(vault)||vault.format!==MEMORY_VAULT_FORMAT||vault.schema!==MEMORY_VAULT_SCHEMA||typeof vault.payloadRaw!=="string"||memorySha256(vault.payloadRaw)!==vault.payloadSha256)return {ok:false,message:"Contrôle global d’intégrité du coffre invalide. Rien n’a été importé."};payload=JSON.parse(vault.payloadRaw);}catch(e){return {ok:false,message:"Fichier de coffre illisible. Rien n’a été importé."};}
+  if(!isRecord(payload)||payload.format!==MEMORY_VAULT_FORMAT||payload.schema!==MEMORY_VAULT_SCHEMA||!isRecord(payload.player)||!isSafeId(payload.player.id)||!isSafeId(payload.player.userId)||typeof payload.player.name!=="string"||!Array.isArray(payload.snapshots))return {ok:false,message:"Structure du coffre invalide. Rien n’a été importé."};
+  const playerId=payload.player.id,items=[],origins=safeMap();
+  for(let i=0;i<payload.snapshots.length;i++){
+    const item=payload.snapshots[i];if(!isRecord(item)||typeof item.envelopeRaw!=="string"||memorySha256(item.envelopeRaw)!==item.envelopeSha256)return {ok:false,message:"Point "+(i+1)+" tronqué ou altéré. Rien n’a été importé."};
+    const parsedMeta=parseMemoryIndex(JSON.stringify([item.meta]));if(!parsedMeta||!parsedMeta[0])return {ok:false,message:"Métadonnées du point "+(i+1)+" invalides. Rien n’a été importé."};
+    const checked=validateMemoryEnvelopeForPlayer(item.envelopeRaw,parsedMeta[0],playerId,payload.player.userId);if(!checked.ok)return {ok:false,message:"Point "+(i+1)+" refusé : "+checked.message};
+    const origin=typeof item.originId==="string"&&item.originId?item.originId:memoryOriginId(parsedMeta[0]);if(origin.length>240||origin!==memoryOriginId(parsedMeta[0]))return {ok:false,message:"Identifiant d’origine invalide. Rien n’a été importé."};
+    const normalized={originId:origin,meta:parsedMeta[0],env:checked.env};
+    if(origins[origin]&&!sameMemoryOriginPoint(origins[origin].meta,normalized.meta))return {ok:false,message:"Conflit interne : deux points différents portent la même origine. Rien n’a été importé."};
+    origins[origin]=normalized;items.push(normalized);
+  }
+  items.sort(function(a,b){return a.meta.number-b.meta.number||(a.meta.createdAt||0)-(b.meta.createdAt||0);});return {ok:true,payload:payload,playerId:playerId,items:items};
+}
+function ensureMemoryVaultPlayer(parsed,cb){
+  const playerId=parsed.playerId,latest=parsed.items.length?parsed.items[parsed.items.length-1]:null,latestRaw=latest&&latest.env.stateRaw,sourceUserId=parsed.payload&&parsed.payload.player&&parsed.payload.player.userId,activeExisting=playerMetaById(playerId);
+  if(activeExisting){if(activeExisting.userId!==sourceUserId){cb(false,false,"Un joueur de cet appareil porte le même identifiant mais une autre identité interne. Import bloqué sans fusion.");return;}cb(true,false);return;}
+  const claimed=sourceUserId&&(PLAYER_REGISTRY.players||[]).concat(PLAYER_REGISTRY.archived||[]).find(function(meta){return meta.id!==playerId&&meta.userId===sourceUserId;});
+  if(claimed){cb(false,false,"Ce coffre porte la même identité interne que « "+claimed.name+" », mais un autre identifiant de joueur. Import bloqué pour ne fusionner ni réécrire deux mémoires distinctes.");return;}
+  const archived=archivedPlayerMetaById(playerId);
+  if(archived){
+    if(archived.userId!==sourceUserId){cb(false,false,"L’archive portant cet identifiant appartient à une autre identité. Aucun octet n’a été modifié.");return;}
+    if(PLAYER_REGISTRY.players.length>=MAX_LOCAL_PLAYERS){cb(false,false,"Le joueur du coffre est archivé, mais les "+MAX_LOCAL_PLAYERS+" places actives sont occupées. Libère une place sans supprimer l’archive.");return;}
+    if(!latestRaw){cb(false,false,"Le coffre ne contient aucun point permettant de rouvrir ce joueur.");return;}
+    const reopen=function(){
+      const restored=Object.assign({},archived);delete restored.archivedAt;PLAYER_REGISTRY.archived=PLAYER_REGISTRY.archived.filter(function(meta){return meta.id!==playerId;});PLAYER_REGISTRY.players.push(restored);
+      if(!writePlayerRegistry()){PLAYER_REGISTRY.players=PLAYER_REGISTRY.players.filter(function(meta){return meta.id!==playerId;});PLAYER_REGISTRY.archived.push(archived);cb(false,false,"Le registre n’a pas pu être enregistré ; l’archive reste intacte.");return;}cb(true,true);
+    };
+    ensureMemoryPlayerStore(playerId,sourceUserId,latestRaw,function(stored,existingRaw,error){if(!stored){cb(false,false,error);return;}reopen();});return;
+  }
+  if(PLAYER_REGISTRY.players.length>=MAX_LOCAL_PLAYERS){cb(false,false,"Les "+MAX_LOCAL_PLAYERS+" places de joueurs sont occupées. Le coffre n’a pas été importé.");return;}
+  if(!latestRaw){cb(false,false,"Le coffre ne contient aucun point de restauration.");return;}
+  let latestState=null;try{latestState=JSON.parse(latestRaw);}catch(e){}if(!recognizableStoredState(latestState)||!latestState._sezam||latestState._sezam.playerId!==playerId||latestState._sezam.userId!==sourceUserId){cb(false,false,"L’état le plus récent du coffre ne correspond pas à l’identité de son joueur.");return;}
+  const register=function(){
+    const p=parsed.payload.player,name=normalizePlayerName(p.name,latestState.profile&&latestState.profile.displayName||"Joueur importé");
+    PLAYER_REGISTRY.players.push({id:playerId,userId:p.userId,name:name,createdAt:latestState._sezam.createdAt||Date.now(),lastPlayedAt:0,xp:latestState.xp||0,sel:validPalierId(latestState.sel,"P1"),legacyCloud:false});
+    if(!writePlayerRegistry()){PLAYER_REGISTRY.players=PLAYER_REGISTRY.players.filter(function(meta){return meta.id!==playerId;});cb(false,false,"Création du joueur annulée : registre indisponible. Les données existantes n’ont pas été effacées.");return;}cb(true,true);
+  };
+  ensureMemoryPlayerStore(playerId,sourceUserId,latestRaw,function(stored,existingRaw,error){if(!stored){cb(false,false,error);return;}if(existingRaw)try{latestState=JSON.parse(existingRaw);}catch(e){}register();});
+}
+function ensureMemoryPlayerStore(playerId,userId,initialRaw,cb){
+  const key="save:"+playerId,localKey=playerFallbackKey(playerId),valid=function(raw){let state=null;try{state=JSON.parse(raw);}catch(e){}return recognizableStoredState(state)&&isRecord(state._sezam)&&state._sezam.playerId===playerId&&state._sezam.userId===userId;};
+  const refused="Un coffre existant porte déjà cet identifiant et ne peut pas être vérifié. Aucun octet n’a été remplacé.";
+  let fallbackRaw=null;try{fallbackRaw=localStorage.getItem(localKey);}catch(e){}
+  if(fallbackRaw!==null&&!valid(fallbackRaw)){cb(false,null,refused);return;}
+  if(!valid(initialRaw)){cb(false,null,"L’état à importer ne porte pas l’identité du joueur attendu.");return;}
+  const localOnly=function(){try{const current=localStorage.getItem(localKey);if(current!==null){if(!valid(current)){cb(false,null,refused);return;}cb(true,current,"");return;}localStorage.setItem(localKey,initialRaw);cb(true,initialRaw,"");}catch(e){cb(false,null,"Impossible de préparer le coffre joueur sur cet appareil.");}};
+  if(typeof indexedDB==="undefined"){localOnly();return;}
+  idbOpen(function(db){
+    if(!db){if(fallbackRaw!==null){cb(true,fallbackRaw,"");return;}cb(false,null,"Le coffre principal est indisponible : création suspendue pour protéger un éventuel état existant.");return;}
+    let tx=null,settled=false,timer=null,savedRaw=null,error="";
+    const done=function(ok){if(settled)return;settled=true;if(timer)clearTimeout(timer);try{db.close();}catch(e){}cb(!!ok,ok?savedRaw:null,error||(!ok?"Le coffre joueur n’a pas pu être préparé sans risque d’écrasement.":""));};
+    try{
+      tx=db.transaction(IDB_STORE,"readwrite");const store=tx.objectStore(IDB_STORE),rq=store.get(key);
+      timer=setTimeout(function(){try{tx.abort();}catch(e){}done(false);},8000);
+      tx.oncomplete=function(){done(!!savedRaw);};tx.onerror=function(){done(false);};tx.onabort=function(){done(false);};rq.onerror=function(){try{tx.abort();}catch(e){done(false);}};
+      rq.onsuccess=function(){
+        const existing=rq.result;if(existing!==undefined&&existing!==null){if(!valid(existing)){error=refused;try{tx.abort();}catch(e){done(false);}return;}savedRaw=fallbackRaw!==null?fallbackRaw:existing;return;}
+        savedRaw=fallbackRaw!==null?fallbackRaw:initialRaw;
+        try{store.add(savedRaw,key);}catch(e){error="Collision de coffres refusée : l’état déjà présent reste intact.";try{tx.abort();}catch(x){done(false);}}
+      };
+    }catch(e){if(tx)try{tx.abort();}catch(x){}done(false);}
+  });
+}
+function importedMemoryRecord(item,targetPlayerId){
+  return {playerId:targetPlayerId,userId:item.meta.userId||targetPlayerId,kind:item.meta.kind,createdAt:item.meta.createdAt,captureId:"import-"+memorySha256(item.originId).slice(0,18)+"-"+Math.random().toString(36).slice(2,7),originId:item.originId,dbVersion:item.meta.dbVersion||0,stateRaw:item.env.stateRaw,runtimeRaw:item.env.runtimeRaw,context:item.meta.context};
+}
+function appendImportedMemoryItem(item,targetPlayerId,cb){
+  const record=importedMemoryRecord(item,targetPlayerId);enqueueMemorySnapshotRecord(record,{notify:false,dedupe:true},cb);
+}
+function importMemoryVault(text,cb){
+  const parsed=parseMemoryVault(text);if(!parsed.ok){cb(parsed);return false;}
+  ensureMemoryVaultPlayer(parsed,function(targetOk,created,error){
+    if(!targetOk){cb({ok:false,message:error||"Import du coffre annulé. Rien n’a été remplacé."});return;}
+    memorySnapshotListForPlayer(parsed.playerId,function(existing){
+      const byOrigin=safeMap();existing.forEach(function(meta){byOrigin[memoryOriginId(meta)]=meta;});const planned=[];let skipped=0;
+      for(let i=0;i<parsed.items.length;i++){
+        const item=parsed.items[i],prior=byOrigin[item.originId];
+        if(prior){if(!sameMemoryOriginPoint(prior,item.meta)){cb({ok:false,message:"Conflit d’origine détecté avant écriture. Aucun point supplémentaire n’a été ajouté."});return;}skipped++;}
+        else {planned.push(item);byOrigin[item.originId]=item.meta;}
+      }
+      let added=0,index=0;const next=function(){
+        if(index>=planned.length){const message="Coffre vérifié : "+added+" point"+(added>1?"s":"")+" ajouté"+(added>1?"s":"")+", "+skipped+" déjà présent"+(skipped>1?"s":"")+". Aucun point existant n’a été modifié.";memoryNotice(message,false);cb({ok:true,message:message,added:added,skipped:skipped,playerId:parsed.playerId,playerCreated:created});return;}
+        appendImportedMemoryItem(planned[index++],parsed.playerId,function(result){if(!result.ok){const remaining=planned.length-index+1,message="Import interrompu après "+added+" ajout"+(added>1?"s":"")+" ; "+remaining+" point"+(remaining>1?"s":"")+" reste"+(remaining>1?"nt":"")+" à reprendre. Les points déjà présents restent intacts.";memoryNotice(message,true);cb({ok:false,message:message,added:added,skipped:skipped,remaining:remaining});return;}added++;if(index%20===0&&typeof setTimeout==="function")setTimeout(next,0);else next();});
+      };next();
+    });
+  });return true;
+}
 function restoreMemoryElement(id,data){
-  const el=$(id);if(!el||!data)return;el.innerHTML=data.html||"";el.className=id==="cardBox"?"":(data.className||"");if(data.value!==null&&typeof el.value==="string")el.value=data.value;el.disabled=!!data.disabled;
+  const el=$(id);if(!el||!data||MEMORY_SCENE_IDS.indexOf(id)<0)return;el.innerHTML=memoryRenderableHtml(data.html);el.className=id==="cardBox"?"":(data.className||"");if(data.value!==null&&typeof el.value==="string")el.value=data.value;el.disabled=!!data.disabled;
   if(el.style&&data.style){el.style.display=data.style.display||"";el.style.width=data.style.width||"";el.style.visibility=data.style.visibility||"";}
 }
 function restoreMemoryOverlayControls(runtime){
@@ -2773,22 +3192,23 @@ function bindRestoredOverlay(runtime){
   else if(runtime.overlayType==="discovery"&&EX){
     const go=$("btnDecGo"),home=$("btnDecHome");
     if(go)go.onclick=function(){markPalierSeen(EX.palier);save();$("overlay").classList.remove("on");EX.pendingDecouverte=false;nextQuestion();};
-    if(home)home.onclick=function(){$("overlay").classList.remove("on");returnToHomeFromExercise();};
+    if(home)home.onclick=returnToHomeFromExercise;
   } else if(runtime.overlayType==="preview"&&EX){
     const go=$("btnPrepGo"),home=$("btnPrepHome");
     if(go)go.onclick=function(){$("overlay").classList.remove("on");logEvent("serie_preview",{palier:EX.palier&&EX.palier.id,mode:DB.mode,notes:EX.palier&&EX.palier.notes?EX.palier.notes.length:0});nextQuestion();};
-    if(home)home.onclick=function(){$("overlay").classList.remove("on");returnToHomeFromExercise();};
+    if(home)home.onclick=returnToHomeFromExercise;
   } else if(runtime.overlayType==="keyboard_config"){
     $("cardBox").querySelectorAll(".seg button").forEach(function(btn){btn.onclick=function(){const group=btn.parentNode;if(group)group.querySelectorAll("button").forEach(function(x){x.classList.toggle("on",x===btn);});};});
     const go=$("kGo");if(go)go.onclick=function(){const cfg={clef:"sol",dir:"read",acc:false};$("cardBox").querySelectorAll(".seg").forEach(function(seg){const on=seg.querySelector("button.on");if(!on)return;let value=on.getAttribute("data-val");if(value==="true")value=true;else if(value==="false")value=false;cfg[seg.getAttribute("data-key")]=value;});$("overlay").classList.remove("on");beginClavier(cfg);};
   } else if(runtime.overlayType==="keyboard_result"&&KX){
-    const again=$("kAgain"),home=$("kHomeBtn");if(again)again.onclick=function(){$("overlay").classList.remove("on");beginClavier(KX.cfg);};if(home)home.onclick=function(){$("overlay").classList.remove("on");KX=null;renderHome();show("scrHome");};
+    const again=$("kAgain"),home=$("kHomeBtn");if(again)again.onclick=function(){$("overlay").classList.remove("on");beginClavier(KX.cfg);};if(home)home.onclick=universalHome;
   } else if(runtime.overlayType==="watch"){
     const source=$("watchSourceBtn");if(source)source.onclick=function(){const url=source.getAttribute("data-url")||"";if(/^https?:\/\//i.test(url))try{window.open(url,"_blank","noopener");}catch(e){}};
   }
 }
 function resumeRestoredTimers(runtime){
   const now=Date.now(),shift=Math.max(0,now-(runtime.capturedAt||now));
+  if((EX&&!EX.daily&&EX.backgroundPausedAt)||(KX&&KX.backgroundPausedAt)){resumeForegroundSession(now);return;}
   if(EX){
     let resumedFromPause=false;
     ["t0","questionDeadlineAt","advanceDeadlineAt","end"].forEach(function(k){if(EX[k])EX[k]+=shift;});
@@ -2804,6 +3224,10 @@ function resumeRestoredTimers(runtime){
   }
   if(KX){if(KX.t0)KX.t0+=shift;if(KX.advanceDeadlineAt)KX.advanceDeadlineAt+=shift;if(!KX.done&&KX.waiting&&KX.advanceDeadlineAt){const session=KX,step=KX.i;kbdAdvanceTimer=setTimeout(function(){if(KX===session&&!KX.done&&KX.i===step)nextKbd();},Math.max(0,KX.advanceDeadlineAt-Date.now()));}}
 }
+function renderMemorySceneFrozen(renderer){
+  const raw=JSON.stringify(DB),registryRaw=JSON.stringify(PLAYER_REGISTRY),activeId=ACTIVE_PLAYER_ID,previous=memorySceneRenderFrozen;memorySceneRenderFrozen=true;
+  try{renderer();}finally{DB=JSON.parse(raw);PLAYER_REGISTRY=normalizePlayerRegistry(JSON.parse(registryRaw));ACTIVE_PLAYER_ID=activeId;memorySceneRenderFrozen=previous;}
+}
 function restoreMemoryScene(runtime){
   let sceneNotice="";
   const savedOverlayOn=!!runtime.overlayOn,resolvedOverlayType=restoredMemoryOverlayType(runtime);
@@ -2812,61 +3236,77 @@ function restoreMemoryScene(runtime){
   if(rafTimer)clearInterval(rafTimer);clearQTimers();clearDailyTimer();if(typeof clearKbdTimer==="function")clearKbdTimer();
   EX=runtime.ex||null;KX=runtime.kx||null;
   if(runtime.pr){const piece=allPieces().find(function(p){return p.id===runtime.pr.pieceId;});PR=piece?{piece:piece,i:runtime.pr.i,ok:runtime.pr.ok,segmentId:runtime.pr.segmentId||""}:null;}else PR=null;
-  memorySyncChoiceRemote=runtime.overlayType==="sync_choice"&&runtime.syncRemote?runtime.syncRemote:null;
+  memorySyncChoiceRemote=runtime.overlayType==="sync_choice"&&runtime.syncRemote?runtime.syncRemote:null;memoryFileDraft=runtime.fileDraft||null;
   const screen=runtime.screen;
   if(screen==="scrEx"&&EX){show("scrEx");MEMORY_SCENE_IDS.forEach(function(id){if(runtime.scene[id])restoreMemoryElement(id,runtime.scene[id]);});bindRestoredExercise();}
   else if(screen==="scrKbd"&&KX){show("scrKbd");MEMORY_SCENE_IDS.forEach(function(id){if(runtime.scene[id])restoreMemoryElement(id,runtime.scene[id]);});bindRestoredKeyboard();}
   else if(screen==="scrRes"&&EX){show("scrRes");["resScore","resSub","resSolado","resErrs","resVal","resPiece","resCode","resSave","btnAgain","btnReplayCourse"].forEach(function(id){if(runtime.scene[id])restoreMemoryElement(id,runtime.scene[id]);});const resultPiece=pieceById(EX.segment&&EX.segment.pieceId||DB.activePiece);if($("resPiece").innerHTML&&resultPiece)bindResPiece(resultPiece,EX.segment||null);}
-  else if(screen==="scrStats"){renderStats();}
-  else if(screen==="scrPieces"){renderPieces();if($("pcFile"))$("pcFile").value="";["pcTitle","pcClef","pcKey","pieceMsg","segPiece","segTitle","segBars","segLevel","segHand","segFocus","segNotes","segMsg"].forEach(function(id){if(runtime.scene[id])restoreMemoryElement(id,runtime.scene[id]);});}
-  else if(screen==="scrPiece"&&runtime.pieceId){renderPieceDetail(runtime.pieceId);}
-  else {renderHome();show("scrHome");}
-  if(runtime.overlayOn&&runtime.scene.cardBox&&overlayCanBind){
+  else if(screen==="scrStats"){renderMemorySceneFrozen(renderStats);}
+  else if(screen==="scrPieces"){renderMemorySceneFrozen(renderPieces);if($("pcFile"))$("pcFile").value="";["pcTitle","pcClef","pcKey","pieceMsg","segPiece","segTitle","segBars","segLevel","segHand","segFocus","segNotes","segMsg"].forEach(function(id){if(runtime.scene[id])restoreMemoryElement(id,runtime.scene[id]);});if(memoryFileDraft&&$("pieceMsg"))$("pieceMsg").textContent="Fichier restauré depuis la sauvegarde : "+memoryFileDraft.attachment.name+". Tu peux terminer l’ajout.";}
+  else if(screen==="scrPiece"&&runtime.pieceId){renderMemorySceneFrozen(function(){renderPieceDetail(runtime.pieceId);});}
+  else {renderMemorySceneFrozen(renderHome);show("scrHome");}
+  renderMemorySceneFrozen(function(){restoreMemoryForms(runtime);});
+  if(runtime.overlayOn&&runtime.scene.cardBox){
     restoreMemoryElement("cardBox",runtime.scene.cardBox);restoreMemoryOverlayControls(runtime);
     if(runtime.overlayLabelledBy)$("cardDialog").setAttribute("aria-labelledby",runtime.overlayLabelledBy);else if(typeof $("cardDialog").removeAttribute==="function")$("cardDialog").removeAttribute("aria-labelledby");
-    $("overlay").classList.add("on");bindRestoredOverlay(runtime);
+    $("overlay").classList.add("on");if(overlayCanBind)bindRestoredOverlay(runtime);else sceneNotice="La fenêtre exacte a été rouverte en lecture seule parce que ses anciennes commandes ne sont plus compatibles. Retour et Accueil restent disponibles ; la progression mémorisée est intacte.";
     if(Number.isFinite(runtime.cardScrollTop))$("cardDialog").scrollTop=runtime.cardScrollTop;
     if(Number.isInteger(runtime.overlayFocusIndex)&&runtime.overlayFocusIndex>=0)setTimeout(function(){try{const all=$("cardBox").querySelectorAll("input,select,textarea,button,details");if(all[runtime.overlayFocusIndex])all[runtime.overlayFocusIndex].focus();}catch(e){}},0);
-  }else {$("overlay").classList.remove("on");if(savedOverlayOn&&!overlayCanBind)sceneNotice="La fenêtre provenait d’une ancienne version ou son contexte n’est plus disponible ; elle a été fermée pour éviter tout blocage. La progression mémorisée reste intacte.";}
+  }else {$("overlay").classList.remove("on");if(savedOverlayOn)sceneNotice="Le contexte visuel de cette ancienne fenêtre est incomplet ; la progression mémorisée reste intacte.";}
   resumeRestoredTimers(runtime);
   if(runtime.scrollY){try{window.scrollTo(0,runtime.scrollY);}catch(e){}if(screen==="scrStats"){[80,320].forEach(function(delay){setTimeout(function(){try{window.scrollTo(0,runtime.scrollY);}catch(e){}},delay);});}}
   return sceneNotice;
 }
+let memoryActivationWriting=false;
 function exactActivateMemorySnapshot(validated,token,cb){
   if(!memoryActionCurrent(token)){cb(false,"Le joueur actif a changé : restauration annulée sans modifier aucun profil.");return;}
-  const raw=validated.env.stateRaw,target=validated.state,runtime=validated.runtime,oldRaw=JSON.stringify(DB),oldDB=DB,oldRegistryRaw=JSON.stringify(PLAYER_REGISTRY);
+  const finish=function(ok,error,notice){memoryActivationWriting=false;setMemoryUiLocked(false);cb(ok,error,notice);};memoryActivationWriting=true;setMemoryUiLocked(true);
+  const raw=validated.env.stateRaw,target=validated.state,runtime=validated.runtime,oldRaw=JSON.stringify(DB),oldDB=DB,oldRegistryRaw=JSON.stringify(PLAYER_REGISTRY);let oldRuntime=null;try{oldRuntime=JSON.parse(captureMemoryRuntime());}catch(e){}
   const oldPrimary=(function(){try{return localStorage.getItem(LS_KEY);}catch(e){return null;}})(),oldMirror=(function(){try{return localStorage.getItem(LS_MIRROR);}catch(e){return null;}})(),oldCheckpoint=(function(){try{return localStorage.getItem(LS_CHECKPOINT);}catch(e){return null;}})();
   const restoreLocal=function(){try{if(oldPrimary===null)localStorage.removeItem(LS_KEY);else localStorage.setItem(LS_KEY,oldPrimary);if(oldMirror===null)localStorage.removeItem(LS_MIRROR);else localStorage.setItem(LS_MIRROR,oldMirror);if(oldCheckpoint===null)localStorage.removeItem(LS_CHECKPOINT);else localStorage.setItem(LS_CHECKPOINT,oldCheckpoint);}catch(e){}};
-  try{localStorage.setItem(LS_KEY,raw);localStorage.setItem(LS_MIRROR,raw);localStorage.setItem(LS_CHECKPOINT,raw);}catch(e){restoreLocal();cb(false,"Stockage actif indisponible : restauration annulée, état actuel intact.");return;}
+  try{localStorage.setItem(LS_KEY,raw);localStorage.setItem(LS_MIRROR,raw);localStorage.setItem(LS_CHECKPOINT,raw);}catch(e){restoreLocal();finish(false,"Stockage actif indisponible : restauration annulée, état actuel intact.");return;}
   idbSave(raw,token.playerId,function(ok){
-    if(!memoryActionCurrent(token)){restoreLocal();idbSave(oldRaw,token.playerId);cb(false,"Le joueur actif a changé : restauration annulée.");return;}
-    if(!ok){restoreLocal();idbSave(oldRaw,token.playerId);cb(false,"Coffre actif indisponible : restauration annulée.");return;}
+    if(!memoryActionCurrent(token)){restoreLocal();idbSave(oldRaw,token.playerId);finish(false,"Le joueur actif a changé : restauration annulée.");return;}
+    if(!ok){restoreLocal();idbSave(oldRaw,token.playerId);finish(false,"Coffre actif indisponible : restauration annulée.");return;}
+    const currentRaw=JSON.stringify(DB);
+    if(currentRaw!==oldRaw){
+      try{localStorage.setItem(LS_KEY,currentRaw);localStorage.setItem(LS_MIRROR,currentRaw);localStorage.setItem(LS_CHECKPOINT,currentRaw);}catch(e){}
+      idbSave(currentRaw,token.playerId,function(){finish(false,"Un nouvel état est arrivé pendant la restauration. Il reste actif ; le retour a été annulé pour le conserver.");});return;
+    }
     DB=target;updateActivePlayerMeta(false);
     if(!writePlayerRegistry()){
-      DB=oldDB;PLAYER_REGISTRY=normalizePlayerRegistry(JSON.parse(oldRegistryRaw));ACTIVE_PLAYER_ID=PLAYER_REGISTRY.activeId;restoreLocal();idbSave(oldRaw,token.playerId);cb(false,"Registre du joueur indisponible : restauration annulée.");return;
+      DB=oldDB;PLAYER_REGISTRY=normalizePlayerRegistry(JSON.parse(oldRegistryRaw));ACTIVE_PLAYER_ID=PLAYER_REGISTRY.activeId;restoreLocal();idbSave(oldRaw,token.playerId);finish(false,"Registre du joueur indisponible : restauration annulée.");return;
     }
     let sceneNotice="";try{applyTheme();header();sceneNotice=restoreMemoryScene(runtime);}
-    catch(e){DB=oldDB;PLAYER_REGISTRY=normalizePlayerRegistry(JSON.parse(oldRegistryRaw));ACTIVE_PLAYER_ID=PLAYER_REGISTRY.activeId;restoreLocal();idbSave(oldRaw,token.playerId);writePlayerRegistry();applyTheme();header();renderHome();show("scrHome");cb(false,"La scène sauvegardée n’a pas pu être rouverte : restauration annulée, état précédent intact.");return;}
-    markRestorePending("restore",validated.env.meta.number);cb(true,"",sceneNotice);
+    catch(e){
+      if(rafTimer)clearInterval(rafTimer);clearQTimers();clearDailyTimer();if(typeof clearKbdTimer==="function")clearKbdTimer();
+      DB=oldDB;PLAYER_REGISTRY=normalizePlayerRegistry(JSON.parse(oldRegistryRaw));ACTIVE_PLAYER_ID=PLAYER_REGISTRY.activeId;restoreLocal();idbSave(oldRaw,token.playerId);writePlayerRegistry();applyTheme();header();
+      try{if(oldRuntime)restoreMemoryScene(oldRuntime);else{renderMemorySceneFrozen(renderHome);show("scrHome");}}catch(x){DB=JSON.parse(oldRaw);renderMemorySceneFrozen(renderHome);show("scrHome");}
+      finish(false,"La scène sauvegardée n’a pas pu être rouverte : restauration annulée, état précédent intact.");return;
+    }
+    markRestorePending("restore",validated.env.meta.number);finish(true,"",sceneNotice);
   });
 }
+function setMemoryUiLocked(on){["app","overlay"].forEach(function(id){const el=$(id);if(!el)return;try{el.inert=!!on;if(on)el.setAttribute("aria-busy","true");else el.removeAttribute("aria-busy");}catch(e){}});}
 function restoreMemorySnapshot(meta,cb){
-  if(memoryRestoreBusy||memoryProtectedActionBusy){cb({ok:false,message:"Une autre opération protégée est déjà en cours."});return;}
+  if(memoryRestoreBusy||memoryProtectedActionBusy||playerOperationBusy){cb({ok:false,message:"Une autre opération protégée est déjà en cours."});return;}
   const token=memoryActionToken();memoryRestoreBusy=true;
   loadMemoryEnvelope(meta,function(raw){
     if(!memoryActionCurrent(token)){memoryRestoreBusy=false;cb({ok:false,message:"Le joueur actif a changé : restauration annulée."});return;}
     const validated=validateMemoryEnvelope(raw,meta);
     if(!validated.ok){memoryRestoreBusy=false;memoryToast(validated.message,true);cb(validated);return;}
-    createMemorySnapshot("pre_restore",{milestone:"État conservé automatiquement avant le retour à la sauvegarde n°"+meta.number,notify:false},function(safety){
+    const protectStableState=function(attempt){createMemorySnapshot("pre_restore",{milestone:"État conservé automatiquement avant le retour à la sauvegarde n°"+meta.number,notify:false},function(safety){
       if(!memoryActionCurrent(token)){memoryRestoreBusy=false;cb({ok:false,message:"Le joueur actif a changé : restauration annulée."});return;}
       if(!safety.ok){memoryRestoreBusy=false;const message="Restauration annulée : l’état actuel n’a pas pu être sauvegardé d’abord. Rien n’a été perdu.";memoryToast(message,true);cb({ok:false,message:message});return;}
+      let currentRaw="";try{currentRaw=JSON.stringify(DB);}catch(e){}
+      if(!safety.meta||memorySha256(currentRaw)!==safety.meta.stateSha256){if(attempt>=4){memoryRestoreBusy=false;const message="Restauration différée : l’état change encore. Chaque version demandée a été ajoutée au coffre ; réessaie une fois l’écran stabilisé.";memoryNotice(message,true);cb({ok:false,message:message});return;}protectStableState(attempt+1);return;}
       exactActivateMemorySnapshot(validated,token,function(ok,error,sceneNotice){
         memoryRestoreBusy=false;
         if(!ok){memoryToast(error,true);cb({ok:false,message:error});return;}
         const message="Tu es revenu au Niveau "+meta.context.level+", tel que sauvegardé le "+formatMemoryDate(meta.createdAt)+". Rien n’a été perdu."+(sceneNotice?(" "+sceneNotice):"");
-        memoryToast(message,false);cb({ok:true,meta:meta,message:message,safety:safety.meta});
+        memoryToast(message,false);memoryNotice(message,false);cb({ok:true,meta:meta,message:message,safety:safety.meta});
       });
-    });
+    });};protectStableState(0);
   });
 }
 function renderMemoryHistory(){
@@ -2887,25 +3327,60 @@ function renderMemoryHistory(){
       const ask="Revenir à « "+meta.name+" » ? L’état actuel sera d’abord ajouté comme nouvelle sauvegarde ; rien ne sera effacé.";
       if(typeof window.confirm==="function"&&!window.confirm(ask))return;
       btn.disabled=true;$("memoryMsg").textContent="Sauvegarde de l’état actuel, puis restauration contrôlée…";
-      restoreMemorySnapshot(meta,function(res){if(!res.ok){btn.disabled=false;$("memoryMsg").textContent=res.message;}});
+      restoreMemorySnapshot(meta,function(res){$("memoryMsg").textContent=res.message;if(!res.ok)btn.disabled=false;else renderMemoryHistory();});
     };
   });
 }
-function manualMemorySnapshot(source){
-  if(memoryProtectedActionBusy||memoryRestoreBusy||playerOperationBusy){memoryToast("Protection en cours : l’état stable juste avant l’action est déjà conservé. Réessaie dès la confirmation ; rien n’est perdu.",false);return false;}
+function manualMemorySnapshot(source,callback){
+  const requestPlayerId=ACTIVE_PLAYER_ID,requestToken=memoryActionToken(),busy=memoryProtectedActionBusy||memoryRestoreBusy||playerOperationBusy;
+  if(busy&&source!=="navigation"){const msg="Protection en cours : l’état exact de cet instant est capturé maintenant et son écriture rejoint la file protégée. Rien n’est perdu.";memoryToast(msg,false);memoryNotice(msg,false);}
   const quick=$("btnQuickSave"),manual=$("btnManualSave"),overlay=$("btnOverlaySave");if(quick)quick.disabled=true;if(manual)manual.disabled=true;if(overlay)overlay.disabled=true;
+  const enable=function(){if(quick)quick.disabled=false;if(manual)manual.disabled=false;if(overlay)overlay.disabled=false;};
+  const sourceLabel=(busy?"Capturée pendant une autre opération protégée · ":"")+(source==="header"?"Demandée pendant le jeu":(source==="overlay"?"Demandée sans fermer la scène en cours":(source==="command"?"Demandée par la commande « sauvegarde »":"Demandée depuis l’historique")));
+  const report=function(result){if(typeof callback==="function")callback(result);};
+  const captured=captureMemorySnapshotRecord(source==="navigation"?"pre_exit":"manual",{milestone:source==="navigation"?"Scène conservée avant retour ou ouverture du coffre":sourceLabel});if(!captured.ok){enable();memoryToast(captured.message,true);memoryNoticeForPlayer(requestPlayerId,captured.message,true);report(captured);return false;}
+  const commit=function(record){enqueueMemorySnapshotRecord(record,{notify:source!=="navigation"},function(res){enable();if(requestPlayerId===ACTIVE_PLAYER_ID&&$("memoryMsg"))$("memoryMsg").textContent=res.message;if(res.ok&&requestPlayerId===ACTIVE_PLAYER_ID&&$("memoryList"))renderMemoryHistory();report(res);});};
   const pendingFile=$("pcFile");if(activeMemoryScreen()==="scrPieces"&&pendingFile&&pendingFile.files&&pendingFile.files.length){
-    if(quick)quick.disabled=false;if(manual)manual.disabled=false;if(overlay)overlay.disabled=false;
-    memoryToast("Ajoute d’abord le fichier à la partition, ou retire-le : le navigateur interdit de restaurer un fichier encore seulement sélectionné. Rien n’a été modifié.",true);return false;
+    const file=pendingFile.files[0];
+    {
+      const fileMark={name:file.name,size:file.size,lastModified:Number(file.lastModified)||0,type:file.type||""};memoryNoticeForPlayer(requestPlayerId,"Lecture du fichier sélectionné avant la sauvegarde complète…",false);
+      readPieceAttachment(file,function(attachment,error){
+        if(error||!attachment){enable();const msg=error||"Le fichier sélectionné est illisible. La progression déjà enregistrée reste intacte.";memoryToast(msg,true);memoryNoticeForPlayer(requestPlayerId,msg,true);report({ok:false,message:msg});return;}
+        if(attachment.name!==fileMark.name||attachment.size!==fileMark.size){enable();const msg="Le fichier a changé pendant sa lecture : sauvegarde annulée sans toucher aux anciens points.";memoryNoticeForPlayer(requestPlayerId,msg,true);report({ok:false,message:msg});return;}
+        let runtime=null;try{runtime=JSON.parse(captured.record.runtimeRaw);runtime.fileDraft={inputId:"pcFile",attachment:attachment};captured.record.runtimeRaw=JSON.stringify(runtime);}catch(e){runtime=null;}
+        if(!runtime||!validPendingMemoryRecord(captured.record)){enable();const msg="Le brouillon complet n’a pas pu être scellé. Aucun ancien point n’a été modifié.";memoryNoticeForPlayer(requestPlayerId,msg,true);report({ok:false,message:msg});return;}
+        if(memoryActionCurrent(requestToken)){const current=$("pcFile"),currentFile=current&&current.files&&current.files[0];if(currentFile&&currentFile.name===fileMark.name&&currentFile.size===fileMark.size&&(Number(currentFile.lastModified)||0)===fileMark.lastModified)memoryFileDraft={inputId:"pcFile",attachment:attachment};}
+        commit(captured.record);
+      });return true;
+    }
   }
-  const sourceLabel=source==="header"?"Demandée pendant le jeu":(source==="overlay"?"Demandée sans fermer la scène en cours":"Demandée depuis l’historique");
-  createMemorySnapshot("manual",{milestone:sourceLabel},function(res){
-    if(quick)quick.disabled=false;if(manual)manual.disabled=false;if(overlay)overlay.disabled=false;
-    if($("memoryMsg"))$("memoryMsg").textContent=res.message;
-    if(res.ok&&$("memoryList"))renderMemoryHistory();
-  });
+  commit(captured.record);
+  return true;
+}
+function normalizedMemoryCommand(value){const raw=String(value||"").trim().toLocaleLowerCase("fr-FR");return raw.normalize?raw.normalize("NFD").replace(/[\u0300-\u036f]/g,""):raw;}
+function executeMemoryCommand(value){
+  const raw=String(value||"").trim(),cmd=normalizedMemoryCommand(raw),msg=$("memoryMsg");
+  if(!cmd){if(msg)msg.textContent="Écris « sauvegarde », « liste mes sauvegardes » ou « reviens à 3 ».";return false;}
+  if(/^(sauvegarde|sauvegarder|enregistre|enregistrer)( maintenant)?[.!]?$/.test(cmd)){if(msg)msg.textContent="Création du point complet…";return manualMemorySnapshot("command");}
+  if(/^(liste|affiche|montre)( moi)?( toutes)? mes sauvegardes/.test(cmd)||cmd==="mes sauvegardes"){
+    openMemoryVaultSection();memorySnapshotList(function(rows){if($("memoryMsg"))$("memoryMsg").textContent=rows.length+" sauvegarde"+(rows.length>1?"s":"")+" disponible"+(rows.length>1?"s":"")+", de la plus récente à la plus ancienne.";});return true;
+  }
+  if(/^(reviens|retourne|restaure|restaurer)/.test(cmd)){
+    const requested=cmd.replace(/^(?:reviens|retourne|restaurer|restaure)\b\s*(?:(?:au|a|vers)\b\s*)?/,"").trim(),numberMatch=requested.match(/^(?:(?:sauvegarde|point|numero|n°)\s*)?(\d+)\s*[.!]?$/),requestedNumber=numberMatch?Number(numberMatch[1]):0;
+    memorySnapshotList(function(rows){
+      let meta=requestedNumber?rows.find(function(row){return row.number===requestedNumber;}):null;
+      if(!meta&&!requestedNumber&&requested){const matches=rows.filter(function(row){const name=normalizedMemoryCommand(row.name);return name===requested||name.indexOf(requested)>=0;});if(matches.length===1)meta=matches[0];else if(matches.length>1){if(msg)msg.textContent="Plusieurs sauvegardes correspondent. Indique leur numéro exact, par exemple « reviens à "+matches[0].number+" ».";return;}}
+      if(!meta){if(msg)msg.textContent=requestedNumber?("La sauvegarde n°"+requestedNumber+" n’existe pas pour ce joueur."):"Indique le numéro ou le nom exact : par exemple « reviens à 3 ».";return;}
+      const ask="Revenir à « "+meta.name+" » ? L’état actuel sera d’abord ajouté comme nouvelle sauvegarde ; rien ne sera effacé.";
+      if(typeof window.confirm==="function"&&!window.confirm(ask)){if(msg)msg.textContent="Restauration annulée. Rien n’a été modifié.";return;}
+      if(msg)msg.textContent="Sauvegarde de l’état actuel, puis retour contrôlé vers "+meta.name+"…";
+      restoreMemorySnapshot(meta,function(result){if($("memoryMsg"))$("memoryMsg").textContent=result.message;});
+    });return true;
+  }
+  if(msg)msg.textContent="Commande inconnue. Essaie « sauvegarde », « liste mes sauvegardes » ou « reviens à 3 ».";return false;
 }
 function protectedGameStartBlocked(){
+  if(memoryStartupBlocked){memoryToast("Ta progression attend d’être relue. Utilise « Réessayer le chargement » sur l’accueil ; aucun acquis n’a été remplacé.",true);return true;}
   if(!(memoryProtectedActionBusy||memoryRestoreBusy||playerOperationBusy)) return false;
   memoryToast("Attends la confirmation de l’enregistrement avant de jouer. Rien n’a été perdu.",false);
   return true;
@@ -2997,19 +3472,45 @@ function idbDeletePlayer(playerId){
 }
 // IndexedDB est lu avant sa première écriture. Une copie locale valide reste
 // prioritaire : une suppression volontaire ne doit jamais être « réparée ».
+function idbStartupRead(key,cb){
+  if(typeof indexedDB==="undefined"){cb({ok:true,raw:null});return;}
+  idbOpen(function(db){
+    if(!db){cb({ok:false,raw:null});return;}let settled=false,timer=null;
+    const finish=function(ok,raw){if(settled)return;settled=true;if(timer)clearTimeout(timer);try{db.close();}catch(e){}cb({ok:!!ok,raw:raw===undefined?null:raw});};
+    try{const tx=db.transaction(IDB_STORE,"readonly"),rq=tx.objectStore(IDB_STORE).get(key);timer=setTimeout(function(){try{tx.abort();}catch(e){}finish(false,null);},8000);rq.onsuccess=function(){finish(true,rq.result);};rq.onerror=function(){finish(false,null);};tx.onerror=function(){finish(false,null);};tx.onabort=function(){finish(false,null);};}catch(e){finish(false,null);}
+  });
+}
+function showStartupMemoryBlock(message,done){
+  memoryStartupBlocked=true;idbReady=false;
+  try{sessionStorage.setItem("sezam_startup_pending_"+ACTIVE_PLAYER_ID,"1");}catch(e){}
+  const retry=function(){idbRescue(done);};
+  try{renderHome();}catch(e){}show("scrHome");
+  memoryNoticeForPlayer(ACTIVE_PLAYER_ID,message+" Aucun état neuf n’a été écrit. Tes sauvegardes existantes restent intactes.",true);
+  let retryBanner=document.getElementById("startupMemoryRetryBanner");if(!retryBanner){retryBanner=document.createElement("button");retryBanner.id="startupMemoryRetryBanner";retryBanner.type="button";$("memoryNotice").appendChild(retryBanner);}retryBanner.textContent="Réessayer le chargement";retryBanner.onclick=retry;
+  $("cardBox").innerHTML='<h3>Mémoire protégée</h3><h2>Chargement en attente</h2><p>'+esc(message)+'</p><p>Le jeu attend de retrouver ta progression. Rien n’a été remplacé par une partie neuve.</p><button id="startupMemoryRetry">Réessayer le chargement</button><button id="startupMemoryHome">Accueil</button>';
+  $("startupMemoryRetry").onclick=retry;$("startupMemoryHome").onclick=function(){$("overlay").classList.remove("on");show("scrHome");};$("overlay").classList.add("on");
+}
 function idbRescue(done){
-  idbLoadRegistry(function(registryStr){
+  if(!hadRecognizableLocal)memoryStartupBlocked=true;
+  idbStartupRead("players",function(registryRead){
+    const registryStr=registryRead.raw;
+    if(!registryRead.ok&&!hadPlayerRegistryLocal&&!hadRecognizableLocal){showStartupMemoryBlock("Le registre des joueurs ne répond pas encore.",done);return;}
     let registryRestored=false;
-    if(!hadPlayerRegistryLocal&&registryStr){
+    if(!hadPlayerRegistryLocal&&registryStr!==null){
       let parsed=null;try{parsed=JSON.parse(registryStr);}catch(e){}
       const recovered=normalizePlayerRegistry(parsed);
       if(recovered.players.length){PLAYER_REGISTRY=recovered;ACTIVE_PLAYER_ID=recovered.activeId;registryRestored=true;writePlayerRegistry(true);}
+      else {showStartupMemoryBlock("Le registre existant est illisible. Il a été conservé sans modification.",done);return;}
     }
-    const finish=function(str){
+    const finish=function(str,confirmedAbsent){
       let restored=false,obj=null;
+      if(!hadRecognizableLocal&&!str&&(hadPlayerRegistryLocal||registryRestored||hadUnrecognizedLocalBytes||!confirmedAbsent)){showStartupMemoryBlock(hadUnrecognizedLocalBytes?"Des données locales sont présentes mais illisibles. Le jeu les conserve et attend une copie de progression vérifiable.":"La progression de ce joueur n’a pas pu être retrouvée dans le stockage actif.",done);return;}
       if((!hadRecognizableLocal||!stateBelongsToPlayer(DB,ACTIVE_PLAYER_ID))&&str){
         try{obj=JSON.parse(str);}catch(e){obj=null;}
         obj=backupToDb(obj);
+        if(!recognizableStoredState(obj)){showStartupMemoryBlock("Le coffre actif est illisible. Ses octets ont été conservés sans modification.",done);return;}
+        const expected=activePlayerMeta(),identity=obj&&obj._sezam;
+        if((hadPlayerRegistryLocal||registryRestored)&&(!isRecord(identity)||identity.userId!==expected.userId||(identity.playerId&&identity.playerId!==ACTIVE_PLAYER_ID))){showStartupMemoryBlock("Le coffre trouvé ne porte pas l’identité attendue pour ce joueur.",done);return;}
         if(recognizableStoredState(obj)){
           DB=ensureStructure(obj);DB._sezam.playerId=ACTIVE_PLAYER_ID;restored=true;logEvent("idb_rescue",{xp:DB.xp,playerId:ACTIVE_PLAYER_ID});
           const meta=activePlayerMeta();if(meta&&DB.profile&&DB.profile.displayName)meta.name=normalizePlayerName(DB.profile.displayName,meta.name);
@@ -3026,7 +3527,9 @@ function idbRescue(done){
         if(ownerId){ACTIVE_PLAYER_ID=ownerId;PLAYER_REGISTRY.activeId=ownerId;DB._sezam.playerId=ownerId;}
         else DB=freshPlayerState(ACTIVE_PLAYER_ID,activePlayerMeta()?activePlayerMeta().name:"Joueur");
       }
-      idbReady=true;idbQueuedSave=safeMap();applyTheme();save({touch:false,cloud:false});
+      memoryStartupBlocked=false;idbReady=true;idbQueuedSave=safeMap();const retryBanner=document.getElementById("startupMemoryRetryBanner");if(retryBanner)try{retryBanner.remove();}catch(e){}applyTheme();save({touch:false,cloud:false});
+      try{const pendingKey="sezam_startup_pending_"+ACTIVE_PLAYER_ID;if(sessionStorage.getItem(pendingKey)){sessionStorage.removeItem(pendingKey);memoryNoticeForPlayer(ACTIVE_PLAYER_ID,"Progression retrouvée : "+(DB.xp||0)+" XP. Tu peux reprendre ; aucune sauvegarde n’a été effacée.",false);}}catch(e){}
+      resumePendingMemorySnapshots();restoreMemoryNotice();
       if(done)done(restored||registryRestored);
       if(restored||registryRestored){
         $("cardBox").innerHTML='<h3>Sauvegarde de secours</h3><h2>Profils retrouvés</h2>'+
@@ -3036,10 +3539,11 @@ function idbRescue(done){
         $("overlay").classList.add("on");
       }
     };
-    idbLoad(function(str){
-      if(str||hadRecognizableLocal){finish(str);return;}
-      idbGet("save",finish); // compatibilité avec le coffre unique v27
-    },ACTIVE_PLAYER_ID);
+    idbStartupRead("save:"+ACTIVE_PLAYER_ID,function(activeRead){
+      if(!activeRead.ok){if(hadRecognizableLocal){finish(null,true);return;}showStartupMemoryBlock("Le coffre de progression ne répond pas encore.",done);return;}
+      if(activeRead.raw!==null||hadRecognizableLocal){finish(activeRead.raw,activeRead.raw===null);return;}
+      idbStartupRead("save",function(legacyRead){if(!legacyRead.ok){showStartupMemoryBlock("La vérification de l’ancien coffre n’a pas abouti.",done);return;}finish(legacyRead.raw,legacyRead.raw===null);}); // coffre unique v27
+    });
   });
 }
 function logEvent(type,data){
@@ -3060,6 +3564,7 @@ function load(){
   if(navigator.storage && navigator.storage.persist){ try{ navigator.storage.persist(); }catch(e){} }
   const startup=initializePlayerRegistry(), raw=startup.raw;
   hadRecognizableLocal=!!startup.hadState;
+  memoryStartupBlocked=!hadRecognizableLocal;
   DB=ensureStructure(raw||{});
   DB._sezam.playerId=ACTIVE_PLAYER_ID;
   const meta=activePlayerMeta();
@@ -3071,7 +3576,7 @@ function load(){
   }
   logEvent("ouverture",{playerId:ACTIVE_PLAYER_ID});
   applyTheme();
-  save({touch:false,cloud:false});
+  if(!memoryStartupBlocked)save({touch:false,cloud:false});
 }
 function updateActivePlayerMeta(touch){
   const meta=activePlayerMeta();if(!meta||!DB)return;
@@ -3083,6 +3588,9 @@ function updateActivePlayerMeta(touch){
   PLAYER_REGISTRY.activeId=ACTIVE_PLAYER_ID;
 }
 function save(opts){
+  if(memoryStartupBlocked)return false;
+  if(memorySceneRenderFrozen)return true;
+  if(memoryActivationWriting)return false;
   opts=opts||{};
   if(DB){
     ensureMeta(DB);
@@ -3118,6 +3626,7 @@ function stopPlayerAsyncWork(){
   if(typeof syncBusy!=="undefined")syncBusy=false;
 }
 function activatePlayerState(id,state){
+  if(memoryStartupBlocked)return false;
   const meta=playerMetaById(id);if(!meta||!recognizableStoredState(state))return false;
   const previousId=ACTIVE_PLAYER_ID,previousDB=DB,previousRegistry=JSON.stringify(PLAYER_REGISTRY);
   stopPlayerAsyncWork();ACTIVE_PLAYER_ID=id;PLAYER_REGISTRY.activeId=id;meta.lastPlayedAt=Date.now();
@@ -3129,11 +3638,14 @@ function activatePlayerState(id,state){
     return false;
   }
   show("scrHome");renderHome();
+  if($("memoryNotice"))$("memoryNotice").classList.remove("on");restoreMemoryNotice();
+  clearMemoryVaultDownloads();
   if(syncEnabled())syncPull();
   return true;
 }
 function switchPlayer(id,cb){
   cb=typeof cb==="function"?cb:function(){};
+  if(memoryStartupBlocked){cb(false,"La mémoire des joueurs attend d’être relue. Réessaie le chargement depuis l’accueil.");return false;}
   if(!idbReady){cb(false,"Les profils finissent de se charger. Réessaie dans un instant.");return false;}
   if(memoryRestoreBusy||memoryProtectedActionBusy){cb(false,"Une sauvegarde protégée est en cours. Le changement de joueur attend sa confirmation.");return false;}
   if(playerOperationBusy){cb(false,"Un changement de joueur est déjà en cours.");return false;}
@@ -3160,6 +3672,7 @@ function switchPlayer(id,cb){
 }
 function createPlayer(name,cb){
   cb=typeof cb==="function"?cb:function(){};
+  if(memoryStartupBlocked){cb(false,"La mémoire des joueurs attend d’être relue. Aucun nouveau profil ne sera créé avant sa récupération.");return false;}
   if(!idbReady){cb(false,"Les profils finissent de se charger. Réessaie dans un instant.");return false;}
   if(memoryRestoreBusy||memoryProtectedActionBusy){cb(false,"Une sauvegarde protégée est en cours. Réessaie dès sa confirmation.");return false;}
   if(playerOperationBusy){cb(false,"Une opération sur les joueurs est déjà en cours.");return false;}
@@ -3195,6 +3708,7 @@ function createPlayer(name,cb){
 }
 function renamePlayer(id,name,cb){
   cb=typeof cb==="function"?cb:function(){};name=normalizePlayerName(name,"");
+  if(memoryStartupBlocked){cb(false,"La mémoire des joueurs attend d’être relue. Aucun nom n’a été modifié.");return false;}
   if(!idbReady){cb(false,"Les profils finissent de se charger.");return false;}
   if(memoryRestoreBusy||memoryProtectedActionBusy){cb(false,"Une sauvegarde protégée est en cours.");return false;}
   if(playerOperationBusy){cb(false,"Une opération sur les joueurs est déjà en cours.");return false;}
@@ -3221,6 +3735,7 @@ function renamePlayer(id,name,cb){
   return true;
 }
 function deletePlayer(id){
+  if(memoryStartupBlocked)return false;
   if(playerOperationBusy||memoryRestoreBusy||memoryProtectedActionBusy||!idbReady||!isSafeId(id)||!playerMetaById(id)||id===ACTIVE_PLAYER_ID||PLAYER_REGISTRY.players.length<=1||(PLAYER_REGISTRY.archived||[]).length>=MAX_ARCHIVED_PLAYERS)return false;
   playerOperationBusy=true;
   const previous=JSON.stringify(PLAYER_REGISTRY);
@@ -3232,6 +3747,7 @@ function deletePlayer(id){
 }
 function restoreArchivedPlayer(id,cb){
   cb=typeof cb==="function"?cb:function(){};
+  if(memoryStartupBlocked){cb(false,"La mémoire des joueurs attend d’être relue. Les archives restent intactes.");return false;}
   if(playerOperationBusy||memoryRestoreBusy||memoryProtectedActionBusy||!idbReady||PLAYER_REGISTRY.players.length>=MAX_LOCAL_PLAYERS){cb(false,"Restauration momentanément indisponible.");return false;}
   const meta=archivedPlayerMetaById(id);if(!meta){cb(false,"Joueur archivé introuvable.");return false;}
   playerOperationBusy=true;
@@ -3753,8 +4269,7 @@ function overlayBack(){
   const type=detectMemoryOverlayType($("cardBox")&&$("cardBox").innerHTML||"");
   if((type==="discovery"||type==="preview")&&EX&&!EX.done)return returnToHomeFromExercise();
   if(type==="keyboard_result")return universalHome();
-  if(type==="first_look_self"||type==="first_look_quiz"||type==="first_look_answer"){if(typeof PR!=="undefined")PR=null;}
-  if(type==="sync_choice"&&typeof memorySyncChoiceRemote!=="undefined")memorySyncChoiceRemote=null;
+  if($("overlay")&&$("overlay").classList.contains("on"))return leaveMemoryScene("overlay_back");
   return closeOverlay();
 }
 let overlayReturnFocus=null;
@@ -3927,7 +4442,7 @@ function openAddPlayer(){
   setTimeout(function(){try{$("newPlayerName").focus();}catch(e){}},0);
 }
 function bindPlayerEditorDialog(id){
-  const form=$("playerEditForm"),back=$("editPlayerBack");if(back){back.disabled=false;back.onclick=openPlayerSwitcher;}if(!form)return;
+  const form=$("playerEditForm"),back=$("editPlayerBack");if(back){back.disabled=false;back.onclick=function(){leaveMemoryScene("player_switcher");};}if(!form)return;
   const meta=playerMetaById(id);
   if(!meta){if($("editPlayerSave"))$("editPlayerSave").disabled=true;if($("editPlayerDelete"))$("editPlayerDelete").disabled=true;if($("editPlayerMsg"))$("editPlayerMsg").textContent=archivedPlayerMetaById(id)?"Ce joueur est maintenant archivé. Reviens à la liste pour le restaurer ; son coffre et ses sauvegardes sont intacts.":"Ce joueur n’est plus disponible dans la liste active. Reviens à la liste ; aucune autre progression n’a été modifiée.";return;}
   const canArchive=id!==ACTIVE_PLAYER_ID&&PLAYER_REGISTRY.players.length>1&&(PLAYER_REGISTRY.archived||[]).length<MAX_ARCHIVED_PLAYERS;
@@ -5102,7 +5617,7 @@ function resumeForegroundSession(now){
     resumed=true;
   }
   if(KX&&!KX.done&&KX.backgroundPausedAt){
-    const session=KX,step=KX.i,arem=KX.backgroundAdvanceRemaining;KX.backgroundPausedAt=0;KX.backgroundAdvanceRemaining=null;
+    const session=KX,step=KX.i,arem=KX.backgroundAdvanceRemaining,delta=Math.max(0,now-KX.backgroundPausedAt);if(KX.t0)KX.t0+=delta;KX.backgroundPausedAt=0;KX.backgroundAdvanceRemaining=null;
     if(arem!==null&&KX.waiting){KX.advanceDeadlineAt=now+arem;kbdAdvanceTimer=setTimeout(function(){if(KX===session&&!KX.done&&KX.i===step)nextKbd();},arem);}resumed=true;
   }
   return resumed;
@@ -5243,7 +5758,7 @@ function showSeriePreview(pid,onContinue){
     logEvent("serie_preview",{palier:pid,mode:DB.mode,notes:notes.length});
     if(onContinue) onContinue();
   };
-  $("btnPrepHome").onclick=function(){ $("overlay").classList.remove("on"); returnToHomeFromExercise(); };
+  $("btnPrepHome").onclick=returnToHomeFromExercise;
 }
 // Écran Découverte : je montre la/les note(s) neuve(s) avant de tester (I-do → You-do)
 function showDecouverte(pid, onContinue, idsOverride){
@@ -5264,7 +5779,7 @@ function showDecouverte(pid, onContinue, idsOverride){
     $("overlay").classList.remove("on");
     if(onContinue) onContinue();
   };
-  $("btnDecHome").onclick=function(){ $("overlay").classList.remove("on"); returnToHomeFromExercise(); };
+  $("btnDecHome").onclick=returnToHomeFromExercise;
 }
 function startRafale(){
   if(protectedGameStartBlocked()) return false;
@@ -6593,7 +7108,7 @@ function renderStats(){
   $("saveExportTitle").textContent="Sauvegarde de "+playerName+" — exporter";
   $("saveRestoreTitle").textContent="Restaurer la progression de "+playerName;
   $("syncTitle").textContent="Synchro cloud de "+playerName;
-  $("impArea").value=""; $("saveMsg").textContent="";
+  $("saveMsg").textContent="";
   $("memoryMsg").textContent="Ta progression ne repart jamais de zéro contre ton gré.";
   $("syncState").textContent=syncStateText(); $("syncMsg").textContent="";
   show("scrStats");renderMemoryHistory();
@@ -7496,15 +8011,17 @@ function addPiece(){
   if(!t){ $("pieceMsg").textContent="Donne un titre."; return; }
   const file=$("pcFile").files&&$("pcFile").files[0];
   if(file) $("pieceMsg").textContent="Lecture du fichier…";
-  readPieceAttachment(file,function(att,msg){
+  const restoredDraft=!file&&memoryFileDraft&&memoryFileDraft.inputId==="pcFile"?memoryFileDraft.attachment:null;
+  const finish=function(att,msg){
     if(msg){ $("pieceMsg").textContent=msg; return; }
     const piece={id:"u"+Date.now(), titre:t, compositeur:"(perso)", clef:$("pcClef").value, key:($("pcKey").value||"").trim(), q:[], info:"Partition perso — fais ton premier regard sur ta copie."};
     if(att) piece.attachment=att;
     DB.pieces.push(piece); save();
-    $("pcTitle").value=""; $("pcKey").value=""; $("pcFile").value="";
+    $("pcTitle").value=""; $("pcKey").value=""; $("pcFile").value="";memoryFileDraft=null;
     renderPieces();
     $("pieceMsg").textContent="Ajoutée : "+t+(att?" avec pièce jointe.":".");
-  });
+  };
+  if(restoredDraft)finish(restoredDraft,null);else readPieceAttachment(file,finish);
 }
 function parseSegmentNotes(txt){
   const out=[];
@@ -7685,7 +8202,8 @@ function finishClavier(){
     '<button id="kHomeBtn" style="margin-top:8px;background:var(--panel2);color:var(--ink)">Accueil</button>';
   $("overlay").classList.add("on");
   $("kAgain").onclick=function(){ $("overlay").classList.remove("on"); beginClavier(cfg); };
-  $("kHomeBtn").onclick=function(){ $("overlay").classList.remove("on"); KX=null; renderHome(); show("scrHome"); };
+  $("kHomeBtn").onclick=universalHome;
+  createMemorySnapshot("session_complete",{milestone:"Série clavier terminée · "+ok+"/"+KX.n+" · "+clefFullLabel(KX.clef)});
 }
 
 /* ================= SYNCHRO ENTRE APPAREILS (Gist GitHub) ================= */
@@ -7885,6 +8403,7 @@ function cloudDeletePreflight(g){
 }
 // Trouve (ou crée) le gist de sauvegarde ; un token suffit sur un nouvel appareil.
 function syncEnsure(cb){
+  if(memoryStartupBlocked){if(cb)cb(false);syncStatus("La synchronisation attend que ta progression soit relue.");return;}
   const c=syncCfg();
   if(!c.token||!canSyncNow()){ cb(false); return; }
   const token=memoryActionToken(),defer=function(){syncStatus("Création du coffre GitHub différée jusqu’à la confirmation de la sauvegarde protégée.");setTimeout(function(){if(memoryActionCurrent(token))syncEnsure(cb);else cb(false);},2200);};
@@ -7942,6 +8461,7 @@ function flushPendingSync(){
   return true;
 }
 function syncPush(force,forceLocal){
+  if(memoryStartupBlocked){syncStatus("Aucun envoi : ta progression doit d’abord être relue.");return;}
   if(!syncEnabled()) return;
   if(memoryProtectedActionBusy||memoryRestoreBusy){if(!restorePending())queueCloudSync(2200);syncStatus("Synchronisation différée jusqu’à la confirmation de la sauvegarde protégée.");return;}
   if(restorePending()&&!force){syncStatus("Une restauration locale est active. La synchro automatique est suspendue pour ne pas l’annuler ; utilise « Synchroniser maintenant » pour décider explicitement.");return;}
@@ -7971,6 +8491,7 @@ function syncPush(force,forceLocal){
   });
 }
 function syncPull(force){
+  if(memoryStartupBlocked){syncStatus("La synchronisation attend que ta progression soit relue.");return;}
   if(!syncEnabled()) return;
   if(restorePending()&&!force){syncStatus("Restauration locale protégée : aucune version cloud ne sera reprise automatiquement. Touche « Synchroniser maintenant » si tu veux comparer volontairement.");return;}
   if(!canSyncNow()){ syncStatus("Hors ligne : SEZAM synchronisera au retour du réseau."); return; }
@@ -8102,11 +8623,83 @@ function showSaveQR(){
   }
   $("overlay").classList.add("on");
 }
-function returnToHomeFromExercise(){
+let memoryVaultDownloadUrls=[];
+function clearMemoryVaultDownloads(){memoryVaultDownloadUrls.forEach(function(url){try{URL.revokeObjectURL(url);}catch(e){}});memoryVaultDownloadUrls=[];const box=$("memoryVaultDownloads");if(box)box.textContent="";}
+function downloadMemoryVaultFile(){
+  if(memoryProtectedActionBusy||memoryRestoreBusy||playerOperationBusy){memoryNotice("Une protection est en cours. Réessaie l’export après sa confirmation.",false);return false;}
+  const token=memoryActionToken(),player=Object.assign({},activePlayerMeta());memoryProtectedActionBusy=true;
+  const button=$("btnDownloadMemoryVault"),msg=$("memoryVaultMsg");if(button)button.disabled=true;if(msg)msg.textContent="Création d’un dernier point, puis vérification de tout le coffre…";
+  const finish=function(message,bad){memoryProtectedActionBusy=false;if(button)button.disabled=false;if(memoryActionCurrent(token)&&msg)msg.textContent=message;memoryNoticeForPlayer(token.playerId,message,!!bad);};
+  createMemorySnapshot("manual",{milestone:"Point créé avant export du coffre complet",notify:false},function(snapshot){
+    if(!snapshot.ok){finish(snapshot.message,true);return;}
+    if(!memoryActionCurrent(token)){finish("Le joueur actif a changé : export annulé. Le dernier point reste protégé.",true);return;}
+    buildMemoryVaultForPlayer(token.playerId,player,function(result){
+      if(!result.ok){finish(result.message,true);return;}
+      if(!memoryActionCurrent(token)){finish("Le joueur actif a changé : export annulé. Aucun coffre n’a été remplacé.",true);return;}
+      try{
+        const files=result.files&&result.files.length?result.files:[{text:result.text,count:result.count,index:1,total:1}],slug=normalizePlayerName(player.name,"joueur").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-zA-Z0-9_-]+/g,"-").replace(/^-+|-+$/g,"").toLowerCase(),box=$("memoryVaultDownloads");clearMemoryVaultDownloads();
+        files.forEach(function(file,index){const blob=new Blob([file.text],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");memoryVaultDownloadUrls.push(url);a.href=url;a.download="sezam-coffre-"+(slug||"joueur")+"-"+todayStr()+(files.length>1?"-partie-"+(index+1)+"-sur-"+files.length:"")+".sezam-memory.json";a.textContent=(files.length>1?"Télécharger la partie "+(index+1)+" sur "+files.length:"Télécharger à nouveau le coffre")+" · "+file.count+" point"+(file.count>1?"s":"");a.className="secbtn";a.style.textAlign="center";a.style.textDecoration="none";if(box)box.appendChild(a);else document.body.appendChild(a);if(files.length===1)a.click();});
+        finish(files.length>1?("Coffre vérifié : "+result.count+" points répartis en "+files.length+" fichiers. Télécharge chaque partie ci-dessous et garde-les ensemble. Tu pourras les importer une par une."):("Coffre vérifié : "+result.count+" point"+(result.count>1?"s":"")+". Téléchargement lancé ; vérifie le fichier dans Fichiers ou Téléchargements et conserve-en une copie."),false);
+      }catch(e){finish("Le coffre est vérifié, mais le téléchargement a été bloqué par cet appareil. Réessaie depuis Safari.",true);}
+    });
+  });return true;
+}
+function importMemoryVaultFile(file){
+  const msg=$("memoryVaultMsg"),input=$("memoryVaultInput"),button=$("btnImportMemoryVault");
+  if(memoryProtectedActionBusy||memoryRestoreBusy||playerOperationBusy){if(msg)msg.textContent="Une protection est en cours. Réessaie après sa confirmation.";return false;}
+  const token=memoryActionToken();
+  if(!file){if(msg)msg.textContent="Choisis un fichier de coffre Sezam.";return false;}
+  if(file.size>MAX_MEMORY_VAULT_BYTES){if(msg)msg.textContent="Coffre trop volumineux pour cet appareil (limite 16 Mo).";if(input)input.value="";return false;}
+  if(typeof FileReader==="undefined"){if(msg)msg.textContent="Lecture de fichier indisponible sur ce navigateur.";return false;}
+  if(button)button.disabled=true;if(msg)msg.textContent="Lecture et contrôle intégral du coffre…";
+  const reader=new FileReader();reader.onerror=function(){if(button)button.disabled=false;if(input)input.value="";if(msg)msg.textContent="Fichier illisible. Rien n’a été importé.";};
+  reader.onload=function(){
+    if(!memoryActionCurrent(token)||memoryProtectedActionBusy||memoryRestoreBusy||playerOperationBusy){if(button)button.disabled=false;if(input)input.value="";if(msg)msg.textContent="Le joueur ou l’opération en cours a changé pendant la lecture. Import annulé ; tu peux sélectionner le fichier à nouveau.";return;}
+    const text=String(reader.result||""),preview=parseMemoryVault(text);if(!preview.ok){if(button)button.disabled=false;if(input)input.value="";if(msg)msg.textContent=preview.message;memoryNotice(preview.message,true);return;}
+    const ask="Importer "+preview.items.length+" point"+(preview.items.length>1?"s":"")+" du coffre de "+normalizePlayerName(preview.payload.player.name,"ce joueur")+" ? Les points s’ajouteront ; aucun point existant ne sera remplacé.";
+    if(typeof window.confirm==="function"&&!window.confirm(ask)){if(button)button.disabled=false;if(input)input.value="";if(msg)msg.textContent="Import annulé. Rien n’a été modifié.";return;}
+    if(memoryProtectedActionBusy||memoryRestoreBusy||playerOperationBusy||!memoryActionCurrent(token)){if(button)button.disabled=false;if(input)input.value="";if(msg)msg.textContent="Une autre protection est en cours. Réessaie après sa confirmation.";return;}
+    const originalPlayer=ACTIVE_PLAYER_ID;memoryProtectedActionBusy=true;if(msg)msg.textContent="Protection du joueur actuel avant ajout du coffre…";
+    createMemorySnapshot("pre_import",{milestone:"Avant import d’un coffre mémoire complet",notify:false},function(safety){
+      if(!safety.ok||!memoryActionCurrent(token)){memoryProtectedActionBusy=false;if(button)button.disabled=false;if(input)input.value="";if(msg)msg.textContent="Import annulé : le joueur attendu n’a pas pu être protégé. Rien n’a été modifié.";return;}
+      importMemoryVault(text,function(result){
+        memoryProtectedActionBusy=false;if(button)button.disabled=false;if(input)input.value="";
+        if(!result.ok){if(msg)msg.textContent=result.message;return;}
+        const finish=function(extra){renderStats();if($("memoryVaultMsg"))$("memoryVaultMsg").textContent=result.message+(extra||"");};
+        if(result.playerId!==originalPlayer&&playerMetaById(result.playerId))switchPlayer(result.playerId,function(ok){finish(ok?" Le joueur du coffre est maintenant ouvert.":" Le coffre est ajouté ; ouvre ce joueur depuis l’accueil.");});else finish("");
+      });
+    });
+  };reader.readAsText(file);return true;
+}
+function leaveMemoryScene(destination){
+  if(memoryProtectedActionBusy||memoryRestoreBusy||playerOperationBusy){memoryToast("L’enregistrement en cours se termine d’abord ; la scène reste protégée.",false);return false;}
+  const token=memoryActionToken();pauseForegroundSession();memoryProtectedActionBusy=true;setMemoryUiLocked(true);
+  manualMemorySnapshot("navigation",function(result){
+    memoryProtectedActionBusy=false;setMemoryUiLocked(false);
+    if(!result.ok||!memoryActionCurrent(token)){if(memoryActionCurrent(token))resumeForegroundSession();memoryNoticeForPlayer(token.playerId,result.message||"Retour annulé : la scène actuelle est conservée.",true);return;}
+    if(destination==="player_switcher"){
+      openPlayerSwitcher();resumeForegroundSession();memoryNotice(result.meta.name+" — saisies protégées avant le retour à la liste des joueurs.",false);return;
+    }
+    if(destination==="overlay_back"){
+      const type=detectMemoryOverlayType($("cardBox")&&$("cardBox").innerHTML||"");
+      if(type==="first_look_self"||type==="first_look_quiz"||type==="first_look_answer"){if(typeof PR!=="undefined")PR=null;}
+      if(type==="sync_choice"&&typeof memorySyncChoiceRemote!=="undefined")memorySyncChoiceRemote=null;
+      closeOverlay();resumeForegroundSession();
+      memoryNotice(result.meta.name+" — fenêtre et saisies protégées avant fermeture. Retrouve-les dans le Coffre.",false);return;
+    }
+    finishReturnHome();
+    if(destination==="vault"){renderMemorySceneFrozen(renderStats);setTimeout(function(){try{$("memorySection").scrollIntoView({block:"start"});$("memorySection").focus();}catch(e){}},0);}
+    memoryNotice(result.meta.name+" — séance mise à l’abri. Pour la reprendre à cette question, ouvre Coffre puis « Revenir à cette sauvegarde ».",false);
+  });return true;
+}
+function returnToHomeFromExercise(){return leaveMemoryScene("home");}
+function finishReturnHome(){
   if(EX&&!EX.done) logEvent("exercise_home",{type:EX.sessionMode||EX.kind||"serie",palier:EX.palier?EX.palier.id:null,step:EX.course?EX.course.stepId:null,questions:EX.promptCount||EX.i||0});
   if(rafTimer) clearInterval(rafTimer);
   clearQTimers(); clearDailyTimer();
   if(EX) EX.done=true;
+  if(KX&&!KX.done){clearKbdTimer();KX.done=true;}KX=null;
+  if(typeof PR!=="undefined")PR=null;
   closeOverlay();
   save(); renderHome(); show("scrHome"); flushPendingSync();
   try{$("btnPlayNow").focus();}catch(e){}
@@ -8114,7 +8707,7 @@ function returnToHomeFromExercise(){
 }
 function universalHome(){
   if(memoryProtectedActionBusy||memoryRestoreBusy||playerOperationBusy){memoryToast("La protection en cours se termine d’abord. L’accueil reste disponible dès sa confirmation et rien n’est perdu.",false);return false;}
-  if(EX&&!EX.done)return returnToHomeFromExercise();
+  if((EX&&!EX.done)||(KX&&!KX.done)||(typeof PR!=="undefined"&&PR)||($("overlay")&&$("overlay").classList.contains("on"))||activeMemoryScreen()==="scrPieces")return leaveMemoryScene("home");
   if(rafTimer)clearInterval(rafTimer);clearQTimers();clearDailyTimer();
   if(KX&&!KX.done){clearKbdTimer();logEvent("clavier_home",{i:KX.i||0});KX.done=true;}KX=null;
   if(typeof PR!=="undefined"&&PR)PR=null;
@@ -8129,16 +8722,18 @@ $("btnProfileQuick").onclick=openMusicProfile;
 $("btnSerie").onclick=startSerie;
 $("btnRafale").onclick=startRafale;
 $("btnClavier").onclick=startClavier;
-$("kQuit").onclick=function(){ clearKbdTimer(); if(KX&&!KX.done)logEvent("clavier_quit",{i:KX.i}); KX=null; renderHome(); show("scrHome"); flushPendingSync(); };
+$("kQuit").onclick=returnToHomeFromExercise;
 $("btnStats").onclick=renderStats;
 $("btnThemeQuick").onclick=renderStats;
+$("btnMemoryVault").onclick=openMemoryVaultSection;
 $("btnStatsBack").onclick=function(){renderHome();show("scrHome");};
 $("btnPieces").onclick=renderPieces;
-$("btnPiecesBack").onclick=function(){renderHome();show("scrHome");};
+$("btnPiecesBack").onclick=universalHome;
 $("btnPieceBack").onclick=renderPieces;
-$("btnPieceHome").onclick=function(){renderHome();show("scrHome");};
+$("btnPieceHome").onclick=universalHome;
 $("btnAddPiece").onclick=addPiece;
-$("btnClearPieceFile").onclick=function(){ $("pcFile").value=""; $("pieceMsg").textContent="Fichier choisi retiré."; };
+$("btnClearPieceFile").onclick=function(){ $("pcFile").value="";memoryFileDraft=null; $("pieceMsg").textContent="Fichier choisi retiré."; };
+$("pcFile").onchange=function(){memoryFileDraft=null;};
 $("btnAddSegment").onclick=addSegment;
 $("btnQR").onclick=showSaveQR;
 $("btnExerciseHome").onclick=returnToHomeFromExercise;
@@ -8190,6 +8785,12 @@ $("btnHome").onclick=function(){ renderHome(); show("scrHome"); flushPendingSync
 $("btnQuickSave").onclick=function(){manualMemorySnapshot("header");};
 $("btnManualSave").onclick=function(){manualMemorySnapshot("stats");};
 $("btnOverlaySave").onclick=function(){manualMemorySnapshot("overlay");};
+$("btnMemoryNoticeOpen").onclick=openMemoryVaultSection;
+$("btnMemoryNoticeClose").onclick=function(){$("memoryNotice").classList.remove("on");try{sessionStorage.removeItem("sezam_memory_notice_"+ACTIVE_PLAYER_ID);}catch(e){}};
+$("memoryCommandForm").onsubmit=function(ev){if(ev&&ev.preventDefault)ev.preventDefault();executeMemoryCommand($("memoryCommand").value);return false;};
+$("btnDownloadMemoryVault").onclick=downloadMemoryVaultFile;
+$("btnImportMemoryVault").onclick=function(){$("memoryVaultInput").click();};
+$("memoryVaultInput").onchange=function(ev){const file=ev&&ev.target&&ev.target.files&&ev.target.files[0];importMemoryVaultFile(file);};
 $("btnGlobalHome").onclick=universalHome;
 $("btnOverlayHome").onclick=universalHome;
 $("btnOverlayBack").onclick=overlayBack;
