@@ -1,5 +1,21 @@
 # Journal des changements
 
+## v41 — Coffre mémoire complet et sorties protégées
+
+- Sauvegardes manuelles et automatiques datées et numérotées, ajoutées sans remplacer les points existants.
+- État sérialisé complet du joueur et de la scène : question, score, session, choix, formulaires et pièce jointe sélectionnée. Restauration vérifiée par SHA‑256, sans reconstitution des acquis ; compensation du temps passé en pause à la reprise.
+- Point de protection avant restauration, import, changement de classe et sortie de séance. Accueil, sortie du clavier et Retour des fenêtres conservent un point avant de fermer la scène.
+- Commandes écrites « sauvegarde », « liste mes sauvegardes », « reviens à [numéro ou nom] » ; ambiguïtés refusées sans choisir un point arbitraire.
+- Coffre exportable/importable entre appareils, fractionné si nécessaire en parties de 16 Mio maximum ; ajouts idempotents et points locaux conservés en cas de refus d'export.
+- Journaux scellés, index reconstruisible, collisions et identités contrôlées ; récupération sans écrasement en cas de panne de stockage. Protection des callbacks tardifs et changements de joueur pendant les opérations asynchrones.
+- Démarrage protégé : si le stockage est momentanément inaccessible ou illisible, aucune partie ni aucun registre vierge ne remplace les données existantes. Réessayer et Accueil restent proposés, les écritures et la synchro attendent la récupération.
+- Validation stricte des scènes importées avant rendu, contrôle d'intégrité et connexions IndexedDB refermées.
+- Affichage mobile corrigé : sept sceaux visibles dès 320 pixels et commandes de sauvegarde accessibles.
+- Tests moteur renforcés et QA WebKit reproductible couvrant sauvegarde/restauration, import/export et vrai chargement sans serveur accessible.
+- Version applicative v41 et cache PWA `sezam-solado-v41`. Les copies externes restent nécessaires contre la suppression des données du navigateur ; aucune promesse de stockage local indestructible.
+
+Résultats et limites : [rapport de validation v41](RAPPORT-VALIDATION-v41.md).
+
 ## v40 — Familles, cycles et 14 classes musicales
 
 ### Positionnement lisible

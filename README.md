@@ -2,6 +2,10 @@
 
 Borne d'arcade musicale adaptative, offline-first, où **la partition est le terrain de jeu**. Le joueur conquiert ses pièces passage par passage; le coach invisible choisit le bon mode (Réparation > Flash > Session); chaque fin de session montre ce qui a été gagné dans la vraie musique.
 
+La v41 renforce le **coffre mémoire** : points complets datés et numérotés, ajout sans écrasement, commandes simples, restauration de la question et de la scène, et export de l'historique vers un autre appareil. Accueil et Retour protègent la séance ou la fenêtre avant de la quitter. Les données sérialisées du joueur sont restaurées à l'identique, avec contrôle SHA‑256 ; les horloges reprennent avec le temps de pause compensé. Un point de sécurité garde aussi l'état quitté avant toute restauration.
+
+Le coffre reste local au navigateur : il ne protège pas d'un effacement des données par l'utilisateur, le système ou le navigateur. **Télécharger le coffre complet** permet d'en garder une copie externe dans Fichiers, iCloud Drive ou un autre emplacement choisi. Les coffres volumineux sont fractionnés en fichiers de 16 Mio maximum ; les parties s'importent séparément sans remplacer les points déjà présents. Si un point unique dépasse cette limite, l'export est refusé explicitement et le point local est conservé.
+
 Chaque joueur peut régler son instrument, son repère d'exploration libre, son intention et sa cadence. Sur l'accueil, la v40 ajoute un réglage distinct en **trois familles clairement rattachées aux cycles du conservatoire** : Cycle 1 · Débutant, Cycle 2 · Intermédiaire et Cycle 3 · Avancé. Le joueur précise aussi son année dans le cycle. La mission quotidienne, introduite en v39, conserve son contrat : humeur, temps indicatif de 10, 15, 20 ou 30 minutes, puis 25 vraies questions avant le sceau.
 
 Dans le parcours d'acquisition, une étape contient exactement 25 questions. Il faut réussir trois séries de 25 sans erreur avant qu'une nouvelle note soit ajoutée ; un item comporte au maximum 12 étapes. Une erreur nourrit la réparation mais ne fait pas avancer l'étape. Les séries parfaites déjà acquises restent protégées.
@@ -53,9 +57,12 @@ Un seul fichier applicatif: `index.html` (HTML + CSS + JS, zéro dépendance d'e
 
 ```bash
 npm test            # 34 000+ contrôles moteur (charge le vrai script d'index.html, zéro duplication)
+npm run test:browser # QA WebKit réelle ; Playwright + navigateur WebKit déjà installés requis
 npm run serve       # http://localhost:4173
 npm run build:watch # régénère la veille musicale (fallback hors-ligne intégré)
 ```
+
+La QA navigateur utilise des profils temporaires : écrans mobiles, sauvegarde en séance, restauration exacte, transfert du coffre et reprise hors ligne. `PLAYWRIGHT_MODULE` peut désigner une installation existante. Les rapports et captures sont écrits dans `output/playwright/`, hors Git. Aucun compte ni progression réelle n'est utilisé par ces essais.
 
 ## Règles de contribution
 
